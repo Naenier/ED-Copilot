@@ -1,0 +1,18 @@
+ED Copilot commodity identifiers and English names
+
+Generated independently from the EDCD/FDevIDs primary CSV tables:
+https://raw.githubusercontent.com/EDCD/FDevIDs/master/commodity.csv
+Rows: 270; SHA256: b2ae885fcdf8a3eff8ad7a81d449fe7dbea032d0546c32f4fc61bc4b199bebde
+https://raw.githubusercontent.com/EDCD/FDevIDs/master/rare_commodity.csv
+Rows: 142; SHA256: bda5166a1394ed3680aaeee7916ce41804b7a0e69866c0e0cc8d4352700e3e2b
+
+Source README: https://github.com/EDCD/FDevIDs/blob/master/README.md
+The source describes these as Companion API IDs and in-game English names; it warns that the collections can be incomplete and that names may differ from CAPI/EDDN labels.
+Names and identifiers describe Elite Dangerous game content. Elite Dangerous and its game data remain the intellectual property of Frontier Developments plc, subject to Frontier's terms. This notice does not claim an MIT or other application-code license for the game data.
+https://www.frontierstore.net/terms-and-conditions/
+
+Generator: scripts/generate-commodity-names.cjs. Inputs are the two CSV tables above and missing planetary commodity entries from ED Copilot's own catalog.cjs. The generator never uses the existing output dictionary as input.
+Keys are normalized FDev symbols and normalized English-name aliases. Values are [English name, FDev symbol]. Canonical symbols take precedence over conflicting name aliases. Russian display labels are maintained separately.
+Generated: 2026-11-07; source rows: 412; supplemental planetary rows: 0; lookup entries: 527; conflicting aliases skipped: 0.
+
+No player identity, inventory, location, timestamps from journals, or account credentials are included.

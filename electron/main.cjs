@@ -53,8 +53,6 @@ const ownProcessNames = [path.basename(app.getPath("exe"), ".exe").toLowerCase()
 const windowState = createWindowState(() => dataDir);
 const iconPath = app.isPackaged ? path.join(process.resourcesPath, "native", "copilot.png") : path.join(__dirname, "../web/copilot.png");
 const preloadPath = path.join(__dirname, "preload.cjs");
-const watcherCandidate = app.isPackaged ? path.join(process.resourcesPath, "native", "edexo-fgwatch.exe") : path.join(__dirname, "../native/target/release/edexo-fgwatch.exe");
-const watcherPath = fs.existsSync(watcherCandidate) ? watcherCandidate : null;
 
 function gameDisplay() {
   if (!gamePoint) return screen.getPrimaryDisplay();
@@ -333,7 +331,7 @@ async function start() {
     foregroundName = name;
     if (isGame(name) && at) gamePoint = at;
     synchronizeOverlay();
-  }, watcherPath);
+  });
   screen.on("display-added", synchronizeOverlay);
   screen.on("display-removed", synchronizeOverlay);
   screen.on("display-metrics-changed", synchronizeOverlay);

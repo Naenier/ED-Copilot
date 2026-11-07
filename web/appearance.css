@@ -1,0 +1,27 @@
+.appearance-panel { margin-bottom: 22px; }
+.appearance-panel p { line-height: 1.7; }
+.appearance-presets { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.appearance-preset { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border: 1px solid var(--line); background: var(--panel-raised); border-radius: 4px; }
+.appearance-preset i { width: 15px; height: 15px; border-radius: 50%; box-shadow: 0 0 14px currentColor; }
+.appearance-preset.is-active { border-color: var(--accent); color: var(--accent-bright); }
+.appearance-colors { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 22px 0; }
+.appearance-color { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 7px 10px; padding: 12px; border: 1px solid var(--line); background: var(--bg); }
+.appearance-color > span { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+.appearance-color input { width: 42px; height: 35px; padding: 2px; min-height: 35px; cursor: pointer; }
+.appearance-color code { font-size: 12px; }
+.appearance-source { display: grid; gap: 5px; margin-top: 16px; padding: 13px 16px; border-left: 2px solid var(--accent); background: var(--panel-raised); }
+.appearance-source span { overflow-wrap: anywhere; font-size: 12px; color: var(--muted); }
+.appearance-source small, .appearance-source p { color: var(--muted); margin: 0; font-size: 12px; }
+.appearance-opacity { max-width: 560px; }
+.appearance-opacity input { padding: 0; accent-color: var(--accent); }
+.appearance-preview { border: 1px solid var(--line); border-radius: 5px; padding: 18px; background: var(--panel-raised); margin: 20px 0; }
+.appearance-preview > div:first-child { display: grid; gap: 5px; }
+.appearance-preview strong { color: var(--accent-bright); }
+.appearance-preview > div:first-child span { color: var(--muted); font-size: 12px; }
+.appearance-danger { color: var(--danger); font-size: 12px; }
+.appearance-matrix { border-top: 1px solid var(--line); padding: 15px 0; }
+.appearance-matrix summary { cursor: pointer; color: var(--accent-bright); }
+.appearance-matrix-grid { display: grid; grid-template-columns: 100px repeat(3,minmax(55px,100px)); align-items: center; gap: 8px; max-width: 500px; margin: 16px 0; }
+.appearance-matrix-grid > span { color: var(--muted); font-size: 12px; }
+.appearance-matrix input { min-width: 0; width: 100%; }
+@media(max-width:1100px) { .appearance-colors { grid-template-columns: repeat(2,minmax(0,1fr)); } }

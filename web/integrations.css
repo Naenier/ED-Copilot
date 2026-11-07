@@ -1,8 +1,8 @@
 .copilot-sync .page-heading { align-items: flex-start; }
 .sync-form { margin-bottom: 24px; }
 .sync-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.sync-mode { display: flex; gap: 11px; align-items: flex-start; padding: 18px 15px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; background: #0a1723; }
-.sync-mode.is-selected { border-color: var(--accent); background: #102b3d; }
+.sync-mode { display: flex; gap: 11px; align-items: flex-start; padding: 18px 15px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; background: var(--panel-raised); }
+.sync-mode.is-selected { border-color: var(--accent); background: var(--line); }
 .sync-mode input { margin-top: 4px; accent-color: var(--accent); }
 .sync-mode strong { display: block; font-size: 13px; font-weight: 500; }
 .sync-mode small { display: block; color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 5px; }

@@ -1,7 +1,7 @@
 {
   "name": "ed-copilot",
   "productName": "ED Copilot",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Русский помощник пилота Elite Dangerous",
   "private": true,
   "main": "electron/main.cjs",
@@ -18,7 +18,6 @@
     "start": "electron .",
     "check": "node scripts/check.cjs",
     "test": "node scripts/test.cjs",
-    "build:native": "node scripts/build-native.cjs",
     "dist:win": "node scripts/package.cjs"
   },
   "devDependencies": {

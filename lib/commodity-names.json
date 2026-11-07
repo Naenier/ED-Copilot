@@ -1,1 +1,2110 @@
-{"platinum":["Platinum"],"palladium":["Palladium"],"gold":["Gold"],"silver":["Silver"],"bertrandite":["Bertrandite"],"indite":["Indite"],"gallite":["Gallite"],"coltan":["Coltan"],"uraninite":["Uraninite"],"lepidolite":["Lepidolite"],"cobalt":["Cobalt"],"rutile":["Rutile"],"bauxite":["Bauxite"],"water":["Water"],"beryllium":["Beryllium"],"indium":["Indium"],"gallium":["Gallium"],"tantalum":["Tantalum"],"uranium":["Uranium"],"lithium":["Lithium"],"titanium":["Titanium"],"copper":["Copper"],"aluminium":["Aluminium"],"algae":["Algae"],"fruitandvegetables":["Fruit and Vegetables","FruitAndVegetables","Fruit And Vegetables"],"grain":["Grain"],"animalmeat":["Animal Meat","Animalmeat"],"fish":["Fish"],"foodcartridges":["Food Cartridges","FoodCartridges"],"syntheticmeat":["Synthetic Meat","SyntheticMeat"],"tea":["Tea"],"coffee":["Coffee"],"leather":["Leather"],"naturalfabrics":["Natural Fabrics","NaturalFabrics"],"syntheticfabrics":["Synthetic Fabrics","SyntheticFabrics"],"polymers":["Polymers"],"semiconductors":["Semiconductors"],"superconductors":["Superconductors"],"hydrogenfuel":["Hydrogen Fuel","HydrogenFuel"],"mineraloil":["Mineral Oil","MineralOil"],"explosives":["Explosives"],"pesticides":["Pesticides"],"agriculturalmedicines":["Agri-Medicines","AgriculturalMedicines","Agri-medicines"],"agrimedicines":["Agri-Medicines","AgriculturalMedicines","Agri-medicines"],"performanceenhancers":["Performance Enhancers","PerformanceEnhancers"],"basicmedicines":["Basic Medicines","BasicMedicines"],"basicnarcotics":["Narcotics","BasicNarcotics"],"narcotics":["Narcotics","BasicNarcotics"],"tobacco":["Tobacco"],"beer":["Beer"],"wine":["Wine"],"liquor":["Liquor"],"powergenerators":["Power Generators","PowerGenerators"],"waterpurifiers":["Water Purifiers","WaterPurifiers"],"heliostaticfurnaces":["Microbial Furnaces","HeliostaticFurnaces"],"microbialfurnaces":["Microbial Furnaces","HeliostaticFurnaces"],"mineralextractors":["Mineral Extractors","MineralExtractors"],"cropharvesters":["Crop Harvesters","CropHarvesters"],"marinesupplies":["Marine Equipment","MarineSupplies"],"marineequipment":["Marine Equipment","MarineSupplies"],"computercomponents":["Computer Components","ComputerComponents"],"hazardousenvironmentsuits":["H.E. Suits","HazardousEnvironmentSuits","H.e. Suits"],"hesuits":["H.E. Suits","HazardousEnvironmentSuits","H.e. Suits"],"robotics":["Robotics"],"autofabricators":["Auto-Fabricators","AutoFabricators","Auto-fabricators"],"animalmonitors":["Animal Monitors","AnimalMonitors"],"aquaponicsystems":["Aquaponic Systems","AquaponicSystems"],"advancedcatalysers":["Advanced Catalysers","AdvancedCatalysers"],"terrainenrichmentsystems":["Land Enrichment Systems","TerrainEnrichmentSystems"],"landenrichmentsystems":["Land Enrichment Systems","TerrainEnrichmentSystems"],"personalweapons":["Personal Weapons","PersonalWeapons"],"battleweapons":["Battle Weapons","BattleWeapons"],"reactivearmour":["Reactive Armour","ReactiveArmour"],"nonlethalweapons":["Non-Lethal Weapons","NonLethalWeapons","Non-lethal Weapons"],"domesticappliances":["Domestic Appliances","DomesticAppliances"],"consumertechnology":["Consumer Technology","ConsumerTechnology"],"clothing":["Clothing"],"slaves":["Slaves"],"biowaste":["Biowaste"],"toxicwaste":["Toxic Waste","ToxicWaste"],"chemicalwaste":["Chemical Waste","ChemicalWaste"],"scrap":["Scrap"],"progenitorcells":["Progenitor Cells","ProgenitorCells"],"combatstabilisers":["Combat Stabilisers","CombatStabilisers"],"resonatingseparators":["Resonating Separators","ResonatingSeparators"],"bioreducinglichen":["Bioreducing Lichen","BioReducingLichen"],"atmosphericextractors":["Atmospheric Processors","AtmosphericExtractors"],"atmosphericprocessors":["Atmospheric Processors","AtmosphericExtractors"],"drones":["Limpets","Drones"],"limpets":["Limpets","Drones"],"usscargoblackbox":["Black Box","USSCargoBlackBox"],"blackbox":["Black Box","USSCargoBlackBox"],"usscargotradedata":["Trade Data","USSCargoTradeData"],"tradedata":["Trade Data","USSCargoTradeData"],"usscargomilitaryplans":["Military Plans","USSCargoMilitaryPlans"],"militaryplans":["Military Plans","USSCargoMilitaryPlans"],"usscargoancientartefact":["Ancient Artefact","USSCargoAncientArtefact"],"ancientartefact":["Ancient Artefact","USSCargoAncientArtefact"],"usscargorareartwork":["Rare Artwork","USSCargoRareArtwork"],"rareartwork":["Rare Artwork","USSCargoRareArtwork"],"usscargoexperimentalchemicals":["Experimental Chemicals","USSCargoExperimentalChemicals"],"experimentalchemicals":["Experimental Chemicals","USSCargoExperimentalChemicals"],"usscargorebeltransmissions":["Rebel Transmissions","USSCargoRebelTransmissions"],"rebeltransmissions":["Rebel Transmissions","USSCargoRebelTransmissions"],"usscargoprototypetech":["Prototype Tech","USSCargoPrototypeTech"],"prototypetech":["Prototype Tech","USSCargoPrototypeTech"],"usscargotechnicalblueprints":["Technical Blueprints","USSCargoTechnicalBlueprints"],"technicalblueprints":["Technical Blueprints","USSCargoTechnicalBlueprints"],"imperialslaves":["Imperial Slaves","ImperialSlaves"],"unknownartifact":["Thargoid Sensor","UnknownArtifact"],"thargoidsensor":["Thargoid Sensor","UnknownArtifact"],"airelics":["AI Relics","AiRelics","Ai Relics"],"hafnium178":["Hafnium 178","Hafnium178"],"painite":["Painite"],"antiquities":["Antiquities"],"militaryintelligence":["Military Intelligence","MilitaryIntelligence"],"osmium":["Osmium"],"sap8corecontainer":["SAP 8 Core Container","SAP8CoreContainer","Sap 8 Core Container"],"trinketsoffortune":["Trinkets of Hidden Fortune","TrinketsOfFortune","Trinkets Of Hidden Fortune"],"trinketsofhiddenfortune":["Trinkets of Hidden Fortune","TrinketsOfFortune","Trinkets Of Hidden Fortune"],"wreckagecomponents":["Wreckage Components","WreckageComponents"],"encripteddatastorage":["Encrypted Data Storage","EncriptedDataStorage"],"encrypteddatastorage":["Encrypted Data Storage","EncriptedDataStorage"],"occupiedcryopod":["Occupied Escape Pod","OccupiedCryoPod"],"occupiedescapepod":["Occupied Escape Pod","OccupiedCryoPod"],"personaleffects":["Personal Effects","PersonalEffects"],"comercialsamples":["Commercial Samples","ComercialSamples"],"commercialsamples":["Commercial Samples","ComercialSamples"],"tacticaldata":["Tactical Data","TacticalData"],"assaultplans":["Assault Plans","AssaultPlans"],"encryptedcorrespondence":["Encrypted Correspondence","EncryptedCorrespondence"],"diplomaticbag":["Diplomatic Bag","DiplomaticBag"],"scientificresearch":["Scientific Research","ScientificResearch"],"scientificsamples":["Scientific Samples","ScientificSamples"],"politicalprisoner":["Political Prisoners","PoliticalPrisoner"],"politicalprisoners":["Political Prisoners","PoliticalPrisoner"],"hostage":["Hostages","Hostage"],"hostages":["Hostages","Hostage"],"largeexplorationdatacash":["Large Survey Data Cache","LargeExplorationDataCash"],"largesurveydatacache":["Large Survey Data Cache","LargeExplorationDataCash"],"smallexplorationdatacash":["Small Survey Data Cache","SmallExplorationDataCash"],"smallsurveydatacache":["Small Survey Data Cache","SmallExplorationDataCash"],"antiquejewellery":["Antique Jewellery","AntiqueJewellery"],"preciousgems":["Precious Gems","PreciousGems"],"earthrelics":["Earth Relics","EarthRelics"],"genebank":["Gene Bank","GeneBank"],"timecapsule":["Time Capsule","TimeCapsule"],"cryolite":["Cryolite"],"goslarite":["Goslarite"],"moissanite":["Moissanite"],"pyrophyllite":["Pyrophyllite"],"lanthanum":["Lanthanum"],"thallium":["Thallium"],"bismuth":["Bismuth"],"thorium":["Thorium"],"ceramiccomposites":["Ceramic Composites","CeramicComposites"],"syntheticreagents":["Synthetic Reagents","SyntheticReagents"],"nerveagents":["Nerve Agents","NerveAgents"],"surfacestabilisers":["Surface Stabilisers","SurfaceStabilisers"],"bootlegliquor":["Bootleg Liquor","BootlegLiquor"],"geologicalequipment":["Geological Equipment","GeologicalEquipment"],"thermalcoolingunits":["Thermal Cooling Units","ThermalCoolingUnits"],"buildingfabricators":["Building Fabricators","BuildingFabricators"],"mutomimager":["Muon Imager","MuTomImager"],"muonimager":["Muon Imager","MuTomImager"],"structuralregulators":["Structural Regulators","StructuralRegulators"],"landmines":["Landmines"],"skimercomponents":["Skimmer Components","SkimerComponents"],"skimmercomponents":["Skimmer Components","SkimerComponents"],"evacuationshelter":["Evacuation Shelter","EvacuationShelter"],"geologicalsamples":["Geological Samples","GeologicalSamples"],"metaalloys":["Meta-Alloys","MetaAlloys","Meta-alloys"],"taaffeite":["Taaffeite"],"jadeite":["Jadeite"],"unstabledatacore":["Unstable Data Core","UnstableDataCore"],"damagedescapepod":["Damaged Escape Pod","DamagedEscapePod"],"praseodymium":["Praseodymium"],"bromellite":["Bromellite"],"samarium":["Samarium"],"lowtemperaturediamond":["Low Temperature Diamonds","LowTemperatureDiamond"],"lowtemperaturediamonds":["Low Temperature Diamonds","LowTemperatureDiamond"],"hydrogenperoxide":["Hydrogen Peroxide","HydrogenPeroxide"],"liquidoxygen":["Liquid oxygen","LiquidOxygen","Liquid Oxygen"],"methanolmonohydratecrystals":["Methanol Monohydrate Crystals","MethanolMonohydrateCrystals"],"lithiumhydroxide":["Lithium Hydroxide","LithiumHydroxide"],"methaneclathrate":["Methane Clathrate","MethaneClathrate"],"insulatingmembrane":["Insulating Membrane","InsulatingMembrane"],"cmmcomposite":["CMM Composite","CMMComposite","Cmm Composite"],"coolinghoses":["Micro-weave Cooling Hoses","CoolingHoses"],"microweavecoolinghoses":["Micro-weave Cooling Hoses","CoolingHoses"],"neofabricinsulation":["Neofabric Insulation","NeofabricInsulation"],"articulationmotors":["Articulation Motors","ArticulationMotors"],"hnshockmount":["HN Shock Mount","HNShockMount","Hn Shock Mount"],"emergencypowercells":["Emergency Power Cells","EmergencyPowerCells"],"powerconverter":["Power Converter","PowerConverter"],"powergridassembly":["Energy Grid Assembly","PowerGridAssembly"],"energygridassembly":["Energy Grid Assembly","PowerGridAssembly"],"powertransferconduits":["Power Transfer Bus","PowerTransferConduits"],"powertransferbus":["Power Transfer Bus","PowerTransferConduits"],"radiationbaffle":["Radiation Baffle","RadiationBaffle"],"exhaustmanifold":["Exhaust Manifold","ExhaustManifold"],"reinforcedmountingplate":["Reinforced Mounting Plate","ReinforcedMountingPlate"],"heatsinkinterlink":["Heatsink Interlink","HeatsinkInterlink"],"magneticemittercoil":["Magnetic Emitter Coil","MagneticEmitterCoil"],"modularterminals":["Modular Terminals","ModularTerminals"],"nanobreakers":["Nanobreakers"],"telemetrysuite":["Telemetry Suite","TelemetrySuite"],"microcontrollers":["Micro Controllers","MicroControllers"],"iondistributor":["Ion Distributor","IonDistributor"],"diagnosticsensor":["Hardware Diagnostic Sensor","DiagnosticSensor"],"hardwarediagnosticsensor":["Hardware Diagnostic Sensor","DiagnosticSensor"],"unknownartifact2":["Thargoid Probe","UnknownArtifact2"],"thargoidprobe":["Thargoid Probe","UnknownArtifact2"],"conductivefabrics":["Conductive Fabrics","ConductiveFabrics"],"militarygradefabrics":["Military Grade Fabrics","MilitaryGradeFabrics"],"advancedmedicines":["Advanced Medicines","AdvancedMedicines"],"medicaldiagnosticequipment":["Medical Diagnostic Equipment","MedicalDiagnosticEquipment"],"survivalequipment":["Survival Equipment","SurvivalEquipment"],"datacore":["Data Core","DataCore"],"mysteriousidol":["Mysterious Idol","MysteriousIdol"],"prohibitedresearchmaterials":["Prohibited Research Materials","ProhibitedResearchMaterials"],"antimattercontainmentunit":["Antimatter Containment Unit","AntimatterContainmentUnit"],"spacepioneerrelics":["Space Pioneer Relics","SpacePioneerRelics"],"fossilremnants":["Fossil Remnants","FossilRemnants"],"ancientrelic":["Guardian Relic","AncientRelic"],"guardianrelic":["Guardian Relic","AncientRelic"],"ancientorb":["Guardian Orb","AncientOrb"],"guardianorb":["Guardian Orb","AncientOrb"],"ancientcasket":["Guardian Casket","AncientCasket"],"guardiancasket":["Guardian Casket","AncientCasket"],"ancienttablet":["Guardian Tablet","AncientTablet"],"guardiantablet":["Guardian Tablet","AncientTablet"],"ancienturn":["Guardian Urn","AncientUrn"],"guardianurn":["Guardian Urn","AncientUrn"],"ancienttotem":["Guardian Totem","AncientTotem"],"guardiantotem":["Guardian Totem","AncientTotem"],"unknownresin":["Thargoid Resin","UnknownResin"],"thargoidresin":["Thargoid Resin","UnknownResin"],"unknownbiologicalmatter":["Thargoid Biological Matter","UnknownBiologicalMatter"],"thargoidbiologicalmatter":["Thargoid Biological Matter","UnknownBiologicalMatter"],"unknowntechnologysamples":["Thargoid Technology Samples","UnknownTechnologySamples"],"thargoidtechnologysamples":["Thargoid Technology Samples","UnknownTechnologySamples"],"unknownartifact3":["Thargoid Link","UnknownArtifact3"],"thargoidlink":["Thargoid Link","UnknownArtifact3"],"thargoidheart":["Thargoid Heart","ThargoidHeart"],"thargoidtissuesampletype1":["Thargoid Cyclops Tissue Sample","ThargoidTissueSampleType1"],"thargoidcyclopstissuesample":["Thargoid Cyclops Tissue Sample","ThargoidTissueSampleType1"],"thargoidtissuesampletype2":["Thargoid Basilisk Tissue Sample","ThargoidTissueSampleType2"],"thargoidbasilisktissuesample":["Thargoid Basilisk Tissue Sample","ThargoidTissueSampleType2"],"thargoidtissuesampletype3":["Thargoid Medusa Tissue Sample","ThargoidTissueSampleType3"],"thargoidmedusatissuesample":["Thargoid Medusa Tissue Sample","ThargoidTissueSampleType3"],"thargoidscouttissuesample":["Thargoid Scout Tissue Sample","ThargoidScoutTissueSample"],"ancientkey":["Ancient Key","AncientKey"],"thargoidtissuesampletype4":["Thargoid Hydra Tissue Sample","ThargoidTissueSampleType4"],"thargoidhydratissuesample":["Thargoid Hydra Tissue Sample","ThargoidTissueSampleType4"],"mtissuesamplefluid":["Mollusc Fluid","M_TissueSample_Fluid"],"molluscfluid":["Mollusc Fluid","M_TissueSample_Fluid"],"mtissuesamplesoft":["Mollusc Soft Tissue","M_TissueSample_Soft"],"molluscsofttissue":["Mollusc Soft Tissue","M_TissueSample_Soft"],"mtissuesamplenerves":["Mollusc Brain Tissue","M_TissueSample_Nerves"],"molluscbraintissue":["Mollusc Brain Tissue","M_TissueSample_Nerves"],"stissuesamplecells":["Pod Core Tissue","S_TissueSample_Cells"],"podcoretissue":["Pod Core Tissue","S_TissueSample_Cells"],"stissuesamplesurface":["Pod Dead Tissue","S_TissueSample_Surface"],"poddeadtissue":["Pod Dead Tissue","S_TissueSample_Surface"],"stissuesamplecore":["Pod Surface Tissue","S_TissueSample_Core"],"podsurfacetissue":["Pod Surface Tissue","S_TissueSample_Core"],"pparticulatesample":["Anomaly Particles","P_ParticulateSample"],"anomalyparticles":["Anomaly Particles","P_ParticulateSample"],"s9tissuesampleshell":["Pod Tissue","S9_TissueSample_Shell"],"podtissue":["Pod Tissue","S9_TissueSample_Shell"],"m3tissuesamplemembrane":["Mollusc Membrane","M3_TissueSample_Membrane"],"molluscmembrane":["Mollusc Membrane","M3_TissueSample_Membrane"],"m3tissuesamplemycelium":["Mollusc Mycelium","M3_TissueSample_Mycelium"],"molluscmycelium":["Mollusc Mycelium","M3_TissueSample_Mycelium"],"m3tissuesamplespores":["Mollusc Spores","M3_TissueSample_Spores"],"molluscspores":["Mollusc Spores","M3_TissueSample_Spores"],"s6tissuesamplemesoglea":["Pod Mesoglea","S6_TissueSample_Mesoglea"],"podmesoglea":["Pod Mesoglea","S6_TissueSample_Mesoglea"],"s6tissuesamplecells":["Pod Outer Tissue","S6_TissueSample_Cells"],"podoutertissue":["Pod Outer Tissue","S6_TissueSample_Cells"],"s6tissuesamplecoenosarc":["Pod Shell Tissue","S6_TissueSample_Coenosarc"],"podshelltissue":["Pod Shell Tissue","S6_TissueSample_Coenosarc"],"rhodplumsite":["Rhodplumsite"],"serendibite":["Serendibite"],"monazite":["Monazite"],"musgravite":["Musgravite"],"benitoite":["Benitoite"],"grandidierite":["Grandidierite"],"alexandrite":["Alexandrite"],"opal":["Void Opal","Opal"],"voidopal":["Void Opal","Opal"],"rockforthfertiliser":["Rockforth Fertiliser","RockforthFertiliser"],"agronomictreatment":["Agronomic Treatment","AgronomicTreatment"],"tritium":["Tritium"],"onionheadc":["Onionhead Gamma Strain","OnionHeadC"],"onionheadgammastrain":["Onionhead Gamma Strain","OnionHeadC"],"ancientrelictg":["Unclassified Relic","AncientRelicTG"],"unclassifiedrelic":["Unclassified Relic","AncientRelicTG"],"thargoidtissuesampletype5":["Thargoid Orthrus Tissue Sample","ThargoidTissueSampleType5"],"thargoidorthrustissuesample":["Thargoid Orthrus Tissue Sample","ThargoidTissueSampleType5"],"thargoidgeneratortissuesample":["Caustic Tissue Sample","ThargoidGeneratorTissueSample"],"caustictissuesample":["Caustic Tissue Sample","ThargoidGeneratorTissueSample"],"unocuppiedescapepod":["Unoccupied Escape Pod","UnocuppiedEscapePod"],"unoccupiedescapepod":["Unoccupied Escape Pod","UnocuppiedEscapePod"],"thargoidtissuesampletype6":["Thargoid Glaive Tissue Sample","ThargoidTissueSampleType6"],"thargoidglaivetissuesample":["Thargoid Glaive Tissue Sample","ThargoidTissueSampleType6"],"thargoidtissuesampletype7":["Thargoid Scythe Tissue Sample","ThargoidTissueSampleType7"],"thargoidscythetissuesample":["Thargoid Scythe Tissue Sample","ThargoidTissueSampleType7"],"thargoidtissuesampletype9a":["Titan Deep Tissue Sample","ThargoidTissueSampleType9a"],"titandeeptissuesample":["Titan Deep Tissue Sample","ThargoidTissueSampleType9a"],"thargoidtissuesampletype9b":["Titan Tissue Sample","ThargoidTissueSampleType9b"],"titantissuesample":["Titan Tissue Sample","ThargoidTissueSampleType9b"],"thargoidtissuesampletype9c":["Titan Partial Tissue Sample","ThargoidTissueSampleType9c"],"titanpartialtissuesample":["Titan Partial Tissue Sample","ThargoidTissueSampleType9c"],"thargoidtissuesampletype10a":["Titan Maw Deep Tissue Sample","ThargoidTissueSampleType10a"],"titanmawdeeptissuesample":["Titan Maw Deep Tissue Sample","ThargoidTissueSampleType10a"],"thargoidtissuesampletype10b":["Titan Maw Tissue Sample","ThargoidTissueSampleType10b"],"titanmawtissuesample":["Titan Maw Tissue Sample","ThargoidTissueSampleType10b"],"thargoidtissuesampletype10c":["Titan Maw Partial Tissue Sample","ThargoidTissueSampleType10c"],"titanmawpartialtissuesample":["Titan Maw Partial Tissue Sample","ThargoidTissueSampleType10c"],"unknownsack":["Protective Membrane Scrap","UnknownSack"],"protectivemembranescrap":["Protective Membrane Scrap","UnknownSack"],"thargoidpod":["Xenobiological Prison Pod","ThargoidPod"],"xenobiologicalprisonpod":["Xenobiological Prison Pod","ThargoidPod"],"coralsap":["Coral Sap","CoralSap"],"unknownmineral":["Impure Spire Mineral","UnknownMineral"],"impurespiremineral":["Impure Spire Mineral","UnknownMineral"],"unknownrefinedmineral":["Semi-Refined Spire Mineral","UnknownRefinedMineral","Semi-refined Spire Mineral"],"semirefinedspiremineral":["Semi-Refined Spire Mineral","UnknownRefinedMineral","Semi-refined Spire Mineral"],"thargoidtitandrivecomponent":["Titan Drive Component","ThargoidTitanDriveComponent"],"titandrivecomponent":["Titan Drive Component","ThargoidTitanDriveComponent"],"thargoidcystspecimen":["Cyst Specimen","ThargoidCystSpecimen"],"cystspecimen":["Cyst Specimen","ThargoidCystSpecimen"],"thargoidbonefragments":["Bone Fragments","ThargoidBoneFragments"],"bonefragments":["Bone Fragments","ThargoidBoneFragments"],"thargoidorgansample":["Organ Sample","ThargoidOrganSample"],"organsample":["Organ Sample","ThargoidOrganSample"],"steel":["Steel"],"haematite":["Haematite"]}
+{
+  "advancedcatalysers": [
+    "Advanced Catalysers",
+    "AdvancedCatalysers"
+  ],
+  "advancedmedicines": [
+    "Advanced Medicines",
+    "AdvancedMedicines"
+  ],
+  "advert1": [
+    "Ultra-Compact Processor Prototypes",
+    "Advert1"
+  ],
+  "aepyornisegg": [
+    "Aepyornis Egg",
+    "CetiAepyornisEgg"
+  ],
+  "aerialedenapple": [
+    "Eden Apples of Aerial",
+    "AerialEdenApple"
+  ],
+  "aganipperush": [
+    "Aganippe Rush",
+    "AganippeRush"
+  ],
+  "agriculturalmedicines": [
+    "Agri-Medicines",
+    "AgriculturalMedicines"
+  ],
+  "agrimedicines": [
+    "Agri-Medicines",
+    "AgriculturalMedicines"
+  ],
+  "agronomictreatment": [
+    "Agronomic Treatment",
+    "AgronomicTreatment"
+  ],
+  "airelics": [
+    "AI Relics",
+    "AiRelics"
+  ],
+  "alacarakmoskinart": [
+    "Alacarakmo Skin Art",
+    "AlacarakmoSkinArt"
+  ],
+  "albinoquechuamammoth": [
+    "Albino Quechua Mammoth Meat",
+    "AlbinoQuechuaMammoth"
+  ],
+  "albinoquechuamammothmeat": [
+    "Albino Quechua Mammoth Meat",
+    "AlbinoQuechuaMammoth"
+  ],
+  "alexandrite": [
+    "Alexandrite",
+    "Alexandrite"
+  ],
+  "algae": [
+    "Algae",
+    "Algae"
+  ],
+  "alieneggs": [
+    "Leathery Eggs",
+    "AlienEggs"
+  ],
+  "altairianskin": [
+    "Altairian Skin",
+    "AltairianSkin"
+  ],
+  "aluminium": [
+    "Aluminium",
+    "Aluminium"
+  ],
+  "alyabodilysoap": [
+    "Alya Body Soap",
+    "AlyaBodilySoap"
+  ],
+  "alyabodysoap": [
+    "Alya Body Soap",
+    "AlyaBodilySoap"
+  ],
+  "ancientartefact": [
+    "Ancient Artefact",
+    "USSCargoAncientArtefact"
+  ],
+  "ancientcasket": [
+    "Guardian Casket",
+    "AncientCasket"
+  ],
+  "ancientkey": [
+    "Ancient Key",
+    "AncientKey"
+  ],
+  "ancientorb": [
+    "Guardian Orb",
+    "AncientOrb"
+  ],
+  "ancientrelic": [
+    "Guardian Relic",
+    "AncientRelic"
+  ],
+  "ancientrelictg": [
+    "Unclassified Relic",
+    "AncientRelicTG"
+  ],
+  "ancienttablet": [
+    "Guardian Tablet",
+    "AncientTablet"
+  ],
+  "ancienttotem": [
+    "Guardian Totem",
+    "AncientTotem"
+  ],
+  "ancienturn": [
+    "Guardian Urn",
+    "AncientUrn"
+  ],
+  "anduligafireworks": [
+    "Anduliga Fire Works",
+    "AnduligaFireWorks"
+  ],
+  "animaleffigies": [
+    "Crom Silver Fesh",
+    "AnimalEffigies"
+  ],
+  "animalmeat": [
+    "Animal Meat",
+    "Animalmeat"
+  ],
+  "animalmonitors": [
+    "Animal Monitors",
+    "AnimalMonitors"
+  ],
+  "anomalyparticles": [
+    "Anomaly Particles",
+    "P_ParticulateSample"
+  ],
+  "antimattercontainmentunit": [
+    "Antimatter Containment Unit",
+    "AntimatterContainmentUnit"
+  ],
+  "antiquejewellery": [
+    "Antique Jewellery",
+    "AntiqueJewellery"
+  ],
+  "antiquities": [
+    "Antiquities",
+    "Antiquities"
+  ],
+  "anynacoffee": [
+    "Any Na Coffee",
+    "AnyNaCoffee"
+  ],
+  "apavietii": [
+    "Apa Vietii",
+    "ApaVietii"
+  ],
+  "aquaponicsystems": [
+    "Aquaponic Systems",
+    "AquaponicSystems"
+  ],
+  "aroucaconventualsweets": [
+    "Arouca Conventual Sweets",
+    "AroucaConventualSweets"
+  ],
+  "articulationmotors": [
+    "Articulation Motors",
+    "ArticulationMotors"
+  ],
+  "assaultplans": [
+    "Assault Plans",
+    "AssaultPlans"
+  ],
+  "atmosphericextractors": [
+    "Atmospheric Processors",
+    "AtmosphericExtractors"
+  ],
+  "atmosphericprocessors": [
+    "Atmospheric Processors",
+    "AtmosphericExtractors"
+  ],
+  "autofabricators": [
+    "Auto-Fabricators",
+    "AutoFabricators"
+  ],
+  "azcancriformula42": [
+    "AZ Cancri Formula 42",
+    "AZCancriFormula42"
+  ],
+  "azuremilk": [
+    "Azure Milk",
+    "BlueMilk"
+  ],
+  "bakedgreebles": [
+    "Baked Greebles",
+    "BakedGreebles"
+  ],
+  "baltahsinevacuumkrill": [
+    "Baltah'sine Vacuum Krill",
+    "BaltahSineVacuumKrill"
+  ],
+  "bankiamphibiousleather": [
+    "Banki Amphibious Leather",
+    "BankiAmphibiousLeather"
+  ],
+  "basicmedicines": [
+    "Basic Medicines",
+    "BasicMedicines"
+  ],
+  "basicnarcotics": [
+    "Narcotics",
+    "BasicNarcotics"
+  ],
+  "bastnasite": [
+    "Bastnasite",
+    "Bastnasite"
+  ],
+  "bastsnakegin": [
+    "Bast Snake Gin",
+    "BastSnakeGin"
+  ],
+  "battleweapons": [
+    "Battle Weapons",
+    "BattleWeapons"
+  ],
+  "bauxite": [
+    "Bauxite",
+    "Bauxite"
+  ],
+  "beer": [
+    "Beer",
+    "Beer"
+  ],
+  "belalansrayleather": [
+    "Belalans Ray Leather",
+    "BelalansRayLeather"
+  ],
+  "benitoite": [
+    "Benitoite",
+    "Benitoite"
+  ],
+  "bertrandite": [
+    "Bertrandite",
+    "Bertrandite"
+  ],
+  "beryllium": [
+    "Beryllium",
+    "Beryllium"
+  ],
+  "bioreducinglichen": [
+    "Bioreducing Lichen",
+    "BioReducingLichen"
+  ],
+  "biowaste": [
+    "Biowaste",
+    "Biowaste"
+  ],
+  "bismuth": [
+    "Bismuth",
+    "Bismuth"
+  ],
+  "blackbox": [
+    "Black Box",
+    "USSCargoBlackBox"
+  ],
+  "bluemilk": [
+    "Azure Milk",
+    "BlueMilk"
+  ],
+  "bonefragments": [
+    "Bone Fragments",
+    "ThargoidBoneFragments"
+  ],
+  "bootlegliquor": [
+    "Bootleg Liquor",
+    "BootlegLiquor"
+  ],
+  "borasetanipathogenetics": [
+    "Borasetani Pathogenetics",
+    "BorasetaniPathogenetics"
+  ],
+  "bromellite": [
+    "Bromellite",
+    "Bromellite"
+  ],
+  "buckyballbeermats": [
+    "Buckyball Beer Mats",
+    "BuckyballBeerMats"
+  ],
+  "buildingfabricators": [
+    "Building Fabricators",
+    "BuildingFabricators"
+  ],
+  "burnhambiledistillate": [
+    "Burnham Bile Distillate",
+    "BurnhamBileDistillate"
+  ],
+  "caustictissuesample": [
+    "Caustic Tissue Sample",
+    "ThargoidGeneratorTissueSample"
+  ],
+  "cd75catcoffee": [
+    "CD-75 Kitten Brand Coffee",
+    "CD75CatCoffee"
+  ],
+  "cd75kittenbrandcoffee": [
+    "CD-75 Kitten Brand Coffee",
+    "CD75CatCoffee"
+  ],
+  "centaurimegagin": [
+    "Centauri Mega Gin",
+    "CentauriMegaGin"
+  ],
+  "ceramiccomposites": [
+    "Ceramic Composites",
+    "CeramicComposites"
+  ],
+  "ceremonialheiketea": [
+    "Ceremonial Heike Tea",
+    "CeremonialHeikeTea"
+  ],
+  "cetiaepyornisegg": [
+    "Aepyornis Egg",
+    "CetiAepyornisEgg"
+  ],
+  "cetirabbits": [
+    "Ceti Rabbits",
+    "CetiRabbits"
+  ],
+  "chameleoncloth": [
+    "Chameleon Cloth",
+    "ChameleonCloth"
+  ],
+  "chateaudeaegaeon": [
+    "Chateau De Aegaeon",
+    "ChateauDeAegaeon"
+  ],
+  "chemicalwaste": [
+    "Chemical Waste",
+    "ChemicalWaste"
+  ],
+  "cherbonesbloodcrystals": [
+    "Cherbones Blood Crystals",
+    "CherbonesBloodCrystals"
+  ],
+  "chieridanimarinepaste": [
+    "Chi Eridani Marine Paste",
+    "ChiEridaniMarinePaste"
+  ],
+  "classifiedexperimentalequipment": [
+    "Classified Experimental Equipment",
+    "ClassifiedExperimentalEquipment"
+  ],
+  "clothing": [
+    "Clothing",
+    "Clothing"
+  ],
+  "cmmcomposite": [
+    "CMM Composite",
+    "CMMComposite"
+  ],
+  "cobalt": [
+    "Cobalt",
+    "Cobalt"
+  ],
+  "coffee": [
+    "Coffee",
+    "Coffee"
+  ],
+  "coltan": [
+    "Coltan",
+    "Coltan"
+  ],
+  "combatstabilisers": [
+    "Combat Stabilisers",
+    "CombatStabilisers"
+  ],
+  "comercialsamples": [
+    "Commercial Samples",
+    "ComercialSamples"
+  ],
+  "commercialsamples": [
+    "Commercial Samples",
+    "ComercialSamples"
+  ],
+  "computercomponents": [
+    "Computer Components",
+    "ComputerComponents"
+  ],
+  "conductivefabrics": [
+    "Conductive Fabrics",
+    "ConductiveFabrics"
+  ],
+  "consumertechnology": [
+    "Consumer Technology",
+    "ConsumerTechnology"
+  ],
+  "coolinghoses": [
+    "Micro-weave Cooling Hoses",
+    "CoolingHoses"
+  ],
+  "copper": [
+    "Copper",
+    "Copper"
+  ],
+  "coquimspongiformvictuals": [
+    "Coquim Spongiform Victuals",
+    "CoquimSpongiformVictuals"
+  ],
+  "coralsap": [
+    "Coral Sap",
+    "CoralSap"
+  ],
+  "cromsilverfesh": [
+    "Crom Silver Fesh",
+    "AnimalEffigies"
+  ],
+  "cropharvesters": [
+    "Crop Harvesters",
+    "CropHarvesters"
+  ],
+  "cryolite": [
+    "Cryolite",
+    "Cryolite"
+  ],
+  "crystallinespheres": [
+    "Crystalline Spheres",
+    "CrystallineSpheres"
+  ],
+  "curatedcommodity": [
+    "Curated Commodity Package",
+    "CuratedCommodity"
+  ],
+  "curatedcommoditypackage": [
+    "Curated Commodity Package",
+    "CuratedCommodity"
+  ],
+  "cystspecimen": [
+    "Cyst Specimen",
+    "ThargoidCystSpecimen"
+  ],
+  "damagedescapepod": [
+    "Damaged Escape Pod",
+    "DamagedEscapePod"
+  ],
+  "damnacarapaces": [
+    "Damna Carapaces",
+    "DamnaCarapaces"
+  ],
+  "datacore": [
+    "Data Core",
+    "DataCore"
+  ],
+  "deltaphoenicispalms": [
+    "Delta Phoenicis Palms",
+    "DeltaPhoenicisPalms"
+  ],
+  "deuringastruffles": [
+    "Deuringas Truffles",
+    "DeuringasTruffles"
+  ],
+  "deuterium": [
+    "Deuterium",
+    "Deuterium"
+  ],
+  "diagnosticsensor": [
+    "Hardware Diagnostic Sensor",
+    "DiagnosticSensor"
+  ],
+  "diamond": [
+    "Diamond",
+    "Diamond"
+  ],
+  "diplomaticbag": [
+    "Diplomatic Bag",
+    "DiplomaticBag"
+  ],
+  "disomacorn": [
+    "Diso Ma Corn",
+    "DisoMaCorn"
+  ],
+  "domesticappliances": [
+    "Domestic Appliances",
+    "DomesticAppliances"
+  ],
+  "drones": [
+    "Limpets",
+    "Drones"
+  ],
+  "duradrives": [
+    "Duradrives",
+    "Duradrives"
+  ],
+  "earthrelics": [
+    "Earth Relics",
+    "EarthRelics"
+  ],
+  "edenapplesofaerial": [
+    "Eden Apples of Aerial",
+    "AerialEdenApple"
+  ],
+  "eleuthermals": [
+    "Eleu Thermals",
+    "EleuThermals"
+  ],
+  "emergencypowercells": [
+    "Emergency Power Cells",
+    "EmergencyPowerCells"
+  ],
+  "encripteddatastorage": [
+    "Encrypted Data Storage",
+    "EncriptedDataStorage"
+  ],
+  "encryptedcorrespondence": [
+    "Encrypted Correspondence",
+    "EncryptedCorrespondence"
+  ],
+  "encrypteddatastorage": [
+    "Encrypted Data Storage",
+    "EncriptedDataStorage"
+  ],
+  "energygridassembly": [
+    "Energy Grid Assembly",
+    "PowerGridAssembly"
+  ],
+  "eraninpearlwhisky": [
+    "Eranin Pearl Whisky",
+    "EraninPearlWhisky"
+  ],
+  "eshuumbrellas": [
+    "Eshu Umbrellas",
+    "EshuUmbrellas"
+  ],
+  "esusekucaviar": [
+    "Esuseku Caviar",
+    "EsusekuCaviar"
+  ],
+  "ethgrezeteabuds": [
+    "Ethgreze Tea Buds",
+    "EthgrezeTeaBuds"
+  ],
+  "evacuationshelter": [
+    "Evacuation Shelter",
+    "EvacuationShelter"
+  ],
+  "exhaustmanifold": [
+    "Exhaust Manifold",
+    "ExhaustManifold"
+  ],
+  "experimentalchemicals": [
+    "Experimental Chemicals",
+    "USSCargoExperimentalChemicals"
+  ],
+  "explosives": [
+    "Explosives",
+    "Explosives"
+  ],
+  "festivegifts": [
+    "Festive Gifts",
+    "PersonalGifts"
+  ],
+  "fish": [
+    "Fish",
+    "Fish"
+  ],
+  "foodcartridges": [
+    "Food Cartridges",
+    "FoodCartridges"
+  ],
+  "fossilremnants": [
+    "Fossil Remnants",
+    "FossilRemnants"
+  ],
+  "fruitandvegetables": [
+    "Fruit and Vegetables",
+    "FruitAndVegetables"
+  ],
+  "fujintea": [
+    "Fujin Tea",
+    "FujinTea"
+  ],
+  "galactictravelguide": [
+    "Galactic Travel Guide",
+    "GalacticTravelGuide"
+  ],
+  "gallite": [
+    "Gallite",
+    "Gallite"
+  ],
+  "gallium": [
+    "Gallium",
+    "Gallium"
+  ],
+  "geawendancedust": [
+    "Geawen Dance Dust",
+    "GeawenDanceDust"
+  ],
+  "genebank": [
+    "Gene Bank",
+    "GeneBank"
+  ],
+  "geologicalequipment": [
+    "Geological Equipment",
+    "GeologicalEquipment"
+  ],
+  "geologicalsamples": [
+    "Geological Samples",
+    "GeologicalSamples"
+  ],
+  "gerasiangueuzebeer": [
+    "Gerasian Gueuze Beer",
+    "GerasianGueuzeBeer"
+  ],
+  "giantirukamasnails": [
+    "Giant Irukama Snails",
+    "GiantIrukamaSnails"
+  ],
+  "giantverrix": [
+    "Giant Verrix",
+    "GiantVerrix"
+  ],
+  "gilyasignatureweapons": [
+    "Gilya Signature Weapons",
+    "GilyaSignatureWeapons"
+  ],
+  "gold": [
+    "Gold",
+    "Gold"
+  ],
+  "gomanyauponcoffee": [
+    "Goman Yaupon Coffee",
+    "GomanYauponCoffee"
+  ],
+  "goslarite": [
+    "Goslarite",
+    "Goslarite"
+  ],
+  "grain": [
+    "Grain",
+    "Grain"
+  ],
+  "grandidierite": [
+    "Grandidierite",
+    "Grandidierite"
+  ],
+  "guardiancasket": [
+    "Guardian Casket",
+    "AncientCasket"
+  ],
+  "guardianorb": [
+    "Guardian Orb",
+    "AncientOrb"
+  ],
+  "guardianrelic": [
+    "Guardian Relic",
+    "AncientRelic"
+  ],
+  "guardiantablet": [
+    "Guardian Tablet",
+    "AncientTablet"
+  ],
+  "guardiantotem": [
+    "Guardian Totem",
+    "AncientTotem"
+  ],
+  "guardianurn": [
+    "Guardian Urn",
+    "AncientUrn"
+  ],
+  "haematite": [
+    "Haematite",
+    "Haematite"
+  ],
+  "hafnium178": [
+    "Hafnium 178",
+    "Hafnium178"
+  ],
+  "haidenblackbrew": [
+    "Haiden Black Brew",
+    "HaidneBlackBrew"
+  ],
+  "haidneblackbrew": [
+    "Haiden Black Brew",
+    "HaidneBlackBrew"
+  ],
+  "hardwarediagnosticsensor": [
+    "Hardware Diagnostic Sensor",
+    "DiagnosticSensor"
+  ],
+  "harmasilversearum": [
+    "Harma Silver Sea Rum",
+    "HarmaSilverSeaRum"
+  ],
+  "havasupaidreamcatcher": [
+    "Havasupai Dream Catcher",
+    "HavasupaiDreamCatcher"
+  ],
+  "hazardousenvironmentsuits": [
+    "H.E. Suits",
+    "HazardousEnvironmentSuits"
+  ],
+  "heatsinkinterlink": [
+    "Heatsink Interlink",
+    "HeatsinkInterlink"
+  ],
+  "heliostaticfurnaces": [
+    "Microbial Furnaces",
+    "HeliostaticFurnaces"
+  ],
+  "helium": [
+    "Helium",
+    "Helium"
+  ],
+  "helium3": [
+    "Helium-3",
+    "Helium3"
+  ],
+  "helvetitjpearls": [
+    "Helvetitj Pearls",
+    "HelvetitjPearls"
+  ],
+  "hesuits": [
+    "H.E. Suits",
+    "HazardousEnvironmentSuits"
+  ],
+  "hip10175bushmeat": [
+    "HIP 10175 Bush Meat",
+    "HIP10175BushMeat"
+  ],
+  "hip118311swarm": [
+    "HIP 118311 Swarm",
+    "HIP118311Swarm"
+  ],
+  "hip41181squid": [
+    "HIP Proto-Squid",
+    "HIP41181Squid"
+  ],
+  "hiporganophosphates": [
+    "HIP Organophosphates",
+    "HIPOrganophosphates"
+  ],
+  "hipprotosquid": [
+    "HIP Proto-Squid",
+    "HIP41181Squid"
+  ],
+  "hnshockmount": [
+    "HN Shock Mount",
+    "HNShockMount"
+  ],
+  "holvaduellingblades": [
+    "Holva Duelling Blades",
+    "HolvaDuellingBlades"
+  ],
+  "honestypills": [
+    "Honesty Pills",
+    "HonestyPills"
+  ],
+  "hostage": [
+    "Hostages",
+    "Hostage"
+  ],
+  "hostages": [
+    "Hostages",
+    "Hostage"
+  ],
+  "hr7221wheat": [
+    "HR 7221 Wheat",
+    "HR7221Wheat"
+  ],
+  "hydrogenfuel": [
+    "Hydrogen Fuel",
+    "HydrogenFuel"
+  ],
+  "hydrogenperoxide": [
+    "Hydrogen Peroxide",
+    "HydrogenPeroxide"
+  ],
+  "imperialslaves": [
+    "Imperial Slaves",
+    "ImperialSlaves"
+  ],
+  "impurespiremineral": [
+    "Impure Spire Mineral",
+    "UnknownMineral"
+  ],
+  "indibourbon": [
+    "Indi Bourbon",
+    "IndiBourbon"
+  ],
+  "indite": [
+    "Indite",
+    "Indite"
+  ],
+  "indium": [
+    "Indium",
+    "Indium"
+  ],
+  "insulatingmembrane": [
+    "Insulating Membrane",
+    "InsulatingMembrane"
+  ],
+  "iondistributor": [
+    "Ion Distributor",
+    "IonDistributor"
+  ],
+  "iridium": [
+    "Iridium",
+    "Iridium"
+  ],
+  "jadeite": [
+    "Jadeite",
+    "Jadeite"
+  ],
+  "jaquesquinentianstill": [
+    "Jaques Quinentian Still",
+    "JaquesQuinentianStill"
+  ],
+  "jaradharrepuzzlebox": [
+    "Jaradharre Puzzle Box",
+    "JaradharrePuzzlebox"
+  ],
+  "jarouarice": [
+    "Jaroua Rice",
+    "JarouaRice"
+  ],
+  "jotunmookah": [
+    "Jotun Mookah",
+    "JotunMookah"
+  ],
+  "kachiriginfilterleeches": [
+    "Kachirigin Filter Leeches",
+    "KachiriginLeaches"
+  ],
+  "kachiriginleaches": [
+    "Kachirigin Filter Leeches",
+    "KachiriginLeaches"
+  ],
+  "kamitracigars": [
+    "Kamitra Cigars",
+    "KamitraCigars"
+  ],
+  "kamorinhistoricweapons": [
+    "Kamorin Historic Weapons",
+    "KamorinHistoricWeapons"
+  ],
+  "karetiicouture": [
+    "Karetii Couture",
+    "KaretiiCouture"
+  ],
+  "karsukilocusts": [
+    "Karsuki Locusts",
+    "KarsukiLocusts"
+  ],
+  "kinagoinstruments": [
+    "Kinago Violins",
+    "KinagoInstruments"
+  ],
+  "kinagoviolins": [
+    "Kinago Violins",
+    "KinagoInstruments"
+  ],
+  "konggaale": [
+    "Kongga Ale",
+    "KonggaAle"
+  ],
+  "korokungpellets": [
+    "Koro Kung Pellets",
+    "KorroKungPellets"
+  ],
+  "korrokungpellets": [
+    "Koro Kung Pellets",
+    "KorroKungPellets"
+  ],
+  "landenrichmentsystems": [
+    "Land Enrichment Systems",
+    "TerrainEnrichmentSystems"
+  ],
+  "landmines": [
+    "Landmines",
+    "Landmines"
+  ],
+  "lanthanum": [
+    "Lanthanum",
+    "Lanthanum"
+  ],
+  "largeexplorationdatacash": [
+    "Large Survey Data Cache",
+    "LargeExplorationDataCash"
+  ],
+  "largesurveydatacache": [
+    "Large Survey Data Cache",
+    "LargeExplorationDataCash"
+  ],
+  "lavianbrandy": [
+    "Lavian Brandy",
+    "LavianBrandy"
+  ],
+  "leather": [
+    "Leather",
+    "Leather"
+  ],
+  "leatheryeggs": [
+    "Leathery Eggs",
+    "AlienEggs"
+  ],
+  "leestianeviljuice": [
+    "Leestian Evil Juice",
+    "LeestianEvilJuice"
+  ],
+  "lepidolite": [
+    "Lepidolite",
+    "Lepidolite"
+  ],
+  "lftvoidextractcoffee": [
+    "Void Extract Coffee",
+    "LFTVoidExtractCoffee"
+  ],
+  "limpets": [
+    "Limpets",
+    "Drones"
+  ],
+  "liquidoxygen": [
+    "Liquid oxygen",
+    "LiquidOxygen"
+  ],
+  "liquor": [
+    "Liquor",
+    "Liquor"
+  ],
+  "lithium": [
+    "Lithium",
+    "Lithium"
+  ],
+  "lithiumhydroxide": [
+    "Lithium Hydroxide",
+    "LithiumHydroxide"
+  ],
+  "livehecateseaworms": [
+    "Live Hecate Sea Worms",
+    "LiveHecateSeaWorms"
+  ],
+  "lowtemperaturediamond": [
+    "Low Temperature Diamonds",
+    "LowTemperatureDiamond"
+  ],
+  "lowtemperaturediamonds": [
+    "Low Temperature Diamonds",
+    "LowTemperatureDiamond"
+  ],
+  "ltthypersweet": [
+    "LTT Hyper Sweet",
+    "LTTHyperSweet"
+  ],
+  "lucanonionhead": [
+    "Lucan Onionhead",
+    "TransgenicOnionHead"
+  ],
+  "lyraeweed": [
+    "Lyrae Weed",
+    "LyraeWeed"
+  ],
+  "m3tissuesamplemembrane": [
+    "Mollusc Membrane",
+    "M3_TissueSample_Membrane"
+  ],
+  "m3tissuesamplemycelium": [
+    "Mollusc Mycelium",
+    "M3_TissueSample_Mycelium"
+  ],
+  "m3tissuesamplespores": [
+    "Mollusc Spores",
+    "M3_TissueSample_Spores"
+  ],
+  "magnesite": [
+    "Magnesite",
+    "Magnesite"
+  ],
+  "magneticemittercoil": [
+    "Magnetic Emitter Coil",
+    "MagneticEmitterCoil"
+  ],
+  "marineequipment": [
+    "Marine Equipment",
+    "MarineSupplies"
+  ],
+  "marinesupplies": [
+    "Marine Equipment",
+    "MarineSupplies"
+  ],
+  "masterchefs": [
+    "Master Chefs",
+    "MasterChefs"
+  ],
+  "mechucoshightea": [
+    "Mechucos High Tea",
+    "MechucosHighTea"
+  ],
+  "medbstarlube": [
+    "Medb Starlube",
+    "MedbStarlube"
+  ],
+  "medicaldiagnosticequipment": [
+    "Medical Diagnostic Equipment",
+    "MedicalDiagnosticEquipment"
+  ],
+  "metaalloys": [
+    "Meta-Alloys",
+    "MetaAlloys"
+  ],
+  "methaneclathrate": [
+    "Methane Clathrate",
+    "MethaneClathrate"
+  ],
+  "methanolmonohydratecrystals": [
+    "Methanol Monohydrate Crystals",
+    "MethanolMonohydrateCrystals"
+  ],
+  "microbialfurnaces": [
+    "Microbial Furnaces",
+    "HeliostaticFurnaces"
+  ],
+  "microcontrollers": [
+    "Micro Controllers",
+    "MicroControllers"
+  ],
+  "microweavecoolinghoses": [
+    "Micro-weave Cooling Hoses",
+    "CoolingHoses"
+  ],
+  "militarygradefabrics": [
+    "Military Grade Fabrics",
+    "MilitaryGradeFabrics"
+  ],
+  "militaryintelligence": [
+    "Military Intelligence",
+    "MilitaryIntelligence"
+  ],
+  "militaryplans": [
+    "Military Plans",
+    "USSCargoMilitaryPlans"
+  ],
+  "mineralextractors": [
+    "Mineral Extractors",
+    "MineralExtractors"
+  ],
+  "mineraloil": [
+    "Mineral Oil",
+    "MineralOil"
+  ],
+  "modularterminals": [
+    "Modular Terminals",
+    "ModularTerminals"
+  ],
+  "moissanite": [
+    "Moissanite",
+    "Moissanite"
+  ],
+  "mokojingbeastfeast": [
+    "Mokojing Beast Feast",
+    "MokojingBeastFeast"
+  ],
+  "molluscbraintissue": [
+    "Mollusc Brain Tissue",
+    "M_TissueSample_Nerves"
+  ],
+  "molluscfluid": [
+    "Mollusc Fluid",
+    "M_TissueSample_Fluid"
+  ],
+  "molluscmembrane": [
+    "Mollusc Membrane",
+    "M3_TissueSample_Membrane"
+  ],
+  "molluscmycelium": [
+    "Mollusc Mycelium",
+    "M3_TissueSample_Mycelium"
+  ],
+  "molluscsofttissue": [
+    "Mollusc Soft Tissue",
+    "M_TissueSample_Soft"
+  ],
+  "molluscspores": [
+    "Mollusc Spores",
+    "M3_TissueSample_Spores"
+  ],
+  "momusbogspaniel": [
+    "Momus Bog Spaniel",
+    "MomusBogSpaniel"
+  ],
+  "monazite": [
+    "Monazite",
+    "Monazite"
+  ],
+  "motronaexperiencejelly": [
+    "Motrona Experience Jelly",
+    "MotronaExperienceJelly"
+  ],
+  "mtissuesamplefluid": [
+    "Mollusc Fluid",
+    "M_TissueSample_Fluid"
+  ],
+  "mtissuesamplenerves": [
+    "Mollusc Brain Tissue",
+    "M_TissueSample_Nerves"
+  ],
+  "mtissuesamplesoft": [
+    "Mollusc Soft Tissue",
+    "M_TissueSample_Soft"
+  ],
+  "mukusubiichitinos": [
+    "Mukusubii Chitin-os",
+    "MukusubiiChitinOs"
+  ],
+  "mulachigiantfungus": [
+    "Mulachi Giant Fungus",
+    "MulachiGiantFungus"
+  ],
+  "muonimager": [
+    "Muon Imager",
+    "MuTomImager"
+  ],
+  "musgravite": [
+    "Musgravite",
+    "Musgravite"
+  ],
+  "mutomimager": [
+    "Muon Imager",
+    "MuTomImager"
+  ],
+  "mysteriousidol": [
+    "Mysterious Idol",
+    "MysteriousIdol"
+  ],
+  "nanobreakers": [
+    "Nanobreakers",
+    "Nanobreakers"
+  ],
+  "nanomedicines": [
+    "Nanomedicines",
+    "Nanomedicines"
+  ],
+  "narcotics": [
+    "Narcotics",
+    "BasicNarcotics"
+  ],
+  "naturalfabrics": [
+    "Natural Fabrics",
+    "NaturalFabrics"
+  ],
+  "neofabricinsulation": [
+    "Neofabric Insulation",
+    "NeofabricInsulation"
+  ],
+  "neritusberries": [
+    "Neritus Berries",
+    "NeritusBerries"
+  ],
+  "nerveagents": [
+    "Nerve Agents",
+    "NerveAgents"
+  ],
+  "ngadandarifireopals": [
+    "Ngadandari Fire Opals",
+    "NgadandariFireOpals"
+  ],
+  "ngunamodernantiques": [
+    "Nguna Modern Antiques",
+    "NgunaModernAntiques"
+  ],
+  "njangarisaddles": [
+    "Njangari Saddles",
+    "NjangariSaddles"
+  ],
+  "noneuclidianexotanks": [
+    "Non Euclidian Exotanks",
+    "NonEuclidianExotanks"
+  ],
+  "nonlethalweapons": [
+    "Non-Lethal Weapons",
+    "NonLethalWeapons"
+  ],
+  "occupiedcryopod": [
+    "Occupied Escape Pod",
+    "OccupiedCryoPod"
+  ],
+  "occupiedescapepod": [
+    "Occupied Escape Pod",
+    "OccupiedCryoPod"
+  ],
+  "ochoengchillies": [
+    "Ochoeng Chillies",
+    "OchoengChillies"
+  ],
+  "olivine": [
+    "Olivine",
+    "Olivine"
+  ],
+  "onionhead": [
+    "Onionhead",
+    "OnionHead"
+  ],
+  "onionheada": [
+    "Onionhead Alpha Strain",
+    "OnionHeadA"
+  ],
+  "onionheadalphastrain": [
+    "Onionhead Alpha Strain",
+    "OnionHeadA"
+  ],
+  "onionheadb": [
+    "Onionhead Beta Strain",
+    "OnionHeadB"
+  ],
+  "onionheadbetastrain": [
+    "Onionhead Beta Strain",
+    "OnionHeadB"
+  ],
+  "onionheadc": [
+    "Onionhead Gamma Strain",
+    "OnionHeadC"
+  ],
+  "onionheadgammastrain": [
+    "Onionhead Gamma Strain",
+    "OnionHeadC"
+  ],
+  "opal": [
+    "Void Opal",
+    "Opal"
+  ],
+  "ophiuchexinoartefacts": [
+    "Ophiuch Exino Artefacts",
+    "OphiuchiExinoArtefacts"
+  ],
+  "ophiuchiexinoartefacts": [
+    "Ophiuch Exino Artefacts",
+    "OphiuchiExinoArtefacts"
+  ],
+  "organsample": [
+    "Organ Sample",
+    "ThargoidOrganSample"
+  ],
+  "orrerianviciousbrew": [
+    "Orrerian Vicious Brew",
+    "OrrerianViciousBrew"
+  ],
+  "osmium": [
+    "Osmium",
+    "Osmium"
+  ],
+  "painite": [
+    "Painite",
+    "Painite"
+  ],
+  "palladium": [
+    "Palladium",
+    "Palladium"
+  ],
+  "pantaaprayersticks": [
+    "Pantaa Prayer Sticks",
+    "PantaaPrayerSticks"
+  ],
+  "pavoniseargrubs": [
+    "Pavonis Ear Grubs",
+    "PavonisEarGrubs"
+  ],
+  "performanceenhancers": [
+    "Performance Enhancers",
+    "PerformanceEnhancers"
+  ],
+  "periclasedunite": [
+    "Periclase Dunite",
+    "PericlaseDunite"
+  ],
+  "personaleffects": [
+    "Personal Effects",
+    "PersonalEffects"
+  ],
+  "personalgifts": [
+    "Festive Gifts",
+    "PersonalGifts"
+  ],
+  "personalweapons": [
+    "Personal Weapons",
+    "PersonalWeapons"
+  ],
+  "pesticides": [
+    "Pesticides",
+    "Pesticides"
+  ],
+  "platinum": [
+    "Platinum",
+    "Platinum"
+  ],
+  "platinumalloy": [
+    "Platinum Alloy",
+    "PlatinumAloy"
+  ],
+  "platinumaloy": [
+    "Platinum Alloy",
+    "PlatinumAloy"
+  ],
+  "podcoretissue": [
+    "Pod Core Tissue",
+    "S_TissueSample_Cells"
+  ],
+  "poddeadtissue": [
+    "Pod Dead Tissue",
+    "S_TissueSample_Surface"
+  ],
+  "podmesoglea": [
+    "Pod Mesoglea",
+    "S6_TissueSample_Mesoglea"
+  ],
+  "podoutertissue": [
+    "Pod Outer Tissue",
+    "S6_TissueSample_Cells"
+  ],
+  "podshelltissue": [
+    "Pod Shell Tissue",
+    "S6_TissueSample_Coenosarc"
+  ],
+  "podsurfacetissue": [
+    "Pod Surface Tissue",
+    "S_TissueSample_Core"
+  ],
+  "podtissue": [
+    "Pod Tissue",
+    "S9_TissueSample_Shell"
+  ],
+  "politicalprisoner": [
+    "Political Prisoners",
+    "PoliticalPrisoner"
+  ],
+  "politicalprisoners": [
+    "Political Prisoners",
+    "PoliticalPrisoner"
+  ],
+  "polymers": [
+    "Polymers",
+    "Polymers"
+  ],
+  "powerconverter": [
+    "Power Converter",
+    "PowerConverter"
+  ],
+  "powergenerators": [
+    "Power Generators",
+    "PowerGenerators"
+  ],
+  "powergridassembly": [
+    "Energy Grid Assembly",
+    "PowerGridAssembly"
+  ],
+  "powertransferbus": [
+    "Power Transfer Bus",
+    "PowerTransferConduits"
+  ],
+  "powertransferconduits": [
+    "Power Transfer Bus",
+    "PowerTransferConduits"
+  ],
+  "pparticulatesample": [
+    "Anomaly Particles",
+    "P_ParticulateSample"
+  ],
+  "praseodymium": [
+    "Praseodymium",
+    "Praseodymium"
+  ],
+  "preciousgems": [
+    "Precious Gems",
+    "PreciousGems"
+  ],
+  "progenitorcells": [
+    "Progenitor Cells",
+    "ProgenitorCells"
+  ],
+  "prohibitedresearchmaterials": [
+    "Prohibited Research Materials",
+    "ProhibitedResearchMaterials"
+  ],
+  "protectivemembranescrap": [
+    "Protective Membrane Scrap",
+    "UnknownSack"
+  ],
+  "prototypetech": [
+    "Prototype Tech",
+    "USSCargoPrototypeTech"
+  ],
+  "pyrophyllite": [
+    "Pyrophyllite",
+    "Pyrophyllite"
+  ],
+  "quartzpyroxenite": [
+    "Quartz Pyroxenite",
+    "QuartzPyroxenite"
+  ],
+  "radiationbaffle": [
+    "Radiation Baffle",
+    "RadiationBaffle"
+  ],
+  "rajukrumultistoves": [
+    "Rajukru Multi-Stoves",
+    "RajukruStoves"
+  ],
+  "rajukrustoves": [
+    "Rajukru Multi-Stoves",
+    "RajukruStoves"
+  ],
+  "rapabaosnakeskins": [
+    "Rapa Bao Snake Skins",
+    "RapaBaoSnakeSkins"
+  ],
+  "rareartwork": [
+    "Rare Artwork",
+    "USSCargoRareArtwork"
+  ],
+  "reactivearmour": [
+    "Reactive Armour",
+    "ReactiveArmour"
+  ],
+  "rebeltransmissions": [
+    "Rebel Transmissions",
+    "USSCargoRebelTransmissions"
+  ],
+  "reinforcedmountingplate": [
+    "Reinforced Mounting Plate",
+    "ReinforcedMountingPlate"
+  ],
+  "resonatingseparators": [
+    "Resonating Separators",
+    "ResonatingSeparators"
+  ],
+  "rhodplumsite": [
+    "Rhodplumsite",
+    "Rhodplumsite"
+  ],
+  "robotics": [
+    "Robotics",
+    "Robotics"
+  ],
+  "rockforthfertiliser": [
+    "Rockforth Fertiliser",
+    "RockforthFertiliser"
+  ],
+  "ruby": [
+    "Ruby",
+    "Ruby"
+  ],
+  "rusanioldsmokey": [
+    "Rusani Old Smokey",
+    "RusaniOldSmokey"
+  ],
+  "rutile": [
+    "Rutile",
+    "Rutile"
+  ],
+  "s6tissuesamplecells": [
+    "Pod Outer Tissue",
+    "S6_TissueSample_Cells"
+  ],
+  "s6tissuesamplecoenosarc": [
+    "Pod Shell Tissue",
+    "S6_TissueSample_Coenosarc"
+  ],
+  "s6tissuesamplemesoglea": [
+    "Pod Mesoglea",
+    "S6_TissueSample_Mesoglea"
+  ],
+  "s9tissuesampleshell": [
+    "Pod Tissue",
+    "S9_TissueSample_Shell"
+  ],
+  "samarium": [
+    "Samarium",
+    "Samarium"
+  ],
+  "sanumadecorativemeat": [
+    "Sanuma Decorative Meat",
+    "SanumaMEAT"
+  ],
+  "sanumameat": [
+    "Sanuma Decorative Meat",
+    "SanumaMEAT"
+  ],
+  "sap8corecontainer": [
+    "SAP 8 Core Container",
+    "SAP8CoreContainer"
+  ],
+  "sapphire": [
+    "Sapphire",
+    "Sapphire"
+  ],
+  "saxonwine": [
+    "Saxon Wine",
+    "SaxonWine"
+  ],
+  "scientificresearch": [
+    "Scientific Research",
+    "ScientificResearch"
+  ],
+  "scientificsamples": [
+    "Scientific Samples",
+    "ScientificSamples"
+  ],
+  "scrap": [
+    "Scrap",
+    "Scrap"
+  ],
+  "semiconductors": [
+    "Semiconductors",
+    "Semiconductors"
+  ],
+  "semirefinedspiremineral": [
+    "Semi-Refined Spire Mineral",
+    "UnknownRefinedMineral"
+  ],
+  "serendibite": [
+    "Serendibite",
+    "Serendibite"
+  ],
+  "shanscharisorchid": [
+    "Shan's Charis Orchid",
+    "ShansCharisOrchid"
+  ],
+  "silver": [
+    "Silver",
+    "Silver"
+  ],
+  "skimercomponents": [
+    "Skimmer Components",
+    "SkimerComponents"
+  ],
+  "skimmercomponents": [
+    "Skimmer Components",
+    "SkimerComponents"
+  ],
+  "slaves": [
+    "Slaves",
+    "Slaves"
+  ],
+  "smallexplorationdatacash": [
+    "Small Survey Data Cache",
+    "SmallExplorationDataCash"
+  ],
+  "smallsurveydatacache": [
+    "Small Survey Data Cache",
+    "SmallExplorationDataCash"
+  ],
+  "soontillrelics": [
+    "Soontill Relics",
+    "SoontillRelics"
+  ],
+  "sothiscrystallinegold": [
+    "Sothis Crystalline Gold",
+    "SothisCrystallineGold"
+  ],
+  "spacepioneerrelics": [
+    "Space Pioneer Relics",
+    "SpacePioneerRelics"
+  ],
+  "steel": [
+    "Steel",
+    "Steel"
+  ],
+  "stissuesamplecells": [
+    "Pod Core Tissue",
+    "S_TissueSample_Cells"
+  ],
+  "stissuesamplecore": [
+    "Pod Surface Tissue",
+    "S_TissueSample_Core"
+  ],
+  "stissuesamplesurface": [
+    "Pod Dead Tissue",
+    "S_TissueSample_Surface"
+  ],
+  "structuralregulators": [
+    "Structural Regulators",
+    "StructuralRegulators"
+  ],
+  "superconductors": [
+    "Superconductors",
+    "Superconductors"
+  ],
+  "surfacestabilisers": [
+    "Surface Stabilisers",
+    "SurfaceStabilisers"
+  ],
+  "survivalequipment": [
+    "Survival Equipment",
+    "SurvivalEquipment"
+  ],
+  "syntheticfabrics": [
+    "Synthetic Fabrics",
+    "SyntheticFabrics"
+  ],
+  "syntheticmeat": [
+    "Synthetic Meat",
+    "SyntheticMeat"
+  ],
+  "syntheticreagents": [
+    "Synthetic Reagents",
+    "SyntheticReagents"
+  ],
+  "taaffeite": [
+    "Taaffeite",
+    "Taaffeite"
+  ],
+  "tacticaldata": [
+    "Tactical Data",
+    "TacticalData"
+  ],
+  "tanmarktranquiltea": [
+    "Tanmark Tranquil Tea",
+    "TanmarkTranquilTea"
+  ],
+  "tantalum": [
+    "Tantalum",
+    "Tantalum"
+  ],
+  "tarachspice": [
+    "Tarach Spice",
+    "TarachTorSpice"
+  ],
+  "tarachtorspice": [
+    "Tarach Spice",
+    "TarachTorSpice"
+  ],
+  "taurichimes": [
+    "Tauri Chimes",
+    "TauriChimes"
+  ],
+  "tea": [
+    "Tea",
+    "Tea"
+  ],
+  "technicalblueprints": [
+    "Technical Blueprints",
+    "USSCargoTechnicalBlueprints"
+  ],
+  "telemetrysuite": [
+    "Telemetry Suite",
+    "TelemetrySuite"
+  ],
+  "terrainenrichmentsystems": [
+    "Land Enrichment Systems",
+    "TerrainEnrichmentSystems"
+  ],
+  "terramaterbloodbores": [
+    "Terra Mater Blood Bores",
+    "TerraMaterBloodBores"
+  ],
+  "thallium": [
+    "Thallium",
+    "Thallium"
+  ],
+  "thargoidbasilisktissuesample": [
+    "Thargoid Basilisk Tissue Sample",
+    "ThargoidTissueSampleType2"
+  ],
+  "thargoidbiologicalmatter": [
+    "Thargoid Biological Matter",
+    "UnknownBiologicalMatter"
+  ],
+  "thargoidbonefragments": [
+    "Bone Fragments",
+    "ThargoidBoneFragments"
+  ],
+  "thargoidcyclopstissuesample": [
+    "Thargoid Cyclops Tissue Sample",
+    "ThargoidTissueSampleType1"
+  ],
+  "thargoidcystspecimen": [
+    "Cyst Specimen",
+    "ThargoidCystSpecimen"
+  ],
+  "thargoidgeneratortissuesample": [
+    "Caustic Tissue Sample",
+    "ThargoidGeneratorTissueSample"
+  ],
+  "thargoidglaivetissuesample": [
+    "Thargoid Glaive Tissue Sample",
+    "ThargoidTissueSampleType6"
+  ],
+  "thargoidheart": [
+    "Thargoid Heart",
+    "ThargoidHeart"
+  ],
+  "thargoidhydratissuesample": [
+    "Thargoid Hydra Tissue Sample",
+    "ThargoidTissueSampleType4"
+  ],
+  "thargoidlink": [
+    "Thargoid Link",
+    "UnknownArtifact3"
+  ],
+  "thargoidmedusatissuesample": [
+    "Thargoid Medusa Tissue Sample",
+    "ThargoidTissueSampleType3"
+  ],
+  "thargoidorgansample": [
+    "Organ Sample",
+    "ThargoidOrganSample"
+  ],
+  "thargoidorthrustissuesample": [
+    "Thargoid Orthrus Tissue Sample",
+    "ThargoidTissueSampleType5"
+  ],
+  "thargoidpod": [
+    "Xenobiological Prison Pod",
+    "ThargoidPod"
+  ],
+  "thargoidprobe": [
+    "Thargoid Probe",
+    "UnknownArtifact2"
+  ],
+  "thargoidresin": [
+    "Thargoid Resin",
+    "UnknownResin"
+  ],
+  "thargoidscouttissuesample": [
+    "Thargoid Scout Tissue Sample",
+    "ThargoidScoutTissueSample"
+  ],
+  "thargoidscythetissuesample": [
+    "Thargoid Scythe Tissue Sample",
+    "ThargoidTissueSampleType7"
+  ],
+  "thargoidsensor": [
+    "Thargoid Sensor",
+    "UnknownArtifact"
+  ],
+  "thargoidtechnologysamples": [
+    "Thargoid Technology Samples",
+    "UnknownTechnologySamples"
+  ],
+  "thargoidtissuesampletype1": [
+    "Thargoid Cyclops Tissue Sample",
+    "ThargoidTissueSampleType1"
+  ],
+  "thargoidtissuesampletype10a": [
+    "Titan Maw Deep Tissue Sample",
+    "ThargoidTissueSampleType10a"
+  ],
+  "thargoidtissuesampletype10b": [
+    "Titan Maw Tissue Sample",
+    "ThargoidTissueSampleType10b"
+  ],
+  "thargoidtissuesampletype10c": [
+    "Titan Maw Partial Tissue Sample",
+    "ThargoidTissueSampleType10c"
+  ],
+  "thargoidtissuesampletype2": [
+    "Thargoid Basilisk Tissue Sample",
+    "ThargoidTissueSampleType2"
+  ],
+  "thargoidtissuesampletype3": [
+    "Thargoid Medusa Tissue Sample",
+    "ThargoidTissueSampleType3"
+  ],
+  "thargoidtissuesampletype4": [
+    "Thargoid Hydra Tissue Sample",
+    "ThargoidTissueSampleType4"
+  ],
+  "thargoidtissuesampletype5": [
+    "Thargoid Orthrus Tissue Sample",
+    "ThargoidTissueSampleType5"
+  ],
+  "thargoidtissuesampletype6": [
+    "Thargoid Glaive Tissue Sample",
+    "ThargoidTissueSampleType6"
+  ],
+  "thargoidtissuesampletype7": [
+    "Thargoid Scythe Tissue Sample",
+    "ThargoidTissueSampleType7"
+  ],
+  "thargoidtissuesampletype9a": [
+    "Titan Deep Tissue Sample",
+    "ThargoidTissueSampleType9a"
+  ],
+  "thargoidtissuesampletype9b": [
+    "Titan Tissue Sample",
+    "ThargoidTissueSampleType9b"
+  ],
+  "thargoidtissuesampletype9c": [
+    "Titan Partial Tissue Sample",
+    "ThargoidTissueSampleType9c"
+  ],
+  "thargoidtitandrivecomponent": [
+    "Titan Drive Component",
+    "ThargoidTitanDriveComponent"
+  ],
+  "thehuttonmug": [
+    "The Hutton Mug",
+    "TheHuttonMug"
+  ],
+  "thermalcoolingunits": [
+    "Thermal Cooling Units",
+    "ThermalCoolingUnits"
+  ],
+  "thewatersofshintara": [
+    "The Waters of Shintara",
+    "WatersOfShintara"
+  ],
+  "thorium": [
+    "Thorium",
+    "Thorium"
+  ],
+  "thortveitite": [
+    "Thortveitite",
+    "Thortveitite"
+  ],
+  "thrutiscream": [
+    "Thrutis Cream",
+    "ThrutisCream"
+  ],
+  "tiegfriessynthsilk": [
+    "Tiegfries Synth Silk",
+    "TiegfriesSynthSilk"
+  ],
+  "timecapsule": [
+    "Time Capsule",
+    "TimeCapsule"
+  ],
+  "tiolcewaste2pasteunits": [
+    "Tiolce Waste2Paste Units",
+    "TiolceWaste2PasteUnits"
+  ],
+  "titandeeptissuesample": [
+    "Titan Deep Tissue Sample",
+    "ThargoidTissueSampleType9a"
+  ],
+  "titandrivecomponent": [
+    "Titan Drive Component",
+    "ThargoidTitanDriveComponent"
+  ],
+  "titanium": [
+    "Titanium",
+    "Titanium"
+  ],
+  "titanmawdeeptissuesample": [
+    "Titan Maw Deep Tissue Sample",
+    "ThargoidTissueSampleType10a"
+  ],
+  "titanmawpartialtissuesample": [
+    "Titan Maw Partial Tissue Sample",
+    "ThargoidTissueSampleType10c"
+  ],
+  "titanmawtissuesample": [
+    "Titan Maw Tissue Sample",
+    "ThargoidTissueSampleType10b"
+  ],
+  "titanpartialtissuesample": [
+    "Titan Partial Tissue Sample",
+    "ThargoidTissueSampleType9c"
+  ],
+  "titantissuesample": [
+    "Titan Tissue Sample",
+    "ThargoidTissueSampleType9b"
+  ],
+  "tobacco": [
+    "Tobacco",
+    "Tobacco"
+  ],
+  "toxandjivirocide": [
+    "Toxandji Virocide",
+    "ToxandjiVirocide"
+  ],
+  "toxicwaste": [
+    "Toxic Waste",
+    "ToxicWaste"
+  ],
+  "tradedata": [
+    "Trade Data",
+    "USSCargoTradeData"
+  ],
+  "transgeniconionhead": [
+    "Lucan Onionhead",
+    "TransgenicOnionHead"
+  ],
+  "trinketsoffortune": [
+    "Trinkets of Hidden Fortune",
+    "TrinketsOfFortune"
+  ],
+  "trinketsofhiddenfortune": [
+    "Trinkets of Hidden Fortune",
+    "TrinketsOfFortune"
+  ],
+  "tritium": [
+    "Tritium",
+    "Tritium"
+  ],
+  "ultracompactprocessorprototypes": [
+    "Ultra-Compact Processor Prototypes",
+    "Advert1"
+  ],
+  "unclassifiedrelic": [
+    "Unclassified Relic",
+    "AncientRelicTG"
+  ],
+  "unknownartifact": [
+    "Thargoid Sensor",
+    "UnknownArtifact"
+  ],
+  "unknownartifact2": [
+    "Thargoid Probe",
+    "UnknownArtifact2"
+  ],
+  "unknownartifact3": [
+    "Thargoid Link",
+    "UnknownArtifact3"
+  ],
+  "unknownbiologicalmatter": [
+    "Thargoid Biological Matter",
+    "UnknownBiologicalMatter"
+  ],
+  "unknownmineral": [
+    "Impure Spire Mineral",
+    "UnknownMineral"
+  ],
+  "unknownrefinedmineral": [
+    "Semi-Refined Spire Mineral",
+    "UnknownRefinedMineral"
+  ],
+  "unknownresin": [
+    "Thargoid Resin",
+    "UnknownResin"
+  ],
+  "unknownsack": [
+    "Protective Membrane Scrap",
+    "UnknownSack"
+  ],
+  "unknowntechnologysamples": [
+    "Thargoid Technology Samples",
+    "UnknownTechnologySamples"
+  ],
+  "unoccupiedescapepod": [
+    "Unoccupied Escape Pod",
+    "UnocuppiedEscapePod"
+  ],
+  "unocuppiedescapepod": [
+    "Unoccupied Escape Pod",
+    "UnocuppiedEscapePod"
+  ],
+  "unstabledatacore": [
+    "Unstable Data Core",
+    "UnstableDataCore"
+  ],
+  "uraninite": [
+    "Uraninite",
+    "Uraninite"
+  ],
+  "uranium": [
+    "Uranium",
+    "Uranium"
+  ],
+  "usscargoancientartefact": [
+    "Ancient Artefact",
+    "USSCargoAncientArtefact"
+  ],
+  "usscargoblackbox": [
+    "Black Box",
+    "USSCargoBlackBox"
+  ],
+  "usscargoexperimentalchemicals": [
+    "Experimental Chemicals",
+    "USSCargoExperimentalChemicals"
+  ],
+  "usscargomilitaryplans": [
+    "Military Plans",
+    "USSCargoMilitaryPlans"
+  ],
+  "usscargoprototypetech": [
+    "Prototype Tech",
+    "USSCargoPrototypeTech"
+  ],
+  "usscargorareartwork": [
+    "Rare Artwork",
+    "USSCargoRareArtwork"
+  ],
+  "usscargorebeltransmissions": [
+    "Rebel Transmissions",
+    "USSCargoRebelTransmissions"
+  ],
+  "usscargotechnicalblueprints": [
+    "Technical Blueprints",
+    "USSCargoTechnicalBlueprints"
+  ],
+  "usscargotradedata": [
+    "Trade Data",
+    "USSCargoTradeData"
+  ],
+  "uszaiantreegrub": [
+    "Uszaian Tree Grub",
+    "UszaianTreeGrub"
+  ],
+  "utgaroarmillenialeggs": [
+    "Utgaroar Millennial Eggs",
+    "UtgaroarMillenialEggs"
+  ],
+  "utgaroarmillennialeggs": [
+    "Utgaroar Millennial Eggs",
+    "UtgaroarMillenialEggs"
+  ],
+  "uzumokulowgwings": [
+    "Uzumoku Low-G Wings",
+    "UzumokuLowGWings"
+  ],
+  "vanayequiceratomorphafur": [
+    "Vanayequi Ceratomorpha Fur",
+    "VanayequiRhinoFur"
+  ],
+  "vanayequirhinofur": [
+    "Vanayequi Ceratomorpha Fur",
+    "VanayequiRhinoFur"
+  ],
+  "vegaslimweed": [
+    "Vega Slimweed",
+    "VegaSlimWeed"
+  ],
+  "vherculisbodyrub": [
+    "V Herculis Body Rub",
+    "VHerculisBodyRub"
+  ],
+  "vidavantianlace": [
+    "Vidavantian Lace",
+    "VidavantianLace"
+  ],
+  "voidextractcoffee": [
+    "Void Extract Coffee",
+    "LFTVoidExtractCoffee"
+  ],
+  "voidopal": [
+    "Void Opal",
+    "Opal"
+  ],
+  "volkhabbeedrones": [
+    "Volkhab Bee Drones",
+    "VolkhabBeeDrones"
+  ],
+  "water": [
+    "Water",
+    "Water"
+  ],
+  "waterpurifiers": [
+    "Water Purifiers",
+    "WaterPurifiers"
+  ],
+  "watersofshintara": [
+    "The Waters of Shintara",
+    "WatersOfShintara"
+  ],
+  "wheemetewheatcakes": [
+    "Wheemete Wheat Cakes",
+    "WheemeteWheatCakes"
+  ],
+  "wine": [
+    "Wine",
+    "Wine"
+  ],
+  "witchhaulkobebeef": [
+    "Witchhaul Kobe Beef",
+    "WitchhaulKobeBeef"
+  ],
+  "wolf1301fesh": [
+    "Wolf Fesh",
+    "Wolf1301Fesh"
+  ],
+  "wolffesh": [
+    "Wolf Fesh",
+    "Wolf1301Fesh"
+  ],
+  "wreckagecomponents": [
+    "Wreckage Components",
+    "WreckageComponents"
+  ],
+  "wulpahyperboresystems": [
+    "Wulpa Hyperbore Systems",
+    "WulpaHyperboreSystems"
+  ],
+  "wuthielokufroth": [
+    "Wuthielo Ku Froth",
+    "WuthieloKuFroth"
+  ],
+  "xenobiologicalprisonpod": [
+    "Xenobiological Prison Pod",
+    "ThargoidPod"
+  ],
+  "xihebiomorphiccompanions": [
+    "Xihe Biomorphic Companions",
+    "XiheCompanions"
+  ],
+  "xihecompanions": [
+    "Xihe Biomorphic Companions",
+    "XiheCompanions"
+  ],
+  "yasokondileaf": [
+    "Yaso Kondi Leaf",
+    "YasoKondiLeaf"
+  ],
+  "zeesszeantglue": [
+    "Zeessze Ant Grub Glue",
+    "ZeesszeAntGlue"
+  ],
+  "zeesszeantgrubglue": [
+    "Zeessze Ant Grub Glue",
+    "ZeesszeAntGlue"
+  ]
+}

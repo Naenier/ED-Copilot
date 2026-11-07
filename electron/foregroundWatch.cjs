@@ -1,235 +1,149 @@
-/**
- * Which program owns the foreground window, for the HUD overlays (owner, 2026-09-30: "hide the HUD
- * when the game is not running or not in focus").
- *
- * Electron can only see its own windows' focus, so this asks Windows directly: a small helper, started
- * once, that reads GetForegroundWindow every 400 ms and prints the owning process's name when it changes.
- * One line per change, nothing in between. Windows only: elsewhere it never reports, so nothing hides.
- *
- * The helper is native/src/fgwatch.rs (1.3.1, owner 2026-10-25: "use Rust"): ~110 KB, ~4 MB of memory. Until
- * 1.3.0 it was a hidden PowerShell that compiled a C# class on every start and held ~74 MB for the app's whole
- * run; that script stays below for a run where the helper was not built (`npm run dev` without cargo).
- *
- * If the helper cannot start or dies, it is restarted a few times with a growing wait, then left: the overlays
- * then simply behave as before (shown while the game runs).
- */
+"use strict";
+// ED Copilot's read-only Windows focus monitor. It sends no window titles or input.
 const { spawn } = require("node:child_process");
-const fs = require("node:fs");
 const path = require("node:path");
 const readline = require("node:readline");
 
-/**
- * Where the native watcher is: resources/edexo/ in an installed build (electron-builder.cjs extraResources), the
- * cargo output in a checkout. Null when neither exists.
- * @param {string | undefined} resourcesPath  Electron's process.resourcesPath (main process)
- */
-function nativeWatcherPath(resourcesPath) {
-  const found = [
-    resourcesPath ? path.join(resourcesPath, "edexo", "edexo-fgwatch.exe") : null,
-    path.join(__dirname, "..", "native", "target", "release", "edexo-fgwatch.exe"),
-  ].find((p) => p && fs.existsSync(p));
-  return found ?? null;
+function processName(value) {
+  if (typeof value !== "string") return null;
+  const name = value.split(/[\\/]/).at(-1).replace(/\.exe$/i, "").trim().toLowerCase();
+  return name.length <= 180 && !/[\r\n\u0000]/.test(name) ? name : null;
 }
+function point(value) {
+  return value && typeof value.x === "number" && typeof value.y === "number" &&
+    Number.isFinite(value.x) && Number.isFinite(value.y) && Math.abs(value.x) < 10_000_000 && Math.abs(value.y) < 10_000_000
+    ? { x: Math.round(value.x), y: Math.round(value.y) } : null;
+}
+function parseForegroundLine(line) {
+  let record;
+  try { record = JSON.parse(line); } catch {
+    const [name, location] = String(line).split("\t");
+    const pair = /^(-?\d+),(-?\d+)$/.exec(location || "");
+    return { name: processName(name), at: pair ? point({ x: Number(pair[1]), y: Number(pair[2]) }) : null };
+  }
+  return { name: processName(record?.name), at: point(record?.at) };
+}
+function isGame(name) {
+  return /^(?:elitedangerous(?:32|64)?|elitedangerousodyssey(?:32|64)?)$/.test(processName(name) || "");
+}
+function isGameOrOwn(name, own = []) {
+  const current = processName(name);
+  return current !== null && (isGame(current) || Array.from(own || []).some(candidate => processName(candidate) === current));
+}
+function nativeWatcherPath() { return null; }
 
-const SCRIPT = `
-$ErrorActionPreference = 'SilentlyContinue'
+function monitorScript(supervisorId) {
+  if (!Number.isSafeInteger(supervisorId) || supervisorId <= 0) throw new Error("Invalid monitor supervisor");
+  return String.raw`
+$ErrorActionPreference = 'Stop'
+$supervisorId = ${supervisorId}
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
-public static class EdexoFg {
+public static class CopilotWindowProbe {
+  [StructLayout(LayoutKind.Sequential)]
+  public struct Box { public int X1; public int Y1; public int X2; public int Y2; }
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
-  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L; public int T; public int R; public int B; }
-  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
-  [DllImport("user32.dll")] public static extern IntPtr SetProcessDpiAwarenessContext(IntPtr v);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Box box);
+  [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
 }
 "@
-# Per-monitor aware (-4), so window rectangles are real screen pixels on every monitor.
-[void][EdexoFg]::SetProcessDpiAwarenessContext([IntPtr](-4))
-$lastPid = -1
-$lastAt = ''
-$tick = 0
+try { [void][CopilotWindowProbe]::SetThreadDpiAwarenessContext([IntPtr](-4)) } catch {}
+$previous = $null
 while ($true) {
-  # The app that started this is gone (crashed, ended in Task Manager): so is this.
-  if ((++$tick % 10) -eq 0 -and -not (Get-Process -Id __PARENT_PID__ -ErrorAction SilentlyContinue)) { exit }
-  $h = [EdexoFg]::GetForegroundWindow()
-  $p = 0
-  [void][EdexoFg]::GetWindowThreadProcessId($h, [ref]$p)
-  # Where the window's centre is, in screen pixels: which monitor the game is on.
-  $r = New-Object EdexoFg+RECT
-  $at = ''
-  if ([EdexoFg]::GetWindowRect($h, [ref]$r)) { $at = [string][int](($r.L + $r.R) / 2) + ',' + [string][int](($r.T + $r.B) / 2) }
-  if ($p -ne $lastPid -or $at -ne $lastAt) {
-    $lastPid = $p
-    $lastAt = $at
-    $n = ''
-    try { $n = (Get-Process -Id $p -ErrorAction Stop).ProcessName } catch {}
+  try { $supervisor = [System.Diagnostics.Process]::GetProcessById($supervisorId); $supervisor.Dispose() } catch { break }
+  $handle = [CopilotWindowProbe]::GetForegroundWindow()
+  [uint32]$ownerId = 0
+  [void][CopilotWindowProbe]::GetWindowThreadProcessId($handle, [ref]$ownerId)
+  $processLabel = ''
+  if ($ownerId -gt 0) {
     try {
-      [Console]::Out.WriteLine($n + [char]9 + $at)
-      [Console]::Out.Flush()
-    } catch { exit }
+      $owner = [System.Diagnostics.Process]::GetProcessById($ownerId)
+      $processLabel = $owner.ProcessName
+      $owner.Dispose()
+    } catch {}
   }
-  Start-Sleep -Milliseconds 400
+  $box = New-Object CopilotWindowProbe+Box
+  $center = $null
+  if ([CopilotWindowProbe]::GetWindowRect($handle, [ref]$box)) {
+    $center = @{ x = [int](($box.X1 + $box.X2) / 2); y = [int](($box.Y1 + $box.Y2) / 2) }
+  }
+  $record = @{ name = $processLabel; at = $center } | ConvertTo-Json -Compress -Depth 3
+  if ($record -ne $previous) {
+    try { [Console]::Out.WriteLine($record); [Console]::Out.Flush() } catch { break }
+    $previous = $record
+  }
+  Start-Sleep -Milliseconds 500
 }
 `;
-
-const MAX_RESTARTS = 5;
-
-/**
- * One line of the watcher: the process name, a tab, and the window's centre in screen pixels ("x,y",
- * empty when it could not be read).
- * @param {string} line
- * @returns {{ name: string, at: { x: number, y: number } | null }}
- */
-function parseForegroundLine(line) {
-  const [name = "", at = ""] = String(line).split("\t");
-  const m = /^(-?\d+),(-?\d+)$/.exec(at.trim());
-  return { name: name.trim(), at: m ? { x: Number(m[1]), y: Number(m[2]) } : null };
 }
 
-/**
- * @param {(processName: string, at: { x: number, y: number } | null) => void} onName called with the
- *   foreground process's name (no ".exe") and its window's centre in screen pixels
- *   each time it changes; "" when it could not be read.
- * @param {string | null} [exe]  the native watcher (nativeWatcherPath); PowerShell when null
- * @returns {{ stop: () => void }}
- */
-function watchForeground(onName, exe = null) {
-  if (process.platform !== "win32") return { stop() {} };
-  let child = null;
-  let stopped = false;
-  let restarts = 0;
-
-  const start = () => {
-    if (stopped) return;
-    try {
-      child = exe
-        ? spawn(exe, [String(process.pid)], { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] })
-        : spawn(
-        "powershell.exe",
-        [
-          "-NoProfile",
-          "-NonInteractive",
-          "-ExecutionPolicy",
-          "Bypass",
-          "-WindowStyle",
-          "Hidden",
-          "-EncodedCommand",
-          Buffer.from(SCRIPT.replace("__PARENT_PID__", String(process.pid)), "utf16le").toString("base64"),
-        ],
-        { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] },
-          );
-    } catch {
-      child = null;
-      return;
-    }
-    const rl = readline.createInterface({ input: child.stdout });
-    rl.on("line", (line) => {
-      restarts = 0;
-      try {
-        const { name, at } = parseForegroundLine(line);
-        onName(name, at);
-      } catch {
-        /* the listener's failure is its own */
-      }
-    });
-    child.on("error", () => {});
-    child.on("exit", () => {
-      child = null;
-      if (stopped || restarts >= MAX_RESTARTS) return;
-      restarts += 1;
-      const t = setTimeout(start, 2000 * restarts);
-      t.unref?.();
-    });
-  };
-
-  start();
-  return {
-    stop() {
-      stopped = true;
-      if (child) {
-        try {
-          child.kill();
-        } catch {
-          /* already gone */
-        }
-      }
-      child = null;
-    },
-  };
-}
-
-/**
- * The same watcher, run from a utility process of its own (electron/foregroundHost.cjs) so that starting PowerShell
- * never holds the main process (2026-10-19: `spawn` took 1,147 ms inside Electron's main process — 17 ms in plain
- * Node — right after the launcher window was created, so the launcher stayed black and the pages' files, which this
- * process serves during the boot, waited behind it). Falls back to the in-process watcher when the host cannot start
- * or ends before reporting anything.
- *
- * @param {{ fork: (modulePath: string, args?: string[], opts?: object) => any }} utilityProcess  Electron's
- * @param {string} hostPath  electron/foregroundHost.cjs
- * @param {(processName: string, at: { x: number, y: number } | null) => void} onName  as watchForeground
- * @param {string | null} [exe]  the native watcher, handed to the host (it has no resourcesPath of its own)
- * @returns {{ stop: () => void }}
- */
-function watchForegroundOffMain(utilityProcess, hostPath, onName, exe = null) {
-  if (process.platform !== "win32") return { stop() {} };
-  let stopped = false;
-  let heard = false;
-  let fallback = null;
-  let host = null;
-  const useFallback = () => {
-    if (!stopped && !fallback) fallback = watchForeground(onName, exe);
-  };
-  try {
-    host = utilityProcess.fork(hostPath, exe ? [exe] : [], { serviceName: "ED Copilot foreground watch", stdio: "ignore" });
-  } catch {
-    useFallback();
-    return { stop: () => ((stopped = true), fallback?.stop()) };
+function watchForeground(onName, unusedExecutable = null, dependencies = {}) {
+  const launch = dependencies.spawn || spawn;
+  const platform = dependencies.platform || process.platform;
+  let stopped = false, child = null, lines = null, restart = null, attempts = 0;
+  const notify = (name, at) => { if (!stopped) try { onName(name, at); } catch {} };
+  if (platform !== "win32") {
+    notify(null, null);
+    return { stop() { stopped = true; } };
   }
-  host.on("message", (m) => {
-    if (!m || typeof m.name !== "string") return;
-    heard = true;
-    try {
-      onName(m.name, m.at && Number.isFinite(m.at.x) && Number.isFinite(m.at.y) ? { x: m.at.x, y: m.at.y } : null);
-    } catch {
-      /* the listener's failure is its own */
-    }
-  });
-  host.on("exit", () => {
-    host = null;
-    if (!heard) useFallback();
-  });
-  return {
-    stop() {
-      stopped = true;
-      fallback?.stop();
-      try {
-        host?.kill();
-      } catch {
-        /* already gone */
+  function start() {
+    if (stopped) return;
+    let exited = false;
+    const failed = () => {
+      if (exited || stopped) return;
+      exited = true;
+      lines?.close(); lines = null;
+      child?.kill(); child = null;
+      notify(null, null);
+      if (++attempts <= 3) {
+        restart = setTimeout(start, 1000 * 2 ** (attempts - 1));
+        restart.unref?.();
       }
-      host = null;
-    },
+    };
+    try {
+      const executable = dependencies.powershell || path.join(process.env.SystemRoot || "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+      child = launch(executable, ["-NoLogo", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", Buffer.from(monitorScript(process.pid), "utf16le").toString("base64")],
+        { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+      lines = readline.createInterface({ input: child.stdout, crlfDelay: Infinity });
+      lines.on("line", line => {
+        if (line.length > 2048) return;
+        const parsed = parseForegroundLine(line);
+        if (parsed.name !== null) notify(parsed.name, parsed.at);
+      });
+      child.once("error", failed); child.once("exit", failed);
+    } catch { failed(); }
+  }
+  start();
+  return { stop() { stopped = true; clearTimeout(restart); lines?.close(); child?.kill(); lines = null; child = null; } };
+}
+
+function watchForegroundOffMain(utilityProcess, hostPath, onName, unusedExecutable = null) {
+  let stopped = false, worker = null, direct = null, watchdog = null;
+  const notify = (name, at) => { if (!stopped) try { onName(name, at); } catch {} };
+  const fallback = () => {
+    if (stopped || direct) return;
+    clearTimeout(watchdog);
+    worker?.kill(); worker = null;
+    direct = watchForeground(notify);
   };
+  if (!utilityProcess?.fork || !hostPath || process.platform !== "win32") return watchForeground(notify);
+  try {
+    worker = utilityProcess.fork(hostPath, [], { serviceName: "ED Copilot focus monitor", stdio: "ignore" });
+    worker.on("message", record => {
+      if (record?.type !== "foreground") return;
+      clearTimeout(watchdog);
+      const parsed = { name: record.name === null ? null : processName(record.name), at: point(record.at) };
+      notify(parsed.name, parsed.at);
+    });
+    worker.once("exit", fallback);
+    worker.once("error", fallback);
+    watchdog = setTimeout(fallback, 15000);
+    watchdog.unref?.();
+  } catch { fallback(); }
+  return { stop() { stopped = true; clearTimeout(watchdog); direct?.stop(); try { worker?.postMessage({ type: "stop" }); } catch {} worker?.kill(); worker = null; } };
 }
 
-/**
- * Whether the foreground belongs to the game or to this app (its own windows keep the overlays: the
- * commander looking at the app on a second screen still has the game beside it).
- * @param {string} name @param {readonly string[]} own lower-case process names of this app
- */
-function isGameOrOwn(name, own) {
-  const n = String(name || "").toLowerCase();
-  if (!n) return true; // unreadable: do not hide on a guess
-  // "Idle" is process 0: no window in front for a moment, as Windows reports between two windows.
-  if (n === "idle") return true;
-  return n === "elitedangerous64" || own.includes(n);
-}
+module.exports = { watchForeground, watchForegroundOffMain, isGameOrOwn, isGame, parseForegroundLine, nativeWatcherPath, monitorScript };
 
-/** The game itself, not this app's windows (the HUD follows the game's monitor). */
-function isGame(name) {
-  return String(name || "").toLowerCase() === "elitedangerous64";
-}
-
-module.exports = { watchForeground, watchForegroundOffMain, isGameOrOwn, isGame, parseForegroundLine, nativeWatcherPath };

@@ -1,9 +1,5 @@
 "use strict";
 
-const fs = require("node:fs");
-const path = require("node:path");
-const watcher = "native/target/release/edexo-fgwatch.exe";
-
 module.exports = {
   appId: "ru.elite.edcopilot",
   productName: "ED Copilot",
@@ -16,21 +12,24 @@ module.exports = {
     "package.json", "electron/**/*", "lib/**/*", "web/**/*",
     "LICENSE", "NOTICE.md", "docs/**/*", "README.md", "README-RU.txt",
     "API.md", "TRADE-API.md",
-    "!**/*.log", "!**/*.tmp", "!**/node_modules/**/*"
+    "!**/*.log", "!**/*.tmp", "!**/node_modules/**/*",
   ],
   extraResources: [
     { from: "web/copilot.png", to: "native/copilot.png" },
-    ...(fs.existsSync(path.join(__dirname, watcher)) ? [{ from: watcher, to: "native/edexo-fgwatch.exe" }] : []),
-    { from: "LICENSE", to: "LICENSE-EDEXO.txt" },
-    { from: "NOTICE.md", to: "NOTICE.md" }
+    { from: "LICENSE", to: "LICENSE-COPILOT.txt" },
+    { from: "NOTICE.md", to: "NOTICE-COPILOT.md" },
   ],
   extraFiles: [
-    { from: "edmc-plugin", to: "edmc-plugin", filter: ["**/*", "!**/__pycache__/**", "!**/*.pyc"] }
+    { from: "edmc-plugin", to: "edmc-plugin", filter: ["**/*", "!**/__pycache__/**", "!**/*.pyc"] },
+    { from: "README-RU.txt", to: "НАЧАТЬ ЗДЕСЬ.txt" },
+    { from: "web/copilot.ico", to: "ED Copilot.ico" },
+    { from: "LICENSE", to: "LICENSE-COPILOT.txt" },
+    { from: "NOTICE.md", to: "NOTICE-COPILOT.txt" },
+    { from: "lib/COMMODITY-DATA-NOTICE.txt", to: "NOTICE-COMMODITY-DATA.txt" },
+    { from: "lib/ENGINEERING-DATA-NOTICE.txt", to: "NOTICE-ENGINEERING-DATA.txt" },
+    { from: "lib/ENCYCLOPEDIA-DATA-NOTICE.txt", to: "NOTICE-ENCYCLOPEDIA-DATA.txt" },
   ],
-  win: {
-    icon: "web/copilot.ico",
-    target: "dir",
-    signAndEditExecutable: true
-  },
-  publish: null
+  win: { icon: "web/copilot.ico", target: "dir", signAndEditExecutable: true },
+  publish: null,
 };
+

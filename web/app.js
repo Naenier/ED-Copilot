@@ -1000,6 +1000,7 @@
         "Параметры компаньона",
         "Папка журналов, способы добычи, фильтры и справочные цены.",
       ) +
+      window.CopilotAppearance.render(state) +
       '<div class="settings-columns"><div class="stack">' +
       panel(
         "Игровые журналы",
@@ -1151,6 +1152,7 @@
 
   function updateState(next) {
     state = next;
+    window.CopilotAppearance.apply(next.theme);
     if (!initialSettings && next.settings) {
       ui.minTier = next.settings.minTier || "medium";
       ui.method = next.settings.method || "all";
@@ -1376,6 +1378,7 @@
   window.CopilotTargets.init({ getState: () => state, render, perform, showToast, renderMiningTargets: renderTargets });
   window.CopilotEncyclopedia.init({ getState: () => state, render, perform, showToast });
   window.CopilotIntegrations.init({ getState: () => state, render, perform, showToast });
+  window.CopilotAppearance.init({ getState: () => state, render, perform, showToast });
   const subscription = U.subscribe(updateState, (connected, message) => {
     connection = connected;
     const indicator = document.getElementById("connection");

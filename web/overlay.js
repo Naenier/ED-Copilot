@@ -188,7 +188,7 @@
       }
     });
   }
-  const subscription = U.subscribe((next) => { state = next; render(); },
+  const subscription = U.subscribe((next) => { state = next; window.CopilotAppearance.apply(next.theme); render(); },
     (connected) => { online = connected; render(); });
   const clock = setInterval(() => {
     if (state?.settings?.activity === "carrier" && state.carrier?.jump?.pending) render();

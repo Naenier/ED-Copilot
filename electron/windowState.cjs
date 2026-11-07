@@ -1,137 +1,93 @@
-/**
- * Window positions and zoom for the launcher and the app window. Split out of main.cjs (code review D,
- * 2026-09-28). The settings folder is main.cjs's to decide, so it is passed in.
- */
-const { screen } = require("electron");
-const path = require("path");
-const fs = require("fs");
+"use strict";
+// Window geometry belongs to the local profile and is safe to discard.
+const fs = require("node:fs");
+const path = require("node:path");
 const { writeFileAtomic } = require("./atomicWrite.cjs");
-const { GALAXY_MIN } = require("./childWindows.cjs");
-
-/** The smallest a saved window may come back; a smaller saved size is ignored. */
-const WINDOW_MIN = { launcher: { w: 380, h: 420 }, app: { w: 640, h: 420 }, colonize: { w: 640, h: 420 }, galaxy: GALAXY_MIN };
-
-/** @param {() => string} stateDir the folder window-state.json lives in */
-function createWindowState(stateDir) {
-  /*
-    Where the windows were (owner, 2026-09-26: "remember their last position… another monitor…
-    resolution, zoom level").
-
-    The launcher and the app window each keep their size, position and maximised state in
-    `window-state.json` beside the HUD layout (user data, so a rebuilt exe keeps it). They are saved as
-    they move — not only on close, which a crash or a killed process never reaches — and restored only
-    while the rectangle still lands on a connected screen, so an unplugged monitor cannot strand a
-    window off-screen. Positions are Electron's device-independent pixels, which is what makes the
-    same numbers right on a monitor with a different scaling.
-
-    Zoom is Chromium's: it remembers a zoom level per site and per session across restarts. That is
-    also why the app window has a session of its own (`persist:app-window`): the launcher, the HUDs
-    and the app are the same site, and in one session zooming the app zoomed the launcher too.
-  */
-
-  function windowStatePath() {
-    return path.join(stateDir(), "window-state.json");
-  }
-
+const WINDOW_MIN = Object.freeze({ app: { w: 780, h: 560 } });
+const validNumber = value => typeof value === "number" && Number.isFinite(value);
+const safeName = name => typeof name === "string" && /^[a-z][a-z0-9_-]{0,59}$/i.test(name) && !["constructor", "prototype", "__proto__"].includes(name);
+function plain(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
+function areaOf(display) {
+  const area = display?.workArea || display?.bounds;
+  return area && [area.x, area.y, area.width, area.height].every(validNumber) && area.width > 0 && area.height > 0 ? area : null;
+}
+function clampBounds(saved, displays, minimum = WINDOW_MIN.app) {
+  if (!saved || ![saved.x, saved.y, saved.width, saved.height].every(validNumber) || saved.width <= 0 || saved.height <= 0) return null;
+  const areas = displays.map(areaOf).filter(Boolean);
+  if (!areas.length) return null;
+  const overlap = area => Math.max(0, Math.min(saved.x + saved.width, area.x + area.width) - Math.max(saved.x, area.x)) *
+    Math.max(0, Math.min(saved.y + saved.height, area.y + area.height) - Math.max(saved.y, area.y));
+  const ranked = areas.map(area => ({ area, overlap: overlap(area) })).sort((a, b) => b.overlap - a.overlap);
+  const match = ranked[0];
+  const area = match.area;
+  const width = Math.round(Math.min(area.width, Math.max(Math.min(minimum.w, area.width), saved.width)));
+  const height = Math.round(Math.min(area.height, Math.max(Math.min(minimum.h, area.height), saved.height)));
+  const x = match.overlap > 0 ? saved.x : area.x + (area.width - width) / 2;
+  const y = match.overlap > 0 ? saved.y : area.y + (area.height - height) / 2;
+  return {
+    x: Math.round(Math.max(area.x, Math.min(area.x + area.width - width, x))),
+    y: Math.round(Math.max(area.y, Math.min(area.y + area.height - height, y))),
+    width, height, maximized: saved.maximized === true,
+  };
+}
+function createWindowState(stateDir, dependencies = {}) {
+  const screen = dependencies.screen || require("electron").screen;
+  const folder = () => typeof stateDir === "function" ? stateDir() : stateDir;
+  const windowStatePath = () => path.join(folder(), "window-state.json");
   function readWindowStates() {
     try {
-      const all = JSON.parse(fs.readFileSync(windowStatePath(), "utf8"));
-      return all && typeof all === "object" ? all : {};
-    } catch {
-      return {};
-    }
+      if (fs.statSync(windowStatePath()).size > 1024 * 1024) return {};
+      return plain(JSON.parse(fs.readFileSync(windowStatePath(), "utf8")));
+    } catch { return {}; }
   }
-
-  /** Saved bounds for one window, or null when there are none or they no longer land on a screen. */
   function readWindowState(name) {
-    let b = readWindowStates()[name];
-    if (!b && name === "app") {
-      // Test builds of 2026-09-26 kept the app window alone in app-window.json.
-      try {
-        b = JSON.parse(fs.readFileSync(path.join(stateDir(), "app-window.json"), "utf8"));
-      } catch {
-        b = null;
-      }
+    if (!safeName(name)) return null;
+    let saved = readWindowStates()[name];
+    if (!saved && name === "app") {
+      try { saved = JSON.parse(fs.readFileSync(path.join(folder(), "app-window.json"), "utf8")); } catch {}
     }
-    if (!b || ![b.x, b.y, b.width, b.height].every((n) => Number.isFinite(n))) return null;
-    const min = WINDOW_MIN[name] ?? { w: 320, h: 240 };
-    if (b.width < min.w || b.height < min.h) return null;
-    const onScreen = screen
-      .getAllDisplays()
-      .some(
-        (d) =>
-          b.x < d.workArea.x + d.workArea.width - 80 &&
-          b.x + b.width > d.workArea.x + 80 &&
-          b.y >= d.workArea.y - 20 &&
-          b.y < d.workArea.y + d.workArea.height - 80,
-      );
-    return onScreen
-      ? { x: b.x, y: b.y, width: b.width, height: b.height, maximized: b.maximized === true }
-      : null;
+    const displays = screen.getAllDisplays?.() || [screen.getPrimaryDisplay()];
+    return clampBounds(saved, displays, WINDOW_MIN[name] || WINDOW_MIN.app);
   }
-
-  function saveWindowState(name, win) {
-    if (!win || win.isDestroyed() || win.isMinimized()) return;
+  function saveWindowState(name, value) {
+    if (!safeName(name)) return false;
+    let bounds;
     try {
-      const maximized = win.isMaximized();
-      const b = maximized ? win.getNormalBounds() : win.getBounds();
-      const all = readWindowStates();
-      all[name] = { ...b, maximized };
-      fs.mkdirSync(path.dirname(windowStatePath()), { recursive: true });
-      writeFileAtomic(windowStatePath(), JSON.stringify(all, null, 2), "utf8");
-    } catch {
-      /* the next open uses the default size */
-    }
+      if (typeof value?.getBounds === "function") {
+        if (value.isDestroyed?.() || value.isMinimized?.()) return false;
+        bounds = { ...(value.getNormalBounds?.() || value.getBounds()), maximized: value.isMaximized?.() === true };
+      } else bounds = value;
+      if (!bounds || ![bounds.x, bounds.y, bounds.width, bounds.height].every(validNumber) || bounds.width <= 0 || bounds.height <= 0) return false;
+      const states = readWindowStates();
+      states[name] = { x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height), maximized: bounds.maximized === true };
+      writeFileAtomic(windowStatePath(), JSON.stringify(states, null, 2));
+      return true;
+    } catch { return false; }
   }
-
-  /** Keep a window's state on disk as it moves; half a second after the last move, and on close. */
   function trackWindowState(name, win) {
-    let t = null;
-    const soon = () => {
-      if (t) clearTimeout(t);
-      t = setTimeout(() => {
-        t = null;
-        saveWindowState(name, win);
-      }, 500);
-    };
-    for (const ev of ["resize", "move", "maximize", "unmaximize"]) win.on(ev, soon);
-    win.on("close", () => {
-      if (t) clearTimeout(t);
-      saveWindowState(name, win);
-    });
+    let timer = null;
+    const schedule = () => { clearTimeout(timer); timer = setTimeout(() => { timer = null; saveWindowState(name, win); }, 180); timer.unref?.(); };
+    const flush = () => { clearTimeout(timer); timer = null; saveWindowState(name, win); };
+    const events = ["move", "resize", "maximize", "unmaximize"];
+    for (const event of events) win.on(event, schedule);
+    win.on("close", flush);
+    return () => { clearTimeout(timer); for (const event of events) win.removeListener(event, schedule); win.removeListener("close", flush); };
   }
-  return { readWindowStates, readWindowState, saveWindowState, trackWindowState, windowStatePath };
+  return { readWindowState, readWindowStates, saveWindowState, trackWindowState, windowStatePath };
 }
-
-/*
-  Zoom with Ctrl + wheel and Ctrl +/−/0 (owner, 2026-09-26: "zoom does not work").
-
-  Electron reports a Ctrl + wheel as `zoom-changed` and leaves it there — nothing zooms unless the
-  app applies it — and with the menu bar hidden the keyboard shortcuts have no menu to come from.
-  Chromium then keeps the level per site and per session across restarts, which is what makes it
-  "remembered": the launcher (default session) and the app window (`persist:app-window`) each keep
-  their own.
-*/
-const ZOOM_STEP = 0.5;
-const ZOOM_MIN = -3;
-const ZOOM_MAX = 5;
-
 function enableZoom(win) {
-  const wc = win.webContents;
-  const step = (dir) => {
-    const next = dir === 0 ? 0 : Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, wc.getZoomLevel() + dir * ZOOM_STEP));
-    wc.setZoomLevel(next);
-  };
-  wc.on("zoom-changed", (_e, direction) => step(direction === "in" ? 1 : -1));
-  wc.on("before-input-event", (e, input) => {
-    if (input.type !== "keyDown" || !(input.control || input.meta) || input.alt) return;
-    const k = input.key;
-    if (k === "+" || k === "=" || input.code === "NumpadAdd") step(1);
-    else if (k === "-" || k === "_" || input.code === "NumpadSubtract") step(-1);
-    else if (k === "0" || input.code === "Numpad0") step(0);
+  const contents = win.webContents;
+  contents.on("before-input-event", (event, input) => {
+    if (input.type && input.type !== "keyDown" || !(input.control || input.meta) || input.alt) return;
+    const key = String(input.key || "").toLowerCase();
+    let value;
+    if (["0", "num0"].includes(key) || input.code === "Digit0" || input.code === "Numpad0") value = 1;
+    else if (["+", "=", "add"].includes(key) || input.code === "NumpadAdd") value = Math.min(2.5, (contents.getZoomFactor?.() || 1) + 0.1);
+    else if (["-", "_", "subtract"].includes(key) || input.code === "NumpadSubtract") value = Math.max(0.7, (contents.getZoomFactor?.() || 1) - 0.1);
     else return;
-    e.preventDefault();
+    event.preventDefault();
+    contents.setZoomFactor(Math.round(value * 100) / 100);
   });
 }
+module.exports = { WINDOW_MIN, createWindowState, enableZoom, clampBounds };
 
-module.exports = { WINDOW_MIN, createWindowState, enableZoom };

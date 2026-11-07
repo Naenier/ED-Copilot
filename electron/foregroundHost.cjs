@@ -1,12 +1,13 @@
 "use strict";
-
-/**
- * The foreground watcher's own utility process (foregroundWatch.cjs, watchForegroundOffMain): starts the PowerShell
- * watcher here, off the main process, and passes each change on. Ends with the app; the PowerShell script ends
- * itself once this process is gone.
- */
+// This process owns the focus monitor and relays only process identity and position.
 const { watchForeground } = require("./foregroundWatch.cjs");
-
 const port = process.parentPort;
-// The native watcher's path comes from the main process (argv[2]); without one, the PowerShell script.
-if (port) watchForeground((name, at) => port.postMessage({ name, at }), process.argv[2] || null);
+let monitor;
+if (port) {
+  monitor = watchForeground((name, at) => port.postMessage({ type: "foreground", name, at }));
+  port.on("message", message => {
+    if (message?.data?.type === "stop") { monitor.stop(); process.exit(0); }
+  });
+}
+process.once("exit", () => monitor?.stop());
+
