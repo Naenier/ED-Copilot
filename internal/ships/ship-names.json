@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-11-07",
+  "sources": [
+    {
+      "title": "EDCD / FDevIDs — ship identifiers",
+      "url": "https://github.com/EDCD/FDevIDs/blob/master/shipyard.csv"
+    },
+    {
+      "title": "EDCD / FDevIDs — CAPI profile fields",
+      "url": "https://github.com/EDCD/FDevIDs/blob/master/Frontier%20API/FrontierDevelopments-CAPI-endpoints.md"
+    },
+    {
+      "title": "EDDI — Nomad journal observations",
+      "url": "https://github.com/EDCD/EDDI/issues/2849"
+    }
+  ],
+  "ships": [
+    {
+      "id": "128049249",
+      "symbol": "SideWinder",
+      "name": "Sidewinder",
+      "kind": "ship"
+    },
+    {
+      "id": "128049255",
+      "symbol": "Eagle",
+      "name": "Eagle",
+      "kind": "ship"
+    },
+    {
+      "id": "128049261",
+      "symbol": "Hauler",
+      "name": "Hauler",
+      "kind": "ship"
+    },
+    {
+      "id": "128049267",
+      "symbol": "Adder",
+      "name": "Adder",
+      "kind": "ship"
+    },
+    {
+      "id": "128049273",
+      "symbol": "Viper",
+      "name": "Viper Mk III",
+      "kind": "ship"
+    },
+    {
+      "id": "128049279",
+      "symbol": "CobraMkIII",
+      "name": "Cobra Mk III",
+      "kind": "ship"
+    },
+    {
+      "id": "128049285",
+      "symbol": "Type6",
+      "name": "Type-6 Transporter",
+      "kind": "ship"
+    },
+    {
+      "id": "128049291",
+      "symbol": "Dolphin",
+      "name": "Dolphin",
+      "kind": "ship"
+    },
+    {
+      "id": "128049297",
+      "symbol": "Type7",
+      "name": "Type-7 Transporter",
+      "kind": "ship"
+    },
+    {
+      "id": "128049303",
+      "symbol": "Asp",
+      "name": "Asp Explorer",
+      "kind": "ship"
+    },
+    {
+      "id": "128049309",
+      "symbol": "Vulture",
+      "name": "Vulture",
+      "kind": "ship"
+    },
+    {
+      "id": "128049315",
+      "symbol": "Empire_Trader",
+      "name": "Imperial Clipper",
+      "kind": "ship"
+    },
+    {
+      "id": "128049321",
+      "symbol": "Federation_Dropship",
+      "name": "Federal Dropship",
+      "kind": "ship"
+    },
+    {
+      "id": "128049327",
+      "symbol": "Orca",
+      "name": "Orca",
+      "kind": "ship"
+    },
+    {
+      "id": "128049333",
+      "symbol": "Type9",
+      "name": "Type-9 Heavy",
+      "kind": "ship"
+    },
+    {
+      "id": "128049339",
+      "symbol": "Python",
+      "name": "Python",
+      "kind": "ship"
+    },
+    {
+      "id": "128049345",
+      "symbol": "BelugaLiner",
+      "name": "Beluga Liner",
+      "kind": "ship"
+    },
+    {
+      "id": "128049351",
+      "symbol": "FerDeLance",
+      "name": "Fer-de-Lance",
+      "kind": "ship"
+    },
+    {
+      "id": "128049363",
+      "symbol": "Anaconda",
+      "name": "Anaconda",
+      "kind": "ship"
+    },
+    {
+      "id": "128049369",
+      "symbol": "Federation_Corvette",
+      "name": "Federal Corvette",
+      "kind": "ship"
+    },
+    {
+      "id": "128049375",
+      "symbol": "Cutter",
+      "name": "Imperial Cutter",
+      "kind": "ship"
+    },
+    {
+      "id": "128671217",
+      "symbol": "DiamondBack",
+      "name": "Diamondback Scout",
+      "kind": "ship"
+    },
+    {
+      "id": "128671223",
+      "symbol": "Empire_Courier",
+      "name": "Imperial Courier",
+      "kind": "ship"
+    },
+    {
+      "id": "128671831",
+      "symbol": "DiamondBackXL",
+      "name": "Diamondback Explorer",
+      "kind": "ship"
+    },
+    {
+      "id": "128672138",
+      "symbol": "Empire_Eagle",
+      "name": "Imperial Eagle",
+      "kind": "ship"
+    },
+    {
+      "id": "128672145",
+      "symbol": "Federation_Dropship_MkII",
+      "name": "Federal Assault Ship",
+      "kind": "ship"
+    },
+    {
+      "id": "128672152",
+      "symbol": "Federation_Gunship",
+      "name": "Federal Gunship",
+      "kind": "ship"
+    },
+    {
+      "id": "128672255",
+      "symbol": "Viper_MkIV",
+      "name": "Viper Mk IV",
+      "kind": "ship"
+    },
+    {
+      "id": "128672262",
+      "symbol": "CobraMkIV",
+      "name": "Cobra Mk IV",
+      "kind": "ship"
+    },
+    {
+      "id": "128672269",
+      "symbol": "Independant_Trader",
+      "name": "Keelback",
+      "kind": "ship"
+    },
+    {
+      "id": "128672276",
+      "symbol": "Asp_Scout",
+      "name": "Asp Scout",
+      "kind": "ship"
+    },
+    {
+      "id": "128785619",
+      "symbol": "Type9_Military",
+      "name": "Type-10 Defender",
+      "kind": "ship"
+    },
+    {
+      "id": "128816567",
+      "symbol": "Krait_MkII",
+      "name": "Krait Mk II",
+      "kind": "ship"
+    },
+    {
+      "id": "128816574",
+      "symbol": "TypeX",
+      "name": "Alliance Chieftain",
+      "kind": "ship"
+    },
+    {
+      "id": "128816581",
+      "symbol": "TypeX_2",
+      "name": "Alliance Crusader",
+      "kind": "ship"
+    },
+    {
+      "id": "128816588",
+      "symbol": "TypeX_3",
+      "name": "Alliance Challenger",
+      "kind": "ship"
+    },
+    {
+      "id": "128839281",
+      "symbol": "Krait_Light",
+      "name": "Krait Phantom",
+      "kind": "ship"
+    },
+    {
+      "id": "128915979",
+      "symbol": "Mamba",
+      "name": "Mamba",
+      "kind": "ship"
+    },
+    {
+      "id": "129030464",
+      "symbol": "Python_NX",
+      "name": "Python Mk II",
+      "kind": "ship"
+    },
+    {
+      "id": "129030534",
+      "symbol": "Type8",
+      "name": "Type-8 Transporter",
+      "kind": "ship"
+    },
+    {
+      "id": "129030680",
+      "symbol": "Mandalay",
+      "name": "Mandalay",
+      "kind": "ship"
+    },
+    {
+      "id": "129031229",
+      "symbol": "CobraMkV",
+      "name": "Cobra Mk V",
+      "kind": "ship"
+    },
+    {
+      "id": "129031320",
+      "symbol": "Corsair",
+      "name": "Corsair",
+      "kind": "ship"
+    },
+    {
+      "id": "129034269",
+      "symbol": "PantherMkII",
+      "name": "Panther Clipper Mk II",
+      "kind": "ship"
+    },
+    {
+      "id": "129036130",
+      "symbol": "LakonMiner",
+      "name": "Type-11 Prospector",
+      "kind": "ship"
+    },
+    {
+      "id": "129036569",
+      "symbol": "Explorer_NX",
+      "name": "Caspian Explorer",
+      "kind": "ship"
+    },
+    {
+      "id": "129039241",
+      "symbol": "SmallCombat01_NX",
+      "name": "Kestrel Mk II",
+      "kind": "ship"
+    },
+    {
+      "id": "129041442",
+      "symbol": "MediumTransport01",
+      "name": "Lynx Highliner",
+      "kind": "ship"
+    },
+    {
+      "id": "129046025",
+      "symbol": "AnacondaMkII",
+      "name": "Anaconda Mk II",
+      "kind": "ship"
+    },
+    {
+      "symbol": "Buggy",
+      "name": "Scarab",
+      "kind": "srv",
+      "aliases": [
+        "TestBuggy",
+        "Scarab"
+      ]
+    },
+    {
+      "symbol": "Combat_SRV",
+      "name": "Scorpion",
+      "kind": "srv",
+      "aliases": [
+        "Scorpion"
+      ]
+    },
+    {
+      "symbol": "Lander01",
+      "name": "Nomad",
+      "kind": "srv",
+      "aliases": [
+        "Nomad"
+      ]
+    },
+    {
+      "symbol": "OnFoot",
+      "name": "Пешком",
+      "kind": "foot"
+    }
+  ]
+}

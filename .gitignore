@@ -1,74 +1,10 @@
-# Dependencies and generated distributions
-node_modules/
-dist/
-artifacts/
-native/target/
-.cache/
-.npm/
-
-# Local editors and operating-system files
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-desktop.ini
-__pycache__/
-*.pyc
-*.pyo
-*.tmp
+/dist/
+/coverage*
+/*-cover*
+*.syso
+*.test.exe
+*.prof
 *.log
+/.idea/
+/.vscode/
 
-# Never publish account credentials, player journals, or runtime profiles.
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-*.pfx
-*.p12
-credentials*
-*tokens*.json
-*tokens*.enc
-*.enc
-*secrets*.json
-frontier-settings.json
-frontier-cache.json
-frontier-profile.json
-inara-settings.json
-sync-settings.json
-integration-settings.json
-integration-state.bin
-desktop-settings.json
-settings.json
-*sync-queue*.json
-*sync-state*.json
-Journal.*.log
-*.journal
-Status.json
-Cargo.json
-Market.json
-ModulesInfo.json
-Shipyard.json
-Outfitting.json
-NavRoute.json
-Backpack.json
-ShipLocker.json
-Materials.json
-profiles/
-profile/
-userdata/
-user-data/
-logs/
-cache/
-screenshots/
-Saved Games/
-ED Copilot/
-ED Mining/
-
-# Runtime binaries are obtained from pinned dependencies or compiled from source.
-*.exe
-*.dll
-*.asar
-*.zip
-*.7z
-*.msi

@@ -1,0 +1,150 @@
+//go:build windows
+
+package main
+
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"github.com/Naenier/ED-Copilot/internal/app"
+	"github.com/Naenier/ED-Copilot/internal/nativeui"
+	"github.com/Naenier/ED-Copilot/internal/profile"
+	v "github.com/Naenier/ED-Copilot/internal/value"
+	"github.com/lxn/walk"
+	"os"
+	"path/filepath"
+	"runtime"
+	"time"
+)
+
+func main() {
+	dataDir := flag.String("data-dir", "", "Отдельная папка профиля")
+	journalDir := flag.String("journal-dir", "", "Папка игровых журналов")
+	version := flag.Bool("version", false, "Версия приложения")
+	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
+	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
+	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
+	flag.Parse()
+	if *version {
+		fmt.Printf("ED Copilot %s · %s · native Windows\n", app.Version, runtime.Version())
+		return
+	}
+	if *smoke || *headless {
+		root, err := os.MkdirTemp("", "ed-copilot-native-smoke-")
+		if err != nil {
+			fail(err, "")
+			return
+		}
+		*dataDir = filepath.Join(root, "profile")
+		*journalDir = filepath.Join(root, "journals")
+		if err = smokeJournal(*journalDir); err != nil {
+			fail(err, root)
+			return
+		}
+		if *report == "" {
+			*report = filepath.Join(root, "smoke-report.json")
+		}
+	}
+	if *dataDir == "" {
+		*dataDir = profile.DefaultDir()
+	}
+	engine, err := app.New(app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: *smoke || *headless})
+	if err != nil {
+		fail(err, *dataDir)
+		return
+	}
+	defer engine.Close()
+	if *smoke || *headless {
+		if err = smokePlans(engine); err != nil {
+			fail(err, *dataDir)
+			return
+		}
+		if *headless {
+			state := engine.Snapshot()
+			result := v.M{"ok": len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true}
+			b, _ := json.MarshalIndent(result, "", "  ")
+			_ = os.MkdirAll(filepath.Dir(*report), 0700)
+			if err = os.WriteFile(*report, b, 0600); err != nil {
+				fail(err, *dataDir)
+			}
+			return
+		}
+	}
+	err = nativeui.Run(engine, nativeui.Options{Smoke: *smoke, SmokeReport: *report})
+	if err != nil {
+		fail(err, *dataDir)
+	}
+}
+func fail(err error, dir string) {
+	if dir != "" {
+		_ = os.MkdirAll(dir, 0700)
+		_ = os.WriteFile(filepath.Join(dir, "startup-error.txt"), []byte(err.Error()), 0600)
+	}
+	fmt.Fprintln(os.Stderr, err)
+	walk.MsgBox(nil, "ED Copilot", err.Error(), walk.MsgBoxIconError)
+	os.Exit(1)
+}
+func smokeJournal(dir string) error {
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+	at := time.Now().UTC()
+	rows := []v.M{
+		{"event": "Fileheader", "gameversion": "4.4.2", "build": "synthetic"},
+		{"event": "LoadGame", "FID": "FNATIVE-SYNTHETIC", "Commander": "Тестовый командир", "Ship": "panthermkii", "ShipID": 1, "ShipName": "Звёздный попутчик", "ShipIdent": "CP-200", "CargoCapacity": 400, "FuelLevel": 32, "FuelCapacity": 64, "Credits": 1234567890, "Loan": 0, "Horizons": true, "Odyssey": true},
+		{"event": "Location", "StarSystem": "Тестовая колония А", "SystemAddress": 10000001, "StarPos": []float64{0, 0, 0}, "Docked": true, "StationName": "Строительный склад Альфа", "MarketID": 42},
+		{"event": "ColonisationConstructionDepot", "MarketID": 42, "ConstructionProgress": 0.25, "ConstructionComplete": false, "ConstructionFailed": false, "ResourcesRequired": []v.M{{"Name": "$aluminium_name;", "Name_Localised": "Алюминий", "RequiredAmount": 1000, "ProvidedAmount": 250}, {"Name": "$steel_name;", "Name_Localised": "Сталь", "RequiredAmount": 500, "ProvidedAmount": 100}}},
+		{"event": "Location", "StarSystem": "Тестовая колония Б", "SystemAddress": 10000002, "StarPos": []float64{10, 0, 0}, "Docked": true, "StationName": "Строительный склад Бета", "MarketID": 43},
+		{"event": "ColonisationConstructionDepot", "MarketID": 43, "ConstructionProgress": 0.1, "ResourcesRequired": []v.M{{"Name": "$steel_name;", "RequiredAmount": 800, "ProvidedAmount": 100}}},
+		{"event": "Location", "StarSystem": "Тестовая колония А", "SystemAddress": 10000001, "StarPos": []float64{0, 0, 0}, "Docked": true, "StationName": "Строительный склад Альфа", "MarketID": 42},
+		{"event": "Cargo", "Vessel": "Ship", "Inventory": []v.M{{"Name": "aluminium", "Name_Localised": "Алюминий", "Count": 120, "Stolen": 0}, {"Name": "steel", "Name_Localised": "Сталь", "Count": 40, "Stolen": 0}, {"Name": "drones", "Count": 10}}},
+		{"event": "Materials", "Raw": []v.M{{"Name": "polonium", "Count": 25}, {"Name": "carbon", "Count": 100}}, "Manufactured": []v.M{{"Name": "chemicalprocessors", "Count": 35}}, "Encoded": []v.M{{"Name": "dataminedwake", "Count": 10}}},
+		{"event": "CarrierStats", "CarrierID": 1001, "Callsign": "NAT-001", "Name": "Ковчег", "FuelLevel": 750, "JumpRangeCurr": 500, "JumpRangeMax": 500, "SpaceUsage": v.M{"TotalCapacity": 25000, "Cargo": 3000, "Crew": 1000, "ShipPacks": 0, "ModulePacks": 0, "FreeSpace": 21000}, "Finance": v.M{"CarrierBalance": 3000000000, "AvailableBalance": 2800000000}},
+		{"event": "CarrierLocation", "CarrierID": 1001, "StarSystem": "Тестовая колония А", "SystemAddress": 10000001},
+		{"event": "MissionAccepted", "MissionID": 9001, "LocalisedName": "Снабжение новой станции", "DestinationSystem": "Тестовая колония Б", "DestinationStation": "Строительный склад Бета", "Expiry": v.ISO(at.Add(24 * time.Hour)), "Reward": 2500000},
+		{"event": "NavRoute", "Route": []v.M{{"StarSystem": "Тестовая колония А", "SystemAddress": 10000001}, {"StarSystem": "Тестовая колония Б", "SystemAddress": 10000002}}},
+	}
+	file, err := os.Create(filepath.Join(dir, "Journal.synthetic.01.log"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	for i, row := range rows {
+		row["timestamp"] = v.ISO(at.Add(time.Duration(i) * time.Second))
+		b, err := json.Marshal(row)
+		if err != nil {
+			return err
+		}
+		if _, err = file.Write(append(b, '\n')); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func smokePlans(e *app.Engine) error {
+	do := func(body v.M) error { _, err := e.Do("/api/colonization", body); return err }
+	for i, name := range []string{"Тестовая колония А", "Тестовая колония Б"} {
+		if err := do(v.M{"action": "create-project", "targetSystem": name, "name": name, "status": "building", "originSystem": "Тестовая исходная система", "faction": "Тестовая фракция", "cargoCapacity": 400}); err != nil {
+			return err
+		}
+		project := v.Obj(v.At(e.Snapshot(), "colonization", "activeProject"))
+		if err := do(v.M{"action": "add-building", "projectId": project["id"], "typeId": "coriolis", "name": "Основной порт", "isPrimary": true}); err != nil {
+			return err
+		}
+		project = v.Obj(v.At(e.Snapshot(), "colonization", "activeProject"))
+		building := v.Rows(project["buildings"])[0]
+		if err := do(v.M{"action": "link-depot", "projectId": project["id"], "buildingId": building["id"], "marketId": fmt.Sprint(42 + i)}); err != nil {
+			return err
+		}
+	}
+	projects := v.Rows(v.At(e.Snapshot(), "colonization", "projects"))
+	if err := do(v.M{"action": "select-project", "id": projects[0]["id"]}); err != nil {
+		return err
+	}
+	_, err := e.Do("/api/objectives", v.M{"action": "add", "title": "Доставить алюминий в первую колонию", "kind": "colonization", "system": "Тестовая колония А", "priority": "high"})
+	if err != nil {
+		return err
+	}
+	_, err = e.Do("/api/settings", v.M{"overlayEnabled": false, "activity": "colonization"})
+	return err
+}

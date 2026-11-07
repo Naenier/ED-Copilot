@@ -1,0 +1,310 @@
+{
+  "saved": {
+    "originSystem": "Synthetic Origin",
+    "faction": "Synthetic Faction",
+    "cargoCapacity": 50,
+    "selectedProjectId": "colony-a",
+    "projects": [
+      {
+        "id": "colony-a",
+        "name": "Synthetic Alpha",
+        "targetSystem": "Synthetic Alpha",
+        "originSystem": "Synthetic Origin",
+        "status": "building",
+        "goalEconomy": "refinery",
+        "cargoCapacity": 512,
+        "points": {
+          "tier2": 2,
+          "tier3": 0
+        },
+        "supplyOrder": [
+          "a-2",
+          "a-1"
+        ],
+        "buildings": [
+          {
+            "id": "a-1",
+            "name": "Primary port",
+            "typeId": "coriolis",
+            "isPrimary": true,
+            "marketId": "1001",
+            "status": "planned",
+            "resourcePlan": [
+              {
+                "commodity": "steel",
+                "required": 120
+              }
+            ],
+            "sourceNote": "Synthetic estimate"
+          },
+          {
+            "id": "a-2",
+            "name": "Refinery hub",
+            "typeId": "hub-refinery",
+            "status": "planned",
+            "dependsOn": [
+              "a-1"
+            ],
+            "resourcePlan": [
+              {
+                "commodity": "aluminium",
+                "required": 40
+              }
+            ],
+            "sourceNote": "Synthetic estimate"
+          }
+        ],
+        "deliveries": [
+          {
+            "id": "manual-a",
+            "buildingId": "a-1",
+            "commodity": "steel",
+            "count": 50,
+            "timestamp": "2026-11-07T10:00:00Z",
+            "notes": "Synthetic",
+            "source": "manual"
+          }
+        ]
+      },
+      {
+        "id": "colony-b",
+        "name": "Synthetic Beta",
+        "targetSystem": "Synthetic Beta",
+        "status": "planned",
+        "cargoCapacity": 100,
+        "points": {
+          "tier2": null,
+          "tier3": null
+        },
+        "buildings": [
+          {
+            "id": "b-1",
+            "name": "Future port",
+            "typeId": "custom",
+            "status": "planned"
+          }
+        ]
+      }
+    ]
+  },
+  "events": [
+    {
+      "event": {
+        "timestamp": "2026-11-07T10:00:00Z",
+        "event": "LoadGame",
+        "FID": "Synthetic FID"
+      },
+      "context": {
+        "file": "Journal.synthetic.log",
+        "offset": 0,
+        "commander": {
+          "system": "Synthetic Alpha",
+          "systemAddress": 123,
+          "station": "Synthetic depot",
+          "vehicle": "ship"
+        }
+      }
+    },
+    {
+      "event": {
+        "timestamp": "2026-11-07T10:00:00Z",
+        "event": "Location",
+        "StarSystem": "Synthetic Alpha",
+        "SystemAddress": 123,
+        "StationName": "Synthetic depot",
+        "MarketID": 1001
+      },
+      "context": {
+        "file": "Journal.synthetic.log",
+        "offset": 1,
+        "commander": {
+          "system": "Synthetic Alpha",
+          "systemAddress": 123,
+          "station": "Synthetic depot",
+          "vehicle": "ship"
+        }
+      }
+    },
+    {
+      "event": {
+        "timestamp": "2026-11-07T10:00:00Z",
+        "event": "ColonisationConstructionDepot",
+        "MarketID": 1001,
+        "ConstructionProgress": 0.3,
+        "ResourcesRequired": [
+          {
+            "Name": "$steel_name;",
+            "RequiredAmount": 120,
+            "ProvidedAmount": 20
+          }
+        ]
+      },
+      "context": {
+        "file": "Journal.synthetic.log",
+        "offset": 2,
+        "commander": {
+          "system": "Synthetic Alpha",
+          "systemAddress": 123,
+          "station": "Synthetic depot",
+          "vehicle": "ship"
+        }
+      }
+    },
+    {
+      "event": {
+        "timestamp": "2026-11-07T10:00:00Z",
+        "event": "ColonisationContribution",
+        "MarketID": 1001,
+        "Contributions": [
+          {
+            "Name": "$steel_name;",
+            "Amount": 15
+          }
+        ]
+      },
+      "context": {
+        "file": "Journal.synthetic.log",
+        "offset": 3,
+        "commander": {
+          "system": "Synthetic Alpha",
+          "systemAddress": 123,
+          "station": "Synthetic depot",
+          "vehicle": "ship"
+        }
+      }
+    }
+  ],
+  "context": {
+    "commander": {
+      "vehicle": "ship",
+      "cargoForSync": [
+        {
+          "Name": "steel",
+          "Count": 30,
+          "Stolen": 5
+        },
+        {
+          "Name": "aluminium",
+          "Count": 10
+        }
+      ]
+    },
+    "carrier": {
+      "owned": true,
+      "warehouse": {
+        "complete": false,
+        "items": [
+          {
+            "key": "steel",
+            "count": 100
+          }
+        ]
+      }
+    }
+  },
+  "want": [
+    {
+      "id": "colony-a",
+      "status": "building",
+      "cargoCapacity": 512,
+      "totalRequired": 160,
+      "totalMissing": 125,
+      "unknownBills": 0,
+      "pointsProjected": {
+        "tier2": 1,
+        "tier3": 2
+      },
+      "nextTask": {
+        "kind": "delivery",
+        "text": "Refinery hub: доставить Алюминий — 40 т",
+        "system": "Synthetic Alpha",
+        "buildingId": "a-2",
+        "marketId": null,
+        "deadline": null,
+        "commodity": "aluminium",
+        "count": 40,
+        "authoritative": false
+      },
+      "buildings": [
+        {
+          "id": "a-1",
+          "status": "building",
+          "pointCost": 0,
+          "pointReward": 1,
+          "requirements": [
+            {
+              "commodity": "steel",
+              "name": "Сталь",
+              "required": 120,
+              "delivered": 35,
+              "payment": null,
+              "missing": 85,
+              "source": "journal+contribution",
+              "authoritative": true,
+              "observedDelivered": 20,
+              "pendingOwn": 15,
+              "manualDelivered": 50,
+              "updatedAt": "2026-11-07T10:00:00.000Z",
+              "cargoAvailable": 25,
+              "carrierAvailable": 100
+            }
+          ]
+        },
+        {
+          "id": "a-2",
+          "status": "planned",
+          "pointCost": 1,
+          "pointReward": 1,
+          "requirements": [
+            {
+              "commodity": "aluminium",
+              "name": "Алюминий",
+              "required": 40,
+              "delivered": 0,
+              "manualDelivered": 0,
+              "missing": 40,
+              "source": "manual",
+              "sourceNote": "Synthetic estimate",
+              "authoritative": false,
+              "cargoAvailable": 10,
+              "carrierAvailable": null
+            }
+          ]
+        }
+      ],
+      "supplyOrder": [
+        "a-2",
+        "a-1"
+      ]
+    },
+    {
+      "id": "colony-b",
+      "status": "planned",
+      "cargoCapacity": 100,
+      "totalRequired": 0,
+      "totalMissing": 0,
+      "unknownBills": 1,
+      "pointsProjected": {
+        "tier2": null,
+        "tier3": null
+      },
+      "nextTask": {
+        "kind": "claim",
+        "text": "Проверьте заявку на Synthetic Beta у контакта колонизации.",
+        "system": ""
+      },
+      "buildings": [
+        {
+          "id": "b-1",
+          "status": "planned",
+          "pointCost": null,
+          "pointReward": null,
+          "requirements": []
+        }
+      ],
+      "supplyOrder": [
+        "b-1"
+      ]
+    }
+  ]
+}

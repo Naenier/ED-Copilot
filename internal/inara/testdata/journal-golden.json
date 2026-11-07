@@ -1,0 +1,2676 @@
+{
+  "now": "2026-11-07T12:00:00Z",
+  "cases": [
+    {
+      "name": "credits",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "LoadGame",
+        "Credits": 123456,
+        "Loan": 12
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderCredits",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "commanderCredits": 123456,
+            "commanderLoan": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "statistics",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Statistics",
+        "Bank_Account": {
+          "Current_Wealth": 5000
+        },
+        "Mining": {
+          "Mining_Profits": 15
+        }
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderGameStatistics",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "Bank_Account": {
+              "Current_Wealth": 5000
+            },
+            "Mining": {
+              "Mining_Profits": 15
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rank",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Rank",
+        "Combat": 3,
+        "Trade": 7,
+        "Explore": 4,
+        "Federation": 3,
+        "Empire": 2
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPilot",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "rankName": "combat",
+              "rankValue": 3
+            },
+            {
+              "rankName": "trade",
+              "rankValue": 7
+            },
+            {
+              "rankName": "explore",
+              "rankValue": 4
+            },
+            {
+              "rankName": "federation",
+              "rankValue": 3
+            },
+            {
+              "rankName": "empire",
+              "rankValue": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Promotion",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Promotion",
+        "Combat": 3,
+        "Trade": 7,
+        "Explore": 4,
+        "Federation": 3,
+        "Empire": 2
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPilot",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "rankName": "combat",
+              "rankValue": 3
+            },
+            {
+              "rankName": "trade",
+              "rankValue": 7
+            },
+            {
+              "rankName": "explore",
+              "rankValue": 4
+            },
+            {
+              "rankName": "federation",
+              "rankValue": 3
+            },
+            {
+              "rankName": "empire",
+              "rankValue": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Progress",
+        "Combat": 50,
+        "Trade": 7,
+        "Explore": 4,
+        "Federation": 3,
+        "Empire": 2
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPilot",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "rankName": "combat",
+              "rankProgress": 0.5
+            },
+            {
+              "rankName": "trade",
+              "rankProgress": 0.07
+            },
+            {
+              "rankName": "explore",
+              "rankProgress": 0.04
+            },
+            {
+              "rankName": "federation",
+              "rankProgress": 0.03
+            },
+            {
+              "rankName": "empire",
+              "rankProgress": 0.02
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "engineers",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "EngineerProgress",
+        "Engineers": [
+          {
+            "Engineer": "Felicity Farseer",
+            "Progress": "Unlocked",
+            "Rank": 5
+          },
+          {
+            "Engineer": "Unknown",
+            "Progress": "Invited"
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankEngineer",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "engineerName": "Felicity Farseer",
+              "rankStage": "Unlocked",
+              "rankValue": 5
+            },
+            {
+              "engineerName": "Unknown",
+              "rankStage": "Invited"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "reputation",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Reputation",
+        "Empire": 50,
+        "Federation": -20,
+        "Alliance": 10,
+        "Independent": 0
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderReputationMajorFaction",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "majorfactionName": "empire",
+              "majorfactionReputation": 0.5
+            },
+            {
+              "majorfactionName": "federation",
+              "majorfactionReputation": -0.2
+            },
+            {
+              "majorfactionName": "alliance",
+              "majorfactionReputation": 0.1
+            },
+            {
+              "majorfactionName": "independent",
+              "majorfactionReputation": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Powerplay",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Powerplay",
+        "Power": "Aisling Duval",
+        "ToPower": "Li Yong-Rui",
+        "Rank": 3,
+        "Merits": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPower",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "powerName": "Aisling Duval",
+            "rankValue": 3,
+            "meritsValue": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "PowerplayRank",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "PowerplayRank",
+        "Power": "Aisling Duval",
+        "ToPower": "Li Yong-Rui",
+        "Rank": 3,
+        "Merits": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPower",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "powerName": "Aisling Duval",
+            "rankValue": 3,
+            "meritsValue": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "PowerplayJoin",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "PowerplayJoin",
+        "Power": "Aisling Duval",
+        "ToPower": "Li Yong-Rui",
+        "Rank": 3,
+        "Merits": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPower",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "powerName": "Aisling Duval",
+            "rankValue": 1,
+            "meritsValue": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "PowerplayDefect",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "PowerplayDefect",
+        "Power": "Aisling Duval",
+        "ToPower": "Li Yong-Rui",
+        "Rank": 3,
+        "Merits": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPower",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "powerName": "Li Yong-Rui",
+            "rankValue": 1,
+            "meritsValue": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "PowerplayLeave",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "PowerplayLeave",
+        "Power": "Aisling Duval",
+        "ToPower": "Li Yong-Rui",
+        "Rank": 3,
+        "Merits": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderRankPower",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "powerName": "Aisling Duval",
+            "rankValue": -1,
+            "meritsValue": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "cargo legal/stolen/mission",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Cargo",
+        "Vessel": "Ship",
+        "Inventory": [
+          {
+            "Name": "gold",
+            "Count": 10,
+            "Stolen": 3,
+            "MissionID": 123
+          },
+          {
+            "Name": "steel",
+            "Count": 20
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderInventoryCargo",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "itemName": "gold",
+              "itemCount": 3,
+              "missionGameID": 123,
+              "isStolen": true
+            },
+            {
+              "itemName": "gold",
+              "itemCount": 7,
+              "missionGameID": 123,
+              "isStolen": false
+            },
+            {
+              "itemName": "steel",
+              "itemCount": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty cargo",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Cargo",
+        "Vessel": "Ship",
+        "Inventory": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderInventoryCargo",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": []
+        }
+      ]
+    },
+    {
+      "name": "srv excluded",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Cargo",
+        "Vessel": "SRV",
+        "Inventory": [
+          {
+            "Name": "gold",
+            "Count": 1
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    },
+    {
+      "name": "materials",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Materials",
+        "Raw": [
+          {
+            "Name": "iron",
+            "Count": 30
+          }
+        ],
+        "Manufactured": [
+          {
+            "Name": "chemicalprocessors",
+            "Count": 20
+          }
+        ],
+        "Encoded": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderInventoryMaterials",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "itemName": "chemicalprocessors",
+              "itemCount": 20
+            },
+            {
+              "itemName": "iron",
+              "itemCount": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "partial materials excluded",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Materials",
+        "Raw": [
+          {
+            "Name": "iron",
+            "Count": 30
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    },
+    {
+      "name": "locker",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipLocker",
+        "Items": [
+          {
+            "Name": "push",
+            "Count": 1
+          }
+        ],
+        "Components": [],
+        "Data": [
+          {
+            "Name": "settlementdefenceplans",
+            "Count": 2
+          }
+        ],
+        "Consumables": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "resetCommanderInventory",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "itemType": "Components",
+              "itemLocation": "ShipLocker"
+            },
+            {
+              "itemType": "Consumables",
+              "itemLocation": "ShipLocker"
+            }
+          ]
+        },
+        {
+          "eventName": "setCommanderInventory",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "itemName": "push",
+              "itemCount": 1,
+              "itemType": "Items",
+              "itemLocation": "ShipLocker"
+            },
+            {
+              "itemName": "settlementdefenceplans",
+              "itemCount": 2,
+              "itemType": "Data",
+              "itemLocation": "ShipLocker"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "loadout",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Loadout",
+        "Ship": "python",
+        "ShipID": 7,
+        "ShipName": "Synthetic Cargo",
+        "ShipIdent": "SYN-01",
+        "CargoCapacity": 200,
+        "Modules": [
+          {
+            "Slot": "MainEngines",
+            "Item": "int_engine_size6_class5",
+            "Health": 0.8,
+            "On": true,
+            "Priority": 1,
+            "Engineering": {
+              "BlueprintName": "Engine_Dirty",
+              "Level": 5,
+              "Quality": 0.9,
+              "ExperimentalEffect": "special_engine_dragdrives",
+              "Modifiers": [
+                {
+                  "Label": "EngineOptimalMass",
+                  "Value": 1500,
+                  "OriginalValue": 1000,
+                  "LessIsGood": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "shipName": "Synthetic Cargo",
+            "shipIdent": "SYN-01",
+            "shipCargoCapacity": 200,
+            "isCurrentShip": true
+          }
+        },
+        {
+          "eventName": "setCommanderShipLoadout",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "shipLoadout": [
+              {
+                "slotName": "MainEngines",
+                "itemName": "int_engine_size6_class5",
+                "itemHealth": 0.8,
+                "isOn": true,
+                "itemPriority": 1,
+                "engineering": {
+                  "blueprintName": "Engine_Dirty",
+                  "blueprintLevel": 5,
+                  "blueprintQuality": 0.9,
+                  "experimentalEffect": "special_engine_dragdrives",
+                  "modifiers": [
+                    {
+                      "name": "EngineOptimalMass",
+                      "value": 1500,
+                      "originalValue": 1000,
+                      "lessIsGood": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rename",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "SetUserShipName",
+        "Ship": "python",
+        "ShipID": 7,
+        "UserShipName": "New Synthetic Name",
+        "UserShipId": "NEW-01"
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "shipName": "New Synthetic Name",
+            "shipIdent": "NEW-01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "nomad not standalone ship",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Loadout",
+        "Ship": "Lander01",
+        "ShipID": 173,
+        "Modules": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    },
+    {
+      "name": "ShipyardBuy",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipyardBuy",
+        "ShipType": "Anaconda",
+        "ShipID": 8,
+        "StoreOldShip": "python",
+        "StoreShipID": 7,
+        "SellOldShip": "cobraMkIII",
+        "SellShipID": 5
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "delCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "cobraMkIII",
+            "shipGameID": 5
+          }
+        },
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "starsystemName": "Sol",
+            "stationName": "Galileo",
+            "marketID": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "ShipyardSwap",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipyardSwap",
+        "ShipType": "Anaconda",
+        "ShipID": 8,
+        "StoreOldShip": "python",
+        "StoreShipID": 7,
+        "SellOldShip": "cobraMkIII",
+        "SellShipID": 5
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "delCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "cobraMkIII",
+            "shipGameID": 5
+          }
+        },
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "starsystemName": "Sol",
+            "stationName": "Galileo",
+            "marketID": 100
+          }
+        },
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "Anaconda",
+            "shipGameID": 8,
+            "isCurrentShip": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "new ship",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipyardNew",
+        "ShipType": "AnacondaMkII",
+        "NewShipID": 19
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "AnacondaMkII",
+            "shipGameID": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "ShipyardSell",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipyardSell",
+        "ShipType": "cobraMkIII",
+        "SellShipID": 5
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "delCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "cobraMkIII",
+            "shipGameID": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "SellShipOnRebuy",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "SellShipOnRebuy",
+        "ShipType": "cobraMkIII",
+        "SellShipID": 5
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "delCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "cobraMkIII",
+            "shipGameID": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ShipyardTransfer",
+        "ShipType": "python",
+        "ShipID": 7,
+        "TransferTime": 1500
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderShipTransfer",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "starsystemName": "Sol",
+            "stationName": "Galileo",
+            "transferTime": 1500,
+            "marketID": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "stored ships",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "StoredShips",
+        "MarketID": 100,
+        "StationName": "Galileo",
+        "StarSystem": "Sol",
+        "ShipsHere": [
+          {
+            "ShipType": "python",
+            "ShipID": 7,
+            "Name": "Hauler One",
+            "Hot": false
+          }
+        ],
+        "ShipsRemote": [
+          {
+            "ShipType": "Cutter",
+            "ShipID": 8,
+            "StarSystem": "Achenar",
+            "ShipMarketID": 200
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "python",
+            "shipGameID": 7,
+            "shipName": "Hauler One",
+            "isHot": false,
+            "starsystemName": "Sol",
+            "stationName": "Galileo",
+            "marketID": 100
+          }
+        },
+        {
+          "eventName": "setCommanderShip",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "shipType": "Cutter",
+            "shipGameID": 8,
+            "starsystemName": "Achenar",
+            "marketID": 200
+          }
+        }
+      ]
+    },
+    {
+      "name": "stored modules",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "StoredModules",
+        "Items": [
+          {
+            "Name": "int_engine_size6_class5",
+            "BuyPrice": 100000,
+            "Hot": false,
+            "StarSystem": "Sol",
+            "MarketID": 100,
+            "Engineering": "Engine_Dirty",
+            "Level": 5,
+            "Quality": 0.9
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderStorageModules",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "itemName": "int_engine_size6_class5",
+              "itemValue": 100000,
+              "isHot": false,
+              "starsystemName": "Sol",
+              "marketID": 100,
+              "engineering": {
+                "blueprintName": "Engine_Dirty",
+                "blueprintLevel": 5,
+                "blueprintQuality": 0.9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SuitLoadout",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "SuitLoadout",
+        "LoadoutID": 11,
+        "SuitID": 12,
+        "SuitName": "UtilitySuit_Class1",
+        "LoadoutName": "Work",
+        "SuitMods": [
+          "suit_increasedbatterycapacity"
+        ],
+        "Modules": [
+          {
+            "SlotName": "PrimaryWeapon1",
+            "ModuleName": "wpn_m_laser_srifle",
+            "Class": 2,
+            "SuitModuleID": 13,
+            "WeaponMods": [
+              "weapon_magsize"
+            ]
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderSuitLoadout",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "loadoutGameID": 11,
+            "loadoutName": "Work",
+            "suitGameID": 12,
+            "suitType": "UtilitySuit_Class1",
+            "suitMods": [
+              "suit_increasedbatterycapacity"
+            ],
+            "suitLoadout": [
+              {
+                "slotName": "PrimaryWeapon1",
+                "itemName": "wpn_m_laser_srifle",
+                "itemClass": 2,
+                "itemGameID": 13,
+                "engineering": [
+                  {
+                    "blueprintName": "weapon_magsize"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateSuitLoadout",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "CreateSuitLoadout",
+        "LoadoutID": 11,
+        "SuitID": 12,
+        "SuitName": "UtilitySuit_Class1",
+        "LoadoutName": "Work",
+        "SuitMods": [
+          "suit_increasedbatterycapacity"
+        ],
+        "Modules": [
+          {
+            "SlotName": "PrimaryWeapon1",
+            "ModuleName": "wpn_m_laser_srifle",
+            "Class": 2,
+            "SuitModuleID": 13,
+            "WeaponMods": [
+              "weapon_magsize"
+            ]
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderSuitLoadout",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "loadoutGameID": 11,
+            "loadoutName": "Work",
+            "suitGameID": 12,
+            "suitType": "UtilitySuit_Class1",
+            "suitMods": [
+              "suit_increasedbatterycapacity"
+            ],
+            "suitLoadout": [
+              {
+                "slotName": "PrimaryWeapon1",
+                "itemName": "wpn_m_laser_srifle",
+                "itemClass": 2,
+                "itemGameID": 13,
+                "engineering": [
+                  {
+                    "blueprintName": "weapon_magsize"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete suit",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "DeleteSuitLoadout",
+        "LoadoutID": 11
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "delCommanderSuitLoadout",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "loadoutGameID": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "rename suit",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "RenameSuitLoadout",
+        "LoadoutID": 11,
+        "LoadoutName": "New Work"
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "updateCommanderSuitLoadout",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "loadoutGameID": 11,
+            "loadoutName": "New Work"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Location",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderReputationMinorFaction",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "minorfactionName": "Synthetic Faction",
+              "minorfactionReputation": 0.42
+            }
+          ]
+        },
+        {
+          "eventName": "setCommanderTravelLocation",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "stationName": "Dawes Hub",
+            "marketID": 200,
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "FSDJump",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "FSDJump",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderReputationMinorFaction",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "minorfactionName": "Synthetic Faction",
+              "minorfactionReputation": 0.42
+            }
+          ]
+        },
+        {
+          "eventName": "addCommanderTravelFSDJump",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "jumpDistance": 32,
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ],
+            "shipType": "python",
+            "shipGameID": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "CarrierJump",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "CarrierJump",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderReputationMinorFaction",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": [
+            {
+              "minorfactionName": "Synthetic Faction",
+              "minorfactionReputation": 0.42
+            }
+          ]
+        },
+        {
+          "eventName": "addCommanderTravelCarrierJump",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "stationName": "Dawes Hub",
+            "marketID": 200,
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ],
+            "shipType": "python",
+            "shipGameID": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Docked",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Docked",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderTravelDock",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "stationName": "Dawes Hub",
+            "marketID": 200,
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ],
+            "shipType": "python",
+            "shipGameID": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Touchdown",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Touchdown",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderTravelLand",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ],
+            "shipType": "python",
+            "shipGameID": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "ApproachSettlement",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "ApproachSettlement",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderTravelLocation",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "stationName": "Synthetic Settlement",
+            "marketID": 200,
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "SupercruiseExit",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "SupercruiseExit",
+        "StarSystem": "Achenar",
+        "StarPos": [
+          1,
+          2,
+          3
+        ],
+        "StationName": "Dawes Hub",
+        "MarketID": 200,
+        "Name": "Synthetic Settlement",
+        "Docked": true,
+        "Body": "Achenar 1",
+        "BodyType": "Planet",
+        "Latitude": 10,
+        "Longitude": 20,
+        "PlayerControlled": true,
+        "JumpDist": 32,
+        "Factions": [
+          {
+            "Name": "Synthetic Faction",
+            "MyReputation": 42
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderTravelLocation",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Achenar",
+            "starsystemCoords": [
+              1,
+              2,
+              3
+            ],
+            "starsystemBodyName": "Achenar 1",
+            "starsystemBodyCoords": [
+              10,
+              20
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "taxi jump",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "FSDJump",
+        "StarSystem": "Sol",
+        "JumpDist": 2,
+        "Taxi": true
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderTravelFSDJump",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Sol",
+            "starsystemCoords": [
+              0,
+              0,
+              0
+            ],
+            "jumpDistance": 2,
+            "isTaxiShuttle": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "suppressed dock",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Docked",
+        "StarSystem": "Sol",
+        "StationName": "Galileo",
+        "MarketID": 100
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0,
+        "suppressDock": true
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderTravelLocation",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Sol",
+            "starsystemCoords": [
+              0,
+              0,
+              0
+            ],
+            "stationName": "Galileo",
+            "marketID": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "recalled touchdown ignored",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Touchdown",
+        "StarSystem": "Sol",
+        "Body": "Earth",
+        "PlayerControlled": false
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    },
+    {
+      "name": "mission accepted",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "MissionAccepted",
+        "MissionID": 101,
+        "Name": "Mission_Delivery",
+        "Expiry": "2026-11-08T12:00:00Z",
+        "Faction": "Synthetic Faction",
+        "DestinationSystem": "Achenar",
+        "DestinationStation": "Dawes Hub",
+        "Commodity": "gold",
+        "Count": 10,
+        "PassengerVIPs": false,
+        "PassengerWanted": false
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderMission",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "missionGameID": 101,
+            "missionName": "Mission_Delivery",
+            "missionExpiry": "2026-11-08T12:00:00Z",
+            "minorfactionNameOrigin": "Synthetic Faction",
+            "starsystemNameTarget": "Achenar",
+            "stationNameTarget": "Dawes Hub",
+            "commodityName": "gold",
+            "commodityCount": 10,
+            "passengerIsVIP": false,
+            "passengerIsWanted": false,
+            "starsystemNameOrigin": "Sol",
+            "stationNameOrigin": "Galileo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mission completed rewards",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "MissionCompleted",
+        "MissionID": 101,
+        "Reward": 10000,
+        "Donation": 10,
+        "PermitsAwarded": [
+          "Sol"
+        ],
+        "CommodityReward": [
+          {
+            "Name": "gold",
+            "Count": 2
+          }
+        ],
+        "MaterialsReward": [
+          {
+            "Name": "iron",
+            "Count": 3
+          }
+        ],
+        "FactionEffects": [
+          {
+            "Faction": "Synthetic Faction",
+            "Reputation": "++",
+            "Influence": [
+              {
+                "SystemAddress": 1,
+                "Influence": "+"
+              },
+              {
+                "SystemAddress": 2,
+                "Influence": "+++"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "addCommanderPermit",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "starsystemName": "Sol"
+          }
+        },
+        {
+          "eventName": "setCommanderMissionCompleted",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "missionGameID": 101,
+            "donationCredits": 10,
+            "rewardCredits": 10000,
+            "rewardPermits": [
+              {
+                "starsystemName": "Sol"
+              }
+            ],
+            "rewardCommodities": [
+              {
+                "itemName": "gold",
+                "itemCount": 2
+              }
+            ],
+            "rewardMaterials": [
+              {
+                "itemName": "iron",
+                "itemCount": 3
+              }
+            ],
+            "minorfactionEffects": [
+              {
+                "minorfactionName": "Synthetic Faction",
+                "reputationGain": "++",
+                "influenceGain": "+++"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "mission failed",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "MissionFailed",
+        "MissionID": 102
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderMissionFailed",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "missionGameID": 102
+          }
+        }
+      ]
+    },
+    {
+      "name": "mission abandoned",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "MissionAbandoned",
+        "MissionID": 103
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": [
+        {
+          "eventName": "setCommanderMissionAbandoned",
+          "eventTimestamp": "2026-11-07T12:00:00Z",
+          "eventData": {
+            "missionGameID": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "beta ignored",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Cargo",
+        "Vessel": "Ship",
+        "Inventory": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0,
+        "isBeta": true
+      },
+      "expected": []
+    },
+    {
+      "name": "legacy ignored",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "LoadGame",
+        "Credits": 100
+      },
+      "context": {
+        "live": false,
+        "gameVersion": "3.8.0",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    },
+    {
+      "name": "multicrew ignored",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Loadout",
+        "Ship": "python",
+        "ShipID": 7,
+        "Modules": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0,
+        "multicrew": true
+      },
+      "expected": []
+    },
+    {
+      "name": "replay ignored",
+      "event": {
+        "timestamp": "2026-11-07T12:00:00Z",
+        "event": "Docked",
+        "StarSystem": "Sol"
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0,
+        "replay": true
+      },
+      "expected": []
+    },
+    {
+      "name": "invalid timestamp",
+      "event": {
+        "timestamp": "invalid",
+        "event": "Cargo",
+        "Vessel": "Ship",
+        "Inventory": []
+      },
+      "context": {
+        "live": true,
+        "gameVersion": "4.4.2",
+        "commander": {
+          "name": "Synthetic Pilot",
+          "fid": "FSYNTHETIC",
+          "system": "Sol",
+          "station": "Galileo",
+          "marketId": 100,
+          "coordinates": [
+            0,
+            0,
+            0
+          ]
+        },
+        "shipType": "python",
+        "shipId": 7,
+        "loan": 0
+      },
+      "expected": []
+    }
+  ]
+}

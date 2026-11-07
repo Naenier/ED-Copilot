@@ -1,0 +1,986 @@
+{
+  "input": {
+    "moduleKey": "am",
+    "blueprintKey": "AFM_Shielded",
+    "rolls": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "quantity": 2,
+    "experimentalKey": null
+  },
+  "events": [
+    {
+      "event": "Materials",
+      "timestamp": "2026-11-07T20:00:00Z",
+      "Raw": [
+        {
+          "Name": "Iron",
+          "Count": 40
+        },
+        {
+          "Name": "Nickel",
+          "Count": 40
+        },
+        {
+          "Name": "Tin",
+          "Count": 40
+        },
+        {
+          "Name": "Zinc",
+          "Count": 40
+        },
+        {
+          "Name": "Carbon",
+          "Count": 40
+        },
+        {
+          "Name": "Sulphur",
+          "Count": 40
+        },
+        {
+          "Name": "Phosphorus",
+          "Count": 40
+        },
+        {
+          "Name": "Manganese",
+          "Count": 40
+        },
+        {
+          "Name": "Selenium",
+          "Count": 40
+        },
+        {
+          "Name": "Chromium",
+          "Count": 40
+        },
+        {
+          "Name": "Vanadium",
+          "Count": 40
+        },
+        {
+          "Name": "Germanium",
+          "Count": 40
+        },
+        {
+          "Name": "Cadmium",
+          "Count": 40
+        },
+        {
+          "Name": "Tungsten",
+          "Count": 40
+        },
+        {
+          "Name": "Arsenic",
+          "Count": 40
+        },
+        {
+          "Name": "Molybdenum",
+          "Count": 40
+        },
+        {
+          "Name": "Niobium",
+          "Count": 40
+        },
+        {
+          "Name": "Zirconium",
+          "Count": 40
+        },
+        {
+          "Name": "Mercury",
+          "Count": 40
+        },
+        {
+          "Name": "Yttrium",
+          "Count": 40
+        },
+        {
+          "Name": "Tellurium",
+          "Count": 40
+        },
+        {
+          "Name": "Polonium",
+          "Count": 40
+        },
+        {
+          "Name": "Technetium",
+          "Count": 40
+        },
+        {
+          "Name": "Ruthenium",
+          "Count": 40
+        },
+        {
+          "Name": "Antimony",
+          "Count": 40
+        },
+        {
+          "Name": "Rhenium",
+          "Count": 40
+        },
+        {
+          "Name": "Lead",
+          "Count": 40
+        },
+        {
+          "Name": "Boron",
+          "Count": 40
+        }
+      ],
+      "Manufactured": [
+        {
+          "Name": "GridResistors",
+          "Count": 40
+        },
+        {
+          "Name": "CrystalShards",
+          "Count": 40
+        },
+        {
+          "Name": "TemperedAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "BasicConductors",
+          "Count": 40
+        },
+        {
+          "Name": "MechanicalScrap",
+          "Count": 40
+        },
+        {
+          "Name": "HeatConductionWiring",
+          "Count": 40
+        },
+        {
+          "Name": "WornShieldEmitters",
+          "Count": 40
+        },
+        {
+          "Name": "CompactComposites",
+          "Count": 40
+        },
+        {
+          "Name": "SalvagedAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ChemicalStorageUnits",
+          "Count": 40
+        },
+        {
+          "Name": "HybridCapacitors",
+          "Count": 40
+        },
+        {
+          "Name": "UncutFocusCrystals",
+          "Count": 40
+        },
+        {
+          "Name": "HeatResistantCeramics",
+          "Count": 40
+        },
+        {
+          "Name": "ConductiveComponents",
+          "Count": 40
+        },
+        {
+          "Name": "MechanicalEquipment",
+          "Count": 40
+        },
+        {
+          "Name": "HeatDispersionPlate",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldEmitters",
+          "Count": 40
+        },
+        {
+          "Name": "FilamentComposites",
+          "Count": 40
+        },
+        {
+          "Name": "GalvanisingAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ChemicalProcessors",
+          "Count": 40
+        },
+        {
+          "Name": "ElectrochemicalArrays",
+          "Count": 40
+        },
+        {
+          "Name": "FocusCrystals",
+          "Count": 40
+        },
+        {
+          "Name": "PrecipitatedAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ConductiveCeramics",
+          "Count": 40
+        },
+        {
+          "Name": "MechanicalComponents",
+          "Count": 40
+        },
+        {
+          "Name": "HeatExchangers",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldingSensors",
+          "Count": 40
+        },
+        {
+          "Name": "HighDensityComposites",
+          "Count": 40
+        },
+        {
+          "Name": "PhaseAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ChemicalDistillery",
+          "Count": 40
+        },
+        {
+          "Name": "PolymerCapacitors",
+          "Count": 40
+        },
+        {
+          "Name": "RefinedFocusCrystals",
+          "Count": 40
+        },
+        {
+          "Name": "ThermicAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ConductivePolymers",
+          "Count": 40
+        },
+        {
+          "Name": "ConfigurableComponents",
+          "Count": 40
+        },
+        {
+          "Name": "HeatVanes",
+          "Count": 40
+        },
+        {
+          "Name": "CompoundShielding",
+          "Count": 40
+        },
+        {
+          "Name": "FedProprietaryComposites",
+          "Count": 40
+        },
+        {
+          "Name": "ProtoLightAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "ChemicalManipulators",
+          "Count": 40
+        },
+        {
+          "Name": "MilitarySupercapacitors",
+          "Count": 40
+        },
+        {
+          "Name": "ExquisiteFocusCrystals",
+          "Count": 40
+        },
+        {
+          "Name": "MilitaryGradeAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "BiotechConductors",
+          "Count": 40
+        },
+        {
+          "Name": "ImprovisedComponents",
+          "Count": 40
+        },
+        {
+          "Name": "ProtoHeatRadiators",
+          "Count": 40
+        },
+        {
+          "Name": "ImperialShielding",
+          "Count": 40
+        },
+        {
+          "Name": "FedCoreComposites",
+          "Count": 40
+        },
+        {
+          "Name": "ProtoRadiolicAlloys",
+          "Count": 40
+        },
+        {
+          "Name": "PharmaceuticalIsolators",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownEnergySource",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownCarapace",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownEnergyCell",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownOrganicCircuitry",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownTechnologyComponents",
+          "Count": 40
+        },
+        {
+          "Name": "TG_BioMechanicalConduits",
+          "Count": 40
+        },
+        {
+          "Name": "TG_PropulsionElement",
+          "Count": 40
+        },
+        {
+          "Name": "TG_WeaponParts",
+          "Count": 40
+        },
+        {
+          "Name": "TG_WreckageComponents",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_PowerCell",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_PowerConduit",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_TechComponent",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_Sentinel_WeaponParts",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_Sentinel_WreckageComponents",
+          "Count": 40
+        }
+      ],
+      "Encoded": [
+        {
+          "Name": "LegacyFirmware",
+          "Count": 40
+        },
+        {
+          "Name": "EncryptedFiles",
+          "Count": 40
+        },
+        {
+          "Name": "BulkScanData",
+          "Count": 40
+        },
+        {
+          "Name": "DisruptedWakeEchoes",
+          "Count": 40
+        },
+        {
+          "Name": "ScrambledEmissionData",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldCycleRecordings",
+          "Count": 40
+        },
+        {
+          "Name": "ConsumerFirmware",
+          "Count": 40
+        },
+        {
+          "Name": "EncryptionCodes",
+          "Count": 40
+        },
+        {
+          "Name": "ScanArchives",
+          "Count": 40
+        },
+        {
+          "Name": "FSDTelemetry",
+          "Count": 40
+        },
+        {
+          "Name": "ArchivedEmissionData",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldSoakAnalysis",
+          "Count": 40
+        },
+        {
+          "Name": "IndustrialFirmware",
+          "Count": 40
+        },
+        {
+          "Name": "SymmetricKeys",
+          "Count": 40
+        },
+        {
+          "Name": "ScanDatabanks",
+          "Count": 40
+        },
+        {
+          "Name": "WakeSolutions",
+          "Count": 40
+        },
+        {
+          "Name": "EmissionData",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldDensityReports",
+          "Count": 40
+        },
+        {
+          "Name": "SecurityFirmware",
+          "Count": 40
+        },
+        {
+          "Name": "EncryptionArchives",
+          "Count": 40
+        },
+        {
+          "Name": "EncodedScanData",
+          "Count": 40
+        },
+        {
+          "Name": "HyperspaceTrajectories",
+          "Count": 40
+        },
+        {
+          "Name": "DecodedEmissionData",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldPatternAnalysis",
+          "Count": 40
+        },
+        {
+          "Name": "EmbeddedFirmware",
+          "Count": 40
+        },
+        {
+          "Name": "AdaptiveEncryptors",
+          "Count": 40
+        },
+        {
+          "Name": "ClassifiedScanData",
+          "Count": 40
+        },
+        {
+          "Name": "DataminedWake",
+          "Count": 40
+        },
+        {
+          "Name": "CompactEmissionsData",
+          "Count": 40
+        },
+        {
+          "Name": "ShieldFrequencyData",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownShipSignature",
+          "Count": 40
+        },
+        {
+          "Name": "UnknownWakeData",
+          "Count": 40
+        },
+        {
+          "Name": "AncientLanguageData",
+          "Count": 40
+        },
+        {
+          "Name": "AncientBiologicalData",
+          "Count": 40
+        },
+        {
+          "Name": "AncientCulturalData",
+          "Count": 40
+        },
+        {
+          "Name": "AncientHistoricalData",
+          "Count": 40
+        },
+        {
+          "Name": "AncientTechnologicalData",
+          "Count": 40
+        },
+        {
+          "Name": "TG_CompositionData",
+          "Count": 40
+        },
+        {
+          "Name": "TG_ResidueData",
+          "Count": 40
+        },
+        {
+          "Name": "TG_StructuralData",
+          "Count": 40
+        },
+        {
+          "Name": "TG_ShipFlightData",
+          "Count": 40
+        },
+        {
+          "Name": "TG_ShipSystemsData",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_WeaponBlueprint",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_ModuleBlueprint",
+          "Count": 40
+        },
+        {
+          "Name": "Guardian_VesselBlueprint",
+          "Count": 40
+        }
+      ]
+    }
+  ],
+  "options": {
+    "tradeTargetKey": "carbon",
+    "tradeTargetAmount": 7,
+    "protectPlan": true,
+    "showAllTrades": true
+  },
+  "expected": {
+    "shopping": {
+      "neededUnits": 82,
+      "missingUnits": 0,
+      "unknownMaterials": 0
+    },
+    "materials": [
+      {
+        "key": "carbon",
+        "owned": 40,
+        "needed": 10,
+        "missing": 0,
+        "surplus": 30
+      },
+      {
+        "key": "vanadium",
+        "owned": 40,
+        "needed": 8,
+        "missing": 0,
+        "surplus": 32
+      },
+      {
+        "key": "tungsten",
+        "owned": 40,
+        "needed": 10,
+        "missing": 0,
+        "surplus": 30
+      },
+      {
+        "key": "wornshieldemitters",
+        "owned": 40,
+        "needed": 2,
+        "missing": 0,
+        "surplus": 38
+      },
+      {
+        "key": "shieldemitters",
+        "owned": 40,
+        "needed": 10,
+        "missing": 0,
+        "surplus": 30
+      },
+      {
+        "key": "shieldingsensors",
+        "owned": 40,
+        "needed": 8,
+        "missing": 0,
+        "surplus": 32
+      },
+      {
+        "key": "highdensitycomposites",
+        "owned": 40,
+        "needed": 6,
+        "missing": 0,
+        "surplus": 34
+      },
+      {
+        "key": "compoundshielding",
+        "owned": 40,
+        "needed": 10,
+        "missing": 0,
+        "surplus": 30
+      },
+      {
+        "key": "fedproprietarycomposites",
+        "owned": 40,
+        "needed": 8,
+        "missing": 0,
+        "surplus": 32
+      },
+      {
+        "key": "fedcorecomposites",
+        "owned": 40,
+        "needed": 10,
+        "missing": 0,
+        "surplus": 30
+      }
+    ],
+    "offers": [
+      {
+        "fromKey": "niobium",
+        "toKey": "carbon",
+        "cost": 1,
+        "gain": 9,
+        "requiredFrom": 1,
+        "received": 9,
+        "maxGain": 252,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "yttrium",
+        "toKey": "carbon",
+        "cost": 1,
+        "gain": 27,
+        "requiredFrom": 1,
+        "received": 27,
+        "maxGain": 243,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "vanadium",
+        "toKey": "carbon",
+        "cost": 1,
+        "gain": 3,
+        "requiredFrom": 3,
+        "received": 9,
+        "maxGain": 96,
+        "available": 32,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "selenium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "tellurium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "polonium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "technetium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "ruthenium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "antimony",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 9,
+        "requiredFrom": 2,
+        "received": 9,
+        "maxGain": 180,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "tin",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 60,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "cadmium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 60,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "tungsten",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 45,
+        "available": 30,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "molybdenum",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 60,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "mercury",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 60,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "boron",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 3,
+        "requiredFrom": 6,
+        "received": 9,
+        "maxGain": 60,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "zinc",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "manganese",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "chromium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "germanium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "arsenic",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "zirconium",
+        "toKey": "carbon",
+        "cost": 2,
+        "gain": 1,
+        "requiredFrom": 14,
+        "received": 7,
+        "maxGain": 20,
+        "available": 40,
+        "affordable": true,
+        "storageFits": true
+      },
+      {
+        "fromKey": "iron",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      },
+      {
+        "fromKey": "nickel",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      },
+      {
+        "fromKey": "sulphur",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      },
+      {
+        "fromKey": "phosphorus",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      },
+      {
+        "fromKey": "rhenium",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      },
+      {
+        "fromKey": "lead",
+        "toKey": "carbon",
+        "cost": 6,
+        "gain": 1,
+        "requiredFrom": 42,
+        "received": 7,
+        "maxGain": 6,
+        "available": 40,
+        "affordable": false,
+        "storageFits": true
+      }
+    ]
+  }
+}

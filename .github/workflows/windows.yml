@@ -1,0 +1,69 @@
+name: Native Windows build
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache: true
+      - name: Tests and static checks
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go test ./... -count=1 -timeout=120s -coverprofile=coverage.out
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go vet ./...
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Race detector
+        shell: pwsh
+        env:
+          CGO_ENABLED: '1'
+        run: |
+          gcc --version
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go test -race ./... -count=1 -timeout=180s
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Build and isolated smoke
+        shell: pwsh
+        run: ./build.ps1 -SkipTests -Smoke -Package
+  release:
+    needs: verify
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
+    runs-on: windows-2025
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache: true
+      - name: Package
+        shell: pwsh
+        run: ./build.ps1 -SkipTests -Smoke -Package
+      - name: Publish v2.0.0
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v2.0.0 'dist/ED-Copilot-2.0.0-windows-amd64.zip' 'dist/SHA256SUMS.txt' 'dist/smoke-headless.json' 'dist/smoke-native.json' --target $env:GITHUB_SHA --title 'ED Copilot 2.0.0' --notes-file docs/RELEASE-2.0.0.md --repo $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
