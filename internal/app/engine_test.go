@@ -7,8 +7,10 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -296,6 +298,14 @@ func TestEngineConcurrentJournalPollingAndSnapshots(t *testing.T) {
 		events = append(events, testEvent("MiningRefined", M{"Type": "Platinum"}))
 	}
 	writeEvents(t, file, true, events)
+	var journalCallbacks, snapshots, saves atomic.Int64
+	apply := engine.Reader.Apply
+	// ManualPolling is enabled by fixtureEngine. Install the callback observer
+	// before starting workers, and count only fully completed event applications.
+	engine.Reader.Apply = func(event, meta M) {
+		apply(event, meta)
+		journalCallbacks.Add(1)
+	}
 	var wg sync.WaitGroup
 	wg.Add(3)
 	go func() { defer wg.Done(); engine.Reader.Poll() }()
@@ -303,6 +313,7 @@ func TestEngineConcurrentJournalPollingAndSnapshots(t *testing.T) {
 		defer wg.Done()
 		for i := 0; i < 40; i++ {
 			engine.Snapshot()
+			snapshots.Add(1)
 		}
 	}()
 	go func() {
@@ -311,14 +322,37 @@ func TestEngineConcurrentJournalPollingAndSnapshots(t *testing.T) {
 			if err := engine.Save(); err != nil {
 				t.Error(err)
 			}
+			saves.Add(1)
 		}
 	}()
 	done := make(chan struct{})
 	go func() { wg.Wait(); close(done) }()
-	select {
-	case <-done:
-	case <-time.After(10 * time.Second):
-		t.Fatal("poll/snapshot/save lock-order deadlock")
+	// Race instrumentation and concurrent CI packages can make this finite
+	// workload exceed ten seconds. Detect a lack of forward progress instead
+	// of treating total execution time as evidence of a lock-order deadlock.
+	const stallLimit = 10 * time.Second
+	heartbeat := time.NewTicker(100 * time.Millisecond)
+	defer heartbeat.Stop()
+	lastProgress, lastProgressAt := [3]int64{}, time.Now()
+	for {
+		select {
+		case <-done:
+			if journalCallbacks.Load() != int64(len(events)) || snapshots.Load() != 40 || saves.Load() != 10 {
+				t.Fatalf("incomplete concurrent workload: journal=%d/%d snapshots=%d/40 saves=%d/10", journalCallbacks.Load(), len(events), snapshots.Load(), saves.Load())
+			}
+			expectNumber(t, v.At(engine.Snapshot(), "stats", "total", "refinedTons"), 150)
+			return
+		case <-heartbeat.C:
+			progress := [3]int64{journalCallbacks.Load(), snapshots.Load(), saves.Load()}
+			if progress != lastProgress {
+				lastProgress, lastProgressAt = progress, time.Now()
+				continue
+			}
+			if time.Since(lastProgressAt) >= stallLimit {
+				stacks := make([]byte, 1<<20)
+				n := runtime.Stack(stacks, true)
+				t.Fatalf("poll/snapshot/save made no progress for %s: journal=%d/%d snapshots=%d/40 saves=%d/10\n%s", stallLimit, progress[0], len(events), progress[1], progress[2], stacks[:n])
+			}
+		}
 	}
-	expectNumber(t, v.At(engine.Snapshot(), "stats", "total", "refinedTons"), 150)
 }

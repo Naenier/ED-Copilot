@@ -187,6 +187,9 @@ func fold(text string) string {
 
 // Matches searches complete lesson text using all query words, including tags.
 func Matches(lesson v.M, query string) bool {
+	if strings.TrimSpace(query) == "" {
+		return true
+	}
 	parts := []string{v.Str(lesson["title"]), v.Str(lesson["summary"]), v.Str(lesson["courseTitle"]), v.Str(lesson["category"])}
 	for _, tag := range v.Arr(lesson["tags"]) {
 		parts = append(parts, v.Str(tag))

@@ -319,3 +319,44 @@ func TestDelayedPositionSaveDoesNotReorderTheCurrentLesson(t *testing.T) {
 		t.Fatal("late scroll position lost")
 	}
 }
+
+func TestBlankUnicodeSearchKeepsCompleteIndependentSnapshot(t *testing.T) {
+	lesson := Catalog()[1]
+	for _, query := range []string{"", " \t\r\n", "\u00a0", "\u2003\u202f\u3000"} {
+		if !Matches(lesson, query) {
+			t.Fatalf("blank query %q excluded a lesson", query)
+		}
+	}
+	l := fixedLibrary()
+	before := l.Snapshot()
+	update(t, l, M{"action": "configure", "query": "\t\u00a0\u2003\u202f\u3000\n"})
+	after := l.Snapshot()
+	if !reflect.DeepEqual(before, after) {
+		t.Fatal("clearing search with Unicode whitespace changed the unfiltered snapshot")
+	}
+	filtered, all := v.Rows(after["filteredLessons"]), v.Rows(after["lessons"])
+	if len(filtered) != len(all) || len(all) == 0 {
+		t.Fatal("blank search omitted lessons")
+	}
+	original := v.Rows(all[0]["sections"])[0]["title"]
+	v.Rows(filtered[0]["sections"])[0]["title"] = "changed filtered copy"
+	if v.Rows(all[0]["sections"])[0]["title"] != original {
+		t.Fatal("unfiltered search results share mutable lesson sections")
+	}
+	fresh := l.Snapshot()
+	if v.Rows(v.Rows(fresh["filteredLessons"])[0]["sections"])[0]["title"] != original {
+		t.Fatal("unfiltered search result mutated the next snapshot")
+	}
+}
+
+func BenchmarkMatchesBlankQuery(b *testing.B) {
+	// Build and decode the catalogue before timing the common no-search path.
+	lesson := Catalog()[1]
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if !Matches(lesson, "") {
+			b.Fatal("blank query excluded a lesson")
+		}
+	}
+}
