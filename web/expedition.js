@@ -130,7 +130,6 @@
 
   function renderAccount(state) {
     const account = state.frontier || {};
-    const o = values('frontier', { clientId: account.clientId || '' });
     const profile = account.summary?.profile;
     const carrier = account.summary?.carrier;
     let summary = '';
@@ -140,15 +139,12 @@
       '<p class="panel-note">Получено ' + dateTime(account.lastCarrierSync) + '. Снимок CAPI показан отдельно от истории журналов.</p>' +
       (state.carrier?.owned && state.carrier.callsign === carrier.callsign ? HButtonWarehouse() : '') + '</div>' +
       '<div class="table-wrap"><table><thead><tr><th>Товар на складе</th><th class="table-num">Количество</th></tr></thead><tbody>' + (carrier.cargo || []).map((item) => '<tr><td>' + h((state.goods || []).find((g) => g.key === String(item.name).toLowerCase().replace(/[^a-z0-9]/g, ''))?.name || item.localized || item.name) + '</td><td class="table-num">' + n(item.count, true) + '</td></tr>').join('') + '</tbody></table></div>');
-    return heading('Аккаунт Frontier', 'Официальный вход через браузер и Companion API: командир, баланс, корабль, текущая станция и личный флотоносец.') +
+    return heading('Аккаунт Frontier', 'Войдите в аккаунт, чтобы обновлять сведения о командире, корабле и личном флотоносце.') +
       note(account.error, true) + panel('Подключение', '<div class="panel-body"><div class="pill-row">' + pill(account.connected ? 'Вход сохранён' : account.pending ? 'Ожидаем входа в браузере' : 'Аккаунт не подключён', account.connected ? 'confirmed' : 'muted') + pill(account.storageAvailable ? 'Хранилище Windows' : 'Нужно настольное приложение', 'blue') + '</div>' +
         '<p>Последняя синхронизация: ' + dateTime(account.lastSync) + '</p><div class="actions-wrap">' +
         button('Войти через Frontier', 'frontier-login') + (account.connected ? button(account.syncing ? 'Синхронизация…' : 'Обновить данные', 'frontier-sync') + button('Выйти', 'frontier-logout') : '') + '</div>' +
-        '<p class="panel-note">Пароль вводится на сайте Frontier. Токены сохраняются в зашифрованном хранилище Windows. Профиль можно обновлять раз в минуту, данные флотоносца — раз в 15 минут; сведения могут запаздывать относительно игры.</p></div>') +
-      (!account.configured ? note('Для первого входа Frontier требует собственную регистрацию приложения. Зарегистрируйте публичный OAuth-клиент ED Copilot, затем укажите выданный Client ID. Клиентский секрет не нужен.') : '') +
-      (account.configured ? '<details class="expedition-details" data-preserve-open="frontier-advanced"><summary>Дополнительные параметры входа Frontier</summary><p class="panel-note">Первичная настройка уже выполнена. Эти параметры нужны только при регистрации другого приложения или замене Client ID.</p>' : '') +
-      panel('Параметры приложения Frontier', '<form id="frontier-form" class="panel-body"><div class="form-grid">' + input('frontier', o, 'clientId', 'Client ID приложения ED Copilot', 'text', 'maxlength="160" autocomplete="off"') +
-        field('Локальный адрес возврата PKCE', '<input type="text" value="' + h(account.redirectUri || 'http://localhost:7122/api/frontier/callback') + '" readonly>') + '</div><div class="actions-wrap"><button class="button" type="submit">Сохранить Client ID</button><a class="button button-subtle" href="https://auth.frontierstore.net/client/signup" target="_blank" rel="noreferrer">Регистрация у Frontier</a></div><p class="panel-note">Scope: auth capi · PKCE S256 · настольный клиент. Для этой схемы поле New endpoint в Developer Zone оставьте пустым: приложение передаёт локальный адрес при входе. Не подставляйте HTTPS localhost или ссылку GitHub. Shared key: Inactive — нормально, клиентский секрет не нужен.</p></form>') + (account.configured ? '</details>' : '') + summary;
+        '<p class="panel-note">Пароль вводится на сайте Frontier. Вход сохраняется в защищённом хранилище Windows. Профиль обновляется не чаще раза в минуту, флотоносец — раз в 15 минут; сведения могут запаздывать относительно игры.</p></div>') +
+      summary;
   }
   function HButtonWarehouse() { return button('Сверить склад по этому снимку Frontier', 'frontier-warehouse'); }
 
@@ -163,7 +159,7 @@
     });
     document.addEventListener('submit', async (event) => {
       const form = event.target;
-      const paths = { 'fleet-route-form': '/api/carrier/route', 'trade-routes-form': '/api/trading/routes', 'frontier-form': '/api/frontier/configure', 'mining-plan-form': '/api/mining/plan' };
+      const paths = { 'fleet-route-form': '/api/carrier/route', 'trade-routes-form': '/api/trading/routes', 'mining-plan-form': '/api/mining/plan' };
       if (!paths[form.id]) return;
       event.preventDefault();
       const body = Object.fromEntries(new FormData(form));

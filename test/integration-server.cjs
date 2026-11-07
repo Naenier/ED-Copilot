@@ -36,6 +36,8 @@ async function until(get, label) {
 }
 async function run() {
   const server = await startServer({ dataDir, journalDir, port: 0, secureStorage });
+  let submitted = 0;
+  server.integrations.transports = { async sendInara(options) { submitted += options.events.length; return { results: options.events.map(() => ({ ok: true })) }; } };
   const request = async (route, body, headers = {}) => {
     const response = await fetch(server.url + route, body === undefined ? { headers } : {
       method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body)
@@ -48,36 +50,19 @@ async function run() {
     assert.equal(state.game.live, true);
     assert.equal(state.commander.cargoVessel, "ship");
     assert(state.commander.cargoUpdatedAt, "authoritative empty cargo is known");
-    assert.equal(state.integrations.publisher, "off");
-    assert.equal(state.integrations.queue.total, 0, "startup history never uploads");
-    const configured = await request("/api/integrations/configure", { publisher: "edmc", inaraApiKey: "mock-private-key" });
+    assert.equal(state.integrations.enabled, false);
+    assert.equal(state.integrations.queued, 0, "Startup history never uploads");
+    const configured = await request("/api/integrations/configure", { enabled: true, apiKey: "mock-private-key" });
     assert.equal(configured.status, 200);
-    const pair = await request("/api/integrations/pair", {});
-    assert.equal(pair.status, 200); assert(pair.body.token.length >= 32);
-    assert.equal(pair.body.url, server.url + "/api/integrations/edmc");
-    const token = pair.body.token;
-    const headers = { "X-EDCopilot-Token": token };
-    const heartbeat = { type: "heartbeat", commander: "Тестовый пилот", isBeta: false, pluginVersion: "1.0.0" };
-    assert.equal((await request("/api/integrations/edmc", heartbeat)).status, 401);
-    assert.equal((await request("/api/integrations/edmc", heartbeat, { ...headers, Origin: server.url })).status, 403);
-    assert.equal((await request("/api/integrations/edmc", heartbeat, { ...headers, Origin: "https://foreign.invalid" })).status, 403);
-    assert.equal((await request("/api/integrations/edmc", heartbeat, headers)).status, 200);
-    const publicMarket = { ...heartbeat, type: "capi", observedAt: stamp(), data: {
-      commander: { name: "Тестовый пилот", docked: true }, lastSystem: { name: "Sol" },
-      lastStarport: { id: 42, name: "Galileo", commodities: [{ name: "gold", buyPrice: 40000, sellPrice: 50000,
-        stock: 20, demand: 2000, stockBracket: 2, demandBracket: 3 }] }
-    } };
-    assert.equal((await request("/api/integrations/edmc", publicMarket, headers)).status, 200);
-    assert.equal(server.engine.market.source, "EDMC · Frontier CAPI");
-    assert.equal(server.engine.prices.get("gold").price, 50000);
-    const wrongMarket = structuredClone(publicMarket); wrongMarket.data.lastStarport.id = 999;
-    wrongMarket.data.lastStarport.commodities[0].sellPrice = 999999;
-    await request("/api/integrations/edmc", wrongMarket, headers);
-    assert.equal(server.engine.prices.get("gold").price, 50000, "different station rejected");
-    const stale = structuredClone(publicMarket); stale.observedAt = new Date(Date.now() - 600000).toISOString();
-    stale.data.lastStarport.commodities[0].sellPrice = 999999;
-    await request("/api/integrations/edmc", stale, headers);
-    assert.equal(server.engine.prices.get("gold").price, 50000, "stale EDMC market rejected");
+    assert.equal(server.integrations.status().apiKeySet, true);
+    assert.equal(server.integrations.status().identityMatches, true);
+    assert.equal((await request("/api/integrations/configure", { enabled: true }, { Origin: "https://foreign.invalid" })).status, 403);
+    assert.equal((await request("/api/frontier/configure", {})).status, 404, "Account registration is not a user-facing configuration endpoint");
+    const login = await request("/api/frontier/login", {});
+    assert.equal(login.status, 200);
+    assert.equal(new URL(login.body.url).searchParams.get("redirect_uri"), "http://localhost:" + new URL(server.url).port + "/api/frontier/callback");
+    assert.equal(new URL(login.body.url).searchParams.get("client_id"), "0a4c1d43-e433-411e-bcf5-54527fe5a34f");
+    await request("/api/frontier/logout", {});
     const seen = [];
     server.engine.observeJournal((event, meta) => seen.push({ event, meta }));
     const before = fs.statSync(journal).size;
@@ -92,15 +77,22 @@ async function run() {
     server.engine.rescanRequested = true; await server.engine.poll();
     assert(seen.slice(2).every(row => row.meta.replay === true));
     state = (await request("/api/state")).body;
-    assert.equal(state.integrations.queue.total, 0, "EDMC mode never republishes");
+    assert.equal(state.integrations.queued, 0, "Replay and unrelated music events create no uploads");
+    const missionLine = JSON.stringify(make("MissionAccepted", { MissionID: 77, Name: "Mission_Delivery" })) + "\n";
+    fs.appendFileSync(journal, missionLine); await server.engine.poll();
+    assert.equal(server.integrations.status().queued, 1);
+    assert.equal((await request("/api/integrations/sync", {})).status, 200);
+    assert(submitted > 0); assert.equal(server.integrations.status().queued, 0);
+    state = (await request("/api/state")).body;
     const serialized = JSON.stringify(state);
-    assert(!serialized.includes(token) && !serialized.includes("mock-private-key"));
+    assert(!serialized.includes("mock-private-key"));
+    for (const field of ["clientId", "registrationUrl", "redirectUri"]) assert.equal(Object.hasOwn(state.frontier, field), false);
     const stored = fs.readFileSync(path.join(dataDir, "integration-state.bin"));
-    assert(!stored.includes(Buffer.from("mock-private-key")) && !stored.includes(Buffer.from(token)));
-    const next = await request("/api/integrations/pair", {});
-    assert.notEqual(next.body.token, token);
-    assert.equal((await request("/api/integrations/edmc", heartbeat, headers)).status, 401);
-    console.log("Integration server: loopback pairing, encryption, privacy, EDMC market validation, Unicode cursors and replay boundary passed.");
+    assert(!stored.includes(Buffer.from("mock-private-key")));
+    assert.equal((await request("/api/integrations/configure", { enabled: false })).status, 200);
+    assert.equal(server.integrations.status().enabled, false);
+    assert.equal(server.integrations.status().apiKeySet, true);
+    console.log("Integration server: Inara-only settings, protected key, synthetic delivery, default Frontier sign-in, Unicode journal offsets and replay boundary passed.");
   } finally { await server.close(); }
 }
 run().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => {

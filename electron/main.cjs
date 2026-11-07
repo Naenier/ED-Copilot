@@ -6,7 +6,8 @@ const path = require("node:path");
 const { createWindowState, enableZoom } = require("./windowState.cjs");
 const { hudWindowOptions } = require("./hudWindowOptions.cjs");
 const { writeFileAtomic } = require("./atomicWrite.cjs");
-const { watchForegroundOffMain, isGame, isGameOrOwn } = require("./foregroundWatch.cjs");
+const { watchForegroundOffMain, isGame } = require("./foregroundWatch.cjs");
+const { overlayVisibility } = require("./overlayVisibility.cjs");
 const { startServer } = require("../lib/server.cjs");
 const { resolveProfileDir } = require("./profile.cjs");
 const { isWindowMode, normalizeWindowMode, windowModePlan } = require("./windowModes.cjs");
@@ -62,7 +63,6 @@ let foregroundName = null;
 let state = null;
 let overlayHeight = 560;
 let shortcutAvailable = false;
-const ownProcessNames = [path.basename(app.getPath("exe"), ".exe").toLowerCase()];
 const windowState = createWindowState(() => dataDir);
 const iconPath = app.isPackaged ? path.join(process.resourcesPath, "native", "copilot.png") : path.join(__dirname, "../web/copilot.png");
 const preloadPath = path.join(__dirname, "preload.cjs");
@@ -93,14 +93,13 @@ function overlayBounds() {
 }
 
 function overlayState() {
-  const gameAway = state?.connection?.gameRunning === false;
-  const focusAway = state?.settings?.hideUnfocused !== false && foregroundName !== null && !isGameOrOwn(foregroundName, ownProcessNames);
+  const visibility = overlayVisibility({ enabled: desktop.overlayEnabled, hidden: desktop.overlayHidden,
+    quitting: quitRequested, gameRunning: state?.connection?.gameRunning,
+    foregroundName: BrowserWindow.getFocusedWindow() ? null : foregroundName });
   return {
     open: desktop.overlayEnabled,
     hidden: desktop.overlayHidden,
-    gameAway,
-    focusAway,
-    visible: !quitRequested && desktop.overlayEnabled && !desktop.overlayHidden && !gameAway && !focusAway,
+    ...visibility,
     shortcut: "Ctrl+Alt+H",
     shortcutAvailable,
   };
@@ -142,6 +141,10 @@ function openExternal(url) {
 }
 
 function guardWindow(window) {
+  window.on("focus", () => {
+    foregroundName = null;
+    synchronizeOverlay();
+  });
   const ownOrigin = new URL(backend.url).origin;
   window.webContents.setWindowOpenHandler(({ url }) => {
     openExternal(url);

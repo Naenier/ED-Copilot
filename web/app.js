@@ -4,7 +4,7 @@
   const U = window.MiningUI;
   const { h, n, credits, dateTime, duration, pill } = U;
   const content = document.getElementById("content");
-  const tabs = ["overview", "targets", "sale", "deals", "carrier", "encyclopedia", "statistics", "mining", "engineering", "route", "settings", "account", "integrations", "help"];
+  const tabs = ["overview", "targets", "sale", "deals", "carrier", "colonization", "encyclopedia", "statistics", "mining", "engineering", "route", "settings", "account", "integrations", "help"];
   let state = null;
   let connection = false;
   let initialSettings = false;
@@ -1066,18 +1066,13 @@
             "Показывать оверлей",
             "Трюм, разведка и результаты поверх игры",
           ) +
-          settingsCheckbox(
-            "hideUnfocused",
-            "Скрывать оверлей при переключении из игры",
-            "Возвращать при активации Elite Dangerous",
-          ) +
           '<div class="settings-actions"><button class="button button-primary" type="submit">Сохранить настройки</button></div></div></form>',
       ) +
       '</div><aside class="stack">' +
       panel(
         "Управление",
         '<div class="panel-body"><div class="row row-between"><span class="small">Показать / скрыть оверлей</span><span class="mini-key">Ctrl Alt H</span></div>' +
-          '<p class="settings-hint" style="margin-top:12px">Оверлей пропускает клики в игру. Его положение подстраивается под режим корабля или высадки.</p>' +
+          '<p class="settings-hint" style="margin-top:12px">Оверлей появляется только поверх активной Elite Dangerous и пропускает клики в игру. Его положение подстраивается под режим корабля или высадки.</p>' +
           '<hr class="subtle-divider">' +
           button("Перечитать журналы", "rescan", "", "button-subtle") +
           "</div>",
@@ -1104,6 +1099,7 @@
   function render() {
     if (!state || composing) return;
     const active = document.activeElement;
+    const editingPrice = active?.matches("[data-price-key]") ? active : null;
     const focus = active?.getAttribute("data-focus");
     const selection = active?.selectionStart == null ? null : [active.selectionStart, active.selectionEnd];
     const expanded = new Set([...content.querySelectorAll('details[data-preserve-open][open]')].map((entry) => entry.dataset.preserveOpen));
@@ -1113,6 +1109,7 @@
       sale: () => window.MiningOperations.renderMarket(state),
       deals: () => window.MiningExpedition.renderTradeRoutes(state),
       carrier: () => window.MiningOperations.renderCarrier(state),
+      colonization: () => window.CopilotColonization.render(state),
       encyclopedia: () => window.CopilotEncyclopedia ? window.CopilotEncyclopedia.render(state) : renderEncyclopedia(),
       statistics: renderStatistics,
       mining: () => window.MiningPlannerUI.render(state),
@@ -1124,6 +1121,10 @@
       settings: renderSettings,
     };
     content.innerHTML = renderers[ui.tab]();
+    if (editingPrice && ui.tab === "settings") {
+      const replacement = [...content.querySelectorAll("[data-price-key]")].find(input => input.dataset.priceKey === editingPrice.dataset.priceKey);
+      replacement?.replaceWith(editingPrice);
+    }
     const helpButton = document.getElementById("context-help");
     helpButton.dataset.helpTopic = window.MiningHelp.topicForTab[ui.tab] || "start";
     helpButton.textContent = ui.tab === "help" ? "? Начало работы" : "? Помощь по разделу";
@@ -1149,7 +1150,9 @@
   function updateState(next) {
     state = next;
     window.CopilotNavigation.update(next);
-    void window.CopilotNavigation.ensure(ui.tab);
+    // Hash changes immediately on close; its event can arrive after a state refresh.
+    // Using the old rendered tab here could reopen the tab just closed by the user.
+    void window.CopilotNavigation.ensure(tabs.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview");
     window.CopilotAppearance.apply(next.theme);
     if (!initialSettings && next.settings) {
       ui.minTier = next.settings.minTier || "medium";
@@ -1168,6 +1171,7 @@
       trade: "В оверлее выбранный рынок, спрос, цена и путь с грузом.",
       carrier: "В оверлее топливо, средства, свободный склад и прыжок.",
       engineering: "В оверлее недостающие материалы для запланированных улучшений.",
+      colonization: "В оверлее текущая стройка, остаток поставок и груз для неё.",
     }[activity] || "";
     document.getElementById("header-context").innerHTML =
       "<strong>" +
@@ -1322,7 +1326,6 @@
         minLaserPercent: Number(values.get("minLaserPercent")),
         hideDepleted: values.has("hideDepleted"),
         overlayEnabled: values.has("overlayEnabled"),
-        hideUnfocused: values.has("hideUnfocused"),
       };
       const result = await perform("/api/settings", settings, "Настройки сохранены");
       if (result) {
@@ -1369,6 +1372,7 @@
   });
 
   window.MiningOperations.init({ getState: () => state, render, perform, showToast });
+  window.CopilotColonization.init({ getState: () => state, render, perform, showToast });
   window.MiningExpedition.init({ getState: () => state, render, perform, showToast });
   window.MiningEngineering.init({ getState: () => state, render, perform, showToast });
   window.MiningHelp.init({ getState: () => state, render, showToast });
@@ -1381,7 +1385,7 @@
   window.CopilotNavigation.init({ getState: () => state, render, perform, showToast });
   window.CopilotWindowDisplay.init({ getState: () => state, render, perform, showToast });
   window.CopilotViewState = {
-    capture: () => ({ ui: structuredClone(ui), appearance: window.CopilotAppearance.capture(), scrollY,
+    capture: () => ({ ui: structuredClone(ui), appearance: window.CopilotAppearance.capture(), colonization: window.CopilotColonization.capture(), scrollY,
       expanded: [...content.querySelectorAll('details[data-preserve-open][open]')].map(element => element.dataset.preserveOpen) }),
     restore: saved => {
       if (!saved || typeof saved !== 'object') return;
@@ -1389,6 +1393,7 @@
       for (const key of Object.keys(ui)) if (saved.ui && Object.hasOwn(saved.ui, key) && key !== 'busy') ui[key] = saved.ui[key];
       ui.tab = tabs.includes(ui.tab) ? ui.tab : 'overview'; ui.busy = false;
       window.CopilotAppearance.restore(saved.appearance);
+      window.CopilotColonization.restore(saved.colonization);
       if (location.hash !== '#' + ui.tab) location.hash = ui.tab;
       render();
       for (const element of content.querySelectorAll('details[data-preserve-open]')) element.open = Array.isArray(saved.expanded) && saved.expanded.includes(element.dataset.preserveOpen);

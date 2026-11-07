@@ -1,0 +1,79 @@
+.copilot-colonization { min-width: 0; }
+.copilot-colonization td small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+.colonization-project-picker { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; margin: 0 0 20px; }
+.colonization-project-picker .field { min-width: 290px; flex: 1; max-width: 650px; }
+.colonization-workflow { display: flex; align-items: stretch; gap: 9px; margin-bottom: 24px; }
+.colonization-workflow button { display: flex; align-items: center; gap: 11px; flex: 1; min-height: 58px; padding: 13px 16px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); color: var(--muted); text-align: left; }
+.colonization-workflow button > span { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 auto; border: 1px solid var(--accent-dim); border-radius: 50%; font-size: 12px; }
+.colonization-workflow button strong { font-size: 13px; font-weight: 500; }
+.colonization-workflow button.is-active { border-color: var(--accent); color: var(--accent-bright); background: var(--panel-raised); }
+.colonization-workflow button.is-active > span { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.colonization-selection-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 22px; align-items: start; }
+.colonization-main, .colonization-aside { min-width: 0; display: grid; gap: 22px; }
+.colonization-panel { margin-bottom: 22px; }
+.colonization-advice { margin-bottom: 22px; }
+.colonization-advice > summary { cursor: pointer; padding: 17px 20px; font-size: 14px; color: var(--accent-bright); font-weight: 600; }
+.colonization-advice .panel-body { border-top: 1px solid var(--line); }
+.colonization-advice section { margin: 0 0 18px; }
+.colonization-advice section h3 { font-size: 13px; margin: 0 0 7px; }
+.colonization-advice section p { font-size: 12px; color: var(--muted); line-height: 1.8; margin: 0 0 7px; }
+.colonization-advice-types { color: var(--accent-bright) !important; }
+.colonization-main > .colonization-panel, .colonization-aside > .colonization-panel { margin: 0; }
+.colonization-result-filters { display: grid; grid-template-columns: minmax(150px,1fr) 180px 180px; gap: 12px; }
+.colonization-candidates td { min-width: 100px; }
+.colonization-candidates td:first-child { min-width: 180px; }
+.colonization-candidates td small, .colonization-resources td small { display: block; color: var(--muted); font-size: 10px; line-height: 1.7; margin-top: 5px; }
+.colonization-candidates .actions-wrap { min-width: 145px; }
+.colonization-guide { margin: 0; padding: 18px 22px 18px 42px; color: var(--muted); line-height: 1.8; font-size: 12px; }
+.colonization-guide li { padding: 5px 0 8px; }
+.colonization-origin-stations { display: grid; gap: 15px; }
+.colonization-origin-stations > div { display: grid; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 13px; }
+.colonization-origin-stations strong { font-size: 12px; }
+.colonization-origin-stations small { color: var(--muted); font-size: 11px; }
+.colonization-manual-target { border-top: 1px solid var(--line); padding-top: 14px; }
+.colonization-manual-target summary { cursor: pointer; color: var(--accent-bright); font-size: 12px; }
+.colonization-manual-target form { padding-top: 16px; }
+.colonization-empty { text-align: center; padding: 34px 24px; }
+.colonization-empty > span { display: block; color: var(--accent); font-size: 35px; }
+.colonization-empty h2 { font-size: 17px; margin: 12px 0 8px; }
+.colonization-empty p { color: var(--muted); font-size: 12px; line-height: 1.8; max-width: 570px; margin: 0 auto 17px; }
+.colonization-project-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+.colonization-project-summary p { margin: 9px 0 0; font-size: 12px; color: var(--muted); }
+.colonization-building { padding: 19px; border: 1px solid var(--line); border-radius: 5px; margin: 0 0 15px; background: var(--bg); }
+.colonization-building-heading { display: flex; gap: 15px; align-items: flex-start; margin-bottom: 10px; }
+.colonization-building-heading > div:nth-child(2) { flex: 1; min-width: 0; }
+.colonization-building-heading h3 { margin: 9px 0 6px; font-size: 16px; }
+.colonization-building-heading p { font-size: 12px; color: var(--muted); margin: 0; }
+.colonization-building-order { display: flex; align-items: center; gap: 8px; color: var(--muted); padding-top: 6px; cursor: grab; }
+.colonization-building-order strong { color: var(--accent-bright); font-size: 18px; }
+.colonization-building-moves { display: flex; gap: 5px; }
+.colonization-building-moves .button { min-width: 31px; padding-inline: 8px; }
+.colonization-building-bill { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 17px 0 12px; font-size: 12px; }
+.colonization-building-bill > span { color: var(--muted); }
+.colonization-building .progress { margin-bottom: 16px; }
+.colonization-building-form { padding: 20px 0 0; margin-top: 18px; border-top: 1px solid var(--line); }
+.colonization-building-form .actions-wrap { margin-top: 16px; }
+.colonization-dependencies { display: flex; flex-wrap: wrap; gap: 10px 18px; border: 0; padding: 13px 0; margin: 12px 0; }
+.colonization-dependencies legend { color: var(--muted); font-size: 12px; padding: 0; margin-bottom: 8px; }
+.colonization-dependencies label { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.colonization-dependency-note { font-size: 11px; color: var(--muted); margin: 10px 0; }
+.colonization-warnings { border-left: 2px solid var(--warn); padding-left: 12px; margin: 14px 0; color: var(--warn); font-size: 12px; }
+.colonization-warnings p { margin: 5px 0; }
+.colonization-link-depot { display: flex; align-items: end; gap: 12px; margin-top: 18px; }
+.colonization-link-depot .field { flex: 1; min-width: 0; }
+.colonization-supply-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: end; gap: 15px; margin-bottom: 20px; }
+.colonization-supply-toolbar .field { min-width: 280px; flex: 1; max-width: 500px; }
+.colonization-supply-metrics { grid-template-columns: repeat(3,minmax(0,1fr)); margin-bottom: 22px; }
+.colonization-missing { color: var(--accent-bright); font-weight: 600; }
+.colonization-logistics { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 17px 0 0; }
+.colonization-logistics .field { max-width: 330px; }
+.colonization-bom-form, .colonization-delivery-form { padding-top: 17px; border-top: 1px solid var(--line); }
+.colonization-bom-form h3, .colonization-delivery-form h3 { margin: 0 0 12px; font-size: 16px; }
+.colonization-bom-row { display: grid; grid-template-columns: minmax(180px,1fr) 130px 95px; align-items: end; gap: 12px; margin: 13px 0; }
+.colonization-bom-form > .field { margin: 17px 0; }
+.colonization-delivery-form .actions-wrap { margin-top: 16px; }
+.colonization-confirm { border: 1px solid var(--warn); background: var(--panel-raised); border-radius: 4px; padding: 17px; margin-bottom: 20px; }
+.colonization-confirm p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.colonization-building.is-dragging { opacity: .45; }
+@media(max-width:1250px) { .colonization-selection-layout { grid-template-columns: minmax(0,1fr); } .colonization-aside { grid-template-columns: repeat(2,minmax(0,1fr)); } .colonization-result-filters { grid-template-columns: minmax(150px,1fr) 160px 160px; } }
+@media(max-width:900px) { .colonization-aside { grid-template-columns: minmax(0,1fr); } .colonization-workflow { gap: 6px; } .colonization-workflow button { padding: 11px; gap: 8px; } .colonization-workflow button strong { font-size: 11px; } .colonization-result-filters { grid-template-columns: repeat(2,minmax(0,1fr)); } .colonization-result-filters > label:first-child { grid-column: 1 / -1; } .colonization-building { padding: 15px; } }

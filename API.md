@@ -5,10 +5,10 @@ POST routes accept JSON and return {ok:true} or {ok:false,error}.
 
 State
 
-- app {name:"ED Copilot", version:"1.7.0", profileDir, sources:[{title,url}]}
+- app {name:"ED Copilot", version:"1.8.0", profileDir, sources:[{title,url}]}
 - connection {journalDir, scanning, filesRead, filesTotal, eventCount, lastEvent, lastUpdate, error, gameRunning:boolean|null}
 - commander {name, fid, system, systemAddress, coordinates:[x,y,z]|null, body, ship, vehicle:"ship"|"srv"|"foot"|"unknown", docked, cargoCapacity:number|null, cargoTons:number, cargo:[{key,name,count}], materials:[{key,name,count,grade}]}
-- settings {minTier:"medium"|"high"|"low", method:"all"|"laser"|"core"|"subsurface"|"surface"|"surface-planet"|"raw", radiusLy:50, maxArrivalLs:10000, minLaserPercent:15, hideDepleted:true, overlayEnabled:true, hideUnfocused:true}
+- settings {minTier:"medium"|"high"|"low", method:"all"|"laser"|"core"|"subsurface"|"surface"|"surface-planet"|"raw", radiusLy:50, maxArrivalLs:10000, minLaserPercent:15, hideDepleted:true, overlayEnabled:true}
 - navigation {tabs:[string]} ordered list of open feature tabs; default ["overview","targets","sale","encyclopedia","statistics","settings"]. Overview and settings remain available.
 - system {name, bodiesScanned, rings, surfaceTargets}
 - targets [{id, kind:"ring"|"surface", system, systemAddress, body, bodyId, ring, ringType, reserve, tier, score, confidence:"confirmed"|"potential"|"unknown", distanceLy:number|null, distanceLs:number|null, gravity:number|null, landable, hotspots:[{key,name,count,tier}], materials:[{key,name,percent,grade,tier}], resources:[{key,name,tier,methods}], methods:[string], reasons:[string], recommendation, source:"journal"|"edsm", updatedAt}]
@@ -23,7 +23,7 @@ State
 Routes
 
 - POST /api/settings partial settings object
-- POST /api/navigation {tabs:[string]} persists the ordered feature list and emits state. Valid IDs: overview, targets, sale, deals, carrier, encyclopedia, statistics, mining, engineering, route, settings, account, integrations, help. Unknown IDs/non-array payloads are rejected; duplicates are removed. Missing overview/settings are inserted. Closing a tab changes only this navigation list, not feature data or availability.
+- POST /api/navigation {tabs:[string]} persists the ordered feature list and emits state. Valid IDs: overview, targets, sale, deals, carrier, colonization, encyclopedia, statistics, mining, engineering, route, settings, account, integrations, help. Unknown IDs/non-array payloads are rejected; duplicates are removed. Missing overview/settings are inserted. Closing a tab changes only this navigation list, not feature data or availability.
 - POST /api/search {system,radiusLy}; POST /api/search/cancel
 - POST /api/rescan
 - POST /api/bookmarks {action:"add",targetId} or {action:"remove",id}
@@ -53,14 +53,18 @@ engine.setDirectory(path) async when used by native code.
 All raw journal IDs remain untranslated. RU display names are lookup-only.
 No price means unknown sale value. Ring content and hotspot signals distinguish potential from confirmed.
 
-Optional integration routes (JSON POST, same-origin loopback only)
+Inara integration (opt-in, same-origin loopback JSON POST)
 
-- /api/integrations/configure {publisher:"off"|"copilot"|"edmc", inaraEnabled?:boolean, eddnEnabled?:boolean, inaraAppRegistered?:boolean, inaraApiKey?:string, clearInaraKey?:boolean}. Binds to the current journal FID. Secrets and pending uploads are encrypted through native secureStorage callbacks; browser-only servers cannot enable uploads.
-- /api/integrations/sync {}. Queues only authoritative current Inara snapshots and attempts eligible pending uploads. Retry deadlines still apply. Does not upload journal history.
-- /api/integrations/pair {} returns {ok,token,url}. Explicitly rotates the EDMC bridge token; it is never included in /api/state or SSE.
-- /api/integrations/edmc receives {type:"heartbeat"|"journal"|"capi", commander,isBeta,pluginVersion,observedAt,entry?|data?} with X-EDCopilot-Token. Requires publisher=edmc, a matching local token and loopback socket, and rejects browser Origin headers. It updates connection status. Fresh CAPI market prices may update the local market only when current commander, system, station and MarketID agree. EDMC data is never republished by Copilot in this mode.
+- /api/integrations/configure {enabled:boolean, apiKey?:string}. Empty key retains the saved key. Credentials and the retry queue use native encrypted Windows storage.
+- /api/integrations/sync {} attempts eligible pending events and authoritative current snapshots. Historical journal replay is not published.
+- State integrations contains status, queue counters and errors, without the API key. Live-only checks, commander identity binding, saved journal cursors and retry deadlines prevent unsafe resends.
 
-State includes integrations with service counters, last success/error, pending counts, next retry, current/bound identity and Live gate. It never contains API keys or the pairing token. External publishing is opt-in and disabled by default. Exactly one publisher should be enabled across Copilot and EDMC. Inara additionally requires app-name approval and the commander's own API key. EDDN accepts public observations only; personal inventory, balance and missions are excluded. Both uploads reject beta/Legacy sessions. Replay and persisted journal byte cursors prevent historical resends. Network failures remain queued with backoff; permanent validation failures are reported without infinite retries.
+Colonization
+
+- POST /api/colonization action commands manage projects, ordered buildings, planned bills and manual delivery notes.
+- POST /api/colonization/search {originSystem,faction?} starts a cancellable background search. POST /api/colonization/cancel {} stops it.
+- State colonization contains the selected project, ordered build plan, candidate pages, observed depots, requirements and delivery totals.
+- Journal depot requirements and accepted deliveries are authoritative observations. Planned quantities/manual notes and onboard cargo remain separate. Public candidate data does not prove that a claim can currently be purchased.
 
 Appearance routes and state
 
@@ -68,4 +72,3 @@ Appearance routes and state
 - POST /api/theme/preview {settings} validates and returns {ok,theme} without saving or emitting state.
 - POST /api/theme/import {} reads the connected game EDHM configuration or standard graphics XML and returns a preview theme. Optional filePath must name a supported configuration file. No game files are changed and no imported INI code is executed.
 - POST /api/theme {settings} persists the selection in the local appearance preferences and emits state for all windows/overlays.
-- Frontier native PKCE callback is http://localhost:<actual-port>/api/frontier/callback. Only this exact callback accepts the matching localhost Host on a loopback socket; other routes still require the main 127.0.0.1 Host and same origin. The chosen native PKCE flow leaves the Developer Zone New endpoint list empty. No HTTPS loopback certificate is installed, and no client-specific ID or shared secret is embedded in the source.

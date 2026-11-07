@@ -51,26 +51,23 @@ async function main() {
   };
   const options = { dataDir: temporary, fetch, encrypt, decrypt, now: () => now, getCommander: () => expected };
   const client = new FrontierClient(options);
-  assert.equal(client.status().configured, false);
+  assert.equal(client.status().connected, false);
+  assert.equal(client.configure, undefined);
+  for (const field of ["clientId", "registrationUrl", "redirectUri", "authorizationFlow"]) assert.equal(Object.hasOwn(client.status(), field), false);
   assert.equal(DEFAULT_REDIRECT, "http://localhost:7122/api/frontier/callback");
-  assert.equal(client.status().redirectUri, DEFAULT_REDIRECT);
-  assert.equal(client.status().authorizationFlow, "native-pkce");
-  assert.equal(client.status().redirectTransport, "loopback-http");
   assert.throws(() => new FrontierClient({ ...options, redirectUri: "https://localhost:7122/api/frontier/callback" }), (e) => e.code === "REDIRECT_INVALID",
     "The native listener is HTTP; a fake HTTPS callback would fail after login");
   assert.throws(() => new FrontierClient({ ...options, redirectUri: "http://external.invalid:7122/api/frontier/callback" }), (e) => e.code === "REDIRECT_INVALID");
   assert.throws(() => new FrontierClient({ ...options, redirectUri: "http://localhost:7122/api/frontier/callback?code=old" }), (e) => e.code === "REDIRECT_INVALID");
   const alternate = new FrontierClient({ ...options, redirectUri: "http://localhost:7133/api/frontier/callback" });
-  assert.equal(alternate.status().redirectUri, "http://localhost:7133/api/frontier/callback");
-  assert.throws(() => client.startLogin(), (e) => e.code === "CLIENT_REQUIRED");
-  client.configure({ clientId: "edmining-personal-test-client" });
+  assert.equal(new URL(alternate.startLogin().url).searchParams.get("redirect_uri"), "http://localhost:7133/api/frontier/callback");
   const insecure = new FrontierClient({ dataDir: path.join(temporary, "insecure") });
-  insecure.configure({ clientId: "test-client" });
   assert.throws(() => insecure.startLogin(), (e) => e.code === "SECURE_STORAGE_REQUIRED");
 
   const auth = new URL(client.startLogin().url);
   assert.equal(auth.origin, "https://auth.frontierstore.net");
   assert.equal(auth.pathname, "/auth");
+  assert.equal(auth.searchParams.get("client_id"), "0a4c1d43-e433-411e-bcf5-54527fe5a34f");
   assert.equal(auth.searchParams.get("scope"), "auth capi");
   assert.equal(auth.searchParams.get("code_challenge_method"), "S256");
   assert.equal(auth.searchParams.get("redirect_uri"), "http://localhost:7122/api/frontier/callback");
@@ -85,6 +82,7 @@ async function main() {
   assert.equal(client.status().fid, "F123");
   assert.ok(!JSON.stringify(client.status()).includes("secret"));
   assert.ok(!fs.readFileSync(client.tokenFile).toString("utf8").includes("secret"));
+  fs.writeFileSync(path.join(temporary, "frontier-settings.json"), JSON.stringify({ clientId: "obsolete-config-is-ignored" }));
   const restored = new FrontierClient(options);
   assert.equal(restored.status().connected, true);
   assert.equal(restored.status().fid, "F123");
@@ -185,7 +183,6 @@ async function main() {
   // Provider error bodies are never forwarded to the local API.
   const errorClient = new FrontierClient({ ...options, dataDir: path.join(temporary, "errors"),
     fetch: async () => reply({ error: "token-supersecret" }, 400) });
-  errorClient.configure({ clientId: "test-client" });
   const failing = new URL(errorClient.startLogin().url);
   await assert.rejects(errorClient.callback({ state: failing.searchParams.get("state"), code: "code" }), (e) => !e.message.includes("supersecret"));
   assert.ok(!JSON.stringify(errorClient.status()).includes("supersecret"));

@@ -33,6 +33,13 @@
 
   function plans(state) {
     const rows = [];
+    const colony = state.colonization?.activeProject;
+    if (colony && !["complete", "cancelled"].includes(colony.status)) rows.push(planCard({
+      category: "КОЛОНИЗАЦИЯ", title: colony.targetSystem || colony.name,
+      detail: colony.faction || "Строительство и снабжение новой системы",
+      facts: [["Объектов в плане: " + n(array(colony.buildings).length, true)]],
+      actions: link("Строительство и поставки", "colonization"), symbol: "⌂",
+    }));
     const pilot = state.pilot || {}, commander = state.commander || {};
     const carrier = state.carrier || {}, route = state.carrierRoute || {};
     const pending = carrier.jump?.pending;
@@ -138,6 +145,7 @@
     const card = (symbol, title, description, actions) => '<article class="pilot-tool"><span aria-hidden="true">' + h(symbol) + '</span><div><h3>' + h(title) + '</h3><p>' + h(description) + '</p><div class="actions-wrap">' + actions + '</div></div></article>';
     return '<section class="pilot-tools" aria-label="Инструменты и занятия">' +
       card("⇄", "Торговля и логистика", "Сравнение рынков, прибыльных рейсов и перевозки груза.", link("Рынки", "sale") + link("Рейсы", "deals")) +
+      card("⌂", "Колонизация", "Выбор системы, порядок построек и снабжение строительных складов.", link("Открыть планировщик", "colonization")) +
       card("⚒", "Корабль и инженерия", "Материалы, чертежи, доступ к инженерам и справочник кораблей.", link("План улучшений", "engineering") + action("Корабли", "encyclopedia", "catalog-ships")) +
       card("⌁", "Путешествия и исследования", "Навигация, цели поездок и знания для экспедиции.", action("Цели", "targets", "plan") + action("Исследования", "encyclopedia", "exploration")) +
       card("◈", "Занятия в галактике", "Бой, миссии, Odyssey и другие направления в энциклопедии.", action("Бой", "encyclopedia", "combat") + action("Все разделы", "encyclopedia", "all")) + '</section>';

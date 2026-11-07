@@ -16,7 +16,7 @@
     if (button) {
       button.textContent = on ? '▱ Скрыть оверлей' : '▱ Включить оверлей';
       button.setAttribute('aria-pressed', String(on));
-      button.title = on ? 'Скрыть оверлей и выбор его занятия' : 'Показать оверлей и выбор его занятия';
+      button.title = on ? 'Выключить оверлей и скрыть выбор занятия' : 'Включить панели: они появятся, когда Elite Dangerous будет в фокусе';
       button.disabled = busy;
     }
   }

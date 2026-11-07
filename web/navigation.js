@@ -12,8 +12,9 @@
     ['route', '⌁', 'Маршрут флотоносца', 'Прыжки, тритий и время в пути'],
     ['mining', '⛏', 'Заход добычи', 'План и результаты добычи'],
     ['engineering', '⚒', 'Инженерия', 'Улучшения и список материалов'],
+    ['colonization', '⌂', 'Колонизация', 'Поиск системы, строительство и снабжение'],
     ['account', '◉', 'Frontier', 'Подключение Companion API'],
-    ['integrations', '⇅', 'Синхронизация', 'Связь с Inara, EDDN и EDMC'],
+    ['integrations', '⇅', 'Синхронизация', 'Личный профиль командира на Inara'],
     ['help', '?', 'Руководство', 'Инструкции по разделам'],
   ].map(([id, icon, label, description]) => ({ id, icon, label, description }));
   const defaults = ['overview', 'targets', 'sale', 'encyclopedia', 'statistics', 'settings'];
@@ -46,7 +47,7 @@
       const tab = catalog.find(item => item.id === id), isActive = id === selected;
       return '<div class="copilot-tab' + (isActive ? ' is-active' : '') + '" draggable="true" data-navigation-tab="' + id + '">' +
         '<a class="copilot-tab-link' + (isActive ? ' is-active' : '') + '" id="copilot-tab-' + id + '" href="#' + id + '" data-tab="' + id + '" role="tab" aria-selected="' + isActive + '" aria-controls="content" tabindex="' + (isActive ? '0' : '-1') + '" title="' + h(tab.label + ' · Alt+←/→ — переместить вкладку') + '"><span class="copilot-tab-icon" aria-hidden="true">' + h(tab.icon) + '</span><span class="copilot-tab-label">' + h(tab.label) + '</span></a>' +
-        (required.has(id) ? '' : '<button type="button" class="copilot-tab-close" data-navigation-close="' + id + '" aria-label="Закрыть вкладку «' + h(tab.label) + '»" title="Закрыть вкладку"' + (loaded ? '' : ' disabled') + '>×</button>') + '</div>';
+        (required.has(id) ? '' : '<button type="button" class="copilot-tab-close" data-navigation-close="' + id + '" aria-label="Закрыть вкладку «' + h(tab.label) + '»" title="Закрыть вкладку"' + (loaded ? '' : ' disabled') + '><svg class="copilot-tab-close-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4L12 12M12 4L4 12" /></svg></button>') + '</div>';
     }).join('') + '</div><div class="copilot-tabtools"><button id="copilot-nav-add" class="copilot-nav-add" type="button" aria-label="Добавить вкладку" title="Добавить вкладку" aria-haspopup="menu" aria-controls="copilot-nav-menu" aria-expanded="' + menuOpen + '"' + (loaded ? '' : ' disabled') + '>+</button></div></div>' +
       '<div class="copilot-nav-menu" id="copilot-nav-menu" role="menu" aria-label="Добавить раздел"' + (menuOpen ? '' : ' hidden') + '><div class="copilot-nav-menu-heading" role="presentation">ДОБАВИТЬ ВКЛАДКУ</div>' +
       (hidden.length ? hidden.map(tab => '<button type="button" class="copilot-nav-feature" role="menuitem" data-navigation-add="' + tab.id + '"><span aria-hidden="true">' + h(tab.icon) + '</span><span><strong>' + h(tab.label) + '</strong><small>' + h(tab.description) + '</small></span></button>').join('') : '<p class="copilot-nav-menu-empty" role="presentation">Все разделы уже открыты.</p>') +
@@ -189,6 +190,7 @@
     root.addEventListener('dragend', () => { dragged = ''; for (const item of root.querySelectorAll('.is-dragging,.is-drop-target')) item.classList.remove('is-dragging', 'is-drop-target'); });
     document.addEventListener('pointerdown', event => { if (menuOpen && !root.contains(event.target)) { menuOpen = false; render({ keepFocus: false }); } });
     window.addEventListener('hashchange', () => { ensure(active()); render(); scrollActive(); });
+    window.addEventListener('resize', () => requestAnimationFrame(scrollActive));
     update(); ensure(active());
   }
   window.CopilotNavigation = { init, update, ensure };

@@ -1,11 +1,11 @@
 {
   "name": "ed-copilot",
   "productName": "ED Copilot",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Русский помощник пилота Elite Dangerous",
   "private": true,
   "main": "electron/main.cjs",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "UNLICENSED",
   "homepage": "https://github.com/Naenier/ED-Copilot",
   "repository": {
     "type": "git",

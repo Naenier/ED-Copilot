@@ -551,5 +551,16 @@
     window.addEventListener("beforeunload", () => clearInterval(clock));
   }
 
-  window.MiningOperations = { init, renderMarket, renderCarrier, destination };
+  function openPurchase({ resourceKey, quantity, system } = {}) {
+    ui.mode = "buy";
+    ui.resourceKey = resourceKey || "";
+    ui.useCargo = false;
+    ui.useCarrierCargo = false;
+    ui.quantity = Math.max(1, Math.ceil(Number(quantity) || 1));
+    ui.system = system || context.getState()?.commander?.system || "";
+    ui.resultLimit = 20;
+    location.hash = "sale";
+    context.render();
+  }
+  window.MiningOperations = { init, renderMarket, renderCarrier, destination, openPurchase };
 })();

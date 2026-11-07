@@ -9,6 +9,7 @@ const { createWindowState, clampBounds, enableZoom } = require("../electron/wind
 const { hudWindowOptions } = require("../electron/hudWindowOptions.cjs");
 const { isGame, isGameOrOwn, parseForegroundLine, nativeWatcherPath, monitorScript, watchForeground, watchForegroundOffMain } = require("../electron/foregroundWatch.cjs");
 const { childWindowKind, galaxyWindowBounds } = require("../electron/childWindows.cjs");
+const { overlayVisibility } = require("../electron/overlayVisibility.cjs");
 const folder = fs.mkdtempSync(path.join(__dirname, "runtime-test-"));
 const primary = { workArea: { x: 0, y: 0, width: 1920, height: 1040 } };
 const secondary = { workArea: { x: -1920, y: 0, width: 1920, height: 1080 } };
@@ -70,6 +71,14 @@ try {
   assert.equal(isGame("C:\\Games\\EliteDangerous64.exe"), true);
   assert.equal(isGame("EDLaunch.exe"), false);
   assert.equal(isGame("badEliteDangerous64"), false);
+  const enabledHud = { enabled: true, hidden: false, quitting: false, gameRunning: true };
+  for (const foregroundName of [null, "", "ED Copilot.exe", "electron.exe", "Chrome.exe", "EDLaunch.exe"]) {
+    assert.equal(overlayVisibility({ ...enabledHud, foregroundName }).visible, false, "Only the game may show the HUD: " + foregroundName);
+  }
+  assert.equal(overlayVisibility({ ...enabledHud, foregroundName: "EliteDangerous64.exe" }).visible, true);
+  for (const [key, value] of [["enabled", false], ["hidden", true], ["quitting", true], ["gameRunning", false]]) {
+    assert.equal(overlayVisibility({ ...enabledHud, foregroundName: "EliteDangerous64", [key]: value }).visible, false);
+  }
   assert.equal(isGameOrOwn("ED Copilot.exe", ["ed copilot"]), true);
   assert.equal(isGameOrOwn("Chrome.exe", ["ed copilot"]), false);
   assert.deepEqual(parseForegroundLine('{"name":"EliteDangerous64","at":{"x":-960,"y":540}}'), { name: "elitedangerous64", at: { x: -960, y: 540 } });

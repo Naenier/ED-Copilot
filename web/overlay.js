@@ -4,7 +4,7 @@
   const { h, n, credits, pill, dateTime, duration } = U;
   const root = document.getElementById("mining-overlay");
   const activities = { flight: "ПОЛЁТ И НАВИГАЦИЯ", asteroid: "ДОБЫЧА В КОЛЬЦАХ", surface: "ПЛАНЕТАРНАЯ ДОБЫЧА",
-    raw: "СБОР СЫРЬЯ", trade: "ТОРГОВЛЯ", carrier: "ФЛОТОНОСЕЦ", engineering: "МАТЕРИАЛЫ ДЛЯ ИНЖЕНЕРИИ" };
+    raw: "СБОР СЫРЬЯ", trade: "ТОРГОВЛЯ", carrier: "ФЛОТОНОСЕЦ", engineering: "МАТЕРИАЛЫ ДЛЯ ИНЖЕНЕРИИ", colonization: "КОЛОНИЗАЦИЯ И СНАБЖЕНИЕ" };
   let state;
   let online = false;
   let lastHeight = 0;
@@ -168,11 +168,34 @@
           (materials.length > 6 ? empty("Ещё материалов в списке: " + n(materials.length - 6, true)) : "") : empty("Известного запаса хватает на текущий план.")) +
       (!shopping.inventoryKnown && (eng.items || []).length ? empty("Запасы не полностью известны. Откройте игру для нового снимка материалов.") : "");
   }
+  function colonization() {
+    const colony = state.colonization || {}, project = colony.activeProject;
+    if (!project) return section("ПЛАН КОЛОНИЗАЦИИ", empty("Добавьте вкладку «Колонизация» через «+» и выберите проект системы."));
+    if (["complete", "cancelled"].includes(project.status)) return section(project.targetSystem || project.name || "КОЛОНИЗАЦИЯ",
+      empty(project.status === "complete" ? "Проект завершён. Выберите следующий проект колонизации в приложении." : "Проект отменён. Выберите активный проект в приложении."));
+    const task = project.nextTask;
+    const building = (project.buildings || []).find(item => item.id === task?.buildingId);
+    const resources = (building?.requirements || project.supplies || []).filter(item => item.missing > 0).sort((a, b) => b.missing - a.missing);
+    const capacity = colony.cargoCapacity || state.commander?.cargoCapacity;
+    const missingKnown = project.unknownBills === 0 || project.totalMissing > 0;
+    return metrics([["ОСТАЛОСЬ ПО СМЕТАМ", missingKnown ? n(project.totalMissing, true) + " <em>т</em>" : "—"],
+      ["СТРОИТСЯ", n(project.concurrent, true)],
+      ["РЕЙСОВ", capacity > 0 && missingKnown ? n(Math.ceil(project.totalMissing / capacity), true) : "—"]]) +
+      section(project.targetSystem || project.name || "КОЛОНИЗАЦИЯ", (project.faction ? row("Фракция", h(project.faction)) : "") +
+        (task ? empty(task.text) : empty("Проект завершён или приостановлен.")) +
+        (project.deadline ? row("Срок первичного порта", h(dateTime(project.deadline))) : "")) +
+      section(building?.name || "СНАБЖЕНИЕ ПРОЕКТА", resources.length ? resources.slice(0, 5).map(item =>
+        row(item.name || item.commodity, "Ещё " + n(item.missing, true) + " т") +
+        (item.cargoAvailable > 0 ? row("На борту для поставки", n(Math.min(item.missing, item.cargoAvailable), true) + " т") : "")).join("") +
+        (resources.some(item => !item.authoritative) ? empty("Часть потребности задана вручную. Точные объёмы — на стройплощадке.") : empty("Остаток по журналу стройплощадки и принятым поставкам.")) :
+        empty(project.unknownBills > 0 ? "Посетите стройплощадку, чтобы получить список товаров." : "В известных списках недостающих ресурсов нет.")) +
+      (project.unknownBills > 0 ? empty("Объектов без списка ресурсов: " + n(project.unknownBills, true) + ". Их тоннаж ещё не включён в расчёт.") : "");
+  }
   function render() {
     if (!state) return;
     const commander = state.commander || {};
     const activity = state.settings?.activity || "flight";
-    const renderers = { flight, asteroid, surface, raw, trade, carrier, engineering };
+    const renderers = { flight, asteroid, surface, raw, trade, carrier, engineering, colonization };
     const vehicle = { ship: "КОРАБЛЬ", srv: "ТРП", foot: "ПЕШКОМ", unknown: "ОЖИДАНИЕ" }[commander.vehicle] || "ОЖИДАНИЕ";
     root.innerHTML = '<div class="overlay-header"><strong><img src="copilot.svg" alt="" width="18" height="18" />ED COPILOT</strong><span>' + vehicle +
       '</span></div><div class="overlay-context"><strong>' + h(commander.system || "Ожидание положения") +

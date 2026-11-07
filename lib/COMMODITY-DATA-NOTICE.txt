@@ -7,7 +7,7 @@ https://raw.githubusercontent.com/EDCD/FDevIDs/master/rare_commodity.csv
 Rows: 142; SHA256: bda5166a1394ed3680aaeee7916ce41804b7a0e69866c0e0cc8d4352700e3e2b
 
 Source README: https://github.com/EDCD/FDevIDs/blob/master/README.md
-The source describes these as Companion API IDs and in-game English names; it warns that the collections can be incomplete and that names may differ from CAPI/EDDN labels.
+The source describes these as Companion API IDs and in-game English names; it warns that the collections can be incomplete and that names may differ from other protocol labels.
 Names and identifiers describe Elite Dangerous game content. Elite Dangerous and its game data remain the intellectual property of Frontier Developments plc, subject to Frontier's terms. This notice does not claim an MIT or other application-code license for the game data.
 https://www.frontierstore.net/terms-and-conditions/
 

@@ -1,32 +1,19 @@
-# Inara integration
+# Inara protocol adapter
 
-Protocol sources, checked 7 November 2026:
+The implementation follows the [official Inara API documentation](https://inara.cz/elite/inara-api/) and the [Frontier journal reference](https://hosting.zaonce.net/community/journal/v37/Journal_Manual_v37.pdf).
 
-- [Official developer guide](https://inara.cz/elite/inara-api-devguide/)
-- [Official v1 event reference](https://inara.cz/elite/inara-api-docs/)
-- [EDMC integration source](https://github.com/EDCD/EDMarketConnector/blob/main/plugins/inara.py), consulted for journal field correspondence.
+The application uses its own name, ED Copilot. A personal API key stays in Windows-protected local storage and is never included in renderer status, exported data or source control. The API response determines whether a submission succeeds.
 
-ED Copilot uses its own application name. Inara must approve that name before uploads work. Users provide their personal Inara API key. A Frontier OAuth Client ID does not replace either requirement.
+## Local contract
 
-Uploads go to `https://inara.cz/inapi/v1/`. The header contains `appName`, `appVersion`, `isBeingDeveloped`, `APIkey`, `commanderName` and, when available, `commanderFrontierID`. Events contain `eventName`, the original `eventTimestamp`, `eventData` and a numeric `eventCustomID` for acknowledgement matching.
+The configuration endpoint accepts enabled and an optional apiKey. An empty key retains the saved value. Disabling stops sending while retaining queued observations. Status exposes counters, last successful submission, errors and retry time without credentials.
 
-Inara codes 200 and 202 acknowledge an event. Codes 204 and 400 do not. Missing event acknowledgements remain pending. A header-level 400 pauses pending events for setup correction. Retryable network/server failures use increasing delays; they never trigger an immediate retry loop.
+The version 2 encrypted state imports only Inara configuration and observations from version 1, preserving the key, commander binding, journal cursors and acknowledged-event hashes.
 
-## Adapter and manager
+## Delivery
 
-`inara.cjs` exports pure journal/snapshot mapping, `validateLive`, stable `eventKey`, replaceable `snapshotKey`, and one-attempt `sendBatch`. `integrations.cjs` owns encrypted persistence, commander binding, replay cursors, batching and retries. Renderer status never contains a key or bridge token. Only the explicit pairing response returns a new EDMC token.
+Only current Live-game events for the bound commander qualify. Journal replay does not upload history. Snapshots are coalesced, events are deduplicated, batches are limited and network failures use service-wide backoff. Switching commanders or disabling cancels an outstanding batch without acknowledging it for the wrong account.
 
-The manager accepts `secureStorage: {encrypt, decrypt}` callbacks compatible with Electron safeStorage wrappers. Without working encryption it refuses publishing. The binary profile file contains configuration, credentials, cursors and pending observations; do not publish it.
+Cargo snapshots use the raw ship inventory. An unknown inventory or loan is never replaced by a fabricated zero. Credits, ships/loadouts, cargo, materials, ranks, reputation, missions and supported travel events use the documented event types.
 
-Only Live data qualifies. Journal replay and observations preceding opt-in do not generate history uploads. Commander changes cancel outstanding batches. EDMC and ED Copilot are mutually exclusive publishers; the local EDMC bridge displays connection status and never republishes its messages.
-
-Inventory replacement requires complete data. Ship cargo uses the original full Inventory, including stolen and mission partitions; summary cargo is unsuitable. Materials require all three known categories. Manual engineer checkboxes are excluded. Credits require an authoritative observation and known loan value. Game statistics use the complete original Statistics payload.
-
-Fleet-carrier travel is supported by `addCommanderTravelCarrierJump`. The documented API has no carrier ownership, fuel, balance, warehouse, station-market import or galaxy-price lookup event. Those must not be disguised as commander ship inventory. ED Copilot keeps private carrier management locally and submits supported public market observations through EDDN separately.
-
-Tests use synthetic commanders and mocked transports only:
-
-```text
-node work/test-inara.cjs
-node work/test-integration-manager.cjs
-```
+Fleet-carrier travel uses addCommanderTravelCarrierJump. Private carrier ownership, fuel, accounts and warehouse management remain local; the commander profile API does not represent them.

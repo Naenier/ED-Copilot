@@ -86,7 +86,7 @@ async function generate(args = process.argv.slice(2)) {
   const lines = ["ED Copilot commodity identifiers and English names", "", "Generated independently from the EDCD/FDevIDs primary CSV tables:",
     ...provenance.flatMap(row => [`${SOURCE_ROOT}${row.file}`, `Rows: ${row.rows}; SHA256: ${row.sha256}`]), "",
     "Source README: https://github.com/EDCD/FDevIDs/blob/master/README.md",
-    "The source describes these as Companion API IDs and in-game English names; it warns that the collections can be incomplete and that names may differ from CAPI/EDDN labels.",
+    "The source describes these as Companion API IDs and in-game English names; it warns that the collections can be incomplete and that names may differ between API sources.",
     "Names and identifiers describe Elite Dangerous game content. Elite Dangerous and its game data remain the intellectual property of Frontier Developments plc, subject to Frontier's terms. This notice does not claim an MIT or other application-code license for the game data.",
     "https://www.frontierstore.net/terms-and-conditions/", "",
     "Generator: scripts/generate-commodity-names.cjs. Inputs are the two CSV tables above and missing planetary commodity entries from ED Copilot's own catalog.cjs. The generator never uses the existing output dictionary as input.",
