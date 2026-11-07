@@ -1,0 +1,44 @@
+#copilot-navigation {
+  display: block;
+  position: relative;
+  z-index: 30;
+  padding: 0 22px;
+  min-height: 54px;
+  max-width: 100%;
+  overflow: visible;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.copilot-tabbar { display: flex; gap: 7px; align-items: stretch; min-width: 0; }
+.copilot-tabstrip { display: flex; align-items: stretch; gap: 3px; flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; white-space: nowrap; scrollbar-width: thin; scrollbar-color: var(--accent-dim) transparent; padding-top: 6px; }
+.copilot-tabstrip::-webkit-scrollbar { height: 4px; }
+.copilot-tabstrip::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 3px; }
+.copilot-tab { display: flex; position: relative; align-items: stretch; flex: 0 0 auto; max-width: 245px; border: 1px solid transparent; border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0; background: transparent; }
+.copilot-tab:hover { background: var(--panel-raised); }
+.copilot-tab.is-active { background: var(--panel-raised); border-color: var(--line); border-bottom-color: var(--accent); }
+#copilot-navigation .copilot-tab-link { display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-width: 0; padding: 12px 13px; min-height: 46px; border: 0; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 500; background: transparent; }
+#copilot-navigation .copilot-tab-link.is-active { color: var(--accent-bright); background: transparent; }
+#copilot-navigation .copilot-tab-link:hover { color: var(--text); background: transparent; }
+#copilot-navigation .copilot-tab-icon { flex: 0 0 auto; font-size: 15px; color: inherit; }
+#copilot-navigation .copilot-tab-label { overflow: hidden; text-overflow: ellipsis; color: inherit; font-size: inherit; }
+.copilot-tab-close { display: flex; align-items: center; justify-content: center; align-self: center; width: 22px; height: 26px; min-height: 0; margin-right: 6px; padding: 0; background: transparent; border: 0; border-radius: 3px; color: var(--muted); font-size: 19px; line-height: 1; cursor: pointer; }
+.copilot-tab-close:hover { background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); }
+.copilot-tabtools { flex: 0 0 auto; display: flex; align-items: center; padding-top: 4px; }
+.copilot-nav-add { display: flex; justify-content: center; align-items: center; width: 36px; min-height: 36px; padding: 0; border: 1px solid transparent; border-radius: 5px; color: var(--muted); background: transparent; font-size: 25px; line-height: 1; }
+.copilot-nav-add:hover, .copilot-nav-add[aria-expanded="true"] { border-color: var(--line); background: var(--panel-raised); color: var(--accent-bright); }
+.copilot-nav-menu { position: absolute; top: calc(100% + 5px); right: 22px; z-index: 80; width: 365px; max-width: calc(100vw - 30px); max-height: min(72vh, 710px); overflow-y: auto; padding: 9px; border: 1px solid var(--accent-dim); border-radius: 6px; background: var(--panel); box-shadow: 0 15px 45px color-mix(in srgb, var(--bg) 85%, transparent); }
+.copilot-nav-menu[hidden] { display: none; }
+.copilot-nav-menu-heading { padding: 8px 12px 11px; font-size: 10px; letter-spacing: 1.3px; color: var(--muted); }
+.copilot-nav-feature { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 11px 12px; min-height: 52px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text); }
+.copilot-nav-feature:hover, .copilot-nav-feature:focus-visible { background: var(--panel-raised); border-color: var(--line); }
+.copilot-nav-feature > span:first-child { width: 22px; color: var(--accent); text-align: center; font-size: 18px; }
+.copilot-nav-feature > span:last-child { display: grid; gap: 3px; }
+.copilot-nav-feature strong { font-size: 13px; font-weight: 500; }
+.copilot-nav-feature small { color: var(--muted); font-size: 11px; }
+.copilot-nav-menu-footer { margin-top: 8px; padding: 10px 4px 2px; border-top: 1px solid var(--line); }
+.copilot-nav-menu-footer button { width: 100%; text-align: left; padding: 10px 9px; border: 1px solid transparent; color: var(--accent-bright); background: transparent; font-size: 12px; }
+.copilot-nav-menu-footer button:hover { background: var(--panel-raised); border-color: var(--line); }
+.copilot-nav-menu-footer p, .copilot-nav-menu-empty { margin: 8px 9px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.copilot-tab.is-dragging { opacity: .45; }
+.copilot-tab.is-drop-target { box-shadow: inset 3px 0 var(--accent); }
+@media (max-width: 1000px) { #copilot-navigation { padding: 0 14px; } .copilot-nav-menu { right: 14px; } #copilot-navigation .copilot-tab-link { padding-inline: 10px; } }

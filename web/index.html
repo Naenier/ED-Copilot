@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="encyclopedia.css" />
     <link rel="stylesheet" href="integrations.css" />
     <link rel="stylesheet" href="appearance.css" />
+    <link rel="stylesheet" href="navigation.css" />
+    <link rel="stylesheet" href="window-display.css" />
   </head>
   <body>
     <div class="app-shell">
@@ -41,22 +43,7 @@
           </button>
         </div>
       </header>
-      <nav class="main-nav" aria-label="Разделы">
-        <a href="#overview" data-tab="overview"><span>◈</span>Обзор</a>
-        <a href="#targets" data-tab="targets"><span>⌖</span>Цели</a>
-        <a href="#sale" data-tab="sale"><span>⇄</span>Торговля</a>
-        <a href="#deals" data-tab="deals"><span>↔</span>Рейсы</a>
-        <a href="#carrier" data-tab="carrier"><span>▱</span>Флотоносец</a>
-        <a href="#encyclopedia" data-tab="encyclopedia"><span>▤</span>Энциклопедия</a>
-        <a href="#statistics" data-tab="statistics"><span>▥</span>Статистика</a>
-        <a href="#mining" data-tab="mining"><span>⛏</span>Заход добычи</a>
-        <a href="#engineering" data-tab="engineering"><span>⚒</span>Инженерия</a>
-        <a href="#route" data-tab="route"><span>⌁</span>Маршрут</a>
-        <a href="#settings" data-tab="settings"><span>⚙</span>Настройки</a>
-        <a href="#account" data-tab="account"><span>◉</span>Frontier</a>
-        <a href="#integrations" data-tab="integrations"><span>⇅</span>Синхронизация</a>
-        <a href="#help" data-tab="help"><span>?</span>Руководство</a>
-      </nav>
+      <nav id="copilot-navigation" class="main-nav" aria-label="Разделы"></nav>
       <div class="activity-bar" hidden>
         <label for="activity-select">Занятие для оверлея</label>
         <select id="activity-select" aria-label="Занятие для оверлея">
@@ -86,6 +73,8 @@
     <div class="toast" id="toast" role="status" hidden></div>
     <script src="common.js" defer></script>
     <script src="appearance.js" defer></script>
+    <script src="navigation.js" defer></script>
+    <script src="window-display.js" defer></script>
     <script src="operations.js" defer></script>
     <script src="expedition.js" defer></script>
     <script src="mining-planner.js" defer></script>

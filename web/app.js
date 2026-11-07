@@ -10,6 +10,7 @@
   let initialSettings = false;
   let composing = false;
   let toastTimer;
+  let pendingViewRestore = null;
   const ui = {
     tab: tabs.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview",
     targetQuery: "",
@@ -985,12 +986,12 @@
           '" data-focus="price-' +
           h(resource.key) +
           '" value="' +
-          h(ui.priceDraft[resource.key] ?? resource.price ?? "") +
-          '" placeholder="Не задана" aria-label="Справочная цена ' +
+          h(ui.priceDraft[resource.key] ?? resource.manualPrice ?? "") +
+          '" placeholder="Автоматически" aria-label="Справочная цена ' +
           h(resource.name) +
           '"></td><td class="small muted">' +
-          h(resource.priceSource || "—") +
-          (resource.priceAt ? " · " + dateTime(resource.priceAt) : "") +
+          (resource.automaticPrice == null ? "Нет цены из игры" : credits(resource.automaticPrice) + " · " + h(resource.automaticPriceSource || "Рынок игры")) +
+          (resource.automaticPriceAt ? " · " + dateTime(resource.automaticPriceAt) : "") +
           "</td></tr>",
       )
       .join("");
@@ -998,8 +999,9 @@
       heading(
         "ЛОКАЛЬНЫЕ НАСТРОЙКИ",
         "Параметры компаньона",
-        "Папка журналов, способы добычи, фильтры и справочные цены.",
+        "Окно приложения, оформление, папка журналов и личные ориентиры.",
       ) +
+      window.CopilotWindowDisplay.render(state) +
       window.CopilotAppearance.render(state) +
       '<div class="settings-columns"><div class="stack">' +
       panel(
@@ -1073,13 +1075,6 @@
       ) +
       '</div><aside class="stack">' +
       panel(
-        "Источники и точность",
-        '<div class="panel-body"><p class="panel-note">Сканирование тел, горячие точки, текущая руда и результаты добычи читаются из локального журнала игры. Поиск рядом дополняет их открытыми каталогами.</p>' +
-          '<p class="panel-note">Цена, количество товара и состав астероида — разные показатели. Пустая цена означает, что данных для денежной оценки пока нет.</p>' +
-          sourceLinks(state.app?.sources) +
-          "</div>",
-      ) +
-      panel(
         "Управление",
         '<div class="panel-body"><div class="row row-between"><span class="small">Показать / скрыть оверлей</span><span class="mini-key">Ctrl Alt H</span></div>' +
           '<p class="settings-hint" style="margin-top:12px">Оверлей пропускает клики в игру. Его положение подстраивается под режим корабля или высадки.</p>' +
@@ -1089,7 +1084,8 @@
       ) +
       "</aside></div>" +
       '<section class="panel settings-prices"><div class="panel-heading"><h2>Справочные цены товаров</h2><small>ЗА ТОННУ</small></div>' +
-      '<div class="panel-body"><p class="panel-note">Введите ориентир для оценки груза и сравнения состава астероидов. Фактическая цена зависит от станции и времени продажи.</p>' +
+      '<div class="panel-body"><p>Заполнять эти поля необязательно. Ручной ориентир помогает оценить стоимость трюма и состав разведанного астероида ещё до выбора покупателя. Например, при ожидаемой цене платины 270 000 кр./т вы сразу увидите приблизительную стоимость добытого груза.</p>' +
+      '<p class="panel-note">Ваш ориентир имеет приоритет при оценке груза. Пустое поле использует последнюю известную цену из игры; очистите поле и сохраните, чтобы вернуться к ней. Поиск покупателей в разделе «Торговля» использует отдельные рыночные котировки. Справочная оценка не гарантирует продажу по этой цене.</p>' +
       (state.market?.station
         ? '<p class="panel-note">Последний рынок: ' +
           h(state.market.station) +
@@ -1099,7 +1095,7 @@
           dateTime(state.market.timestamp) +
           "</p>"
         : "") +
-      '</div><form id="prices-form"><div class="table-wrap"><table><thead><tr><th>Ресурс</th><th class="table-num">Цена, кр.</th><th>Источник / дата</th></tr></thead><tbody>' +
+      '</div><form id="prices-form"><div class="table-wrap"><table><thead><tr><th>Ресурс</th><th class="table-num">Ваш ориентир, кр./т</th><th>Последняя цена из игры / дата</th></tr></thead><tbody>' +
       prices +
       '</tbody></table></div><div class="panel-body"><button class="button button-primary" type="submit">Сохранить цены</button></div></form></section>'
     );
@@ -1152,6 +1148,8 @@
 
   function updateState(next) {
     state = next;
+    window.CopilotNavigation.update(next);
+    void window.CopilotNavigation.ensure(ui.tab);
     window.CopilotAppearance.apply(next.theme);
     if (!initialSettings && next.settings) {
       ui.minTier = next.settings.minTier || "medium";
@@ -1191,6 +1189,7 @@
     banner.hidden = !text;
     window.CopilotOverlayControl.update();
     render();
+    if (pendingViewRestore) { const saved = pendingViewRestore; pendingViewRestore = null; window.CopilotViewState.restore(saved); }
   }
 
   function showToast(message, error = false) {
@@ -1334,13 +1333,12 @@
         window.edMining?.setOverlay?.(settings.overlayEnabled);
       }
     } else if (form.id === "prices-form") {
-      const prices = [...form.querySelectorAll("[data-price-key]")]
-        .filter((input) => input.value.trim() !== "")
-        .map((input) => ({ key: input.dataset.priceKey, price: Number(input.value) }));
-      if (prices.some((row) => !Number.isFinite(row.price) || row.price < 0))
-        return showToast("Цены должны быть положительными числами или нулём", true);
+      const submitted = { ...ui.priceDraft };
+      const prices = Object.entries(submitted).map(([key, value]) => ({ key, price: value.trim() === "" ? null : Number(value) }));
+      if (prices.some((row) => row.price !== null && (!Number.isFinite(row.price) || row.price <= 0)))
+        return showToast("Введите положительную цену или оставьте поле пустым для автоматической оценки", true);
       const result = await perform("/api/market", { prices }, "Справочные цены сохранены");
-      if (result) ui.priceDraft = {};
+      if (result) for (const [key, value] of Object.entries(submitted)) if (ui.priceDraft[key] === value) delete ui.priceDraft[key];
     }
   });
 
@@ -1351,6 +1349,7 @@
   window.addEventListener("hashchange", () => {
     const next = location.hash.slice(1);
     ui.tab = tabs.includes(next) ? next : "overview";
+    void window.CopilotNavigation.ensure(ui.tab);
     render();
     window.scrollTo(0, 0);
   });
@@ -1379,6 +1378,23 @@
   window.CopilotEncyclopedia.init({ getState: () => state, render, perform, showToast });
   window.CopilotIntegrations.init({ getState: () => state, render, perform, showToast });
   window.CopilotAppearance.init({ getState: () => state, render, perform, showToast });
+  window.CopilotNavigation.init({ getState: () => state, render, perform, showToast });
+  window.CopilotWindowDisplay.init({ getState: () => state, render, perform, showToast });
+  window.CopilotViewState = {
+    capture: () => ({ ui: structuredClone(ui), appearance: window.CopilotAppearance.capture(), scrollY,
+      expanded: [...content.querySelectorAll('details[data-preserve-open][open]')].map(element => element.dataset.preserveOpen) }),
+    restore: saved => {
+      if (!saved || typeof saved !== 'object') return;
+      if (!state) { pendingViewRestore = saved; return; }
+      for (const key of Object.keys(ui)) if (saved.ui && Object.hasOwn(saved.ui, key) && key !== 'busy') ui[key] = saved.ui[key];
+      ui.tab = tabs.includes(ui.tab) ? ui.tab : 'overview'; ui.busy = false;
+      window.CopilotAppearance.restore(saved.appearance);
+      if (location.hash !== '#' + ui.tab) location.hash = ui.tab;
+      render();
+      for (const element of content.querySelectorAll('details[data-preserve-open]')) element.open = Array.isArray(saved.expanded) && saved.expanded.includes(element.dataset.preserveOpen);
+      requestAnimationFrame(() => scrollTo(0, Math.max(0, Number(saved.scrollY) || 0)));
+    },
+  };
   const subscription = U.subscribe(updateState, (connected, message) => {
     connection = connected;
     const indicator = document.getElementById("connection");

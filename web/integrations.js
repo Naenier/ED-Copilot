@@ -4,6 +4,9 @@
   const U = window.MiningUI;
   const { h, n, dateTime, pill } = U;
   const REPOSITORY = 'https://github.com/Naenier/ED-Copilot';
+  const INARA_API_SETTINGS = 'https://inara.cz/elite/cmdr-settings-api/';
+  const INARA_ARTIE = 'https://inara.cz/elite/cmdr/1/';
+  const INARA_GUIDE = 'https://inara.cz/elite/inara-api-devguide/';
   let context;
   let initialized = false;
   let draft = null; // Non-secret checkboxes only. The API key stays in its input.
@@ -18,6 +21,38 @@
   const row = (label, value) => '<div class="sync-status-row"><span>' + h(label) + '</span><strong>' + h(value == null || value === '' ? '—' : value) + '</strong></div>';
   const textError = value => typeof value === 'string' ? value : value?.message || value?.error || '';
   const statusTime = value => value ? dateTime(value) : 'Ещё не было';
+
+  function inaraRegistrationRequest(state = {}) {
+    const version = /^\d+\.\d+\.\d+$/.test(state.app?.version || '') ? state.app.version : 'development build';
+    return [
+      'Hello Artie,',
+      '',
+      'I would like to register ED Copilot for development/testing access to the Inara API.',
+      '',
+      'Exact application name sent in header.appName: ED Copilot',
+      'Current version: ' + version,
+      'Homepage/source: ' + REPOSITORY,
+      '',
+      'Purpose: A Windows desktop companion I use for my own Elite Dangerous Live commander. It reads local game journals and optional Frontier CAPI snapshots. The Inara integration updates supported commander-profile information: credits, ships/loadouts, cargo/materials, ranks, missions and travel events. It does not request market, station or star-system datasets from Inara.',
+      '',
+      'Short description: Russian-language Elite Dangerous desktop companion with an activity-based overlay, trading/mining tools, engineering plans, fleet-carrier planning and optional commander-profile export to Inara.',
+      '',
+      'The integration is in development and sends isBeingDeveloped=true. It uses batched requests, retries with backoff, Live-only checks, journal replay exclusion and event deduplication. Automated protocol checks use synthetic data and mocked responses; live-account export still needs validation after application approval. Only sources are published so far, without binary releases.',
+      '',
+      'Please let me know if you need more information or changes before approving the application name. Thank you.',
+    ].join('\n');
+  }
+
+  function inaraApprovalSteps(inara) {
+    if (inara.appRegistered) return '<p class="panel-note">Вы отметили, что Inara разрешила имя ED Copilot. Это сохранённая отметка, а не проверка на сайте. Успех соединения подтверждается ответом Inara в разделе «Состояние отправки».</p>';
+    return note(inara.keySet ? 'Личный ключ уже сохранён. Остался отдельный разовый шаг: Inara должна разрешить имя приложения ED Copilot.' : 'Для прямой отправки нужны два отдельных шага: личный ключ командира и разрешение имени ED Copilot со стороны Inara.', false) +
+      '<ol class="sync-steps"><li>Войдите на Inara и откройте профиль автора сервиса — Artie.</li>' +
+      '<li>Скопируйте текст запроса кнопкой ниже и отправьте Artie личное сообщение. В нём уже указаны название, назначение и ссылка на исходники приложения.</li>' +
+      '<li>Дождитесь ответа, что имя <strong>ED Copilot</strong> разрешено для API. Только затем отметьте подтверждение ниже и сохраните настройки.</li></ol>' +
+      '<div class="actions-wrap">' + link(INARA_ARTIE, 'Открыть профиль Artie') + action('Скопировать запрос для Inara', 'copy-inara-request') + '</div>' +
+      '<p class="panel-note">Кнопка только копирует заготовку. Проверьте её и отправьте самостоятельно. В текст не входят ваш API-ключ, Client ID Frontier или данные аккаунта. ' + link(INARA_GUIDE, 'Требования Inara к новым приложениям') + '.</p>' +
+      '<p class="panel-note">Пока разрешения нет, можно выбрать «Отправляет EDMC» и настроить Inara в самом EDMC. Он уже указан Inara среди поддерживаемых программ.</p>';
+  }
 
   function defaults(status) {
     return {
@@ -51,7 +86,9 @@
   function serviceStatus(title, service, publisher, extra) {
     const active = publisher === 'copilot' && service.enabled;
     const error = textError(service.lastError);
-    return panel(title, '<div class="pill-row">' + pill(active ? 'Отправляет ED Copilot' : publisher === 'edmc' ? 'Отправка через EDMC' : 'Отправка выключена', active ? 'blue' : 'muted') +
+    let label = active ? 'Выбран ED Copilot' : publisher === 'edmc' ? 'Отправка через EDMC' : 'Отправка выключена';
+    if (title === 'Inara' && active) label = !service.keySet ? 'Нужен личный ключ' : !service.appRegistered ? 'Нужно разрешение Inara для ED Copilot' : service.setupRequired ? 'Проверьте доступ и ключ' : service.lastSuccess ? 'Последняя отправка подтверждена' : 'Настроено, ждём ответа Inara';
+    return panel(title, '<div class="pill-row">' + pill(label, active && (title !== 'Inara' || (service.keySet && service.appRegistered && !service.setupRequired)) ? 'blue' : 'muted') +
       (service.queued ? pill('В очереди: ' + n(service.queued, true), 'muted') : '') + '</div>' +
       row('Успешная отправка', statusTime(service.lastSuccess)) +
       row('Отправлено / отклонено', n(service.sent || 0, true) + ' / ' + n(service.failed || 0, true)) +
@@ -103,10 +140,11 @@
         '<p>Баланс, корабль, груз, материалы, ранги, миссии и поддерживаемые события перемещений — в профиль вашего командира. Для флотоносца передаётся событие перелёта; личный склад не синхронизируется.</p>' +
         '<div class="pill-row">' + pill(inara.keySet ? 'Ключ сохранён' : 'Нужен API-ключ Inara', inara.keySet ? 'blue' : 'muted') + '</div>' +
         '<label class="field"><span>' + (inara.keySet ? 'Новый API-ключ (если нужно заменить)' : 'Личный API-ключ Inara') + '</span><input id="sync-inara-key" type="password" name="inaraApiKey" maxlength="512" autocomplete="new-password" spellcheck="false" placeholder="' + (inara.keySet ? 'Сохранённый ключ не отображается' : 'Вставьте ключ из настроек командира Inara') + '"' + (!native || locked || unavailable ? ' disabled' : '') + '></label>' +
-        '<p class="panel-note">' + link('https://inara.cz/elite/cmdr-settings/', 'Настройки командира на Inara') + '. Ключ сохраняется в зашифрованном хранилище Windows. Для отправки нужен API-ключ, пароль от Inara не используется.</p>' +
-        check('inaraAppRegistered', 'Регистрация ED Copilot для Inara подтверждена', settings.inaraAppRegistered, !native || locked) +
-        '<p class="panel-note">Отмечайте это только после подтверждения регистрации приложения со стороны Inara. Client ID Frontier относится к другому сервису и не подтверждает регистрацию в Inara.</p>' +
-        (inara.setupRequired ? note(typeof inara.setupRequired === 'string' ? inara.setupRequired : 'Прежде чем отправлять данные, завершите настройку ключа и регистрации Inara.', true) : '') +
+        '<p class="panel-note">' + link(INARA_API_SETTINGS, 'Открыть настройки API на Inara') + '. Если ключ уже вставлен и сохранён, создавать новый не нужно. Пароль от Inara здесь не используется.</p>' +
+        '<h3>Разрешить отправку из ED Copilot</h3>' + inaraApprovalSteps(inara) +
+        check('inaraAppRegistered', 'Я получил от Inara подтверждение: имя ED Copilot разрешено для API', settings.inaraAppRegistered, !native || locked) +
+        '<p class="panel-note">Эта галочка лишь сохраняет ваше подтверждение. Она не отправляет заявку и не выдаёт разрешение на стороне Inara. Вход Frontier и его Client ID относятся к другому сервису.</p>' +
+        (inara.setupRequired ? note(typeof inara.setupRequired === 'string' ? inara.setupRequired : !inara.keySet ? 'Сохраните личный API-ключ из настроек командира Inara.' : !inara.appRegistered ? 'Ключ сохранён; ожидается разрешение имени ED Copilot со стороны Inara.' : 'Inara не подтвердила доступ. Проверьте ответ сервиса ниже.', true) : '') +
         (inara.keySet ? '<div class="actions-wrap">' + action('Удалить сохранённый ключ', 'clear-key', locked || unavailable) + '</div>' : '')) +
       panel('EDDN · общая база наблюдений',
         check('eddnEnabled', 'Делиться публичными данными через EDDN', settings.eddnEnabled, !native || locked) +
@@ -172,6 +210,9 @@
       try {
         if (name === 'copy-pair') {
           if (pairingToken) { await U.copyText(pairingToken); context.showToast('Код сопряжения скопирован'); }
+        } else if (name === 'copy-inara-request') {
+          await U.copyText(inaraRegistrationRequest(context.getState()));
+          context.showToast('Текст запроса скопирован. Проверьте его и отправьте Artie на Inara.');
         } else if (name === 'hide-pair') {
           pairingToken = ''; context.render();
         } else if (name === 'sync') {
@@ -200,5 +241,5 @@
     window.addEventListener('beforeunload', () => { pairingToken = ''; draft = null; });
   }
 
-  window.CopilotIntegrations = { init, render };
+  window.CopilotIntegrations = { init, render, inaraRegistrationRequest };
 })();

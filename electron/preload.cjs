@@ -17,6 +17,13 @@ contextBridge.exposeInMainWorld("edMining", {
   showMain: () => invoke("show-main"),
   minimize: () => invoke("minimize"),
   close: () => invoke("close-main"),
+  getDisplayState: () => invoke("display-state"),
+  setDisplayMode: (mode) => invoke("display-mode", mode),
+  onDisplayState: (callback) => {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on("ed-mining:display-state", listener);
+    return () => ipcRenderer.removeListener("ed-mining:display-state", listener);
+  },
   chooseJournalDir: () => invoke("choose-journal-directory"),
   copyText: (text) => invoke("copy-text", String(text)),
   openExternal: (url) => invoke("open-external", String(url)),

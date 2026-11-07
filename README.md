@@ -1,6 +1,6 @@
 # ED Copilot
 
-Русский настольный помощник пилота **Elite Dangerous** для Windows. Версия 1.6.x объединяет навигацию, торговлю, добычу, инженерию, планирование флотоносца, личные цели, статистику, энциклопедию и оверлей с выбором занятия.
+Русский настольный помощник пилота **Elite Dangerous** для Windows. Версия 1.7.x объединяет навигацию, торговлю, добычу, инженерию, планирование флотоносца, личные цели, статистику, энциклопедию и оверлей с выбором занятия.
 
 Домашняя страница: [github.com/Naenier/ED-Copilot](https://github.com/Naenier/ED-Copilot). Здесь публикуются исходники без готовых релизов. Это неофициальное приложение, не связанное с Frontier Developments.
 
@@ -11,12 +11,22 @@
 - Поиск колец, мест добычи и рынков с ценой, спросом, расстоянием и возрастом наблюдения.
 - Маршрут флотоносца с расчётом топлива и времени, торговые и инженерные планы, личные цели и статистика.
 - Энциклопедия и встроенное руководство на русском с поиском, разделами и ссылками на источники.
+- Вкладки как в браузере: основной набор из шести разделов, добавление остальных через «+», закрытие и перестановка с сохранением между запусками.
+- Оконный, полноэкранный и безрамочный режимы основного окна; быстрый выход в окно через Esc и переключение F11.
 - Необязательная авторизация Frontier Companion API через браузер и PKCE.
 - Необязательная отправка поддерживаемых данных в Inara и EDDN, а также локальный мост из самостоятельного клиента EDMarketConnector.
 
 Приложение читает сведения и помогает планировать действия. Управление кораблём, флотоносцем, торговыми приказами и модулями остаётся в игре. Котировки и каталоги могут запаздывать; старое наблюдение не гарантирует текущую цену продажи.
 
-## Шрифт и палитра
+## Вкладки и режим окна
+
+Сначала открыты **«Обзор», «Цели», «Торговля», «Энциклопедия», «Статистика» и «Настройки»**. Нажмите «+» справа от полосы, чтобы добавить флотоносец, его маршрут, инженерию, Frontier, синхронизацию, руководство или другой раздел.
+
+Крестик или средняя кнопка мыши скрывает дополнительную вкладку. Её планы, данные и функции сохраняются. «Обзор» и «Настройки» всегда остаются доступны. Вкладки можно перетащить мышью либо переместить с клавиатуры через Alt+←/→. Пункт «Восстановить стандартные вкладки» находится в меню «+». Список и порядок открытых разделов запоминаются между запусками.
+
+В **«Настройки → Режим окна приложения»** выберите «В окне», «Полноэкранный» или «Безрамочное окно» и нажмите «Применить режим». Оконный режим использует системную рамку Windows. Полноэкранный занимает весь монитор; безрамочный — рабочую область с доступной панелью задач. Esc возвращает обычное окно, F11 переключает оконный и полноэкранный режимы. Выбор и обычный размер окна сохраняются. Режим основного окна не меняет панели игрового оверлея. В браузере нативные режимы окна недоступны. [Подробная инструкция](docs/INTERFACE.md).
+
+## Оформление и палитра
 
 Интерфейс использует установленный в Windows **Segoe UI**, который поддерживает кириллицу. Файлы стороннего шрифта не входят в приложение.
 
@@ -53,7 +63,9 @@ npm run dist:win
 
 Настройки, планы, локальные кэши и учётные данные хранятся в `%LOCALAPPDATA%\ED Copilot`, вне исходников и папки приложения. Для отдельного профиля разработки можно задать `ED_COPILOT_DATA_DIR`. Старый профиль ED Mining переносится с сохранением исходной папки. Полный выход — через меню значка в области уведомлений Windows.
 
-Кнопка «? Помощь по разделу» открывает инструкцию для текущего экрана. Дополнительно: [Client ID и поле Endpoints Frontier](docs/FRONTIER-SETUP.md), [локальный API](API.md), [торговый API](TRADE-API.md), [мост EDMC](edmc-plugin/README.md).
+Кнопка «? Помощь по разделу» открывает инструкцию для текущего экрана. Дополнительно: [Client ID и поле Endpoints Frontier](docs/FRONTIER-SETUP.md), [личный ключ и разрешение приложения на Inara](docs/INARA-SETUP.md), [локальный API](API.md), [торговый API](TRADE-API.md), [мост EDMC](edmc-plugin/README.md).
+
+Справочные цены в настройках необязательны: это ваши ориентиры за тонну для оценки груза и состава астероида. Пустое поле использует последнюю доступную цену из игрового рынка; без наблюдения стоимость остаётся неизвестной. Рядом видны автоматическая цена, её источник и дата. Поиск покупателей и продавцов использует котировки, спрос и запас из своего источника, а история продаж хранит фактические суммы.
 
 ## Синхронизация и конфиденциальность
 
@@ -61,7 +73,7 @@ npm run dist:win
 
 **Frontier:** приложение использует публичный нативный OAuth-клиент с PKCE S256. В Developer Zone список HTTPS Endpoints для этой схемы оставляют пустым; локальный HTTP callback передаётся при запуске входа. Приложение не требует HTTPS-сервера или клиентского секрета. Точный порядок описан в [инструкции](docs/FRONTIER-SETUP.md). Пароль остаётся на сайте Frontier; OAuth-токены шифруются средствами Windows.
 
-**Inara:** нужны личный API-ключ командира и отдельный допуск имени ED Copilot со стороны Inara. Client ID Frontier не заменяет эти условия. Приложение не выдаёт себя за EDMC. Передаются поддерживаемые API сведения личного профиля и события. Документированный API не предоставляет полную синхронизацию личного склада, топлива и баланса флотоносца; они не передаются под видом корабельного груза.
+**Inara:** нужны личный API-ключ командира и отдельный допуск имени ED Copilot со стороны Inara. Если ключ уже сохранён, создавать его повторно не нужно. По [официальному руководству](https://inara.cz/elite/inara-api-devguide/) разрешение имени запрашивают у [Artie](https://inara.cz/elite/cmdr/1/); кнопка в приложении копирует заготовку запроса, которую пользователь проверяет и отправляет сам. Галочка подтверждения сохраняет полученный ответ и не регистрирует приложение удалённо. Подробные шаги — [в инструкции](docs/INARA-SETUP.md). Client ID Frontier относится к другому сервису. Документированный API Inara не предоставляет полную синхронизацию личного склада, топлива и баланса флотоносца; они не передаются под видом корабельного груза.
 
 **EDMC и EDDN:** EDMC — самостоятельная программа, EDDN — публичная сеть игровых наблюдений. Выберите одного отправителя. Если выбран EDMC, интернет-отправку выполняют его обычные плагины, а Copilot не дублирует её. Необязательный локальный мост показывает связь между программами и может дополнить цены текущей станции, но не забирает OAuth-токены EDMC.
 
@@ -73,5 +85,5 @@ EDDN получает только отобранные публичные на�
 
 ## English
 
-ED Copilot is an unofficial Russian-language Windows companion for Elite Dangerous. It combines activity-specific overlays, navigation, trading and mining tools, engineering plans, fleet-carrier routing, personal goals, statistics and an offline encyclopedia. Version 1.6 adds a Cyrillic-capable Windows system font, editable palettes, RGB matrix controls and read-only import of active game/EDHM HUD colors. Optional Frontier CAPI authorization uses native PKCE; the HTTPS Endpoints list stays empty for this flow. Inara needs its own application approval and the user's API key. EDMC remains a separate publisher; EDDN sharing is opt-in. Source builds use pinned official Electron dependencies. No binary releases are published here. See `LICENSE`, `NOTICE.md` and the in-app guide.
+ED Copilot is an unofficial Russian-language Windows companion for Elite Dangerous. It combines activity-specific overlays, navigation, trading and mining tools, engineering plans, fleet-carrier routing, personal goals, statistics and an offline encyclopedia. Version 1.7 uses a persistent browser-style tab bar with six default sections and optional feature tabs, plus windowed/fullscreen/borderless desktop modes. The interface supports editable palettes and read-only import of game/EDHM HUD colors. Optional reference prices support local cargo and asteroid estimates; market search uses observed source quotes. Frontier CAPI authorization uses native PKCE; the HTTPS Endpoints list stays empty for this flow. Inara requires the user's API key and separate application-name approval; the app provides a request template and setup guide. EDMC remains a separate publisher; EDDN sharing is opt-in. Source builds use pinned official Electron dependencies. No binary releases are published here. See `LICENSE`, `NOTICE.md` and the in-app guide.
 
