@@ -1,0 +1,21 @@
+ED Copilot encyclopedia data
+
+The Russian explanatory articles and encyclopedia interface were independently
+written for ED Copilot. No third-party guide prose or website UI was copied.
+
+Ship names/IDs/symbols: EDCD/FDevIDs shipyard.csv
+https://github.com/EDCD/FDevIDs/blob/master/shipyard.csv
+Ship hull, pad class, crew, hardpoints and ordinary optional-slot data:
+https://github.com/EDCD/coriolis-data/tree/master/ships
+Snapshot fetched 2026-11-07: 49 ship identities, 44 with Coriolis specifications.
+Missing specifications remain unknown.
+
+The Coriolis data license states that the game data and associated JSON files
+are intellectual property and copyright of Frontier Developments plc and are
+subject to Frontier's terms and conditions. The MIT license for Coriolis code
+is not asserted here as a license for Frontier's game data.
+https://github.com/EDCD/coriolis-data/blob/master/LICENSE.md
+https://www.frontierstore.net/terms-and-conditions/
+
+Existing engineering, commodity and mining datasets keep their existing
+attribution notices. Source links and reference date are available in the UI.

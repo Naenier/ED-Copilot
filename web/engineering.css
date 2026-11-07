@@ -1,0 +1,29 @@
+.engineering-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 22px; }
+.engineering-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.engineering-rolls { border: 1px solid var(--line); border-radius: 4px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 15px; padding: 18px; margin: 22px 0 12px; }
+.engineering-rolls legend { font-size: 12px; color: var(--muted); padding: 0 8px; }
+.engineering-rolls label { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.engineering-rolls label > span { color: var(--accent-bright); font-size: 12px; }
+.engineering-rolls input { width: 100%; }
+.engineering-rolls small { font-size: 10px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
+.engineering-items { padding: 0 22px; }
+.engineering-item { display: flex; gap: 20px; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.engineering-item:last-child { border-bottom: 0; }
+.engineering-item h3 { font-size: 15px; margin: 0 0 7px; }
+.engineering-item h3 small { color: var(--accent-bright); }
+.engineering-item p { margin: 8px 0; color: var(--muted); font-size: 12px; }
+.engineering-item > .actions-wrap { flex-shrink: 0; }
+.engineering-filters { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.engineering-filters > .field { flex: 1; min-width: 200px; }
+.engineering-filters > .operation-check { min-height: 40px; align-items: center; }
+.engineering-english { display: block; color: var(--muted); margin-top: 5px; font-size: 10px; }
+.engineering-engineers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.engineering-engineers .panel-heading { flex-wrap: wrap; gap: 10px; }
+.engineering-engineers .panel-body > p { font-size: 12px; color: var(--muted); }
+.engineering-engineers .pill-row { margin-bottom: 20px; }
+.engineering-engineers .pill { white-space: normal; }
+.engineering-sources { margin-top: 20px; }
+#engineering-import-form { margin-top: 18px; }
+#engineering-import-form textarea { width: 100%; min-height: 150px; resize: vertical; margin-bottom: 14px; }
+@media (max-width: 1100px) { .engineering-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .engineering-rolls { gap: 10px; padding: 12px; } }
+@media (max-width: 860px) { .engineering-rolls { grid-template-columns: repeat(3, minmax(0, 1fr)); } .engineering-engineers { grid-template-columns: 1fr; } .engineering-item { align-items: flex-start; flex-direction: column; } }

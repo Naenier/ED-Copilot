@@ -1,0 +1,30 @@
+.copilot-sync .page-heading { align-items: flex-start; }
+.sync-form { margin-bottom: 24px; }
+.sync-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.sync-mode { display: flex; gap: 11px; align-items: flex-start; padding: 18px 15px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; background: #0a1723; }
+.sync-mode.is-selected { border-color: var(--accent); background: #102b3d; }
+.sync-mode input { margin-top: 4px; accent-color: var(--accent); }
+.sync-mode strong { display: block; font-size: 13px; font-weight: 500; }
+.sync-mode small { display: block; color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 5px; }
+.sync-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
+.sync-columns > .panel { margin: 0; min-width: 0; }
+.copilot-sync .panel-body > p { line-height: 1.8; }
+.copilot-sync .operation-check { align-items: flex-start; }
+.copilot-sync .field { margin-top: 17px; }
+.copilot-sync input[type="password"] { width: 100%; }
+.sync-save { display: flex; align-items: center; flex-wrap: wrap; gap: 17px; padding-top: 20px; }
+.sync-save > span { color: var(--muted); font-size: 12px; }
+.sync-status-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 11px 0; font-size: 12px; border-bottom: 1px solid var(--line); }
+.sync-status-row > span { color: var(--muted); }
+.sync-status-row > strong { text-align: right; font-weight: 500; overflow-wrap: anywhere; }
+.sync-queue-heading { display: flex; gap: 20px; align-items: center; justify-content: space-between; margin-top: 32px; }
+.sync-queue-heading h2 { font-size: 18px; font-weight: 500; margin: 0 0 8px; }
+.sync-queue-heading p { margin: 0; }
+.sync-steps { color: var(--muted); padding-left: 23px; line-height: 1.8; font-size: 12px; }
+.sync-steps li { padding: 5px 0; }
+.sync-steps code { color: var(--text); overflow-wrap: anywhere; }
+.sync-pairing { border: 1px solid var(--line); border-radius: 4px; margin-top: 20px; padding: 2px 18px 13px; }
+.sync-pairing input { width: 100%; font-family: Consolas, monospace; font-size: 12px; }
+.sync-footer { margin-top: 22px; }
+@media (max-width: 1000px) { .sync-modes { gap: 10px; } .sync-mode { padding: 14px 11px; } }
+@media (max-width: 800px) { .sync-columns, .sync-modes { grid-template-columns: minmax(0, 1fr); } .sync-queue-heading { align-items: flex-start; flex-direction: column; gap: 12px; } }

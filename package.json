@@ -1,0 +1,28 @@
+{
+  "name": "ed-copilot",
+  "productName": "ED Copilot",
+  "version": "1.5.0",
+  "description": "Русский помощник пилота Elite Dangerous",
+  "private": true,
+  "main": "electron/main.cjs",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Naenier/ED-Copilot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Naenier/ED-Copilot.git"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "check": "node scripts/check.cjs",
+    "test": "node scripts/test.cjs",
+    "build:native": "node scripts/build-native.cjs",
+    "dist:win": "node scripts/package.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "electron-builder": "26.18.0"
+  }
+}

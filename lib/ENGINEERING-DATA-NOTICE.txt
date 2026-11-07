@@ -1,0 +1,47 @@
+Engineering data sources and attribution
+
+Material IDs, symbols, types, trader categories and rarities:
+EDCD/FDevIDs material.csv
+https://github.com/EDCD/FDevIDs/blob/master/material.csv
+
+Ship engineer IDs, system addresses and station market IDs:
+EDCD/FDevIDs engineers.csv
+https://github.com/EDCD/FDevIDs/blob/master/engineers.csv
+
+Blueprint ingredients, experimental ingredients, module compatibility and
+engineer grade capabilities:
+EDCD/coriolis-data modifications/{blueprints,modules,specials}.json
+https://github.com/EDCD/coriolis-data/tree/master/modifications
+
+The Coriolis data license states:
+"All Data and associated JSON files are intellectual property and copyright
+of Frontier Developments plc ('Frontier', 'Frontier Developments') and are
+subject to their terms and conditions."
+https://github.com/EDCD/coriolis-data/blob/master/LICENSE.md
+https://www.frontierstore.net/terms-and-conditions/
+
+The MIT license for Coriolis code applies to its JavaScript, CSS, HTML and SVG
+code, and is NOT asserted here as the license for Frontier's game data.
+
+The ED Copilot implementation was independently written. No Coriolis or NEWP
+application code, artwork or descriptive guide prose was copied into it.
+
+The engineering planner feature comparison and factual ship engineer system
+and base names were checked against NEWP on 2026-11-07:
+https://newp.io/engineering#list
+https://newp.io/engineers
+
+Russian interface and reference labels were independently translated where
+necessary. Existing official Russian material labels in the user's local game
+journals were preferred. Only the material ID/name pair was retained; no
+commander, account, location, time, inventory quantity or other journal content
+is present in the reference data.
+
+Journal events are interpreted using Frontier's Player Journal Manual v37:
+https://hosting.zaonce.net/community/journal/v37/Journal_Manual_v37.pdf
+
+The file engineering-data.json records its data capture date. Recipes and
+capabilities describe ship engineering. Legacy experimental effects without
+ingredient recipes are excluded, while costed modern equivalents are included.
+The special CargoRack_IncreasedCapacity entry has no ingredient recipe or
+crafting engineer in the source and is excluded from the regular crafting planner.
