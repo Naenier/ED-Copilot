@@ -37,7 +37,10 @@ jobs:
         run: |
           gcc --version
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          go test -race ./... -count=1 -timeout=180s
+          # The Win32 dependencies encode resource IDs as pointer values
+          # (MAKEINTRESOURCE). Keep the race detector enabled everywhere;
+          # suppress only checkptr in that external ABI adapter.
+          go test -race '-gcflags=github.com/lxn/...=-d=checkptr=0' ./... -count=1 -timeout=180s
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Build and isolated smoke
         shell: pwsh
