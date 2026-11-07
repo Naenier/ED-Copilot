@@ -79,6 +79,14 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		body = M{}
 	}
 	switch path {
+	case "/api/carrier/calculator":
+		if err := e.Calculator.Update(body); err != nil {
+			return nil, err
+		}
+	case "/api/learning":
+		if err := e.Learning.Update(body); err != nil {
+			return nil, err
+		}
 	case "/api/settings":
 		e.mu.Lock()
 		next := v.Copy(e.settings)
@@ -143,6 +151,16 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		for _, key := range []string{"bounds", "windowedBounds", "maximized"} {
 			if raw, ok := body[key]; ok {
 				next[key] = v.Clone(raw)
+			}
+		}
+		for _, key := range []string{"sidebarCollapsed", "inspectorOpen", "focusReading", "useGamePalette"} {
+			if raw, present := body[key]; present {
+				value, valid := raw.(bool)
+				if !valid {
+					e.mu.Unlock()
+					return nil, errors.New("Некорректный параметр рабочего пространства")
+				}
+				next[key] = value
 			}
 		}
 		e.desktop = next

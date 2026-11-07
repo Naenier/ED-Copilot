@@ -10,6 +10,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/data"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
+	"github.com/Naenier/ED-Copilot/internal/learning"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
 	"github.com/Naenier/ED-Copilot/internal/trading"
@@ -85,8 +86,17 @@ func presentationState(t *testing.T) M {
 
 func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	s := presentationState(t)
+	lib := learning.New(nil)
+	lessons := v.Rows(lib.Snapshot()["lessons"])
+	for _, body := range []M{{"action": "select", "lessonId": lessons[0]["id"]}, {"action": "complete", "lessonId": lessons[0]["id"], "completed": true}, {"action": "bookmark", "lessonId": lessons[0]["id"], "bookmarked": true}, {"action": "select", "lessonId": lessons[1]["id"]}} {
+		if err := lib.Update(body); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s["learning"] = lib.Snapshot()
+	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
-	if len(Tabs) != 15 {
+	if len(Tabs) != 17 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {
@@ -299,7 +309,7 @@ func TestHelpNativeWorkflowAndReadableTables(t *testing.T) {
 			t.Fatal("missing contextual help", tab.ID)
 		}
 	}
-	if !strings.Contains(HelpFor("settings"), "цен") || !strings.Contains(HelpFor("colonization"), "Очередь снабжения") || !strings.Contains(HelpFor("help"), "Другие действия") {
+	if !strings.Contains(HelpFor("settings"), "цен") || !strings.Contains(HelpFor("colonization"), "Очередь снабжения") || !strings.Contains(HelpFor("help"), "Ещё") {
 		t.Fatal("wrong contextual help topic")
 	}
 }

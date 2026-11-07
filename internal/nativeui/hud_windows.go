@@ -98,6 +98,11 @@ func mainHUDWndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	if h == nil {
 		return win.DefWindowProc(hwnd, msg, wParam, lParam)
 	}
+	if h.owner.modern != nil {
+		if value, handled := h.owner.modern.windowMessage(hwnd, msg, wParam, lParam); handled {
+			return value
+		}
+	}
 	if msg == smokeCancelMenuMessage && h.owner.options.Smoke {
 		userDLL.NewProc("EndMenu").Call()
 		return 0

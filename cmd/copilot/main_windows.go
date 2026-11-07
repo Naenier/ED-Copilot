@@ -23,13 +23,27 @@ func main() {
 	version := flag.Bool("version", false, "Версия приложения")
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
+	demo := flag.Bool("demo", false, "Открыть демонстрацию с новым временным профилем и без сети")
 	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
 	flag.Parse()
 	if *version {
 		fmt.Printf("ED Copilot %s · %s · native Windows\n", app.Version, runtime.Version())
 		return
 	}
-	if *smoke || *headless {
+	isolated := *smoke || *headless || *demo
+	if !isolated {
+		release, acquired, err := nativeui.AcquireDesktopInstance()
+		if err != nil {
+			fail(err, "")
+			return
+		}
+		if !acquired {
+			nativeui.ActivateExistingDesktopInstance()
+			return
+		}
+		defer release()
+	}
+	if isolated {
 		root, err := os.MkdirTemp("", "ed-copilot-native-smoke-")
 		if err != nil {
 			fail(err, "")
@@ -48,13 +62,13 @@ func main() {
 	if *dataDir == "" {
 		*dataDir = profile.DefaultDir()
 	}
-	engine, err := app.New(app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: *smoke || *headless})
+	engine, err := app.New(app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: isolated})
 	if err != nil {
 		fail(err, *dataDir)
 		return
 	}
 	defer engine.Close()
-	if *smoke || *headless {
+	if isolated {
 		if err = smokePlans(engine); err != nil {
 			fail(err, *dataDir)
 			return
@@ -70,7 +84,7 @@ func main() {
 			return
 		}
 	}
-	err = nativeui.Run(engine, nativeui.Options{Smoke: *smoke, SmokeReport: *report})
+	err = nativeui.Run(engine, nativeui.Options{Smoke: *smoke, Demo: *demo, SmokeReport: *report})
 	if err != nil {
 		fail(err, *dataDir)
 	}

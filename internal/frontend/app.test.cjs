@@ -1,0 +1,330 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+function fixture() {
+  const nodes = new Map(), selectors = new Map(), styles = new Map(), classes = new Set(), messages = [], dialogs = [], listeners = new Map();
+  const host = { scrollTop: 0, contains: element => !!element?.inPage };
+  nodes.set('page-scroll', host);
+  nodes.set('layers', { append: node => selectors.set('.menu', node) });
+  const document = {
+    activeElement: null,
+    documentElement: { style: { setProperty: (key, value) => styles.set(key, value), removeProperty: key => styles.delete(key) }, classList: { toggle: (key, value) => value ? classes.add(key) : classes.delete(key) } },
+    querySelector: selector => selectors.get(selector) || nodes.get(selector.slice(1)) || null,
+    querySelectorAll: selector => selectors.get(selector) || [],
+    getElementById: id => nodes.get(id), addEventListener: (event, handler) => listeners.set(event, handler), createElement: () => ({ style: {}, remove() { selectors.delete('.menu'); } }),
+  };
+  const window = { addEventListener() {}, COPILOT_SMOKE: false };
+  let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+  source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
+window.TestUI={C,context,uiContext,emptyStateInfo,renderEmptyState,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+ setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
+})();`);
+  vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
+  const api = window.TestUI;
+  api.setToast((message, error) => messages.push({ message, error }));
+  api.setDialog((title, body, footer) => dialogs.push({ title, body, footer }));
+  api.setClose(() => { api.C.layer = false; api.C.themePreview = null; });
+  return { api, window, document, nodes, selectors, styles, classes, messages, dialogs, host, listeners };
+}
+
+test('reading actions target the active lesson instead of a table row', () => {
+  const { api } = fixture();
+  Object.assign(api.C, { tab: 'learning', lesson: 'trade-alerts.practice', selected: 'trade-alerts.basics' });
+  assert.equal(api.context().selected, 'trade-alerts.practice');
+  api.C.tab = 'targets';
+  assert.equal(api.context().selected, 'trade-alerts.basics');
+});
+
+test('module UI contract supplies query-all and never inserts an overlay strip into reading mode', () => {
+  const { api, nodes } = fixture();
+  assert.equal(typeof api.uiContext().$$, 'function');
+  let insertions = 0;
+  nodes.set('page', { insertAdjacentHTML() { insertions++; } });
+  api.C.page = {}; api.C.tab = 'learning'; api.C.state = { settings: { overlayEnabled: true } };
+  api.renderActivity();
+  assert.equal(insertions, 0);
+});
+
+test('game palette affects main surfaces only when explicitly enabled and rejects CSS injection', () => {
+  const { api, styles, classes } = fixture();
+  api.C.state = { desktop: { useGamePalette: false }, theme: { palette: { accent: '#0099ff', bg: '#001122', text: '#eeeeee', panel: '#102030', danger: 'red;position:fixed' } } };
+  api.applyPalette();
+  assert.equal(styles.get('--accent'), '#0099ff');
+  assert.equal(styles.has('--bg'), false);
+  assert.equal(styles.has('--danger'), false);
+  api.C.state.desktop.useGamePalette = true; api.applyPalette();
+  assert.equal(styles.get('--bg'), '#001122');
+  assert.equal(styles.get('--text'), '#eeeeee');
+  assert.equal(classes.has('game-palette'), true);
+  api.C.state.desktop.useGamePalette = false; api.applyPalette();
+  assert.equal(styles.has('--bg'), false);
+});
+
+test('import preview never applies a theme until the user presses apply', async () => {
+  const { api, dialogs } = fixture();
+  const calls = [], preview = { settings: { preset: 'blue' }, palette: { accent: '#28a0f0', text: '#eeeeee', panel: '#172534' }, source: '<script>injected</script>' };
+  api.C.actions = [{ id: 'theme-import', fields: [] }];
+  api.setCall(async (op, params) => { calls.push({ op, params }); return { themePreview: preview }; });
+  await api.submitAction('theme-import', {});
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].op, 'action');
+  assert.equal(api.C.themePreview, preview);
+  assert.match(dialogs[0].footer, /data-click="apply-theme"/);
+  assert.match(dialogs[0].body, /&lt;script&gt;/);
+  assert.doesNotMatch(dialogs[0].body, /<script>/);
+  api.setLoad(async () => {});
+  await api.handleClick('apply-theme', { disabled: false });
+  assert.equal(calls.at(-1).op, 'theme-apply');
+  assert.deepEqual(calls.at(-1).params.values, { preset: 'blue' });
+});
+
+test('details are escaped readable text, without mutation or a saved notification', async () => {
+  const { api, dialogs, messages } = fixture();
+  api.setCall(async () => ({ details: 'Строительство\n<img src=x>', title: 'Колония' }));
+  await api.submitAction('details', {});
+  assert.equal(dialogs[0].title, 'Колония');
+  assert.match(dialogs[0].body, /Строительство\n&lt;img src=x&gt;/);
+  assert.equal(messages.length, 0);
+});
+
+test('copy, URL, export cancellation and saved file receive accurate notifications', async () => {
+  for (const [result, nativeResult, expected] of [
+    [{ copy: 'Система' }, { ok: true }, /Скопировано/],
+    [{ url: 'https://example.com' }, { ok: true }, /браузере/],
+    [{ export: 'route.json' }, { cancelled: true }, /отменено/],
+    [{ export: 'route.json' }, { ok: true, file: 'route.json' }, /route\.json/],
+  ]) {
+    const { api, messages } = fixture();
+    api.setCall(async op => op === 'action' ? result : nativeResult);
+    api.setLoad(async () => {});
+    await api.submitAction('operation', {});
+    assert.match(messages.at(-1).message, expected);
+    assert.doesNotMatch(messages.at(-1).message, /Изменения сохранены/);
+  }
+});
+
+test('automatic row and mode selection fetch action defaults for the selected row', async () => {
+  const { api } = fixture();
+  const calls = [], page = { Rows: [{ ID: 'one' }, { ID: 'two' }], Modes: ['Планы'], Columns: ['Название'] };
+  api.setCall(async (op, params) => { calls.push(JSON.parse(JSON.stringify(params))); return { state: {}, page, actions: [{ id: 'edit', fields: [{ key: 'name', default: params.selected }] }] }; });
+  api.setRender(() => {});
+  await api.loadView();
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].selected, 'one');
+  assert.equal(calls[1].mode, 'Планы');
+  assert.equal(api.C.actions[0].fields[0].default, 'one');
+  api.C.selected = 'two'; await api.loadView();
+  assert.equal(api.C.actions[0].fields[0].default, 'two');
+});
+
+test('quiet polling leaves form input alone and renders deferred changes after blur', async () => {
+  const { api, document, window } = fixture();
+  let calls = 0, renders = 0;
+  api.setCall(async () => { calls++; return { state: { counter: calls }, page: { Rows: [], Modes: [], Columns: ['x'] }, actions: [] }; });
+  api.setRender(() => { renders++; });
+  document.activeElement = { closest: () => ({}) };
+  await api.loadView(true); assert.equal(calls, 0);
+  document.activeElement = null; await api.loadView(true);
+  assert.equal(calls, 1); assert.equal(renders, 1);
+  window.COPILOT_SMOKE = true; await api.loadView(true); assert.equal(calls, 1);
+});
+
+test('explicit refresh restores nested scroll, keyboard focus and text selection', async () => {
+  const { api, document, nodes, selectors, host } = fixture();
+  let focusOptions, selection;
+  document.activeElement = { id: 'table-query', inPage: true, selectionStart: 2, selectionEnd: 5, selectionDirection: 'forward' };
+  host.scrollTop = 318;
+  selectors.set('.table-scroll,.inspector,.sidebar-scroll', [{ scrollTop: 43, scrollLeft: 27 }]);
+  api.setCall(async () => ({ state: {}, page: { Rows: [], Modes: [], Columns: ['x'] }, actions: [] }));
+  api.setRender(() => {
+    host.scrollTop = 0;
+    nodes.set('table-query', { focus: options => { focusOptions = options; }, setSelectionRange: (...args) => { selection = args; } });
+    selectors.set('.table-scroll,.inspector,.sidebar-scroll', [{ scrollTop: 0, scrollLeft: 0 }]);
+  });
+  await api.loadView();
+  assert.equal(host.scrollTop, 318);
+  assert.equal(selectors.get('.table-scroll,.inspector,.sidebar-scroll')[0].scrollLeft, 27);
+  assert.equal(focusOptions.preventScroll, true);
+  assert.deepEqual(selection, [2, 5, 'forward']);
+});
+
+test('dashboard renders every overview mode without forcing a table search', () => {
+  const { api } = fixture();
+  api.C.page = { Modes: ['Планы', 'Корабль', 'Снаряжение', 'Материалы', 'Груз', 'Статус'] };
+  const html = api.renderModes(true);
+  assert.equal((html.match(/data-mode=/g) || []).length, 6);
+  assert.doesNotMatch(html, /table-query/);
+});
+
+test('dashboard uses the Go pilot credit observation, including zero and unknown balance', () => {
+  const { api } = fixture();
+  api.C.page = { Modes: ['Планы'] }; api.C.actions = [];
+  for (const balance of [1234567890, 0, null]) {
+    // Commander intentionally carries a different value to expose the former wrong lookup.
+    api.C.state = { commander: { credits: 999 }, pilot: { credits: balance, creditsSource: 'Журнал: начало сеанса' } };
+    const html = api.renderOverview();
+    const card = html.match(/Баланс командира<\/div><div class="metric-value">([^<]*)<\/div><div class="metric-foot">([^<]*)/);
+    assert.ok(card);
+    const expected = balance === null ? '—' : new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 }).format(balance) + ' кр.';
+    assert.equal(card[1], expected);
+    assert.equal(card[2], 'Журнал: начало сеанса');
+  }
+});
+
+test('dashboard binds the carrier location and preserves a known zero cargo capacity', () => {
+  const { api } = fixture(); api.C.page = { Modes: ['Планы'] }; api.C.actions = [];
+  api.C.state = { commander: { ship: 'Sidewinder', cargoTons: 0, cargoCapacity: 0 }, carrier: { owned: true, name: 'Синтетический носитель', callsign: 'ABC-123', location: { system: 'Synthetic Carrier System' } } };
+  const html = api.renderOverview();
+  assert.match(html, /ABC-123 · Synthetic Carrier System/);
+  assert.match(html, /Вместимость 0 т/);
+  assert.doesNotMatch(html, /Вместимость уточняется/);
+  delete api.C.state.commander.cargoCapacity;
+  assert.match(api.renderOverview(), /Вместимость уточняется в игре/);
+});
+
+test('header reports the actual journal Reader.State lifecycle rather than assuming connection', () => {
+  const { api, nodes } = fixture();
+  nodes.set('page-toolbar', {}); nodes.set('sidebar-ship', {}); nodes.set('sidebar-system', {});
+  const cases = [
+    [{}, 'Журнал не настроен'],
+    [{ journalDir: 'Synthetic Journals', eventCount: 0 }, 'Ожидаем события игры'],
+    [{ journalDir: 'Synthetic Journals', scanning: true }, 'Читаем журналы'],
+    [{ journalDir: 'Synthetic Journals', eventCount: 42, lastEvent: 'LoadGame', lastUpdate: '2026-11-08T08:00:00Z' }, 'Журнал подключён'],
+    [{ journalDir: 'Synthetic Journals', error: 'Папка недоступна', lastUpdate: '2026-11-08T08:00:00Z' }, 'Журнал недоступен'],
+  ];
+  for (const [connection, text] of cases) {
+    api.C.state = { connection, commander: { ship: 'Panther Clipper Mk II', system: 'Synthetic Origin' } };
+    api.renderChrome();
+    assert.equal(api.connectionStatus(), text);
+    assert.ok(nodes.get('page-toolbar').innerHTML.includes(text));
+    assert.equal(nodes.get('sidebar-ship').textContent, 'Panther Clipper Mk II');
+    assert.equal(nodes.get('sidebar-system').textContent, 'Synthetic Origin');
+  }
+});
+
+test('colony date defaults retain Russian day/month and local wall time in editable forms', async () => {
+  const { api, dialogs } = fixture();
+  await api.actionForm({ id: 'colony.edit', title: 'Колония', fields: [
+    { key: 'claimedAt', label: 'Заявка', kind: 'datetime', default: '07.11.2026 21:45' },
+    { key: 'deadline', label: 'Срок', kind: 'datetime', default: '18.11.2026 09:30' },
+  ] });
+  assert.match(dialogs[0].body, /name="claimedAt"[^>]*value="2026-11-07T21:45"/);
+  assert.match(dialogs[0].body, /name="deadline"[^>]*value="2026-11-18T09:30"/);
+  assert.equal(api.datetimeInput('2026-11-07T21:45'), '2026-11-07T21:45');
+  assert.equal(api.datetimeInput(null), '');
+  const instant = new Date('2026-11-07T18:45:00Z'), pad = value => String(value).padStart(2, '0');
+  assert.equal(api.datetimeInput(instant.toISOString()), `${instant.getFullYear()}-${pad(instant.getMonth()+1)}-${pad(instant.getDate())}T${pad(instant.getHours())}:${pad(instant.getMinutes())}`);
+});
+
+test('standard numeric forms accept Russian decimal and grouped input without changing text fields', async () => {
+  const { api } = fixture(); let submitted;
+  api.C.actions = [{ id: 'form', fields: [{ key: 'fraction', kind: 'number' }, { key: 'count', kind: 'integer' }, { key: 'optional', kind: 'number' }, { key: 'notes', kind: 'text' }] }];
+  api.setCall(async (op, params) => { submitted = params.values; return { ok: true }; });
+  api.setLoad(async () => {});
+  const raw = { fraction: '0,75', count: '1\u202f000', optional: '', notes: '1 000,75 тонн' };
+  await api.submitAction('form', raw);
+  assert.equal(submitted.fraction, '0.75'); assert.equal(submitted.count, '1000');
+  assert.equal(submitted.optional, ''); assert.equal(submitted.notes, '1 000,75 тонн');
+  assert.equal(raw.fraction, '0,75');
+});
+
+test('F11 requests a toggle, including the second press', () => {
+  const { api, listeners } = fixture(); const calls = [];
+  api.setCall(async (op, params) => { calls.push({ op, params }); return { ok: true }; });
+  let prevented = 0;
+  for (let press = 0; press < 2; press++) listeners.get('keydown')({ key: 'F11', preventDefault() { prevented++; } });
+  assert.equal(prevented, 2);
+  assert.equal(calls.length, 2);
+  for (const call of calls) assert.equal(call.params.action, 'toggle-fullscreen');
+});
+
+test('a quiet response arriving after focus does not consume the deferred render', async () => {
+  const { api, document } = fixture(); let resolveFirst, renders = 0;
+  const first = new Promise(resolve => { resolveFirst = resolve; }); let requests = 0;
+  const result = { state: { newer: true }, page: { Rows: [], Modes: [], Columns: ['x'] }, actions: [] };
+  api.setCall(async () => ++requests === 1 ? first : result); api.setRender(() => { renders++; });
+  const pending = api.loadView(true);
+  document.activeElement = { closest: () => ({}) }; resolveFirst(result); await pending;
+  assert.equal(renders, 0); assert.equal(api.C.lastSignature, '');
+  document.activeElement = null; await api.loadView(true);
+  assert.equal(renders, 1); assert.equal(requests, 2);
+});
+
+test('Academy metadata open, next and previous actions switch the reader and restore the chosen lesson position', async () => {
+  for (const action of ['learning.open', 'learning.next', 'learning.previous']) {
+    const { api, messages } = fixture(); let mutations = 0; const selected = [];
+    api.C.tab = 'learning'; api.C.lesson = 'old';
+    api.setCall(async op => { if (op === 'action') mutations++; return { ok: true }; });
+    api.setLoad(async () => { selected.push(api.context().selected); api.C.state.learning = { selectedLessonId: 'trade.practice', lessons: [{ id: 'trade.practice', courseId: 'trade', position: { ratio: 0.35, sectionId: 'exercise' } }] }; });
+    await api.submitAction(action, {});
+    assert.equal(api.C.lesson, 'trade.practice'); assert.equal(api.C.course, 'trade');
+    assert.equal(api.C.academy.pendingRestore.lessonId, 'trade.practice');
+    assert.equal(api.C.academy.pendingRestore.ratio, 0.35);
+    assert.equal(api.C.academy.pendingRestore.sectionId, 'exercise');
+    assert.deepEqual(selected, ['old', 'trade.practice']);
+    assert.equal(mutations, 1); assert.equal(messages.length, 0);
+  }
+});
+
+test('page menu includes all actions even on custom settings pages', async () => {
+  const { api, selectors } = fixture();
+  api.C.actions = ['theme', 'journal', 'prices', 'hotkey'].map(id => ({ id, title: id }));
+  await api.handleClick('page-menu', null);
+  const html = selectors.get('.menu').innerHTML;
+  for (const id of ['theme', 'journal', 'prices', 'hotkey']) assert.match(html, new RegExp('data-action-id="'+id+'"'));
+  assert.equal((html.match(/data-action-id=/g) || []).length, 4);
+});
+
+test('system selection empty state offers the search form even when two colonies already exist', async () => {
+  const { api, dialogs } = fixture();
+  api.C.tab = 'colonization'; api.C.mode = 'Выбор системы';
+  api.C.state.colonization = { selectedProjectId: 'alpha', activeProject: { id: 'alpha', buildings: [] }, projects: [{ id: 'alpha' }, { id: 'beta' }] };
+  api.C.actions = [
+    { id: 'colony.select', title: 'Выбрать колонию', fields: [{ key: 'id' }] },
+    { id: 'colony.search', title: 'Найти системы для колонизации', fields: [{ key: 'originSystem', label: 'Исходная система', kind: 'text', default: 'Synthetic Origin' }, { key: 'faction', label: 'Фракция станции', kind: 'combo', default: 'Synthetic Faction' }] },
+  ];
+  const html = api.renderEmptyState();
+  assert.match(html, /data-action-id="colony.search"/);
+  assert.doesNotMatch(html, /data-action-id="colony.select"|Добавьте колонию/);
+  await api.handleClick('action', { dataset: { actionId: api.emptyStateInfo().actionId } });
+  assert.match(dialogs[0].body, /name="originSystem"[^>]*value="Synthetic Origin"/);
+  assert.match(dialogs[0].body, /name="faction"[^>]*value="Synthetic Faction"/);
+});
+
+test('construction and supply empty states select the next action for the current colony', () => {
+  const { api } = fixture(); api.C.tab = 'colonization';
+  api.C.state.colonization = { activeProject: { id: 'alpha', buildings: [] } };
+  api.C.actions = ['colony.select', 'colony.add-building', 'colony.resource-upsert'].map(id => ({ id, title: id, fields: [] }));
+  api.C.mode = 'Строительство'; assert.match(api.renderEmptyState(), /data-action-id="colony.add-building"/);
+  api.C.mode = 'Снабжение'; assert.match(api.renderEmptyState(), /data-mode="Строительство"/);
+  assert.doesNotMatch(api.renderEmptyState(), /data-action-id="colony.select"/);
+  api.C.state.colonization.activeProject.buildings = [{ id: 'port' }];
+  assert.match(api.renderEmptyState(), /data-action-id="colony.resource-upsert"/);
+  assert.match(api.renderEmptyState(), /постройку.*смету/);
+});
+
+test('an unmatched query offers only clearing the query and keeps the selected mode', async () => {
+  const { api } = fixture(); let loads = 0;
+  api.C.tab = 'colonization'; api.C.mode = 'Снабжение'; api.C.query = '<нет совпадений>';
+  api.C.actions = [{ id: 'colony.select', title: 'Выбрать колонию', fields: [] }];
+  const html = api.renderEmptyState();
+  assert.match(html, /Нет совпадений/); assert.match(html, /data-click="clear-query"/);
+  assert.match(html, /&lt;нет совпадений&gt;/); assert.doesNotMatch(html, /data-action-id=/);
+  api.setLoad(async () => { loads++; }); await api.handleClick('clear-query', null);
+  assert.equal(api.C.query, ''); assert.equal(api.C.mode, 'Снабжение'); assert.equal(loads, 1);
+});
+
+test('statistics does not prompt to reset a period and engineering empty prompts match the current mode', () => {
+  const { api } = fixture(); api.C.tab = 'statistics'; api.C.mode = 'Торговля';
+  api.C.actions = [{ id: 'stats.reset', title: 'Новый период учёта', fields: [] }];
+  assert.match(api.renderEmptyState(), /Торговых сделок пока нет/);
+  assert.doesNotMatch(api.renderEmptyState(), /data-action-id=/);
+  api.C.tab = 'engineering'; api.C.mode = 'Обмен'; api.C.actions = [{ id: 'engineering.trade', title: 'Рассчитать обмен', fields: [] }];
+  assert.match(api.renderEmptyState(), /data-action-id="engineering.trade"/);
+  assert.doesNotMatch(api.renderEmptyState(), /Добавьте улучшение/);
+  api.C.mode = 'Материалы плана'; assert.match(api.renderEmptyState(), /data-mode="План"/);
+});

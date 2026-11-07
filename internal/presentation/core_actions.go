@@ -66,6 +66,10 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 		return Action{ID: "copy.system", Title: "Копировать систему", Kind: "copy", Path: v.Str(system), Disabled: v.Str(system) == ""}
 	}
 	switch tab {
+	case "learning":
+		return LearningActions(mode, state, selected)
+	case "carrier-calculator":
+		return CarrierCalculatorActions(mode, state, selected)
 	case "colonization":
 		return ColonyActions(mode, state, selected)
 	case "overview", "targets":

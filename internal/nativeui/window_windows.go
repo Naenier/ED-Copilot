@@ -1,6 +1,7 @@
 //go:build windows
 
-// Package nativeui uses Win32 controls and GDI drawing. It does not host a browser.
+// Package nativeui hosts the embedded desktop interface in a native Win32 window
+// and renders the independent, game-only overlay with Win32/GDI.
 package nativeui
 
 import (
@@ -35,8 +36,10 @@ type Controller interface {
 type Options struct {
 	SmokeReport string
 	Smoke       bool
+	Demo        bool
 }
 type Window struct {
+	modern                                                 *modernShell
 	header, identity, toolbar, actionbar                   *walk.Composite
 	brand                                                  *walk.Label
 	main                                                   *walk.MainWindow
@@ -163,14 +166,21 @@ func box(parent walk.Container, horizontal bool) (*walk.Composite, error) {
 func Run(backend Controller, options Options) error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	u, e := NewWindow(backend, options)
+	u, e := newModernWindow(backend, options)
 	if e != nil {
 		return e
 	}
 	defer u.dispose()
 	u.main.Show()
 	u.applyMode(v.Text(v.At(u.state, "desktop", "displayMode"), "windowed"))
-	if options.Smoke {
+	if options.Smoke || options.Demo {
+		// A hidden launcher can supply STARTF_USESHOWWINDOW/SW_HIDE. Its
+		// first ShowWindow is consumed by Windows, so make isolated GUI
+		// scenarios explicitly visible after the normal first Show.
+		win.ShowWindow(u.main.Handle(), win.SW_SHOWNORMAL)
+		win.SetForegroundWindow(u.main.Handle())
+	}
+	if options.Smoke && u.modern == nil {
 		go func() { time.Sleep(1100 * time.Millisecond); u.main.Synchronize(func() { u.smoke() }) }()
 	}
 	u.main.Run()
@@ -446,6 +456,10 @@ func (u *Window) watch() {
 	}
 }
 func (u *Window) refresh() {
+	if u.modern != nil {
+		u.refreshModern()
+		return
+	}
 	u.refreshing = true
 	defer func() { u.refreshing = false }()
 	u.state = u.backend.Snapshot()
@@ -666,7 +680,9 @@ func (u *Window) execute(action p.Action, values M) {
 		u.error(err)
 		return
 	}
-	u.footer.SetText("Выполняем: " + v.Text(action.Title, "действие"))
+	if u.footer != nil {
+		u.footer.SetText("Выполняем: " + v.Text(action.Title, "действие"))
+	}
 	go func() {
 		result, err := u.backend.Do(action.Path, body)
 		delete(body, "apiKey")
@@ -704,6 +720,9 @@ func (u *Window) quit() {
 	walk.App().Exit(0)
 }
 func (u *Window) dispose() {
+	if u.modern != nil {
+		u.modern.close()
+	}
 	if !u.disposed.Swap(true) {
 		close(u.stop)
 		u.backend.Close()

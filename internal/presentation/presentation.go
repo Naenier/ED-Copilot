@@ -18,8 +18,8 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Заход добычи", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
-var DefaultTabs = []string{"overview", "targets", "sale", "encyclopedia", "statistics", "settings"}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var DefaultTabs = []string{"overview", "targets", "sale", "mining", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
 type Choice struct{ Value, Label string }
@@ -210,6 +210,10 @@ func Build(tab, mode, query string, s M) Page {
 	p := Page{Title: Title(tab), Columns: []string{"Параметр", "Значение"}}
 	cmd := v.Obj(s["commander"])
 	switch tab {
+	case "learning":
+		return LearningPage(mode, query, s)
+	case "carrier-calculator":
+		return CarrierCalculatorPage(mode, query, s)
 	case "overview":
 		p.Description = "Положение, корабль и следующие действия для ваших занятий."
 		p.Modes = []string{"Планы", "Состояние", "Корабль и груз", "Миссии", "Журнал"}
@@ -678,6 +682,12 @@ func encyclopedia(mode, query string, s M) Page {
 	return p
 }
 func HelpFor(tab string) string {
+	if tab == "learning" {
+		return "Академия — отдельное пространство для изучения игры.\n\nВыберите курс на главной странице. В каждом курсе есть основы, практикум в ED Copilot и самопроверка. Оглавление слева помогает переходить между уроками, а справа — между разделами статьи.\n\nОтмечайте полезные уроки закладкой. Приложение сохраняет избранное, выполненные пункты, ответы и место чтения в вашем профиле. «Режим чтения» скрывает основное меню, чтобы сосредоточиться на материале.\n\nКнопка «Изучено» отмечает урок завершённым; ответы на вопросы сами по себе не завершают его. Кнопки перехода в инструменты открывают связанные разделы Copilot.\n\nМатериалы доступны без интернета. Ссылки в конце уроков открывают дополнительные материалы PTN в браузере. Игровые механики и доступность конкретных операций могут меняться; окончательные условия всегда видны в самой игре."
+	}
+	if tab == "carrier-calculator" {
+		return "Калькулятор затрат на флотоносец\n\n1. Выберите личный или эскадрильный тип. У каждого сохраняется собственный план.\n2. Для каждой дополнительной службы укажите: работает, приостановлена или не установлена. Приостановка снижает содержание, но не освобождает место. Встроенную верфь эскадрильного флотоносца убрать нельзя.\n3. Задайте план прыжков на неделю. Обслуживание прыжков и покупка трития считаются отдельно. Если средний расход или цена топлива неизвестны, оценка топлива остаётся неизвестной.\n4. Укажите груз, средства в банке и желаемый резерв. Нажмите «Сохранить параметры», чтобы обновить расчёт.\n5. Сравните разовую покупку, содержание, свободный объём и бюджет. Периоды «30 дней» и «365 дней» — пропорциональные оценки, а не расписание недельных списаний.\n\nДля точного расхода на конкретный перелёт используйте раздел «Маршрут флотоносца». Настройки калькулятора не меняют службы и финансы в игре."
+	}
 	preferred := map[string]string{"overview": "overview", "targets": "targets", "sale": "trade", "deals": "deals", "carrier": "carrier", "route": "carrier-route", "engineering": "engineering", "colonization": "colonization", "encyclopedia": "encyclopedia", "statistics": "statistics", "mining": "mining-analysis", "settings": "settings", "account": "frontier", "integrations": "integrations", "help": "start"}
 	for _, r := range data.Array("help.json") {
 		if v.Str(r["id"]) == preferred[tab] {

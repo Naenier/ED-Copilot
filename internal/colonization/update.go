@@ -71,7 +71,11 @@ func (p *Planner) updateLocked(body M) error {
 		if e := p.uniqueColony(target, address, nil); e != nil {
 			return e
 		}
-		data := merge(copyM(body), M{"id": value.ID(), "targetSystem": target, "originSystem": firstText(value.Obj(p.search["origin"])["name"], p.config["originSystem"]), "faction": firstText(body["faction"], p.config["faction"]), "coordinates": value.First(candidate["coordinates"], body["coordinates"]), "systemAddress": address, "buildings": []M{}, "deliveries": []M{}, "supplyOrder": []string{}})
+		origin := firstText(value.Obj(p.search["origin"])["name"], p.config["originSystem"])
+		if explicit, present := body["originSystem"]; present {
+			origin = text(explicit, 200)
+		}
+		data := merge(copyM(body), M{"id": value.ID(), "targetSystem": target, "originSystem": origin, "faction": firstText(body["faction"], p.config["faction"]), "coordinates": value.First(candidate["coordinates"], body["coordinates"]), "systemAddress": address, "buildings": []M{}, "deliveries": []M{}, "supplyOrder": []string{}})
 		project := cleanProject(data)
 		p.projects = append(p.projects, project)
 		p.selected = str(project["id"])

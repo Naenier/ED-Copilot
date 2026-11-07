@@ -11,6 +11,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/frontier"
 	"github.com/Naenier/ED-Copilot/internal/inara"
 	"github.com/Naenier/ED-Copilot/internal/journal"
+	"github.com/Naenier/ED-Copilot/internal/learning"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
 	"github.com/Naenier/ED-Copilot/internal/presentation"
@@ -31,7 +32,7 @@ import (
 
 type M = v.M
 
-const Version = "2.0.0"
+const Version = "2.1.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -52,6 +53,8 @@ type Engine struct {
 	Pilot                                          *pilot.Tracker
 	Trading                                        *trading.Service
 	Carrier                                        *carrier.Tracker
+	Calculator                                     *carrier.Calculator
+	Learning                                       *learning.Library
 	Route                                          *carrier.RoutePlanner
 	Mining                                         *mining.Service
 	Frontier                                       *frontier.Client
@@ -103,7 +106,7 @@ func New(o Options) (*Engine, error) {
 	if x.appearance == nil {
 		x.appearance = theme.Default()
 	}
-	x.navigation = presentation.NormalizeTabs(v.At(saved, "navigation", "tabs"))
+	x.navigation = presentation.MigrateNavigation(v.At(saved, "navigation", "tabs"), v.Int(v.At(saved, "navigation", "version")))
 	x.desktop, _ = profile.Read(filepath.Join(o.DataDir, "desktop-go-v2.json"))
 	if x.desktop == nil {
 		x.desktop, _ = profile.Read(filepath.Join(o.DataDir, "desktop-settings.json"))
@@ -118,6 +121,8 @@ func New(o Options) (*Engine, error) {
 	x.Pilot = pilot.New()
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"]})
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
+	x.Calculator = carrier.NewCalculator(v.Obj(saved["carrierCalculator"]))
+	x.Learning = learning.New(v.Obj(saved["learning"]))
 	routeSaved := v.Obj(saved["carrierRouteGo"])
 	if len(routeSaved) == 0 {
 		if old, err := profile.Read(filepath.Join(o.DataDir, "carrier-route.json")); err == nil {
@@ -420,6 +425,8 @@ func (e *Engine) Snapshot() M {
 	}
 	connection["gameRunning"] = running
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
+	state["carrierCalculator"] = e.Calculator.Snapshot()
+	state["learning"] = e.Learning.Snapshot()
 	if len(v.Obj(state["trading"])) == 0 {
 		state["trading"] = M{"results": []M{}}
 	}
@@ -441,10 +448,12 @@ func (e *Engine) Save() error {
 	defer e.saveMu.Unlock()
 	e.domainMu.Lock()
 	e.mu.RLock()
-	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
+	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 2, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
 	desktop := v.Copy(e.desktop)
 	e.mu.RUnlock()
 	saved["carrier"] = e.Carrier.ExportSettings()
+	saved["carrierCalculator"] = e.Calculator.ExportSettings()
+	saved["learning"] = e.Learning.ExportSettings()
 	saved["carrierRouteGo"] = e.Route.ExportSettings()
 	saved["colonization"] = e.Colonies.ExportSettings()
 	saved["engineering"] = e.Engineering.ExportSettings()
