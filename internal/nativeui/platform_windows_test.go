@@ -163,9 +163,16 @@ func TestNativeHiddenWindowModeRoundTripAndPersistedBounds(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer main.Dispose()
-	initial := walk.Rectangle{X: 100, Y: 100, Width: 1100, Height: 780}
+	work, ok := monitorRect(main.Handle(), true)
+	if !ok {
+		t.Fatal("work area unavailable for hidden window test")
+	}
+	initial := fitWindowedBounds(walk.Rectangle{X: int(work.Left) + 100, Y: int(work.Top) + 100, Width: 1100, Height: 780}, work)
 	if err := main.SetBoundsPixels(initial); err != nil {
 		t.Fatal(err)
+	}
+	if got := main.BoundsPixels(); got != initial {
+		t.Fatalf("in-workarea initial bounds rejected: expected=%+v actual=%+v work=%+v", initial, got, work)
 	}
 	backend := &platformController{state: M{}}
 	u := &Window{main: main, backend: backend, state: M{"desktop": M{}}, modeValue: "windowed"}
@@ -199,12 +206,57 @@ func TestNativeHiddenWindowModeRoundTripAndPersistedBounds(t *testing.T) {
 		t.Fatal("mode changes activated/showed the hidden test window")
 	}
 	u.saveBounds()
-	if backend.path != "/api/desktop" || v.Int(v.At(backend.last, "windowedBounds", "width")) != 1100 || v.Int(v.At(backend.last, "windowedBounds", "height")) != 780 || v.Bool(backend.last["maximized"]) {
+	if backend.path != "/api/desktop" || v.Int(v.At(backend.last, "windowedBounds", "width")) != initial.Width || v.Int(v.At(backend.last, "windowedBounds", "height")) != initial.Height || v.Int(v.At(backend.last, "windowedBounds", "x")) != initial.X || v.Int(v.At(backend.last, "windowedBounds", "y")) != initial.Y || v.Bool(backend.last["maximized"]) {
 		t.Fatalf("incorrect saved bounds: %#v", backend.last)
 	}
 	u.applyMode("")
 	if u.modeValue != "windowed" {
 		t.Fatal("bounds-only persistence changed display mode")
+	}
+	// A profile saved on a larger or disconnected monitor must restore to the
+	// current usable desktop, not the OS-specific maximum tracking rectangle.
+	u.applyMode("fullscreen")
+	work, ok = monitorRect(main.Handle(), true)
+	if !ok {
+		t.Fatal("work area unavailable during oversize restore")
+	}
+	u.normalBounds = walk.Rectangle{X: int(work.Left) - 5000, Y: int(work.Top) - 5000, Width: int(work.Right-work.Left) * 3, Height: int(work.Bottom-work.Top) * 3}
+	u.applyMode("windowed")
+	want := walk.Rectangle{X: int(work.Left), Y: int(work.Top), Width: int(work.Right - work.Left), Height: int(work.Bottom - work.Top)}
+	if got := main.BoundsPixels(); got != want {
+		t.Fatalf("oversized/offscreen window not clamped to work area: expected=%+v actual=%+v", want, got)
+	}
+	if u.normalBounds != want {
+		t.Fatalf("normal bounds retained oversize profile: %+v", u.normalBounds)
+	}
+	u.saveBounds()
+	if got := v.Obj(backend.last["windowedBounds"]); v.Int(got["x"]) != want.X || v.Int(got["y"]) != want.Y || v.Int(got["width"]) != want.Width || v.Int(got["height"]) != want.Height {
+		t.Fatalf("clamped bounds not persisted: %#v", got)
+	}
+	if win.IsWindowVisible(main.Handle()) {
+		t.Fatal("oversize restore exposed the hidden test window")
+	}
+}
+
+func TestWindowedBoundsFitWorkArea(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		bounds walk.Rectangle
+		work   win.RECT
+		want   walk.Rectangle
+	}{
+		{"unchanged", walk.Rectangle{X: 40, Y: 40, Width: 1000, Height: 720}, win.RECT{Left: 0, Top: 0, Right: 1920, Bottom: 1040}, walk.Rectangle{X: 40, Y: 40, Width: 1000, Height: 720}},
+		{"runner1024", walk.Rectangle{X: 100, Y: 100, Width: 1100, Height: 780}, win.RECT{Left: 0, Top: 0, Right: 1024, Bottom: 728}, walk.Rectangle{X: 0, Y: 0, Width: 1024, Height: 728}},
+		{"negative monitor", walk.Rectangle{X: -5000, Y: -5000, Width: 4000, Height: 2000}, win.RECT{Left: -1280, Top: 40, Right: 0, Bottom: 760}, walk.Rectangle{X: -1280, Y: 40, Width: 1280, Height: 720}},
+		{"right bottom offscreen", walk.Rectangle{X: 10000, Y: 10000, Width: 1000, Height: 710}, win.RECT{Left: -1280, Top: 40, Right: 0, Bottom: 760}, walk.Rectangle{X: -1000, Y: 50, Width: 1000, Height: 710}},
+		{"below minimum desktop", walk.Rectangle{X: 50, Y: 50, Width: 1100, Height: 780}, win.RECT{Left: 100, Top: -500, Right: 900, Bottom: 100}, walk.Rectangle{X: 100, Y: -500, Width: 800, Height: 600}},
+		{"minimum normal dimensions", walk.Rectangle{X: 0, Y: 0, Width: 20, Height: 20}, win.RECT{Left: 0, Top: 0, Right: 1920, Bottom: 1040}, walk.Rectangle{X: 0, Y: 0, Width: 900, Height: 700}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := fitWindowedBounds(tc.bounds, tc.work); got != tc.want {
+				t.Fatalf("fit=%+v expected=%+v", got, tc.want)
+			}
+		})
 	}
 }
 

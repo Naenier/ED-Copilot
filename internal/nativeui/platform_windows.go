@@ -95,6 +95,22 @@ func monitorRect(hwnd win.HWND, work bool) (win.RECT, bool) {
 	return info.RcMonitor, true
 }
 
+// fitWindowedBounds keeps the complete normal window reachable after a monitor
+// is removed or the desktop resolution changes. This is explicit rather than
+// relying on Windows' maximum tracking size, which may exceed the work area by
+// the invisible resize borders and varies between desktop environments.
+func fitWindowedBounds(bounds walk.Rectangle, work win.RECT) walk.Rectangle {
+	width, height := int(work.Right-work.Left), int(work.Bottom-work.Top)
+	if width <= 0 || height <= 0 {
+		return bounds
+	}
+	bounds.Width = min(max(bounds.Width, min(900, width)), width)
+	bounds.Height = min(max(bounds.Height, min(700, height)), height)
+	bounds.X = max(int(work.Left), min(bounds.X, int(work.Right)-bounds.Width))
+	bounds.Y = max(int(work.Top), min(bounds.Y, int(work.Bottom)-bounds.Height))
+	return bounds
+}
+
 func (u *Window) applyMode(mode string) {
 	if mode != "windowed" && mode != "fullscreen" && mode != "borderless" {
 		return
@@ -138,6 +154,10 @@ func (u *Window) applyMode(mode string) {
 		if b.Width < 900 || b.Height < 700 {
 			b = u.main.BoundsPixels()
 		}
+		if work, ok := monitorRect(hwnd, true); ok {
+			b = fitWindowedBounds(b, work)
+		}
+		u.normalBounds = b
 		win.SetWindowPos(hwnd, 0, int32(b.X), int32(b.Y), int32(b.Width), int32(b.Height), win.SWP_FRAMECHANGED|win.SWP_NOZORDER|win.SWP_NOACTIVATE)
 		if u.hud != nil && u.hud.restoreMaximized {
 			win.ShowWindow(hwnd, win.SW_MAXIMIZE)

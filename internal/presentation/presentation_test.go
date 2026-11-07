@@ -303,3 +303,20 @@ func TestHelpNativeWorkflowAndReadableTables(t *testing.T) {
 		t.Fatal("wrong contextual help topic")
 	}
 }
+
+func TestHelpDoesNotAdvertiseBrowserApplication(t *testing.T) {
+	for _, article := range data.Array("help.json") {
+		body := strings.ToLower(v.Str(article["body"]))
+		for _, obsolete := range []string{"браузерная версия", "в обычном браузере кнопка", "разрешите всплывающие окна", "http://localhost", "https://localhost", "http://127.0.0.1", "карточк"} {
+			if strings.Contains(body, obsolete) {
+				t.Fatalf("%v advertises obsolete web application flow: %s", article["id"], obsolete)
+			}
+		}
+	}
+	if !strings.Contains(HelpFor("account"), "браузере") || !strings.Contains(HelpFor("account"), "официальном сайте Frontier") {
+		t.Fatal("legitimate Frontier browser login instructions were removed")
+	}
+	if !strings.Contains(HelpFor("integrations"), "https://inara.cz/elite/cmdr-settings-api/") {
+		t.Fatal("external service instructions were removed")
+	}
+}
