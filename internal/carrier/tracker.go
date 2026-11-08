@@ -435,8 +435,9 @@ func (t *Tracker) warehouse(c M) M {
 		for _, row := range v.Rows(baseline["items"]) {
 			items[v.Str(row["key"])] = v.Merge(v.Copy(row), M{"netTransferred": 0, "basis": basis, "snapshotAt": baseline["timestamp"], "updatedAt": baseline["timestamp"]})
 		}
+		baselineAt := v.Time(baseline["timestamp"])
 		for _, move := range v.Rows(c["movements"]) {
-			if v.Str(move["timestamp"]) <= v.Str(baseline["timestamp"]) {
+			if !v.Time(move["timestamp"]).After(baselineAt) {
 				continue
 			}
 			key := v.Str(move["key"])
@@ -451,7 +452,7 @@ func (t *Tracker) warehouse(c M) M {
 		}
 		for key, raw := range v.Obj(c["items"]) {
 			row := v.Obj(raw)
-			if v.Str(row["snapshotAt"]) > v.Str(baseline["timestamp"]) {
+			if v.Time(row["snapshotAt"]).After(baselineAt) {
 				items[key] = v.Copy(row)
 			}
 		}
@@ -463,7 +464,7 @@ func (t *Tracker) warehouse(c M) M {
 		if v.Num(row["count"]) > 0 || v.Num(row["netTransferred"]) != 0 || row["snapshotAt"] != nil {
 			rows = append(rows, row)
 			tons += v.Num(row["count"])
-			if v.Str(row["updatedAt"]) > v.Str(updated) {
+			if v.Time(row["updatedAt"]).After(v.Time(updated)) {
 				updated = row["updatedAt"]
 			}
 		}

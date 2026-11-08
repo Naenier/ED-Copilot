@@ -113,6 +113,10 @@ First check an inhabited origin system, choose an eligible station and its contr
 
 Each colony has its own selected project, construction order and supply queue. Add planned facilities and review prerequisites and available construction points. Visiting a depot loads its observed bill; manual bills remain estimates.
 
+Supplies shows delivery quantities and the latest observed galactic average prices. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. The resource budget combines all planned and active structures of the selected colony. Its breakdown separates accepted deliveries, ship cargo and enabled carrier warehouses. Unknown bills and prices keep totals incomplete; these estimates do not represent actual expenditure or a market offer. Completed, cancelled and failed structures are excluded.
+
+The overlay lists up to ten outstanding commodities and shows how many more remain. When carrier accounting is enabled, requirements fully covered by fresh accessible carrier stock are hidden from the overlay while remaining visible in the application. Unknown or stale stock cannot hide a requirement. Journal-observed carrier transfers update a known warehouse immediately; Frontier may confirm those changes later.
+
 Cargo aboard is ready for delivery but has not yet been accepted by the depot. A colonisation ship is a supply vessel, not a completed facility. Confirmed permanent stations in your own claim can establish completed construction without inventing a variant or an unobserved resource bill.`,
 	"encyclopedia": `Encyclopedia
 

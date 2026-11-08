@@ -35,6 +35,15 @@ async function run(C,u){
    }
    await u.navigate('ranks');await window.RankInsignia?.load?.(C.state.ranks?.disciplines||[],u,C);check(language+': rank pages use embedded game insignia',u.$$('.ranks-card .rank-insignia img').length===8);
    await u.navigate('colonization',{mode:'Снабжение'});
+   const budget=u.$('[data-colony-budget]');
+   check(language+': colony resource budget belongs to the active project',!!budget&&budget.dataset.colonyBudget===C.state.colonization?.activeProject?.id&&!!C.state.colonization?.activeProject?.costSummary);
+   check(language+': budget shows three distinct totals and a collapsed detailed breakdown',budget.querySelectorAll(':scope>.colony-budget-metrics>.colony-summary-metric').length===3&&budget.querySelector('.colony-budget-breakdown')?.open===false);
+   if(language==='en')check('English colony budget has no untranslated prose',!/[\p{Script=Cyrillic}]/u.test(budget.innerText));
+   await u.navigate('colonization',{mode:'Бюджет'});
+   check(language+': detailed budget table includes observed average prices and commodity totals',C.page.Columns.includes(u.t('Средняя по галактике, кр./т'))&&C.page.Columns.includes(u.t('Полная стоимость, кр.'))&&C.page.Columns.includes(u.t('Цена получена'))&&C.page.Rows.length===(C.state.colonization?.activeProject?.supplies||[]).length);
+   check(language+': budget gives the resource table room without a side inspector',!u.$('.data-split .inspector')&&u.$('.table-scroll thead')?.getBoundingClientRect().top<innerHeight*.75);
+   await u.smokeCapture('colony-budget-'+language);
+   await u.navigate('colonization',{mode:'Снабжение'});
    const warehouseBefore=C.state.colonization?.includeCarrierWarehouse===true;
    const warehouse=u.$('#colony-include-carrier-stock');check(language+': colony warehouse option is available',!!warehouse);warehouse.click();
    await wait(()=>C.state.colonization?.includeCarrierWarehouse===!warehouseBefore&&!u.$('#colony-include-carrier-stock')?.disabled);

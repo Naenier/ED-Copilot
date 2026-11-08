@@ -5,6 +5,7 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"math"
 	"strconv"
+	"time"
 )
 
 // ApplyCAPI replaces the observed physical hold, never adds market orders or
@@ -91,6 +92,28 @@ func (t *Tracker) ApplyCAPI(result, commander M) bool {
 		total += count
 		if total > 25000 {
 			return false
+		}
+	}
+	// A later HTTP response can still contain the provider's pre-transfer
+	// cargo. Compare commodities changed after the known baseline before
+	// replacing it; adding their deltas to the response could double count.
+	// This protection expires with the original 15-minute observation window:
+	// external trades can legitimately change the absolute stock after that.
+	lease := v.Time(t.StockBaseline["timestamp"]).Add(15 * time.Minute)
+	if at.Before(lease) && v.Str(t.StockBaseline["carrierId"]) == id && t.StockBaseline["complete"] != false {
+		pending := map[string]bool{}
+		for _, move := range v.Rows(c["movements"]) {
+			if v.Time(move["timestamp"]).After(v.Time(t.StockBaseline["timestamp"])) {
+				pending[v.Str(move["key"])] = true
+			}
+		}
+		if len(pending) > 0 {
+			for _, row := range v.Rows(t.warehouse(c)["items"]) {
+				key := v.Str(row["key"])
+				if pending[key] && v.Num(row["count"]) != v.Num(groups[key]["count"]) {
+					return false
+				}
+			}
 		}
 	}
 	items := []M{}

@@ -99,6 +99,8 @@ Start with an origin system and its stations, then select the station and contro
 
 Carrier stock is optional. Enable **Use fleet carrier stock** to include known personal-carrier cargo; enable **Squadron cargo is available** as well when you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
 
+The **Budget** view values every commodity at its latest observed galactic average price, with full, remaining and procurement totals for all planned and active construction in the selected colony. Missing bills and prices remain explicit. The overlay stays focused on logistics: up to ten outstanding commodities, excluding requirements already covered by fresh accessible carrier stock when carrier accounting is enabled. Fully covered commodities remain visible in the application.
+
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
 Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
@@ -149,4 +151,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.7.1](docs/RELEASE-2.7.1.md) · [Building and testing (RU)](docs/TESTING.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.7.2](docs/RELEASE-2.7.2.md) · [Building and testing (RU)](docs/TESTING.md)

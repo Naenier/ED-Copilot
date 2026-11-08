@@ -118,6 +118,19 @@ func (p *Planner) ApplyCAPI(result, commander M) {
 		if !value.Time(previous["receivedAt"]).IsZero() && !value.Time(stock["receivedAt"]).After(value.Time(previous["receivedAt"])) {
 			continue
 		}
+		// /fleetcarrier can return an older server-side hold even when the HTTP
+		// request itself starts after a local transfer. Receipt time does not
+		// prove that the payload already includes that transfer. Retain our
+		// baseline + observed deltas for at most one freshness window. After
+		// that window an absolute verified observation can include legitimate
+		// transactions by other commanders and must be allowed to replace it.
+		// In particular, never add those deltas to the incoming payload: it may
+		// already include some or all of them.
+		lease := value.Time(previous["receivedAt"]).Add(carrierStockMaxAge)
+		if str(previous["id"]) == str(stock["id"]) && value.Time(stock["receivedAt"]).Before(lease) && pendingCarrierStockDiffers(previous, stock) {
+			previous["awaitingConfirmation"] = true
+			continue
+		}
 		if kind == "squadron" && str(stock["id"]) != "" && str(p.config["squadronWarehouseAccessCarrierID"]) != str(stock["id"]) {
 			p.clearSquadronAccess()
 		}
@@ -147,10 +160,37 @@ func (p *Planner) restoreCarrierStocks(saved M) {
 			items[key] = count
 		}
 		if valid {
-			p.carrierStocks[kind] = M{"id": marketID(raw["id"]), "callsign": text(raw["callsign"], 40), "receivedAt": validDate(raw["receivedAt"]), "updatedAt": validDate(raw["updatedAt"]), "complete": true, "absent": absent, "items": items, "movementKeys": uniqueStrings(raw["movementKeys"], 1000)}
+			pending := M{}
+			for key, rawTime := range value.Obj(raw["pendingMovements"]) {
+				at := value.Time(rawTime)
+				if _, exists := items[key]; exists && value.Key(key) == key && !at.IsZero() && at.After(value.Time(raw["receivedAt"])) && !at.After(value.Time(raw["updatedAt"])) {
+					pending[key] = validDate(rawTime)
+				}
+			}
+			// Older caches recorded the corrected items and one update time, but
+			// not the per-commodity fence. Protect that already observed projection
+			// conservatively; do not reconstruct quantities from historical deltas.
+			if _, exists := raw["pendingMovements"]; !exists && len(uniqueStrings(raw["movementKeys"], 1000)) > 0 && value.Time(raw["updatedAt"]).After(value.Time(raw["receivedAt"])) {
+				for key := range items {
+					pending[key] = validDate(raw["updatedAt"])
+				}
+			}
+			p.carrierStocks[kind] = M{"id": marketID(raw["id"]), "callsign": text(raw["callsign"], 40), "receivedAt": validDate(raw["receivedAt"]), "updatedAt": validDate(raw["updatedAt"]), "complete": true, "absent": absent, "items": items, "movementKeys": uniqueStrings(raw["movementKeys"], 1000), "pendingMovements": pending, "awaitingConfirmation": value.Bool(raw["awaitingConfirmation"])}
 		}
 	}
 	p.carrierOwner = fid
+}
+
+func pendingCarrierStockDiffers(previous, incoming M) bool {
+	if !value.Bool(previous["complete"]) {
+		return false
+	}
+	for key := range value.Obj(previous["pendingMovements"]) {
+		if !value.Bool(incoming["complete"]) || num(value.Obj(previous["items"])[key]) != num(value.Obj(incoming["items"])[key]) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Planner) applyCarrierMovement(event, context M) {
@@ -202,7 +242,13 @@ func (p *Planner) applyCarrierMovement(event, context M) {
 				s["complete"] = false
 				return
 			}
+			if num(items[key])+delta < 0 {
+				s["complete"] = false // The baseline cannot explain this withdrawal.
+			}
 			items[key] = math.Max(0, num(items[key])+delta)
+			pending := value.Obj(s["pendingMovements"])
+			pending[key] = validDate(event["timestamp"])
+			s["pendingMovements"] = pending
 		}
 		if str(event["event"]) == "CargoTransfer" {
 			for _, transfer := range rows(event["Transfers"]) {
@@ -238,7 +284,10 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 		included := enabled && (kind == "fleet" || squadronAccess)
 		reason := "Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически."
 		if known {
-			reason = "Снимок Frontier CAPI; изменения других игроков могут запаздывать."
+			reason = "Снимок Frontier CAPI; данные сервера могут запаздывать."
+			if len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]) {
+				reason = "Склад скорректирован по журналу. Frontier пока не подтвердил последние перемещения."
+			}
 			if value.Bool(s["absent"]) {
 				reason = "Frontier подтвердил отсутствие личного флотоносца."
 			}
@@ -264,7 +313,7 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 			knownTons = total
 		}
 		accessible := fid != "" && fid == p.carrierOwner && (kind == "fleet" || squadronAccess)
-		result = append(result, M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "knownTons": knownTons, "items": list, "reason": reason})
+		result = append(result, M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "awaitingConfirmation": len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]), "knownTons": knownTons, "items": list, "reason": reason})
 		if !included {
 			continue
 		}

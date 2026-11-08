@@ -3,6 +3,7 @@
 package nativeui
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -26,8 +27,8 @@ func TestNativeColonySupplyPreviewFitsSafeBandsAtNormalFont(t *testing.T) {
 		{"commodity": "aluminium", "name": "Алюминий", "missing": 7047, "cargoAvailable": 1232, "carrierIncluded": true, "carrierAvailable": 0, "carrierComplete": true, "toBuy": 5815, "authoritative": true},
 		{"commodity": "ceramiccomposites", "name": "СММ-композит", "missing": 6776, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 1000, "carrierComplete": true, "toBuy": 5776, "authoritative": true},
 	}
-	for range 23 {
-		supplies = append(supplies, M{"commodity": "synthetic", "name": "Synthetic extra supply", "missing": 100, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 0, "carrierComplete": true, "toBuy": 100})
+	for i := range 23 {
+		supplies = append(supplies, M{"commodity": fmt.Sprintf("synthetic%d", i), "name": fmt.Sprintf("Resource %02d", i), "missing": 100, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 0, "carrierComplete": true, "toBuy": 100})
 	}
 	state := M{"settings": M{"activity": "colonization"}, "connection": M{"gameRunning": false}, "commander": M{"system": "Synthetic Origin", "station": "Synthetic Orbital Port", "docked": true, "vehicle": "ship"}, "colonization": M{"includeCarrierWarehouse": true, "activeProject": M{"name": "Synthetic Colony", "status": "building", "operationalSupplies": supplies}}}
 	h, err := newHUD(&Window{main: main, state: state, backend: &platformController{state: state}})
@@ -54,9 +55,14 @@ func TestNativeColonySupplyPreviewFitsSafeBandsAtNormalFont(t *testing.T) {
 					t.Fatal("measured text escaped the cockpit-safe band", language, dpi, panel, band)
 				}
 			}
-			section := h.document.Sections[1]
-			if len(section.Lines) != 4 || !strings.Contains(section.Lines[1].Text, "12 000") {
-				t.Fatal("the covered carrier steel or bounded footer was lost", section)
+			text := ""
+			for _, section := range h.document.Sections {
+				for _, line := range section.Lines {
+					text += line.Text + "\n"
+				}
+			}
+			if strings.Contains(text, "12 000") || strings.Count(text, ": купить ")+strings.Count(text, ": buy ") != 10 || !strings.Contains(text, "15") || !strings.Contains(text, "1/26") {
+				t.Fatal("ten uncovered resources or the exact remainder was lost", text)
 			}
 		}
 	}

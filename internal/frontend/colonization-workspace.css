@@ -42,6 +42,50 @@
 .colony-warehouse-options>.colony-source-note{margin:0}
 .colony-warehouse-options>.colony-source-note p{margin:0}
 .colony-warehouse-options>.colony-source-note p+p{margin-top:8px}
+.colony-budget{padding:22px 25px;border:1px solid var(--line);background:var(--panel);border-radius:14px;margin:20px 0}
+.colony-budget>header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.colony-budget h3{margin:6px 0 0;font-size:18px;line-height:1.5;font-weight:550}
+.colony-budget-scope{font-size:11px;line-height:1.8;color:var(--muted)}
+.colony-budget-basis,.colony-budget-breakdown>p{font-size:11px;line-height:1.8;color:var(--muted);margin:12px 0 16px;max-width:1000px}
+.colony-budget-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.colony-budget-metrics .colony-summary-metric>strong{font-variant-numeric:tabular-nums;font-size:18px}
+.colony-budget-warning{font-size:11px;line-height:1.8;color:var(--warn);margin:13px 0 0;overflow-wrap:anywhere}
+.colony-budget-breakdown{margin-top:16px;font-size:11px;color:var(--muted)}
+.colony-budget-breakdown>summary{cursor:pointer;line-height:1.8;width:fit-content;color:var(--text)}
+.colony-budget-breakdown>.colony-budget-metrics{margin-top:12px}
+.colony-budget-breakdown>p{margin-bottom:0}
+.colony-budget-context{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 12px}
+.colony-budget-context>div:first-child{min-width:0}
+.colony-budget-context h2{font-size:17px;line-height:1.5;font-weight:550;margin:3px 0 5px;overflow-wrap:anywhere}
+.colony-budget-workspace .colony-budget{padding:16px 20px;margin:12px 0}
+.colony-budget-workspace .colony-budget>header .eyebrow{display:none}
+.colony-budget-workspace .colony-budget h3{font-size:16px;margin:0}
+.colony-budget-workspace .colony-budget-basis{font-size:10px;margin:8px 0 12px;line-height:1.6}
+.colony-budget-workspace .colony-budget-metrics .colony-summary-metric{padding:11px 14px}
+.colony-budget-workspace .colony-budget-breakdown{margin-top:10px}
+.colony-budget-stock{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:11px}
+.colony-budget-stock>summary{cursor:pointer;padding:10px 16px;line-height:1.6;color:var(--muted)}
+.colony-budget-stock>.colony-warehouse-options{padding:0 16px 16px;margin:0}
+#page:has(.colony-budget-workspace)>.page-heading{margin-bottom:12px}
+#page:has(.colony-budget-workspace)>.page-heading .eyebrow,#page:has(.colony-budget-workspace)>.page-heading .description{display:none}
+#page:has(.colony-budget-workspace)>.page-heading h1{font-size:20px;line-height:1.4;margin:0}
+#page:has(.colony-budget-workspace)>.filters{margin-bottom:12px;gap:10px}
+#page:has(.colony-budget-workspace)>.action-row{margin-bottom:12px}
+#page:has(.colony-budget-workspace) .data-split{min-height:0}
+#page:has(.colony-budget-workspace) .table-scroll td,#page:has(.colony-budget-workspace) .table-scroll th{padding:10px 11px}
+.colony-budget-workspace .colony-budget-context{margin:0 0 8px;gap:10px}
+.colony-budget-workspace .colony-budget-context>div:first-child{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.colony-budget-workspace .colony-budget-context .eyebrow{display:none}
+.colony-budget-workspace .colony-budget-context h2{font-size:14px;margin:0;line-height:1.5}
+.colony-budget-workspace .colony-budget-context .colony-overview-meta{font-size:10px;gap:8px}
+.colony-budget-workspace .colony-budget-context .pill{min-height:28px;padding:5px 8px;font-size:11px}
+.colony-budget-workspace .colony-budget{padding:13px 16px;margin:8px 0}
+.colony-budget-workspace .colony-budget h3{font-size:14px}
+.colony-budget-workspace .colony-budget-metrics .colony-summary-metric{padding:9px 12px}
+.colony-budget-workspace .colony-budget-metrics .colony-summary-metric>strong{font-size:16px;line-height:1.4;margin:4px 0}
+.colony-budget-workspace .colony-budget-metrics .colony-summary-metric>small{line-height:1.4}
+.colony-budget-workspace .colony-budget-stock{margin-bottom:10px}
+.colony-budget-workspace .colony-budget-stock>summary{padding:8px 13px}
 .colony-data-warnings{margin-top:17px;color:var(--muted);font-size:11px;line-height:1.8}
 .colony-data-warnings summary{cursor:pointer;color:var(--warn)}
 .colony-data-warnings ul{padding-left:17px;margin:9px 0 0}
@@ -70,3 +114,5 @@
 .colony-source-workspace>[hidden],.colony-station-check[hidden]{display:none}
 @media(max-width:1250px){.colony-summary-metrics,.colony-supply-items{grid-template-columns:repeat(2,minmax(0,1fr))}.colony-summary-metric:nth-child(2){border-right:0}.colony-summary-metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.colony-overview>header{flex-direction:column}.colony-overview-actions{justify-content:flex-start}}
 @media(max-width:1020px){.colony-source-workspace{grid-template-columns:1fr}.colony-source-step+.colony-source-step{border-left:0;border-top:1px solid var(--line)}.colony-origin-summary{grid-template-columns:1fr 1fr}.colony-start{align-items:flex-start;flex-wrap:wrap}.colony-start>.pill{margin-left:70px}.colony-next-step{flex-wrap:wrap}.colony-next-step>.pill{margin-left:45px}}
+@media(max-width:1020px){.colony-budget-metrics{grid-template-columns:1fr}.colony-budget-metrics .colony-summary-metric{border-right:0;border-bottom:1px solid var(--line)}.colony-budget-metrics .colony-summary-metric:last-child{border-bottom:0}}
+@media(min-width:761px) and (max-width:1250px){.colony-budget-workspace .colony-budget-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.colony-budget-workspace .colony-budget-metrics .colony-summary-metric{border-right:1px solid var(--line);border-bottom:0}.colony-budget-workspace .colony-budget-metrics .colony-summary-metric:last-child{border-right:0}}

@@ -3,6 +3,7 @@ package app
 import (
 	"time"
 
+	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/theme"
 	"github.com/Naenier/ED-Copilot/internal/trading"
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -42,11 +43,15 @@ func (e *Engine) snapshotScoped(tab string) M {
 	var navigation []string
 	var goals, bookmarks, notices any
 	manual, prices, network := M{}, M{}, map[string]M{}
+	galacticPrices := M{}
 	if !syncOnly {
 		appearance, desktop = v.Copy(e.appearance), v.Copy(e.desktop)
 		navigation = append([]string(nil), e.navigation...)
 		goals, bookmarks, notices = v.Clone(e.objectives), v.Clone(e.bookmarks), v.Clone(e.notices)
 		manual, prices = v.Copy(e.manualPrices), v.Copy(e.prices)
+		if !hud && oneOf(tab, "colonization", "overview", "statistics") {
+			galacticPrices = v.Copy(e.galacticPrices)
+		}
 		for key, value := range e.network {
 			if key == "trading" && (oneOf(tab, "sale", "deals", "statistics", "carrier-trade", "encyclopedia", "reference") || hud && oneOf(activity, "trade", "asteroid")) || key == "tradeRoutes" && tab == "deals" || key == "search" && tab == "targets" || key == "politics" && tab == "politics" {
 				network[key] = v.Copy(value)
@@ -135,6 +140,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	if oneOf(tab, "overview", "colonization", "statistics") || hud && activity == "colonization" {
 		state["colonization"] = e.Colonies.Snapshot(ctx)
+		if !hud {
+			colonization.EnrichCosts(v.Obj(state["colonization"]), galacticPrices)
+		}
 	} else if settings["activity"] == "colonization" || !hud {
 		state["colonization"] = e.Colonies.SelectorSnapshot()
 	}

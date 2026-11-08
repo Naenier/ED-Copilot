@@ -718,14 +718,11 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 	}
 	colony := v.Obj(s["colonization"])
 	supplies := hudColonySupplies(colony, p)
-	if len(supplies) > 0 && v.Num(supplies[0].row["cargoAvailable"]) > 0 {
-		r := supplies[0].row
-		rows = append(rows, HUDLine{"Готово к доставке: " + v.Text(r["name"], r["commodity"]) + " · " + Number(min(v.Num(r["cargoAvailable"]), v.Num(r["missing"]))) + " т", "good"})
-	} else if len(supplies) > 0 && v.Num(supplies[0].carrier) > 0 {
-		item := supplies[0]
-		amount := min(v.Num(item.carrier), v.Num(item.row["missing"]))
-		rows = append(rows, HUDLine{"Загрузить с ФН: " + v.Text(item.row["name"], item.row["commodity"]) + " · " + Number(amount) + " т", "good"})
-	} else if text := v.Str(v.At(p, "nextTask", "text")); text != "" {
+	pending := hudPendingColonySupplies(colony, supplies)
+	if len(supplies) > 0 && len(pending) == 0 {
+		rows = append(rows, HUDLine{"Ресурсы на ФН · доставка на стройки ещё нужна", "good"})
+	} else if len(supplies) == 0 && v.Str(v.At(p, "nextTask", "text")) != "" {
+		text := v.Str(v.At(p, "nextTask", "text"))
 		rows = append(rows, hudText(text))
 	}
 	if deadline := v.Time(p["deadline"]); !colonization.PrimaryPortComplete(p) && p["deadlineActive"] != false && !deadline.IsZero() {
@@ -735,7 +732,16 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 			rows = append(rows, hudMuted("Срок первичного порта: "+Date(p["deadline"])))
 		}
 	}
-	hudAdd(doc, "ВЫБРАННАЯ КОЛОНИЯ", rows...)
-	rows = hudColonySupplyLines(colony, p, supplies)
-	hudAdd(doc, "СНАБЖЕНИЕ КОЛОНИИ", rows...)
+	lines := hudColonySupplyLines(colony, p, supplies)
+	// Five actions per section can flow into the left safe band without an
+	// oversized ten-row panel covering cockpit instruments. Context shares
+	// the first panel instead of consuming an independent header window.
+	if len(pending) > 5 {
+		hudAdd(doc, "СНАБЖЕНИЕ КОЛОНИИ", append(rows, lines[:5]...)...)
+		hudAdd(doc, "СНАБЖЕНИЕ · ПРОДОЛЖЕНИЕ", lines[5:]...)
+	} else if len(lines) > 0 {
+		hudAdd(doc, "СНАБЖЕНИЕ КОЛОНИИ", append(rows, lines...)...)
+	} else {
+		hudAdd(doc, "ВЫБРАННАЯ КОЛОНИЯ", rows...)
+	}
 }

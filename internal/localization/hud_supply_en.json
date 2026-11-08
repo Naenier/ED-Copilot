@@ -5,5 +5,8 @@
   "Обеспечено: ": "Stock covers: ",
   "Учёт склада ФН выключен": "FC stock accounting is off",
   "на борту ": "aboard ",
-  "купить ": "buy "
+  "купить ": "buy ",
+  "доставить ": "deliver ",
+  "Ресурсы на ФН · доставка на стройки ещё нужна": "Resources aboard FC · construction deliveries still needed",
+  "СНАБЖЕНИЕ · ПРОДОЛЖЕНИЕ": "SUPPLY · CONTINUED"
 }

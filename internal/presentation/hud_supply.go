@@ -95,7 +95,7 @@ func hudColonySupplies(colony, project M) []hudColonySupply {
 }
 
 func hudColonySupplyLines(colony, project M, supplies []hudColonySupply) []HUDLine {
-	const limit = 3
+	const limit = 10
 	rows := []HUDLine{}
 	covered, uncertain, warehouseVisible := 0, false, false
 	for _, item := range supplies {
@@ -105,9 +105,34 @@ func hudColonySupplyLines(colony, project M, supplies []hudColonySupply) []HUDLi
 		uncertain = uncertain || item.uncertain
 		warehouseVisible = warehouseVisible || v.Num(item.carrier) > 0
 	}
-	for _, item := range hudVisibleColonySupplies(supplies, limit) {
+	pending := hudPendingColonySupplies(colony, supplies)
+	for _, item := range hudVisibleColonySupplies(pending, limit) {
 		r := item.row
 		text := v.Text(r["name"], r["commodity"]) + ": осталось " + Number(r["missing"]) + " т"
+		// With warehouse accounting on, the overlay is the next shopping or
+		// delivery action. The desktop retains the full bill and stock columns.
+		if v.Bool(colony["includeCarrierWarehouse"]) && v.Bool(r["carrierIncluded"]) {
+			switch {
+			case hudKnown(r["toBuy"]) && v.Num(r["toBuy"]) > 0:
+				text = v.Text(r["name"], r["commodity"]) + ": купить " + Number(r["toBuy"]) + " т"
+			case r["toBuy"] == nil && hudKnown(r["toBuyAtMost"]) && v.Num(r["toBuyAtMost"]) > 0:
+				text = v.Text(r["name"], r["commodity"]) + ": купить ≤" + Number(r["toBuyAtMost"]) + " т"
+			case item.covered && v.Num(r["cargoAvailable"]) > 0:
+				text = v.Text(r["name"], r["commodity"]) + ": доставить " + Number(min(v.Num(r["cargoAvailable"]), v.Num(r["missing"]))) + " т"
+			default:
+				text += " · ФН: ?"
+			}
+			role := "text"
+			if item.covered {
+				role = "good"
+			}
+			if !v.Bool(r["authoritative"]) && strings.Contains(v.Str(r["source"]), "manual") {
+				text += " (оценка)"
+				role = "warn"
+			}
+			rows = append(rows, HUDLine{text, role})
+			continue
+		}
 		if hudKnown(r["cargoAvailable"]) && v.Num(r["cargoAvailable"]) > 0 {
 			text += " · на борту " + Number(r["cargoAvailable"]) + " т"
 		}
@@ -137,10 +162,10 @@ func hudColonySupplyLines(colony, project M, supplies []hudColonySupply) []HUDLi
 		}
 		rows = append(rows, HUDLine{text, role})
 	}
-	if len(supplies) > 0 && (len(supplies) > limit || warehouseVisible || v.Bool(colony["includeCarrierWarehouse"])) {
+	if len(supplies) > 0 && (len(pending) > limit || warehouseVisible || v.Bool(colony["includeCarrierWarehouse"])) {
 		parts := []string{}
-		if len(supplies) > limit {
-			parts = append(parts, "Ещё позиций: "+Number(len(supplies)-limit))
+		if len(pending) > limit {
+			parts = append(parts, "Ещё позиций: "+Number(len(pending)-limit))
 		}
 		if uncertain && covered == 0 {
 			parts = append(parts, "Обеспечено: ?/"+Number(len(supplies)))
@@ -162,33 +187,25 @@ func hudColonySupplyLines(colony, project M, supplies []hudColonySupply) []HUDLi
 	return rows
 }
 
-// Represent the next three different actions when the bill is longer than
-// the HUD: deliver loaded cargo, load an already covered carrier commodity,
-// and obtain an uncovered commodity. Three loaded rows must not hide the
-// useful fact that a fourth commodity is already aboard the carrier.
-func hudVisibleColonySupplies(all []hudColonySupply, limit int) []hudColonySupply {
-	if len(all) <= limit {
+// A confirmed carrier quantity can remove an item from this task list only
+// when the commander opted into warehouse accounting. Unknown/stale cargo
+// remains actionable. Ship cargo still needs delivery, so it stays visible.
+func hudPendingColonySupplies(colony M, all []hudColonySupply) []hudColonySupply {
+	if !v.Bool(colony["includeCarrierWarehouse"]) {
 		return all
 	}
-	selected, used := []hudColonySupply{}, map[int]bool{}
-	pick := func(matches func(hudColonySupply) bool) {
-		for index, item := range all {
-			if len(selected) == limit {
-				return
-			}
-			if !used[index] && matches(item) {
-				selected, used[index] = append(selected, item), true
-				return
-			}
+	pending := make([]hudColonySupply, 0, len(all))
+	for _, item := range all {
+		if hudKnown(item.carrier) && v.Num(item.carrier) >= v.Num(item.row["missing"]) {
+			continue
 		}
+		pending = append(pending, item)
 	}
-	pick(func(item hudColonySupply) bool { return v.Num(item.row["cargoAvailable"]) > 0 })
-	pick(func(item hudColonySupply) bool {
-		return item.covered && v.Num(item.carrier) > 0 && v.Num(item.row["cargoAvailable"]) < v.Num(item.row["missing"])
-	})
-	pick(func(item hudColonySupply) bool { return !item.covered })
-	for len(selected) < limit {
-		pick(func(hudColonySupply) bool { return true })
-	}
-	return selected
+	return pending
+}
+
+// The stable source order already prioritizes loaded ship cargo and partial
+// carrier stock. Bound the working preview without reordering domain state.
+func hudVisibleColonySupplies(all []hudColonySupply, limit int) []hudColonySupply {
+	return all[:min(len(all), max(0, limit))]
 }

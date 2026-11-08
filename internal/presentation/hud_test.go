@@ -59,7 +59,7 @@ func TestHUDColoniesSelectedOnlyUnknownBillsAndInactive(t *testing.T) {
 	b := M{"id": "b", "name": "Бета", "targetSystem": "Colony B", "status": "building", "nextTask": M{"text": "Доставить Бета"}, "operationalSupplies": []M{{"name": "Титан", "missing": 72, "cargoAvailable": nil}}}
 	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"activeProject": a, "projects": []M{a, b}, "aggregateSupplies": []M{{"name": "Чужой груз", "missing": 123}}}}
 	text := hudProse(BuildHUD(s, time.Now()))
-	for _, want := range []string{"Альфа", "Готово к доставке: Сталь · 20 т", "Сметы неизвестны: 1", "Сталь: осталось 50 т · на борту 20 т"} {
+	for _, want := range []string{"Альфа", "Сметы неизвестны: 1", "Сталь: осталось 50 т · на борту 20 т"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}

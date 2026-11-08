@@ -2,6 +2,7 @@ package presentation
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestHUDColonyShowsActualCarrierSteelEvenWhenAccountingIsOff(t *testing.T) {
 	before, _ := json.Marshal(s)
 	doc := BuildHUD(s, *now)
 	text := hudProse(doc)
-	for _, want := range []string{"Сталь: осталось 10 164 т · ФН: 12 000 т ✓", "Загрузить с ФН: Сталь · 10 164 т", "Учёт склада ФН выключен", "Обеспечено: 1/1"} {
+	for _, want := range []string{"Сталь: осталось 10 164 т · ФН: 12 000 т ✓", "Учёт склада ФН выключен", "Обеспечено: 1/1"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}
@@ -71,33 +72,36 @@ func TestHUDColonyEnabledStockKeepsDeliveriesAndPurchasesDistinct(t *testing.T) 
 		t.Fatal(err)
 	}
 	text := hudProse(BuildHUD(hudStockState(p, context), *now))
-	for _, want := range []string{"Сталь: осталось 100 т · ФН: 120 т ✓", "Титан: осталось 50 т · ФН: 10 т · купить 40 т", "Обеспечено: 1/2"} {
+	for _, want := range []string{"Титан: купить 40 т", "Обеспечено: 1/2"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}
 	}
-	if strings.Contains(text, "купить 0") || strings.Contains(text, "Учёт склада ФН выключен") {
+	if strings.Contains(text, "Сталь:") || strings.Contains(text, "купить 0") || strings.Contains(text, "Учёт склада ФН выключен") {
 		t.Fatal(text)
 	}
 }
 
-func TestHUDColonyLongBillShowsCarrierCoveredGoodAndExplicitHiddenCount(t *testing.T) {
-	required := []M{}
-	for index, key := range []string{"steel", "aluminium", "titanium", "ceramiccomposites", "semiconductors", "copper"} {
-		required = append(required, M{"Name": key, "Name_Localised": key, "RequiredAmount": 100 - index*10, "ProvidedAmount": 0})
+func TestHUDColonyShowsTenUncoveredCommoditiesAndCorrectRemainder(t *testing.T) {
+	all := []M{{"commodity": "steel", "name": "Сталь", "missing": 100, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 100, "carrierComplete": true, "toBuy": 0}}
+	for index := range 15 {
+		all = append(all, M{"commodity": fmt.Sprintf("item%d", index), "name": fmt.Sprintf("Item%02d", index), "missing": 100, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 0, "carrierComplete": true, "toBuy": 100})
 	}
-	p, context, now := hudStockPlanner(t, required, []M{{"Name": "aluminium", "Count": 10}, {"Name": "titanium", "Count": 20}, {"Name": "ceramiccomposites", "Count": 30}}, []M{{"commodity": "steel", "qty": 100}}, nil)
-	doc := BuildHUD(hudStockState(p, context), *now)
-	section := hudSection(doc, "СНАБЖЕНИЕ КОЛОНИИ")
-	if section == nil || len(section.Lines) != 5 { // three goods, summary, accounting-off note
-		t.Fatal("long bill expanded the HUD or lost its summary", section)
-	}
+	state := M{"settings": M{"activity": "colonization"}, "colonization": M{"includeCarrierWarehouse": true, "activeProject": M{"name": "Synthetic", "status": "building", "operationalSupplies": all}}}
+	before, _ := json.Marshal(state)
+	doc := BuildHUD(state, hudFixtureNow)
 	text := hudProse(doc)
-	if !strings.Contains(text, "Сталь: осталось 100 т · ФН: 100 т ✓") || !strings.Contains(text, "Ещё позиций: 3") || !strings.Contains(text, "Обеспечено: 1/6") {
-		t.Fatal("loaded goods hid covered carrier steel or the hidden-count indicator", text)
+	if strings.Contains(text, "Сталь:") || strings.Count(text, ": купить 100 т") != 10 || !strings.Contains(text, "Ещё позиций: 5") || !strings.Contains(text, "Обеспечено: 1/16") || len(doc.Sections) != 2 {
+		t.Fatal("preview cap/filter/remainder failed", text)
 	}
-	if strings.Contains(text, "Медь: осталось") || strings.Contains(text, "Полупроводники: осталось") {
-		t.Fatal("the bounded preview became a complete inventory table", text)
+	after, _ := json.Marshal(state)
+	if string(before) != string(after) {
+		t.Fatal("HUD removed a covered resource from the desktop state")
+	}
+	v.Obj(state["colonization"])["includeCarrierWarehouse"] = false
+	text = hudProse(BuildHUD(state, hudFixtureNow))
+	if !strings.Contains(text, "Сталь:") || !strings.Contains(text, "Ещё позиций: 6") {
+		t.Fatal("opt-out incorrectly removed carrier-covered cargo", text)
 	}
 }
 
@@ -114,7 +118,7 @@ func TestHUDColonyNeverCountsInaccessibleSquadronStock(t *testing.T) {
 		t.Fatal(err)
 	}
 	text = hudProse(BuildHUD(hudStockState(p, context), *now))
-	if !strings.Contains(text, "ФН: 9 999 т ✓") || strings.Contains(text, "купить 100 т") {
+	if !strings.Contains(text, "Обеспечено: 1/1") || strings.Contains(text, "Сталь:") || strings.Contains(text, "купить 100 т") {
 		t.Fatal("accessible shared cargo remained invisible", text)
 	}
 }
@@ -126,7 +130,7 @@ func TestHUDColonyStaleWarehouseRemainsUnknownAndBoundsPurchases(t *testing.T) {
 	}
 	*now = now.Add(16 * time.Minute)
 	text := hudProse(BuildHUD(hudStockState(p, context), *now))
-	if strings.Contains(text, "✓") || strings.Contains(text, "120 т") || strings.Contains(text, "ФН: 0") || !strings.Contains(text, "ФН: ?") || !strings.Contains(text, "купить ≤100 т") || !strings.Contains(text, "Обеспечено: ?/1") {
+	if strings.Contains(text, "✓") || strings.Contains(text, "120 т") || strings.Contains(text, "ФН: 0") || !strings.Contains(text, "Сталь: купить ≤100 т") || !strings.Contains(text, "Обеспечено: ?/1") {
 		t.Fatal("stale carrier inventory became a current known zero or a covered bill", text)
 	}
 }
@@ -134,18 +138,18 @@ func TestHUDColonyStaleWarehouseRemainsUnknownAndBoundsPurchases(t *testing.T) {
 func TestHUDColonyPartialWarehouseShowsLowerBoundAndUncertainProcurement(t *testing.T) {
 	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"includeCarrierWarehouse": true, "carrierWarehouses": []M{{"kind": "fleet", "id": "42", "known": true, "accessible": true, "items": []M{{"key": "steel", "count": 30}}}, {"kind": "squadron", "id": "43", "known": false, "accessible": true}}, "activeProject": M{"name": "Synthetic", "status": "building", "operationalSupplies": []M{{"commodity": "steel", "name": "Steel", "missing": 100, "cargoAvailable": 10, "carrierIncluded": true, "carrierAvailable": 30, "carrierComplete": false, "toBuy": nil, "toBuyAtMost": 60}}}}}
 	text := hudProse(BuildHUD(s, hudFixtureNow))
-	if strings.Contains(text, "✓") || strings.Contains(text, "купить 60 т") || !strings.Contains(text, "ФН: ≥30 т · купить ≤60 т") || !strings.Contains(text, "Обеспечено: ?/1") {
+	if strings.Contains(text, "✓") || strings.Contains(text, "купить 60 т") || !strings.Contains(text, "Steel: купить ≤60 т") || !strings.Contains(text, "Обеспечено: ?/1") {
 		t.Fatal("partial stock was shown as an exact procurement deficit", text)
 	}
 	v.Obj(s["settings"])["language"] = "en"
-	if english := hudProse(BuildHUD(s, hudFixtureNow)); !strings.Contains(english, "FC: ≥30 t · buy ≤60 t") || !strings.Contains(english, "Stock covers: ?/1") {
+	if english := hudProse(BuildHUD(s, hudFixtureNow)); !strings.Contains(english, "Steel: buy ≤60 t") || !strings.Contains(english, "Stock covers: ?/1") {
 		t.Fatal("partial procurement prose was not translated", english)
 	}
 	v.Obj(s["settings"])["language"] = "ru"
 	row := v.Rows(v.At(s, "colonization", "activeProject", "operationalSupplies"))[0]
 	row["cargoAvailable"], row["toBuyAtMost"] = nil, nil
 	text = hudProse(BuildHUD(s, hudFixtureNow))
-	if strings.Contains(text, "на борту 0") || strings.Contains(text, "купить") || strings.Contains(text, "✓") || !strings.Contains(text, "ФН: ≥30 т") {
+	if strings.Contains(text, "на борту 0") || strings.Contains(text, "купить") || strings.Contains(text, "✓") || !strings.Contains(text, "Steel: осталось 100 т · ФН: ?") {
 		t.Fatal("unknown ship cargo became zero or an invented purchase amount", text)
 	}
 }
@@ -156,7 +160,7 @@ func TestHUDColonyDuplicateCarrierViewsDoNotCoverOneBillTwice(t *testing.T) {
 	}
 	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"includeCarrierWarehouse": true, "carrierWarehouses": []M{warehouse("fleet"), warehouse("squadron")}, "activeProject": M{"name": "Synthetic", "status": "building", "operationalSupplies": []M{{"commodity": "steel", "name": "Steel", "missing": 75, "cargoAvailable": 0, "carrierIncluded": true, "carrierAvailable": 50, "carrierComplete": true, "toBuy": 25}}}}}
 	text := hudProse(BuildHUD(s, hudFixtureNow))
-	if strings.Contains(text, "✓") || strings.Contains(text, "ФН: 100") || !strings.Contains(text, "ФН: 50 т · купить 25 т") {
+	if strings.Contains(text, "✓") || strings.Contains(text, "ФН: 100") || !strings.Contains(text, "Steel: купить 25 т") {
 		t.Fatal("the same carrier ID was counted twice", text)
 	}
 }
@@ -166,7 +170,7 @@ func TestHUDColonySupplySummaryIsEnglishWithoutTranslatingUserNames(t *testing.T
 	s := hudStockState(p, context)
 	v.Obj(s["settings"])["language"] = "en"
 	text := hudProse(BuildHUD(s, *now))
-	for _, want := range []string{"FC: 100 t", "Load from FC:", "Stock covers: 1/1", "FC stock accounting is off", "Synthetic HUD Colony"} {
+	for _, want := range []string{"FC: 100 t", "Stock covers: 1/1", "FC stock accounting is off", "Synthetic HUD Colony"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing translated phrase %q: %s", want, text)
 		}
@@ -183,5 +187,39 @@ func TestHUDColonyWithoutAnObservedBillDoesNotInventEmptyCoverage(t *testing.T) 
 	doc := BuildHUD(s, hudFixtureNow)
 	if text := hudProse(doc); strings.Contains(text, "0/0") || strings.Contains(text, "Обеспечено") || !strings.Contains(text, "Сметы неизвестны: 1") {
 		t.Fatal("an unread bill became an empty covered bill", text)
+	}
+}
+
+func TestHUDColonyHidesCarrierCoveredRowsAndTheirOldNextAction(t *testing.T) {
+	p, context, now := hudStockPlanner(t, []M{{"Name": "steel", "RequiredAmount": 100, "ProvidedAmount": 0}}, []M{{"Name": "steel", "Count": 5}}, []M{{"commodity": "steel", "qty": 100}}, nil)
+	if err := p.Update(M{"action": "configure", "includeCarrierWarehouse": true}); err != nil {
+		t.Fatal(err)
+	}
+	s := hudStockState(p, context)
+	v.Obj(v.At(s, "colonization", "activeProject"))["nextTask"] = M{"text": "Steel: load 100"}
+	text := hudProse(BuildHUD(s, *now))
+	if strings.Contains(text, "Сталь") || strings.Contains(text, "Steel") || !strings.Contains(text, "доставка на стройки ещё нужна") || !strings.Contains(text, "Обеспечено: 1/1") {
+		t.Fatal("a suppressed resource leaked into another HUD panel or became delivered", text)
+	}
+	v.Obj(s["settings"])["language"] = "en"
+	text = hudProse(BuildHUD(s, *now))
+	if strings.Contains(text, "Ресурсы") || !strings.Contains(text, "construction deliveries still needed") {
+		t.Fatal("all-covered HUD not localized", text)
+	}
+}
+
+func TestHUDColonyKeepsLoadedShipCargoWhenCarrierAloneIsInsufficient(t *testing.T) {
+	p, context, now := hudStockPlanner(t, []M{{"Name": "steel", "RequiredAmount": 100, "ProvidedAmount": 0}}, []M{{"Name": "steel", "Count": 65}}, []M{{"commodity": "steel", "qty": 35}}, nil)
+	if err := p.Update(M{"action": "configure", "includeCarrierWarehouse": true}); err != nil {
+		t.Fatal(err)
+	}
+	s := hudStockState(p, context)
+	text := hudProse(BuildHUD(s, *now))
+	if !strings.Contains(text, "Сталь: доставить 65 т") || strings.Contains(text, "купить 0") {
+		t.Fatal("combined coverage hid cargo that still needs ship delivery", text)
+	}
+	v.Obj(s["settings"])["language"] = "en"
+	if text = hudProse(BuildHUD(s, *now)); !strings.Contains(text, "Steel: deliver 65 t") {
+		t.Fatal("delivery action not localized", text)
 	}
 }

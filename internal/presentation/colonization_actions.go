@@ -233,7 +233,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 		}
 		actions = append(actions, post("colony.link-depot", "Связать со стройплощадкой из журнала", "link-depot", M{"buildingId": buildingID}, Field{Key: "marketId", Label: "Строительная площадка", Kind: "select", Choices: depots, Default: v.Str(selectedBuild["marketId"]), Help: "Здесь только площадки этой системы. Требования обновятся по журналу."}), Action{ID: "colony.delete-building", Title: "Убрать выбранный объект из плана", Path: "/api/colonization", Payload: M{"action": "remove-building", "projectId": projectID, "id": buildingID}, Confirm: "Удалить этап «" + v.Text(selectedBuild["name"], selectedBuild["typeId"]) + "» и его личные отметки? Это не отменяет строительство в игре."})
 	}
-	if len(buildings) > 0 && (mode == "Снабжение" || mode == "supplies" || mode == "Строительство" || mode == "construction" || mode == "Очередь снабжения" || mode == "Поставки") {
+	if len(buildings) > 0 && (mode == "Снабжение" || mode == "supplies" || mode == "Бюджет" || mode == "Строительство" || mode == "construction" || mode == "Очередь снабжения" || mode == "Поставки") {
 		goods := colonyGoods(state, project)
 		commodity := v.Text(selected["commodity"], selected["key"])
 		required := selected["required"]
@@ -258,7 +258,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 		sourceDefault := selectedBuild["sourceNote"]
 		resource := Action{ID: "colony.resource-upsert", Title: "Плановая потребность в товаре", Path: "/colonization/resource-row", Payload: M{"projectId": projectID}, Fields: []Field{{Key: "buildingId", Label: "Объект этой колонии", Kind: "select", Choices: buildChoices, Default: defaultBuilding, Required: true}, {Key: "commodity", Label: "Товар", Kind: "combo", Choices: goods, Default: commodity, Required: true}, colonyInteger("required", "Нужно всего, т", required, true, 1, 1e9), {Key: "sourceNote", Label: "Основание плановой оценки", Kind: "text", Default: sourceDefault, Required: true, Help: "Это ручная оценка. Точный список игрового склада имеет приоритет."}}, Transform: colonyResourceBody}
 		actions = append(actions, resource)
-		if mode == "Снабжение" || mode == "supplies" {
+		if mode == "Снабжение" || mode == "supplies" || mode == "Бюджет" {
 			manualBuildings := []Choice{}
 			manualGoods := []Choice{}
 			seen := map[string]bool{}
@@ -284,8 +284,16 @@ func ColonyActions(mode string, state M, selected M) []Action {
 				}(), Required: true}}})
 			}
 			if commodity != "" {
-				quantity := math.Max(1, math.Ceil(v.Num(selected["missing"])))
-				actions = append(actions, Action{ID: "colony.purchase", Title: "Найти, где купить выбранный товар", Kind: "purchase", Path: "sale", Payload: M{"resourceKey": commodity, "quantity": quantity, "system": v.Text(commander["system"], project["originSystem"])}, Fields: []Field{colonyInteger("quantity", "Найти объём, т", quantity, true, 1, 1e9), {Key: "system", Label: "Искать рядом с системой", Kind: "text", Default: v.Text(commander["system"], project["originSystem"]), Required: true}}})
+				need, exact := v.Number(selected["toBuy"])
+				if !exact {
+					var bounded bool
+					need, bounded = v.Number(selected["toBuyAtMost"])
+					if !bounded {
+						need = v.Num(selected["missing"])
+					}
+				}
+				quantity := math.Max(1, math.Ceil(need))
+				actions = append(actions, Action{ID: "colony.purchase", Title: "Найти, где купить выбранный товар", Kind: "purchase", Path: "sale", Disabled: exact && need <= 0, Payload: M{"resourceKey": commodity, "quantity": quantity, "system": v.Text(commander["system"], project["originSystem"])}, Fields: []Field{colonyInteger("quantity", "Найти объём, т", quantity, true, 1, 1e9), {Key: "system", Label: "Искать рядом с системой", Kind: "text", Default: v.Text(commander["system"], project["originSystem"]), Required: true}}})
 			}
 		}
 		if mode == "Поставки" || mode == "Снабжение" || mode == "supplies" {

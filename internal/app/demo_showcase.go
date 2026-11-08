@@ -70,6 +70,11 @@ func (e *Engine) SeedDemoShowcase() error {
 	}
 	e.domainMu.Unlock()
 	e.mu.Lock()
+	// These reference prices are fictional and exist only in the isolated
+	// showcase, alongside its fictional stations, construction bills and cargo.
+	for key, price := range map[string]float64{"steel": 4200, "aluminium": 2500, "titanium": 4400, "ceramiccomposites": 400, "superconductors": 6500, "gold": 50000} {
+		e.galacticPrices[key] = M{"price": price, "observedAt": at, "source": "Market.json"}
+	}
 	e.network["tradeRoutes"] = M{"running": false, "results": routes, "options": routeOptions, "checked": 4, "total": 4, "status": "Демонстрационный рейс. Цены вымышлены."}
 	e.network["trading"] = M{"running": false, "status": "Демонстрационные предложения", "options": M{"mode": "sell", "system": "Тестовая колония А", "resourceKey": "gold", "quantity": 10000, "maxAgeHours": 24, "carrierMaxAgeHours": 6}, "results": []M{market("demo-market-a", "Демонстрационный порт Альфа", "L", 4000), market("demo-market-b", "Демонстрационный порт Бета", "M", 3800)}}
 	e.mu.Unlock()

@@ -250,3 +250,68 @@ test('manual placeholder faction is rejected before any search or persistence re
  await f.api.handleClick('colony-workspace-find',null,f.C,f.ui);
  assert.equal(f.calls.length,0);assert.match(f.C.colonizationWorkspace.error,/малую фракцию обычной/);
 });
+
+const costMetric=(value,complete=true,extra={})=>({value:complete?value:null,knownValue:value,complete,unpricedCommodityCount:0,unknownQuantityCount:0,...extra});
+function budgetProject(id,name){return project(id,name,{costSummary:{required:costMetric(1000000),delivered:costMetric(100000),missing:costMetric(900000),cargoCovered:costMetric(200000),carrierCovered:costMetric(600000),toBuy:costMetric(100000),toBuyAtMost:costMetric(100000),unknownBills:0,plannedBuildings:2,buildingBuildings:1}});}
+
+test('colony budget values belong only to the selected colony and distinguish total bill delivery and procurement',()=>{
+ const f=fixture();f.C.mode='Бюджет';const alpha=budgetProject('a','Alpha'),beta=budgetProject('b','Beta');beta.costSummary.required=costMetric(999);
+ f.C.state.colonization.projects=[alpha,beta];f.C.state.colonization.activeProject=alpha;
+ const before=clone(f.C.state),html=f.api.render(f.C,f.ui),budget=html.split('<section class="colony-budget"')[1]||'';
+ assert.match(budget,/data-colony-budget="a"/);assert.match(budget,/Полная смета ресурсов<\/span><strong>1000000 кр\./);
+ assert.match(budget,/Осталось доставить<\/span><strong>900000 кр\./);assert.match(budget,/Нужно закупить<\/span><strong>100000 кр\./);
+ assert.match(budget,/Принято стройками<\/span><strong>100000 кр\./);assert.match(budget,/Покрыто складом флотоносца<\/span><strong>600000 кр\./);
+ assert.match(budget,/В плане: 2 · Строятся: 1/);assert.doesNotMatch(budget,/999 кр\./);assert.deepEqual(f.C.state,before);
+ f.C.state.colonization.activeProject=beta;assert.match(f.api.render(f.C,f.ui),/Полная смета ресурсов<\/span><strong>999 кр\./);
+ f.C.mode='Выбор системы';assert.doesNotMatch(f.api.render(f.C,f.ui),/data-colony-budget=/);
+});
+
+test('budget unknown totals remain lower bounds and a bounded purchase estimate is separate from a confirmed zero',()=>{
+ const f=fixture();f.C.mode='Снабжение';const p=budgetProject('a','Synthetic');f.C.state.colonization.activeProject=p;
+ p.costSummary.required=costMetric(5000,false,{unpricedCommodityCount:2});p.costSummary.unknownBills=1;
+ p.costSummary.missing=costMetric(0,false,{unpricedCommodityCount:2});p.costSummary.toBuy=costMetric(0,false,{unknownQuantityCount:1});p.costSummary.toBuyAtMost=costMetric(7000);
+ let html=f.api.render(f.C,f.ui);
+ assert.match(html,/Полная смета ресурсов<\/span><strong>Не менее 5000 кр\./);assert.match(html,/Осталось доставить<\/span><strong>Неизвестно/);
+ assert.match(html,/Нужно закупить<\/span><strong>Не более 7000 кр\./);assert.match(html,/Неизвестных смет: 1 · Без средней цены: 2/);
+ assert.match(html,/Неполные оценки помечены границами/);
+ p.costSummary.toBuy=costMetric(0);html=f.api.render(f.C,f.ui);assert.match(html,/Нужно закупить<\/span><strong>0 кр\./);assert.doesNotMatch(html,/Нужно закупить<\/span><strong>Не более/);
+});
+
+test('budget renders fully in English without translating user records and never creates a network request',()=>{
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.activeProject=budgetProject('a','Личная колония');
+ const dictionary={};for(const filename of fs.readdirSync(path.join(__dirname,'../localization')).filter(x=>x.endsWith('_en.json')).sort())Object.assign(dictionary,JSON.parse(fs.readFileSync(path.join(__dirname,'../localization',filename),'utf8')));
+ f.window.CopilotI18n={t:key=>dictionary[key]??key,locale:()=> 'en-GB'};
+ const html=f.api.render(f.C,f.ui),budget=html.split('<section class="colony-budget"')[1]||'';
+ assert.match(html,/Личная колония/);assert.match(budget,/Colony resource budget/);assert.match(budget,/Full resource bill/);assert.match(budget,/Procurement budget/);
+ assert.doesNotMatch(budget,/[\p{Script=Cyrillic}]/u);assert.equal(f.calls.length,0);
+});
+
+test('warehouse journal corrections remain visible with separate receipt and movement times',()=>{
+ const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ const warehouse={kind:'fleet',known:true,included:true,knownTons:200,callsign:'SYN-001',receivedAt:'2031-01-01T12:00:00Z',updatedAt:'2031-01-01T12:02:00Z',awaitingConfirmation:true,reason:'Склад скорректирован по журналу. Frontier пока не подтвердил последние перемещения.'};
+ f.C.state.colonization.carrierWarehouses=[warehouse];
+ let html=f.api.render(f.C,f.ui);assert.match(html,/Получено /);assert.match(html,/Скорректировано по журналу /);assert.match(html,/Frontier пока не подтвердил последние перемещения/);
+ warehouse.awaitingConfirmation=false;html=f.api.render(f.C,f.ui);assert.doesNotMatch(html,/Скорректировано по журналу /);
+});
+
+test('Budget keeps a compact colony context and puts warehouse controls in a closed accessible disclosure',async()=>{
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.activeProject=budgetProject('a','Synthetic');
+ const html=f.api.render(f.C,f.ui);
+ assert.match(html,/class="colony-budget-context" data-colony-id="a"/);
+ assert.doesNotMatch(html,/class="colony-overview"|class="colony-summary-metrics"|class="colony-supply-preview"|class="colony-next-step"/);
+ const beforeStock=html.split('<details class="colony-budget-stock">')[0];assert.doesNotMatch(beforeStock,/colony-warehouse-options|colony-include-carrier-stock/);
+ const stock=html.match(/<details class="colony-budget-stock">([\s\S]*?)<\/details>/)?.[1]||'';
+ assert.match(stock,/<summary>Запасы и учёт<\/summary>/);assert.match(stock,/id="colony-include-carrier-stock"/);
+ assert.doesNotMatch(html,/<details class="colony-budget-stock"[^>]*\bopen/);
+ await f.api.handleClick('colony-workspace-copy',null,f.C,f.ui);assert.deepEqual(f.calls[0],{op:'native',params:{action:'copy',text:'Synthetic system'}});
+ f.C.mode='Снабжение';const normal=f.api.render(f.C,f.ui);assert.match(normal,/class="colony-overview"/);assert.doesNotMatch(normal,/colony-budget-stock/);
+});
+
+test('manual bill totals stay labelled as planning estimates without implying that a known sum is incomplete',()=>{
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.activeProject=budgetProject('a','Synthetic');
+ f.C.state.colonization.activeProject.costSummary.manualBills=2;
+ const html=f.api.render(f.C,f.ui);
+ assert.match(html,/Ручных смет: 2/);assert.match(html,/Ручные сметы — плановые оценки; требования игры имеют приоритет/);
+ assert.match(html,/Полная смета ресурсов<\/span><strong>1000000 кр\./);
+ assert.doesNotMatch(html,/Неполные оценки помечены границами/);
+});

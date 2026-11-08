@@ -252,7 +252,7 @@ func TestHUDColonyPrioritizesCargoAndNeverAggregatesOtherProjects(t *testing.T) 
 	doc := BuildHUD(s, hudFixtureNow)
 	text := hudProse(doc)
 	supplies := hudSection(doc, "СНАБЖЕНИЕ КОЛОНИИ")
-	if supplies == nil || !strings.Contains(supplies.Lines[0].Text, "Already loaded item") || !strings.Contains(text, "Готово к доставке: Already loaded item · 10 т") || strings.Contains(text, "Buy 500 units first") || strings.Contains(text, "Other colony") || strings.Contains(text, "Global supplies") || !hudHasWarning(doc, "Сметы неизвестны: 2") {
+	if supplies == nil || !strings.Contains(supplies.Lines[1].Text, "Already loaded item: осталось 20 т · на борту 10 т") || strings.Contains(text, "Buy 500 units first") || strings.Contains(text, "Other colony") || strings.Contains(text, "Global supplies") || !hudHasWarning(doc, "Сметы неизвестны: 2") {
 		t.Fatal("colony cargo priority or isolation failed", doc)
 	}
 	after, _ := json.Marshal(s)

@@ -692,7 +692,7 @@ func MarketSnapshot(result v.M) v.M {
 		if v.Num(row["demandBracket"]) == 0 {
 			demand = 0
 		}
-		items = append(items, v.M{"Name": name, "Name_Localised": row["locName"], "BuyPrice": row["buyPrice"], "SellPrice": row["sellPrice"], "Stock": stock, "Demand": demand})
+		items = append(items, v.M{"Name": name, "Name_Localised": row["locName"], "BuyPrice": row["buyPrice"], "SellPrice": row["sellPrice"], "MeanPrice": row["meanPrice"], "Stock": stock, "Demand": demand})
 	}
 	return v.M{"event": "Market", "timestamp": observed, "MarketID": market["id"], "StationName": market["name"], "StarSystem": v.At(profile, "lastSystem", "name"), "Items": items, "Source": "Frontier CAPI"}
 }

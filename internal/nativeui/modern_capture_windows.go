@@ -44,6 +44,7 @@ type previewCallback struct {
 // Captures are available only in --smoke and only under the report directory.
 // No renderer-provided path, arbitrary CDP method or desktop image is accepted.
 var modernPreviewNames = map[string]bool{
+	"colony-budget-en": true, "colony-budget-ru": true,
 	"tooltip-en": true, "tooltip-ru": true,
 	"ranks-en": true, "ranks-ru": true, "politics-en": true, "politics-ru": true, "politics-factions": true, "politics-goals": true,
 	"overview": true, "academy": true, "reader": true, "calculator": true,

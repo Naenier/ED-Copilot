@@ -396,7 +396,7 @@ func buildPage(tab, mode, query string, s M) Page {
 		}
 	case "colonization":
 		p.Description = "Отдельные колонии, порядок строительства и независимые очереди снабжения."
-		p.Modes = []string{"Выбор системы", "Строительство", "Очередь снабжения", "Снабжение", "Поставки"}
+		p.Modes = []string{"Выбор системы", "Строительство", "Очередь снабжения", "Снабжение", "Бюджет", "Поставки"}
 		c := v.Obj(s["colonization"])
 		project := v.Obj(c["activeProject"])
 		p.Summary = v.Text(project["name"], project["targetSystem"], "Создайте или выберите колонию") + " · " + Label(project["status"])
@@ -426,9 +426,14 @@ func buildPage(tab, mode, query string, s M) Page {
 				}
 			}
 		case "Снабжение":
-			p.Columns = []string{"Товар", "Нужно, т", "Сдано, т", "Осталось, т", "На борту, т", "На флотоносце, т", "Купить, т", "Основание"}
+			p.Columns = []string{"Товар", "Нужно, т", "Сдано, т", "Осталось, т", "На борту, т", "На флотоносце, т", "Купить, т", "Средняя по галактике, кр./т", "Стоимость остатка, кр.", "Основание"}
 			for _, r := range v.Rows(project["supplies"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["delivered"]), Number(r["missing"]), Number(r["cargoAvailable"]), Number(r["carrierAvailable"]), Number(r["toBuy"]), Label(r["source"])}, "Остаток по строительному складу уже включает принятые поставки. Груз на борту ещё не доставлен.\r\n"+fields(r, "updatedAt", "Наблюдение", "sourceNote", "Источник оценки")))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["delivered"]), Number(r["missing"]), Number(r["cargoAvailable"]), Number(r["carrierAvailable"]), colonyProcurement(r["toBuy"], r["toBuyAtMost"]), Number(r["galacticAveragePrice"]), Number(r["missingCost"]), Label(r["source"])}, colonyCostDetails(r)))
+			}
+		case "Бюджет":
+			p.Columns = []string{"Товар", "Полная потребность, т", "Осталось, т", "Средняя по галактике, кр./т", "Полная стоимость, кр.", "Стоимость остатка, кр.", "Закупить, кр.", "Цена получена"}
+			for _, r := range v.Rows(project["supplies"]) {
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), Number(r["galacticAveragePrice"]), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
 			}
 		case "Поставки":
 			p.Columns = []string{"Время", "Товар", "Объём, т", "Основание", "Объект"}

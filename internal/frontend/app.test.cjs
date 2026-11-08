@@ -461,7 +461,7 @@ test('the actual toolbar offers details only for the renderer that can display a
   ['settings','','settings',true],['overview','','overview',false],['overview','Планы','overview',false],['overview','Состояние','overview',false],['overview','Корабль и груз','table',true],
   ['encyclopedia','Корабли','reference',false],['engineering','Инженеры','reference',false],['targets','Инженеры','reference',false],['engineering','План','table',true],
   ['learning','','learning',false],['carrier-calculator','','carrier-calculator',false],['carrier-trade','','carrier-trade',false],['deals','Поиск','deals',false],
-  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['sale','Продать','table',true],
+  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['colonization','Бюджет','table',false],['sale','Продать','table',true],
  ]){
   api.C.tab=tab;api.C.mode=mode;api.renderChrome();
   assert.equal(api.rendererKind(),kind,tab+' / '+mode);
@@ -469,6 +469,22 @@ test('the actual toolbar offers details only for the renderer that can display a
  }
  api.C.page.Rows=[];
  for(const tab of ['sale','route','colonization']){api.C.tab=tab;api.C.mode='';api.renderChrome();assert.equal(nodes.get('page-toolbar').innerHTML.includes('data-click="inspector"'),false,'Empty '+tab+' has no details panel');}
+});
+
+test('Budget devotes the table width to prices and offers procurement without changing the saved inspector preference',()=>{
+ const f=fixture();mountedPage(f);const {api}=f;
+ f.window.ColonyWorkspaceUI={render:()=>'<div class="colony-budget-workspace"></div>'};
+ api.C.tab='colonization';api.C.mode='Бюджет';api.C.inspector=true;api.C.selected='steel';api.C.state={settings:{overlayEnabled:false}};
+ api.C.page={Title:'Колонизация',Description:'Description',Summary:'Repeated context',Modes:['Бюджет','Снабжение'],Columns:['Товар'],Rows:[{ID:'steel',Cells:['Steel'],Data:{},Details:'More detail'}]};
+ api.C.actions=['colony.carrier-stock','colony.select','colony.create','colony.export-csv','colony.resource-upsert','colony.purchase'].map(id=>({id,title:id}));
+ let html=api.renderGeneral();
+ assert.doesNotMatch(html,/<aside class="inspector"|class="summary-note"|data-action-id="colony.carrier-stock"|data-action-id="colony.select"|data-action-id="colony.create"/);
+ assert.ok(html.indexOf('data-action-id="colony.purchase"')<html.indexOf('data-action-id="colony.resource-upsert"'));
+ assert.ok(html.indexOf('data-action-id="colony.resource-upsert"')<html.indexOf('data-action-id="colony.export-csv"'));
+ api.renderChrome();assert.doesNotMatch(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);
+ assert.equal(api.C.inspector,true);
+ api.C.mode='Снабжение';html=api.renderGeneral();assert.match(html,/<aside class="inspector"/);
+ api.renderChrome();assert.match(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);assert.equal(api.C.inspector,true);
 });
 
 test('the real details handler removes and restores the settings panel and persists both choices',async()=>{

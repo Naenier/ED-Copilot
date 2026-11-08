@@ -39,7 +39,7 @@ import (
 
 type M = v.M
 
-const Version = "2.7.1"
+const Version = "2.7.2"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -48,54 +48,54 @@ type Options struct {
 	DisableNetwork, ManualPolling bool
 }
 type Engine struct {
-	mu                                             sync.RWMutex
-	domainMu                                       sync.Mutex
-	saveMu                                         sync.Mutex
-	opts                                           Options
-	ctx                                            context.Context
-	cancel                                         context.CancelFunc
-	Reader                                         *journal.Reader
-	Colonies                                       *colonization.Planner
-	Engineering                                    *engineering.Planner
-	Exobiology                                     *exobiology.Service
-	Pilot                                          *pilot.Tracker
-	CommanderProfile                               *commander.Tracker
-	Ranks                                          *ranks.Tracker
-	Politics                                       *politics.Service
-	Trading                                        *trading.Service
-	Carrier                                        *carrier.Tracker
-	Calculator                                     *carrier.Calculator
-	CarrierTrade                                   *carrier.TradePlanner
-	Learning                                       *learning.Library
-	Route                                          *carrier.RoutePlanner
-	clipboardCommand                               M
-	clipboardSequence                              uint64
-	Mining                                         *mining.Service
-	Systems                                        *systems.Client
-	Frontier                                       *frontier.Client
-	Inara                                          *inara.Manager
-	commander, game, settings, appearance, desktop M
-	objectives, bookmarks                          []M
-	navigation                                     []string
-	manualPrices, prices, cargoSync                M
-	statsSince                                     string
-	gameRunning                                    any
-	locationAt, cargoAt                            string
-	network                                        map[string]M
-	cancelJobs                                     map[string]context.CancelFunc
-	jobIDs                                         map[string]uint64
-	notices                                        []M
-	revision                                       uint64
-	updates                                        chan struct{}
-	callback                                       *http.Server
-	listener                                       net.Listener
-	closed                                         bool
-	onlineCache                                    *onlineCache
-	UpdateManager                                  *updater.Manager
-	updateNotice                                   M
-	updateError                                    string
-	updateDone                                     chan struct{}
-	frontierAuto                                   *frontierAutomatic
+	mu                                              sync.RWMutex
+	domainMu                                        sync.Mutex
+	saveMu                                          sync.Mutex
+	opts                                            Options
+	ctx                                             context.Context
+	cancel                                          context.CancelFunc
+	Reader                                          *journal.Reader
+	Colonies                                        *colonization.Planner
+	Engineering                                     *engineering.Planner
+	Exobiology                                      *exobiology.Service
+	Pilot                                           *pilot.Tracker
+	CommanderProfile                                *commander.Tracker
+	Ranks                                           *ranks.Tracker
+	Politics                                        *politics.Service
+	Trading                                         *trading.Service
+	Carrier                                         *carrier.Tracker
+	Calculator                                      *carrier.Calculator
+	CarrierTrade                                    *carrier.TradePlanner
+	Learning                                        *learning.Library
+	Route                                           *carrier.RoutePlanner
+	clipboardCommand                                M
+	clipboardSequence                               uint64
+	Mining                                          *mining.Service
+	Systems                                         *systems.Client
+	Frontier                                        *frontier.Client
+	Inara                                           *inara.Manager
+	commander, game, settings, appearance, desktop  M
+	objectives, bookmarks                           []M
+	navigation                                      []string
+	manualPrices, prices, cargoSync, galacticPrices M
+	statsSince                                      string
+	gameRunning                                     any
+	locationAt, cargoAt                             string
+	network                                         map[string]M
+	cancelJobs                                      map[string]context.CancelFunc
+	jobIDs                                          map[string]uint64
+	notices                                         []M
+	revision                                        uint64
+	updates                                         chan struct{}
+	callback                                        *http.Server
+	listener                                        net.Listener
+	closed                                          bool
+	onlineCache                                     *onlineCache
+	UpdateManager                                   *updater.Manager
+	updateNotice                                    M
+	updateError                                     string
+	updateDone                                      chan struct{}
+	frontierAuto                                    *frontierAutomatic
 }
 
 func New(o Options) (*Engine, error) {
@@ -121,6 +121,7 @@ func New(o Options) (*Engine, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
 	x.frontierAuto = newFrontierAutomatic()
+	x.galacticPrices = restoreGalacticPrices(v.Obj(saved["galacticPrices"]))
 	v.Merge(x.settings, v.Obj(saved["settings"]))
 	x.settings["language"] = localization.Normalize(v.Text(x.settings["language"], "en"))
 	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
@@ -401,6 +402,7 @@ func (e *Engine) applyLocked(event, meta M) {
 func (e *Engine) market(event, commander M) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	e.observeGalacticPricesLocked(event)
 	for _, r := range v.Rows(event["Items"]) {
 		g := trading.Good(r["Name"], r["Name_Localised"])
 		price := v.Num(r["SellPrice"])
@@ -421,7 +423,7 @@ func (e *Engine) Snapshot() M {
 	for k, m := range e.network {
 		network[k] = v.Copy(m)
 	}
-	manual, prices := v.Copy(e.manualPrices), v.Copy(e.prices)
+	manual, prices, galacticPrices := v.Copy(e.manualPrices), v.Copy(e.prices), v.Copy(e.galacticPrices)
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	running, statsSince := e.gameRunning, e.statsSince
 	revision := e.revision
@@ -496,6 +498,7 @@ func (e *Engine) Snapshot() M {
 	state["coloniesSelectors"] = e.Colonies.SelectorSnapshot()
 	state["commanderProfile"] = e.commanderProfileSnapshot(v.Obj(state["engineeringInventory"]))
 	state["politics"] = e.Politics.Snapshot()
+	colonization.EnrichCosts(v.Obj(state["colonization"]), galacticPrices)
 	state["updates"] = e.updateSnapshot()
 	if len(v.Obj(state["trading"])) == 0 {
 		state["trading"] = M{"results": []M{}}
@@ -519,6 +522,7 @@ func (e *Engine) Save() error {
 	e.domainMu.Lock()
 	e.mu.RLock()
 	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 3, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
+	saved["galacticPrices"] = v.Copy(e.galacticPrices)
 	desktop := v.Copy(e.desktop)
 	e.mu.RUnlock()
 	saved["carrier"] = e.Carrier.ExportSettings()
