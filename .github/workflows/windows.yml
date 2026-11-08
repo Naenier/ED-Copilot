@@ -52,7 +52,9 @@ jobs:
           # The Win32 dependencies encode resource IDs as pointer values
           # (MAKEINTRESOURCE). Keep the race detector enabled everywhere;
           # suppress only checkptr in that external ABI adapter.
-          go test -race '-gcflags=github.com/lxn/...=-d=checkptr=0' ./... -count=1 -timeout=180s
+          # This bounds the entire package, including large-history replay and
+          # durable profile writes under race instrumentation on shared runners.
+          go test -race '-gcflags=github.com/lxn/...=-d=checkptr=0' ./... -count=1 -timeout=300s
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Build and isolated smoke
         shell: pwsh
