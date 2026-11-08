@@ -1,7 +1,7 @@
 /* Explicit UI translation. Entity names and entered values never pass through this layer. */
 (() => {
   'use strict';
-  let language = 'ru';
+  let language = 'en';
   const numbers = new Map(), dates = new Map(), plurals = new Map();
   const normalize = value => value === 'en' ? 'en' : 'ru';
   const locale = () => language === 'en' ? 'en-GB' : 'ru-RU';

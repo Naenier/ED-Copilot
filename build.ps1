@@ -57,6 +57,7 @@ try {
         New-Item -ItemType Directory -Path $stage | Out-Null
         Copy-Item -LiteralPath $binary -Destination $stage
         Copy-Item -LiteralPath 'README.md' -Destination $stage
+        Copy-Item -LiteralPath 'README.ru.md' -Destination $stage
         Copy-Item -LiteralPath 'docs' -Destination $stage -Recurse
         Copy-Item -LiteralPath 'lib' -Destination $stage -Recurse
         Copy-Item -LiteralPath 'dist/smoke-headless.json' -Destination $stage

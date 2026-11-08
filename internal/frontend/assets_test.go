@@ -27,7 +27,7 @@ func TestHTMLIsCompleteOfflineDocument(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			document := HTML(nonce, smoke)
-			for _, required := range []string{"<!doctype html>", `<html lang="ru">`, `id="app"`, `id="layers"`, `id="toasts"`, "</body></html>"} {
+			for _, required := range []string{"<!doctype html>", `<html lang="en">`, `id="app"`, `id="layers"`, `id="toasts"`, "</body></html>"} {
 				if !strings.Contains(document, required) {
 					t.Errorf("document is missing %s", required)
 				}

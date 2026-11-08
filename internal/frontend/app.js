@@ -12,7 +12,7 @@ const tabIcons={exobiology:'leaf',overview:'house',targets:'target',sale:'arrow-
 let sequence=0,viewEpoch=0;const pending=new Map();
 const storage={get(key){try{return localStorage.getItem(key);}catch{return null;}},set(key,value){try{localStorage.setItem(key,value);}catch{}}};
 const C={t,locale,tab:'overview',mode:'',query:'',selected:'',page:null,actions:[],state:{},tabs:[],nav:[],prefill:{},boot:null,collapsed:storage.get('sidebar-collapsed')==='true',inspector:storage.get('inspector')!=='false',focus:false,lesson:'',course:'',layer:false,lastFetch:0,lastSignature:'',lastRevision:null};
-function currentLanguage(){return C.state.settings?.language||C.state.app?.language||'ru';}
+function currentLanguage(){return C.state.settings?.language||C.state.app?.language||'en';}
 function captureInputs(){return $$('#page input,#page select,#page textarea').map(node=>({
  id:node.id,name:node.name,tag:node.tagName,type:node.type,value:node.value,checked:node.checked,
  data:Object.entries(node.dataset||{}).filter(([key])=>!['click','nav','mode'].includes(key)),
@@ -297,7 +297,7 @@ async function smoke(){
    const modes=[...(C.page.Modes?.length?C.page.Modes:[''])];
    for(const mode of modes){
     C.mode=mode;C.selected='';await loadView();add(tab.ID+' / '+(mode||'Основной экран'),referenceActive()||C.tab==='exobiology'?!!$('#page h1'):!!C.page.Columns?.length);
-    if(tab.ID==='colonization'&&mode==='Строительство')await smokeCapture('construction');
+    if(tab.ID==='colonization'&&mode==='Строительство')await smokeCapture('construction');if(tab.ID==='exobiology'&&mode==='Обзор'){const survey=$('.exo-system-progress'),cards=$('.exo-overview-grid');add('Exobiology survey card has visible spacing',!!survey&&!!cards&&cards.getBoundingClientRect().top-survey.getBoundingClientRect().bottom>=20);survey?.scrollIntoView({block:'start'});await smokeCapture('exobiology');$('#page-scroll').scrollTop=0;}
     if(tab.ID==='carrier-calculator'&&mode==='Сводка'){
      await smokeCapture('calculator');const original=C.state.carrierCalculator?.selectedType||'fleet';
      await call('calculator',{values:{action:'select',carrierType:'squadron'}});await loadView();await smokeCapture('calculator-squadron');

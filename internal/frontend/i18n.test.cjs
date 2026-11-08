@@ -16,9 +16,9 @@ function domainFixture(name,exportName='fixture'){
  realVM.runInNewContext(fs.readFileSync(path.join(__dirname,name+'.test.cjs'),'utf8')+'\nmodule.exports='+exportName+';',sandbox);
  const result=module.exports();return {...result,contexts};
 }
-test('explicit translation defaults to Russian and preserves unknown player text and interpolation values',()=>{
+test('explicit translation defaults to English and preserves unknown player text and interpolation values',()=>{
  const context={window:{CopilotTranslations:catalogue},document:{documentElement:{}}};vm.runInNewContext(i18nSource,context);const api=context.window.CopilotI18n;
- assert.equal(api.language,'ru');assert.equal(api.t('Настройки'),'Настройки');assert.equal(api.setLanguage('en'),true);assert.equal(context.document.documentElement.lang,'en');
+ assert.equal(api.language,'en');assert.equal(api.t('Настройки'),'Settings');assert.equal(api.setLanguage('en'),false);assert.equal(context.document.documentElement.lang,'en');
  assert.equal(api.t('Настройки'),'Settings');assert.equal(api.t('CMDR Журнал: <private>'),'CMDR Журнал: <private>');
  context.window.CopilotTranslations['Осталось {count}: {name}']='Remaining {count}: {name}';
  assert.equal(api.t('Осталось {count}: {name}',{count:5,name:'Система <Sol>'}),'Remaining 5: Система <Sol>');

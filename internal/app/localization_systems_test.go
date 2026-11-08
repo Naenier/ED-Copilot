@@ -29,8 +29,8 @@ func drainLocalizationUpdates(e *Engine) {
 }
 func TestInterfaceLanguagePersistsAcrossProfileReloadWithoutChangingIdentities(t *testing.T) {
 	e, journal, dir := fixtureEngine(t, nil)
-	if e.Language() != "ru" {
-		t.Fatal("a profile without a language did not default to Russian")
+	if e.Language() != "en" {
+		t.Fatal("a profile without a language did not default to English")
 	}
 	before := e.Commander()
 	doOK(t, e, "/api/settings", M{"language": "en"})
@@ -67,6 +67,17 @@ func TestInterfaceLanguagePersistsAcrossProfileReloadWithoutChangingIdentities(t
 		t.Fatal("Russian preference was not saved", err)
 	}
 }
+func TestDefaultEnglishPreservesAnExistingLanguagePreference(t *testing.T) {
+	for _, language := range []string{"ru", "en"} {
+		t.Run(language, func(t *testing.T) {
+			e, _, _ := fixtureEngine(t, M{"settings": M{"language": language}})
+			if e.Language() != language || v.At(e.SnapshotForUI("settings"), "settings", "language") != language {
+				t.Fatal("default replaced saved preference")
+			}
+		})
+	}
+}
+
 func TestInvalidInterfaceLanguageIsRejectedAtomically(t *testing.T) {
 	e, _, dir := fixtureEngine(t, M{"settings": M{"language": "en", "minTier": "medium"}})
 	if err := e.Save(); err != nil {

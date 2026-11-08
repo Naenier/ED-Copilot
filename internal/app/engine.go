@@ -35,7 +35,7 @@ import (
 
 type M = v.M
 
-const Version = "2.4.0"
+const Version = "2.4.1"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -109,7 +109,7 @@ func New(o Options) (*Engine, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
 	v.Merge(x.settings, v.Obj(saved["settings"]))
-	x.settings["language"] = localization.Normalize(v.Str(x.settings["language"]))
+	x.settings["language"] = localization.Normalize(v.Text(x.settings["language"], "en"))
 	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
 		x.settings["routeAutoCopyNext"] = true
 	}

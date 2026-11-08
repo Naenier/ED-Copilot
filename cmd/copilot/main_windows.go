@@ -80,6 +80,18 @@ func main() {
 	}
 	defer engine.Close()
 	if isolated {
+		// A fresh production profile starts in English. The existing bilingual
+		// smoke suite starts explicitly in Russian and exercises both choices.
+		if engine.Language() != "en" {
+			fail(fmt.Errorf("fresh profile must default to English"), *dataDir)
+			return
+		}
+		if *smoke || *headless {
+			if _, err = engine.Do("/api/settings", v.M{"language": "ru"}); err != nil {
+				fail(err, *dataDir)
+				return
+			}
+		}
 		if err = smokePlans(engine); err != nil {
 			fail(err, *dataDir)
 			return

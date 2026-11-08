@@ -1,122 +1,128 @@
-<p align="center"><img src="docs/assets/copilot-mark.png" width="76" alt="Логотип ED Copilot"></p>
+<p align="center"><img src="docs/assets/copilot-mark.png" width="76" alt="ED Copilot logo"></p>
 
-# ED Copilot 2.4.0
+# ED Copilot 2.4.1
 
-Помощник пилота Elite Dangerous для торговли, добычи, экзобиологии, флотоносцев и колонизации. Русский и английский интерфейс, планы и нужные подсказки поверх игры.
+**English** · [Русский](README.ru.md)
 
-**[Скачать для Windows](https://github.com/Naenier/ED-Copilot/releases/latest)** · [Руководство](docs/USER-GUIDE.md) · [Установка и обновление](docs/INSTALLATION.md)
+A desktop companion for Elite Dangerous: trading, mining, exobiology, fleet carriers and colonisation. Plan your next task, compare opportunities and keep useful guidance visible while you play.
 
-![Обзор командира в ED Copilot](docs/screenshots/overview.png)
+**[Download for Windows](https://github.com/Naenier/ED-Copilot/releases/latest)** · [User guide (RU)](docs/USER-GUIDE.md) · [Installation and updates (RU)](docs/INSTALLATION.md)
 
-*Все снимки в этом README сделаны в демонстрационном профиле с вымышленными данными. Показанные суммы и котировки служат примером интерфейса.*
+![Commander overview in ED Copilot](docs/screenshots/overview.png)
 
-## Начать пользоваться
+*All screenshots in this README use a demonstration profile with fictional data. Balances and market quotes illustrate the interface.*
 
-1. Установите **ED-Copilot-2.4.0-Setup.exe** или распакуйте переносимый архив и запустите `ED Copilot.exe`.
-2. Откройте Elite Dangerous. Приложение прочитает игровые журналы; при необходимости выберите их папку в настройках.
-3. Добавьте нужные занятия в левое меню через **…**. Флотоносец, колонизация и другие необязательные инструменты можно скрыть.
-4. Выберите занятие для оверлея и приступайте к своему плану.
+## Getting started
 
-Поддерживаются Windows 10/11 x64. Для окна нужен Microsoft Edge WebView2 Runtime: установщик предложит добавить его, если компонента нет. Go, Python и Node.js пользователю устанавливать не требуется. Папку установки можно выбрать, в том числе `C:\Games\ED Copilot`.
+1. Install **ED-Copilot-2.4.1-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
+2. Start Elite Dangerous. Copilot reads the game journals; choose their folder in Settings if it is not detected automatically.
+3. Use **…** in the sidebar to add the activities you need. Fleet carrier, colonisation and other optional tools can be hidden.
+4. Select an activity for the overlay and start working through your plan.
 
-## Поиск систем и язык
+Windows 10/11 x64 is supported. The application window requires Microsoft Edge WebView2 Runtime; the installer offers to install it if needed. You do not need Go, Python or Node.js. You can choose the installation folder, including `C:\Games\ED Copilot`.
 
-Во всех полях звёздных систем есть подсказки Spansh. Введите три символа и выберите название мышью или клавишами ↑/↓ и Enter. В многострочных остановках маршрута заменяется только текущая строка. Выдача ограничена двадцатью вариантами; локальная база галактики не требуется. Ручной ввод доступен всегда.
+## Star system search
 
-В «Настройках» выберите русский или английский язык. Выбор сохраняется; названия систем, станций и личные записи остаются без изменений. Материалы Академии пока доступны на русском.
+Spansh suggestions are available in star system fields throughout the application. Type three characters, then select a name with the mouse or ↑/↓ and Enter. In multiline route stops, selecting a suggestion replaces only the current line. Results are limited to twenty suggestions, with no local galaxy database required. You can always enter a name manually.
 
-## Экзобиология
+## Exobiology
 
-Выбирайте планеты по биосигналам, условиям и ценности возможных видов. Следите за тремя генетическими пробами, минимальным разносом и расстоянием до сохранённых точек. Отдельный режим оверлея помогает на поверхности, а вкладки образцов и продаж показывают данные до и после Vista Genomics.
+Choose planets by their biological signals, environmental conditions and the value of potential species. Track three genetic samples, the required separation and your distance from recorded points when live coordinates are available. A dedicated overlay activity supports surface exploration, while sample and sales screens distinguish data on board from confirmed Vista Genomics sales.
 
-Справочник содержит 126 видов из 25 родов, условия обитания, варианты и 101 фотографию. Доступны закладки планет, точки поверхности, публичный индекс находок и статистика. Первый след, предполагаемая выплата и неизвестные координаты обозначаются отдельно. [Как пользоваться экзобиологией](docs/EXOBIOLOGY.md).
+The reference catalogue includes 126 species across 25 genera, habitat conditions, variants and 101 photographs. Planet bookmarks, surface waypoints, a public observation index and expedition statistics help organise your research. First footfall status, estimated payouts and unknown coordinates are identified separately. [Exobiology guide (RU)](docs/EXOBIOLOGY.md).
 
-## Торговля и добыча
+## Trading and mining
 
-Ищите станции и флотоносцы для покупки или продажи товара. Сравнивайте цену за тонну, спрос и запас, размер площадки, расстояние и время наблюдения. Подбирайте торговые рейсы под трюм и бюджет, сохраняйте назначение для оверлея и учитывайте сделки.
+Find stations and fleet carriers where you can buy or sell a commodity. Compare price per tonne, demand, supply, landing pad size, distance and the age of each observation. Search for trade routes that fit your cargo hold and budget, keep a destination in the overlay and track your transactions.
 
-Для добычи доступны поиск ценных колец и планет, отбор по качеству, анализ астероида, проверка оснащения и статистика заходов. Материалы для инженерии и продаваемые товары учитываются отдельно.
+Mining tools help you find valuable rings and planets, filter suitable targets, inspect prospected asteroids, check equipment and review mining sessions. Engineering materials and commodities for sale are tracked separately.
 
-## Торговые рейсы — от поиска до плана
+## Trade routes: from search to a usable plan
 
-Раздел «Рейсы» показывает обе станции на широкой карточке: систему, площадку, расстояние от звезды, закупочную и продажную цены, запас, спрос и время наблюдения. Обратный груз A → B → A отображается отдельным плечом с собственным товаром и расчётом. Систему и название каждой станции можно копировать независимо, затем вставить в игре.
+The route screen presents both stations on a wide card, including their systems, landing pads, arrival distances, buy and sell prices, supply, demand and observation times. A return load on an A → B → A route has its own commodity and calculation. Copy each system or station name independently, then paste it into the game.
 
-Поиск учитывает свободный трюм, известный баланс, доступный объём рынка, расходы и ваши ограничения. Прибыль за час основана на введённом времени плеча; дорога до первой станции в него не входит. Неизвестные трюм и бюджет предлагается заполнить, а известный ноль сохраняет своё значение.
+Search takes available cargo space, your known credit balance, market volume, costs and personal limits into account. Profit per hour uses the leg duration you enter; travel to the first station is excluded. Unknown cargo capacity and budgets are requested explicitly, while a known zero remains zero.
 
-![Торговые рейсы с двумя плечами](docs/screenshots/deals.png)
+![A two-leg trade route](docs/screenshots/deals.png)
 
-Выберите рейс, назначьте покупателя для оверлея или сохраните план нужного плеча. В «Сохранённых» помещается до 40 полных маршрутов с обеими котировками. Это снимки наблюдений: перед повторным рейсом выполните новый поиск, чтобы проверить цены и доступный объём.
+Select a route, set its buyer as the overlay destination or save a plan for a particular leg. Keep up to 40 complete routes, including both market quotes, in Saved. These are observation snapshots: run a new search before repeating a route to check current prices and available volume.
 
-## Торговля флотоносцем — весь рейс в одном расчёте
+## Fleet carrier trading: the whole journey in one calculation
 
-Планируйте загрузку, продажу и возвращение, включая обратный груз или пустой перелёт. Расчёт учитывает тритий, обслуживание прыжков, содержание, время погрузки и продажи, оплату перевозчиков и прочие расходы. В итогах — прибыль владельца, прибыль за час, необходимый капитал, рентабельность, безубыточность и окупаемость.
+Plan loading, selling and the return journey, with either a return load or an empty repositioning flight. Account for tritium, jump maintenance, upkeep, loading and selling time, hauler payments and other expenses. Results include the owner's profit, profit per hour, capital required, return on investment, break-even figures and payback.
 
-![План торговли флотоносцем](docs/screenshots/carrier-trade.png)
+![Fleet carrier trading plan](docs/screenshots/carrier-trade.png)
 
-Шаблон **Booze Cruise** помогает подготовить рейс к Rackham’s Peak. У станции максимальная площадка **M**, поэтому для продажи нужен корабль S/M. Праздничная цена вина подставляется только из выбранной котировки или ваших данных; наличие Public Holiday подтверждайте в игре.
+The **Booze Cruise** preset helps plan a journey to Rackham’s Peak. The station's largest landing pad is **M**, so selling requires a small or medium ship. Holiday wine prices come only from a selected market quote or your own input; confirm Public Holiday in the game.
 
-Отдельный калькулятор сравнивает покупку и содержание личного и эскадрильного флотоносцев.
+A separate calculator compares the purchase and running costs of personal and squadron fleet carriers.
 
-## Маршрут личного флотоносца
+## Personal fleet carrier routes
 
-Рассчитайте прыжки, расход топлива, пополнение, резерв по прибытии и время. При известном запасе форма начинает с него; расчёт минимального стартового топлива выбирается отдельно и описывает планируемый запас. Денежная оценка остаётся неизвестной, пока не задана цена трития.
+Calculate jumps, fuel consumption, refuelling, the reserve on arrival and journey time. When your fuel stock is known, the form starts with that amount. Minimum starting fuel is a separate option for planning the required stock. Fuel cost remains unknown until you provide a tritium price.
 
-![Маршрут личного флотоносца](docs/screenshots/route.png)
+![Personal fleet carrier route](docs/screenshots/route.png)
 
-После подтверждённого прибытия следующая система может автоматически копироваться в буфер обмена — в карте галактики останется нажать **Ctrl+V**. Назначение прыжков выполняется в игре.
+After a confirmed arrival, the next system can be copied to the clipboard automatically: press **Ctrl+V** in the galaxy map to paste it. Schedule jumps in the game.
 
-## Энциклопедия с полноценными страницами
+## A reference library with complete entity pages
 
-Выбирайте категорию, ищите по названию и фильтруйте по группе. Корабли и инженеры представлены карточками с изображениями; каждая запись открывается на отдельной странице с характеристиками, условиями и связанными материалами.
+Browse by category, search by name and narrow results by group. Ships and engineers have illustrated catalogue cards; each entry opens a full page with properties, requirements and related entries.
 
-![Каталог кораблей](docs/screenshots/ships.png)
+![Ship catalogue](docs/screenshots/ships.png)
 
-![Полная страница корабля](docs/screenshots/ship.png)
+![Complete ship page](docs/screenshots/ship.png)
 
-Инженеры доступны и из инженерного плана. На их страницах собраны требования знакомства и поддерживаемые улучшения. Материалы показывают известный личный запас, а чертежи объединены по семействам с рецептами уровней и экспериментальными эффектами.
+Engineers are also accessible from engineering plans. Their pages show introduction requirements and supported upgrades. Material pages include your known inventory, while blueprint families bring together grade recipes and experimental effects.
 
-![Страница инженера](docs/screenshots/engineer.png)
+![Engineer page](docs/screenshots/engineer.png)
 
-Статьи удобно читать на широком экране с оглавлением. Страница товара позволяет перейти к покупке и продаже, увидеть предложения и открыть торговлю с уже выбранным ресурсом.
+Read articles in a spacious layout with a table of contents. Commodity pages offer buy and sell views, show market offers and open trading with the commodity already selected.
 
-![Статья энциклопедии](docs/screenshots/article.png)
+![Reference article](docs/screenshots/article.png)
 
-## Колонии, инженерия и личные планы
+## Colonies, engineering and personal plans
 
-Ведите несколько колоний независимо: выбирайте систему с нужной исходной фракцией, планируйте порядок построек и очередь снабжения, сверяйте сметы и принятые поставки. Оверлей подскажет следующую задачу выбранной колонии.
+Manage multiple colonies independently. Choose a system using your preferred starting faction, plan the construction order and supply queue, then compare bills of materials with accepted deliveries. The overlay shows the next task for the selected colony.
 
-Подбор начинается с исходной системы и её станций, затем — станции и контролирующей фракции. У кандидатов видны население, требование разрешения, известные признаки заселения и колонизации, число постоянных станций и дата наблюдения.
+Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
 
-![План колонизации](docs/screenshots/colonization.png)
+![Colonisation plan](docs/screenshots/colonization.png)
 
-Инженерный план собирает потребность в материалах для нескольких модулей и улучшений. Сравнивайте её с запасом, подбирайте обмен и сохраняйте список. Обзор, цели, миссии и статистика помогают следить за текущими задачами.
+Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
 
-## Академия
+## Academy
 
-Девять курсов и 27 русскоязычных уроков: торговля, групповые операции, первые шаги Odyssey, флотоносцы и другие занятия. Короткие объяснения дополняют практикумы в Copilot, чек-листы и самопроверка. Избранное, ответы и место чтения сохраняются.
+Nine courses and 27 Russian-language lessons cover trading, group operations, getting started with Odyssey, fleet carriers and more. Short explanations lead into Copilot exercises, checklists and self-tests. Favourites, answers and reading position are saved.
 
-![Академия ED Copilot](docs/screenshots/academy.png)
+![ED Copilot Academy](docs/screenshots/academy.png)
 
-## Подсказки в игре и удобное управление
+## In-game guidance and controls
 
-Оверлей показывает панели выбранного занятия только при активной Elite Dangerous. Он адаптируется к кораблю, ТРП/Nomad и пешему режиму; переключение в Copilot скрывает игровые панели.
+The overlay displays panels for the selected activity only while Elite Dangerous is focused. It adapts to ship, SRV/Nomad and on-foot play; switching to Copilot hides the game panels.
 
-Компактные панели сначала заполняют правую сторону, затем переходят влево. В корабле и ТРП они остаются выше нижних приборов. Пустые планы и повторяющиеся сведения скрыты; показываются следующий шаг и нужные предупреждения. Собственные колонии восстанавливаются по заявкам из журналов и появляются в выборе для оверлея.
+Compact panels fill the right side first, then continue on the left. In a ship or SRV, they stay above the lower cockpit instruments. Empty plans and repeated information are hidden, keeping the next step and relevant warnings visible. Your colonies are recovered from journal claims and become available in the overlay selector.
 
-| Клавиши | Действие |
+| Shortcut | Action |
 | --- | --- |
-| **Ctrl+K** | Быстрый переход по разделам, в том числе при русской раскладке. |
-| **F11** | Полный экран и возврат в окно. |
-| **Ctrl+Alt+H** | Включение и выключение оверлея. |
+| **Ctrl+K** | Jump to a section, including with a Russian keyboard layout. |
+| **F11** | Enter or leave full screen. |
+| **Ctrl+Alt+H** | Toggle the overlay. |
 
-Настраивайте порядок разделов, режим окна и цвета. Палитру оверлея можно скопировать из игры и сначала оценить в предпросмотре.
+Customise the section order, window mode and colours. Import the overlay palette from the game and preview it before applying.
 
-## Подключения и обновления
+## Interface language
 
-Вход Frontier позволяет получать сведения аккаунта. Для отправки поддерживаемых событий в Inara добавьте личный API-ключ и включите отправку в разделе «Синхронизация».
+The application starts in **English** on first launch. Choose English or Russian in Settings; your choice is retained between sessions. System names, station names and personal notes are preserved. Academy lessons are currently available in Russian.
 
-Планы, настройки и прогресс находятся в `%LOCALAPPDATA%\ED Copilot`, отдельно от программы. Перед обновлением полностью завершите приложение через меню «Файл» или значок в области уведомлений. Установщик сохраняет личный профиль.
+This README is also available [in Russian](README.ru.md).
 
-Встроенные справочники, Академия и локальные планы доступны без сети. Для поиска новых рыночных предложений, систем, маршрутов и синхронизации требуется интернет. Прочерк означает неизвестное значение; проверяйте дату котировки перед рейсом. Покупки, заказы, строительство и назначение прыжков выполняются в игре.
+## Connections and updates
 
-[Полное руководство](docs/USER-GUIDE.md) · [Установка](docs/INSTALLATION.md) · [Что нового в 2.4.0](docs/RELEASE-2.4.0.md) · [Сборка и проверки](docs/TESTING.md)
+Sign in with Frontier to retrieve account information. To send supported events to Inara, add your personal API key and enable sending in Synchronization.
+
+Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separately from the application. Before updating, fully exit through the File menu or the system tray icon. The installer preserves your personal profile.
+
+Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
+
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.4.1 (RU)](docs/RELEASE-2.4.1.md) · [Building and testing (RU)](docs/TESTING.md)
