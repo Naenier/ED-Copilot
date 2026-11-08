@@ -44,7 +44,7 @@ test('faction state filtering does not fabricate exact conflict opponents',async
  r.api.handleChange({target:{dataset:{politicsField:'conflict'},value:'election'}},r.C,r.u);
  let html=r.api.render(r.C,r.u);assert.match(html,/Election Faction/);assert.doesNotMatch(html,/War Faction/);assert.match(html,/No matching conflict/);
  delete r.C.state.politics.activeSystem.conflicts;r.api.handleChange({target:{dataset:{politicsField:'conflict'},value:'war'}},r.C,r.u);
- html=r.api.render(r.C,r.u);assert.match(html,/does not establish its opponent or score/);
+ html=r.api.render(r.C,r.u);assert.match(html,/Conflict opponents and scores are unknown/);
 });
 
 test('search results navigate to their system without hidden network refresh and names can be copied',async()=>{
@@ -56,10 +56,10 @@ test('search results navigate to their system without hidden network refresh and
  assert.equal(await r.api.handleClick('unrelated',{},r.C,r.u),false);
 });
 
-test('Thargoid index explicitly distinguishes an empty public snapshot and a decommissioned source',async()=>{
+test('Thargoid index retains an empty dated observation without a redundant source-history lecture',async()=>{
  const r=runtime();r.C.state.politics.search={known:true,kind:'thargoid',entries:[],total:0,indexHasAffectedStates:false,fetchedAt:'2026-11-08T10:00:00Z'};
  await r.api.handleClick('politics-mode',{dataset:{view:'thargoid'}},r.C,r.u);const html=r.api.render(r.C,r.u);
- assert.match(html,/DCoH Overwatch is decommissioned/);assert.match(html,/does not prove the absence/);assert.match(html,/Indexed matches/);assert.doesNotMatch(html,/galaxy is safe|no Thargoids remain/i);
+ assert.doesNotMatch(html,/DCoH Overwatch is decommissioned/);assert.match(html,/No matching indexed systems/);assert.match(html,/Indexed matches/);assert.doesNotMatch(html,/galaxy is safe|no Thargoids remain/i);
 });
 
 test('system form uses typed autocomplete value and binds one submit handler',async()=>{

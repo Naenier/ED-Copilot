@@ -33,7 +33,7 @@ func TestRichSectionSchemaKeepsExistingReaderAnchorsAndLocalizedBuilderText(t *t
 	if c.Courses[0].Minutes != 40 || c.Lessons[0].Minutes != 12 || c.Lessons[1].Minutes != 18 || c.Lessons[2].Minutes != 10 {
 		t.Fatal("explicit lesson durations were discarded")
 	}
-	for i, expected := range [][]string{{"mechanics", "outcome", "decision"}, {"workflow", "checklist", "practice-errors"}, {"exercise", "solution", "reflection", "extra-exercise"}} {
+	for i, expected := range [][]string{{"mechanics", "decision"}, {"workflow", "checklist", "practice-errors"}, {"exercise", "solution", "reflection", "extra-exercise"}} {
 		ids := []string{}
 		for _, section := range c.Lessons[i].Sections {
 			ids = append(ids, section.ID)

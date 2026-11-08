@@ -118,8 +118,8 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 		for _, mode := range modes {
 			t.Run(tab.ID+"/"+mode, func(t *testing.T) {
 				p := Build(tab.ID, mode, "", s)
-				if p.Title != Title(tab.ID) || strings.TrimSpace(p.Description) == "" {
-					t.Fatalf("lost page identity: %#v", p)
+				if p.Title != Title(tab.ID) {
+					t.Fatalf("lost page identity: title %q, expected %q", p.Title, Title(tab.ID))
 				}
 				if !reflect.DeepEqual(p.Modes, initial.Modes) {
 					t.Fatalf("mode picker changed: %v -> %v", initial.Modes, p.Modes)

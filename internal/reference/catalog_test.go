@@ -310,7 +310,7 @@ func TestNewShipDetailsAndModuleFamilies(t *testing.T) {
 		t.Fatal("unknown entity invented")
 	}
 	unknown := UnknownSystem("\x01Some System\n")
-	if unknown.Title != "Some System" || len(unknown.Sections) == 0 {
+	if unknown.Title != "Some System" || len(unknown.Sections) != 0 || unknown.Description != "" {
 		t.Fatal("unsafe unknown system")
 	}
 }

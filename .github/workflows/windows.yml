@@ -24,24 +24,6 @@ jobs:
       - name: Prepare WebView2 on the disposable runner
         shell: pwsh
         run: ./scripts/installer-runtime-ci.ps1
-      - name: Frontend contract tests
-        shell: pwsh
-        run: |
-          $frontendTests = @(Get-ChildItem -LiteralPath 'internal/frontend' -Filter '*.test.cjs' -File | Sort-Object Name | ForEach-Object { $_.FullName })
-          if ($frontendTests.Count -eq 0) { throw 'Frontend tests were not found.' }
-          node --version
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          node --test @frontendTests
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      - name: Tests and static checks
-        shell: pwsh
-        run: |
-          go mod verify
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          go test ./... -count=1 -timeout=120s -coverprofile=coverage.out
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          go vet ./...
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Race detector
         shell: pwsh
         env:
@@ -49,47 +31,49 @@ jobs:
         run: |
           gcc --version
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          # The Win32 dependencies encode resource IDs as pointer values
-          # (MAKEINTRESOURCE). Keep the race detector enabled everywhere;
-          # suppress only checkptr in that external ABI adapter.
-          # This bounds the entire package, including large-history replay and
-          # durable profile writes under race instrumentation on shared runners.
+          # Win32 resource IDs use pointer values (MAKEINTRESOURCE). Keep
+          # races enabled; disable only checkptr in that external ABI adapter.
           go test -race '-gcflags=github.com/lxn/...=-d=checkptr=0' ./... -count=1 -timeout=300s
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      - name: Build and isolated smoke
+      - name: Test, build and verify one immutable package
         shell: pwsh
-        run: ./build.ps1 -SkipTests -Smoke -Package -Installer
+        run: ./build.ps1 -Smoke -Package -Installer -SourceCommit $env:GITHUB_SHA
+      - name: Verify source and artifact manifest
+        shell: pwsh
+        run: ./scripts/verify-release.ps1 -Directory ./dist -ExpectedCommit $env:GITHUB_SHA -SourceRoot .
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-windows-amd64-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          path: |
+            dist/ED Copilot.exe
+            dist/ED-Copilot-*-Setup.exe
+            dist/ED-Copilot-*-windows-amd64.zip
+            dist/SHA256SUMS.txt
+            dist/release-manifest.json
+            dist/smoke-headless.json
+            dist/smoke-native.json
+            dist/smoke-stress.json
+            dist/smoke-installer.json
   release:
     needs: verify
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
     runs-on: windows-2025
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          go-version: '1.27.3'
-          cache: true
-      - name: Prepare WebView2 on the disposable runner
-        shell: pwsh
-        run: ./scripts/installer-runtime-ci.ps1
-      - name: Package
-        shell: pwsh
-        run: ./build.ps1 -SkipTests -Smoke -Package -Installer
-      - name: Publish v2.7.2
+          name: verified-windows-amd64-${{ github.sha }}
+          path: dist
+      - name: Publish the exact verified artifacts
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          $currentHead = gh api "repos/$env:GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha'
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          if ($currentHead.Trim() -ne $env:GITHUB_SHA) {
-            Write-Output 'A newer commit superseded this build; publication skipped.'
-            exit 0
-          }
-          gh release create v2.7.2 'dist/ED-Copilot-2.7.2-windows-amd64.zip' 'dist/ED-Copilot-2.7.2-Setup.exe' 'dist/SHA256SUMS.txt' 'dist/smoke-headless.json' 'dist/smoke-native.json' 'dist/smoke-stress.json' 'dist/smoke-installer.json' --target $env:GITHUB_SHA --title 'ED Copilot 2.7.2' --notes-file docs/RELEASE-2.7.2.md --repo $env:GITHUB_REPOSITORY
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        run: ./scripts/publish-release.ps1 -Directory ./dist -ExpectedCommit $env:GITHUB_SHA -SourceRoot .

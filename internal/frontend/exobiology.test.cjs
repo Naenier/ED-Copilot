@@ -46,7 +46,7 @@ test('sample tracker distinguishes unknown historical positions from confirmed s
 });
 test('unknown body facts and valuations stay unknown and candidate reasons are disclosed on demand',()=>{
  const f=fixture('en');f.body.firstFootfall='unknown';f.body.scan={};f.body.valueRange={minimum:null,maximum:null};f.prediction.unknownConditions=['Unknown atmosphere'];let html=f.render();assert.match(html,/First-footfall status unknown/);assert.match(html,/Insufficient data/);assert.match(html,/<details class="exo-prediction-details">/);assert.match(html,/Unknown atmosphere/);assert.doesNotMatch(html,/<details class="exo-prediction-details" open|99%/);
- f.body.valueRange={minimum:100,maximum:500};html=f.render();assert.match(html,/100 CR — 500 CR/);assert.match(html,/not the sum of all candidates/);
+ f.body.valueRange={minimum:100,maximum:500};html=f.render();assert.match(html,/100 CR — 500 CR/);assert.match(html,/Estimate based on possible genera/);assert.doesNotMatch(html,/not the sum of all candidates/);
 });
 test('empty filtered targets do not silently show all unfiltered planets',()=>{
  const f=fixture('en');f.C.mode='Планеты';f.C.state.exobiology.targets=[];let html=f.render();assert.match(html,/No matching planets/);assert.doesNotMatch(html,/class="panel exo-planet"/);

@@ -65,7 +65,6 @@ func (s *Store) buildSystems() {
 	for name, places := range bySystem {
 		e := UnknownSystem(name)
 		e.Group, e.Subtitle = "engineer-systems", "Система инженерной базы"
-		e.Description = "В системе " + name + " расположена инженерная мастерская. Доступ к системе и доступ к самому инженеру проверяются отдельно."
 		rows := [][]string{}
 		links := [][]string{}
 		for _, place := range places {
@@ -90,5 +89,5 @@ func UnknownSystem(name string) Entry {
 		}
 		return r
 	}, name), 180)
-	return Entry{ID: SystemID(name), Category: "systems", Title: name, Subtitle: "Звёздная система", Description: "Карточка системы " + name + ". Орбитальные тела, кольца, станции и расстояния дополняются по фактическим игровым наблюдениям.", Sections: []Section{{ID: "planning", Title: "Перед перелётом", Type: "requirements", Items: []Item{{Title: "Разрешение на посещение", Text: "Некоторые системы закрыты разрешением. Наличие приглашения инженера не заменяет системное разрешение."}, {Title: "Цель внутри системы", Text: "После входа выберите точную базу на карте системы; межзвёздная дальность и путь до станции измеряются по-разному."}, {Title: "Посадка", Text: "Для планетарной базы нужны подходящий режим игры, возможность посадки и свободное место на площадке."}}}}, Related: []Summary{}}
+	return Entry{ID: SystemID(name), Category: "systems", Title: name, Subtitle: "Звёздная система", Sections: []Section{}, Related: []Summary{}}
 }

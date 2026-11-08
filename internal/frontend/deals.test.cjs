@@ -61,7 +61,7 @@ test('component smoke is independent of selected result or saved view',async()=>
 
 test('raw child-market pages and malformed legacy records never become empty route cards',async()=>{
  const {api,C,u,route,calls,button}=fixture();C.state.tradeRoutes.results=[{id:'market-legacy',station:'Legacy Empty Port'},null,{}, {id:'bad',legs:[]},{id:'bad-leg',legs:[{}]},route];
- let html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,1);assert.doesNotMatch(html,/Legacy Empty Port/);assert.match(html,/Неполные прежние результаты скрыты/);assert.match(html,/Результаты <span>1<\/span>/);
+ let html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,1);assert.doesNotMatch(html,/Legacy Empty Port/);assert.match(html,/Требуется повторный поиск/);assert.match(html,/Результаты <span>1<\/span>/);
  await assert.rejects(api.handle('deals-select',button({id:'market-legacy'}),C,u),/Рейс больше не найден/);assert.equal(calls.length,0);
  C.state.tradeRoutes.results=[{id:'market-only',station:'Legacy Empty Port'}];html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,0);assert.match(html,/<details class="panel deals-search" open>/);
  C.state.savedTradeRoutes=[{id:'broken',station:'Broken saved station'}];C.dealsUI.view='saved';assert.doesNotMatch(api.render(C,u),/Broken saved station/);

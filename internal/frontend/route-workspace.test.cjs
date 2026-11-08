@@ -27,7 +27,7 @@ function ready() {
 test('empty and single-origin routes offer setup without fabricated zero fuel, time or cost', () => {
   for (const route of [{}, { status: 'idle', route: { stops: [{ name: 'Origin', visited: true }] }, summary: { fuelTons: 0 } }]) {
     const f = fixture(route), html = f.render();
-    assert.match(html, /Подготовьте маршрут флотоносца/); assert.doesNotMatch(html, /rw-metric-value|0 кр\.|0 мин|NaN|undefined/);
+    assert.match(html, /Маршрут не построен/); assert.doesNotMatch(html, /rw-metric-value|0 кр\.|0 мин|NaN|undefined/);
     assert.equal(f.calls.length, 0);
   }
 });

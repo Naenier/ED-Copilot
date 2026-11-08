@@ -33,3 +33,11 @@ test('overview plans preserve workflow destinations and escaped commander data i
  for(const id of ['sale','carrier-trade','mining','colonization'])assert.match(html,new RegExp('data-nav="'+id+'"'));
  assert.match(html,/&lt;img src=x onerror=bad\(\)&gt;/);assert.match(html,/&lt;private goal&gt;/);assert.match(html,/Настройки/);assert.doesNotMatch(html,/<img|<private/);
 });
+
+test('an empty overview keeps actual tools and an add-goal action without inventing a carrier or travel story',()=>{
+ const f=fixture('Планы');f.C.state.commander.system='';f.C.state.commander.ship='';f.C.state.carrier={owned:false};
+ let html=f.render();assert.match(html,/Система неизвестна/);assert.match(html,/Нет активных целей/);assert.match(html,/is-compact/);
+ assert.match(html,/data-click="navigate-targets"/);assert.match(html,/data-nav="carrier-trade"/);
+ assert.doesNotMatch(html,/Следующая глава|Новый этап путешествия|Планирование флотоносца|Сохраните цель, чтобы|в одном рабочем пространстве|class="ov-carrier-name"/);
+ f.C.state.carrier={owned:true,name:'Actual carrier',callsign:'ABC-123'};html=f.render();assert.match(html,/Actual carrier/);assert.match(html,/data-click="navigate-carrier"/);
+});

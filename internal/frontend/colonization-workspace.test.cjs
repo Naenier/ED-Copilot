@@ -27,8 +27,8 @@ function project(id,name,extra={}){
 
 test('initial colony workflow explains station discovery without an empty faction selector or implicit network request',()=>{
  const f=fixture(),before=clone(f.C.state),html=f.api.render(f.C,f.ui);
- assert.match(html,/Спланируйте новую колонию/);assert.match(html,/Проверить систему/);
- assert.match(html,/Фракцию не нужно угадывать/);assert.match(html,/Станция → фракция → новая система/);
+ assert.match(html,/Колонии не добавлены/);assert.match(html,/Проверить систему/);
+ assert.match(html,/Поиск загрузит известные станции системы/);assert.match(html,/Станция → фракция → новая система/);
  assert.doesNotMatch(html,/id="colony-workspace-station"|id="colony-workspace-faction"/);
  assert.equal(f.C.colonizationWorkspace.origin,'Current system');assert.equal(f.calls.length,0);
  assert.deepEqual(f.C.state,before);
@@ -273,7 +273,7 @@ test('budget unknown totals remain lower bounds and a bounded purchase estimate 
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/Полная смета ресурсов<\/span><strong>Не менее 5000 кр\./);assert.match(html,/Осталось доставить<\/span><strong>Неизвестно/);
  assert.match(html,/Нужно закупить<\/span><strong>Не более 7000 кр\./);assert.match(html,/Неизвестных смет: 1 · Без средней цены: 2/);
- assert.match(html,/Неполные оценки помечены границами/);
+ assert.doesNotMatch(html,/Неполные оценки помечены границами/);
  p.costSummary.toBuy=costMetric(0);html=f.api.render(f.C,f.ui);assert.match(html,/Нужно закупить<\/span><strong>0 кр\./);assert.doesNotMatch(html,/Нужно закупить<\/span><strong>Не более/);
 });
 
@@ -311,7 +311,7 @@ test('manual bill totals stay labelled as planning estimates without implying th
  const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.activeProject=budgetProject('a','Synthetic');
  f.C.state.colonization.activeProject.costSummary.manualBills=2;
  const html=f.api.render(f.C,f.ui);
- assert.match(html,/Ручных смет: 2/);assert.match(html,/Ручные сметы — плановые оценки; требования игры имеют приоритет/);
+ assert.match(html,/Ручных смет: 2/);assert.doesNotMatch(html,/Ручные сметы — плановые оценки; требования игры имеют приоритет/);
  assert.match(html,/Полная смета ресурсов<\/span><strong>1000000 кр\./);
  assert.doesNotMatch(html,/Неполные оценки помечены границами/);
 });

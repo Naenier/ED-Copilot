@@ -30,7 +30,7 @@ test('English lesson content renders without changing persisted IDs, checklist i
  for(const course of s.courses){course.title='Original Copilot course';course.summary='A complete practical learning path.';course.category='Trading';course.difficulty='Beginner';}
  for(const lesson of s.lessons){lesson.title='Practical lesson '+lesson.order;lesson.summary='Study the decision and apply it in Copilot.';lesson.courseTitle='Original Copilot course';lesson.category='Trading';lesson.difficulty='Beginner';for(const section of lesson.sections){section.title='Section '+section.id;section.paragraphs=['Use the current observation, then review the plan.'];if(section.checklist)section.checklist=section.checklist.map((text,i)=>'Stable check '+i);}for(const question of lesson.quiz||[]){question.prompt='Choose the correct next step.';question.choices=['First option','Second option'];question.explanation='The second option keeps the plan consistent.';}}
  s.options.query='Настройки';const r=runtime(C,'en');let html=r.api.render(C,r.ui);assert.match(html,/Academy/);assert.match(html,/Original Copilot course/);assert.match(html,/value="Настройки"/);assert.match(html,/08 Nov 2026/);
- C.lesson='first.practice';s.lessons[1].checklistState={'checklist:2':true};html=r.api.render(C,r.ui);assert.match(html,/data-lesson="first.practice"/);assert.match(html,/data-academy-check="checklist" data-index="2"[^>]*checked/);assert.match(html,/original ED Copilot lesson/);assert.match(html,/Further reading at PTN/);assert.doesNotMatch(html,/original guide PTN/i);
+ C.lesson='first.practice';s.lessons[1].checklistState={'checklist:2':true};html=r.api.render(C,r.ui);assert.match(html,/data-lesson="first.practice"/);assert.match(html,/data-academy-check="checklist" data-index="2"[^>]*checked/);assert.doesNotMatch(html,/original ED Copilot lesson/);assert.match(html,/Further reading at PTN/);assert.doesNotMatch(html,/original guide PTN/i);
  C.lesson='first.checkpoint';C.academy.drafts={'first.checkpoint':{one:1}};html=r.api.render(C,r.ui);assert.match(html,/data-academy-answer="one"[^>]*value="1" checked/);assert.match(html,/Choose the correct next step/);assert.equal(C.state.learning.options.query,'Настройки');
  r.window.CopilotI18n.setLanguage('ru');C.state.learning=fixture().state.learning;html=r.api.render(C,r.ui);assert.match(html,/Выберите ответ/);assert.match(html,/data-academy-answer="one"[^>]*value="1" checked/);assert.equal(C.lesson,'first.checkpoint');assert.equal(C.academy.drafts['first.checkpoint'].one,1);
 });
@@ -117,7 +117,7 @@ test('quiz sends chosen answers to Go and uses only the backend result',async()=
  const answers=r.calls.filter(call=>call.op==='learning').map(call=>call.body.values);
  assert.deepEqual(answers,[{action:'answer',lessonId:'first.checkpoint',questionId:'one',choiceIndex:0},{action:'answer',lessonId:'first.checkpoint',questionId:'two',choiceIndex:1}]);
  assert.match(r.toasts.at(-1).message,/Верных ответов: 0 из 2/);
- const html=r.api.render(r.C,r.ui);assert.match(html,/Ответ пока неверный/);assert.ok(!html.includes('Все ответы верны'));
+ const html=r.api.render(r.C,r.ui);assert.match(html,/Неверно/);assert.ok(!html.includes('Все ответы верны'));
  r.collections.set('[data-academy-answer]',[]);const count=r.calls.length;
  await r.api.handle('academy-check',{dataset:{id:'first.checkpoint'}},r.C,r.ui);assert.equal(r.calls.length,count);assert.match(r.toasts.at(-1).message,/каждый вопрос/);
 });

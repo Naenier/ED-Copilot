@@ -45,7 +45,7 @@ test('calculator and carrier trading translate labels while mode IDs and numeric
 });
 test('trade search, colony workflow and settings help render English controls without translating player values',()=>{
  const deals=domainFixture('deals');deals.C.dealsUI=null;deals.C.state.commander.system='Система Настройки <A>';let html=deals.api.render(deals.C,deals.u);assert.match(html,/Free hold, t/);assert.match(html,/Find trips/);assert.match(html,/Система Настройки &lt;A&gt;/);assert.match(html,/data-copy="system"/);assert.match(html,/title="Copy system/);
- const colony=domainFixture('colonization-workspace');colony.C.actions.push({id:'colony.search'});colony.C.state.commander.system='Торговля';html=colony.api.render(colony.C,colony.ui);assert.match(html,/Plan a new colony/);assert.match(html,/Check system/);assert.match(html,/value="Торговля"/);
+ const colony=domainFixture('colonization-workspace');colony.C.actions.push({id:'colony.search'});colony.C.state.commander.system='Торговля';html=colony.api.render(colony.C,colony.ui);assert.doesNotMatch(html,/Plan a new colony/);assert.match(html,/Check system/);assert.match(html,/value="Торговля"/);
  const settings=domainFixture('settings-pane');html=settings.api.render(settings.C,settings.ui,'<div>controls</div>');assert.match(html,/Settings details/);assert.match(html,/Workspace/);assert.doesNotMatch(html,/Подробности настроек|Рабочее пространство/);
 });
 test('Academy translates reader navigation and labels while preserving lesson content',()=>{
@@ -85,7 +85,7 @@ test('an incoming language change waits for the open form to close',()=>{
 });
 test('English overview and route workspace keep commander, objective and system names unchanged',async()=>{
  const f=domainFixture('app'),a=f.api;Object.assign(a.C,{tab:'overview',mode:'Планы',page:{Modes:['Планы','Состояние'],Rows:[]},state:{settings:{language:'en'},commander:{name:'Настройки',shipName:'Торговля',system:'Справка',ship:'Python',docked:false},objectives:[{title:'Обзор',system:'Колонизация'}],carrier:{name:'Цели',owned:true}}});
- let html=a.renderOverview();assert.match(html,/What shall we do today/);assert.match(html,/CMDR Настройки/);assert.match(html,/>Справка<\/h2>/);assert.match(html,/>Обзор<\/strong>/);assert.match(html,/«Торговля»/);assert.match(html,/data-mode="Планы"/);assert.match(html,/>Plans<\/button>/);
+ let html=a.renderOverview();assert.doesNotMatch(html,/What shall we do today/);assert.match(html,/CMDR Настройки/);assert.match(html,/>Справка<\/h2>/);assert.match(html,/>Обзор<\/strong>/);assert.match(html,/«Торговля»/);assert.match(html,/data-mode="Планы"/);assert.match(html,/>Plans<\/button>/);
  const route=domainFixture('route-workspace');route.C.state.carrierRoute={status:'ready',route:{sourceSystem:'Настройки',destinationSystem:'Обзор',stops:[{name:'Настройки',visited:true},{name:'Торговля',visited:false,distanceLy:400}]},summary:{totalJumps:1,completedJumps:0,remainingJumps:1,totalMinutes:20,estimatedArrival:null}};
  html=route.render();assert.match(html,/Next jump/);assert.match(html,/>Торговля<\/h2>/);assert.match(html,/Copy system/);assert.match(html,/Unknown/);assert.doesNotMatch(html,/Unknown — Unknown/);await route.api.handle('route-workspace-copy',null,route.C,route.u);assert.equal(route.calls[0].values.text,'Торговля');
 });

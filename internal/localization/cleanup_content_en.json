@@ -1,0 +1,22 @@
+{
+  "Запреты зависят от юрисдикции; проверяйте статус груза в пункте назначения.": "Restrictions depend on jurisdiction; check cargo legality at the destination.",
+  "Совместные сценарии со своими целями и требованиями.": "Cooperative scenarios with their own objectives and requirements.",
+  "Операции — отдельные совместные сценарии с собственными требованиями и целями.": "Operations are distinct cooperative scenarios with their own requirements and objectives.",
+  "Открытая игра, частная группа и соло определяют встречи с другими командирами.": "Open Play, Private Group and Solo determine encounters with other commanders.",
+  "NPC, штрафы и условия миссий действуют во всех режимах.": "NPCs, fines and mission conditions apply in every mode.",
+  "Совместный полёт и общие задания.": "Flying together and shared missions.",
+  "Условия общего задания и порядок сдачи указаны в карточке миссии.": "The mission card lists the shared assignment requirements and hand-in procedure.",
+  "Постоянные объединения командиров.": "Persistent commander organisations.",
+  "Эскадрилья — постоянное объединение командиров. Команда объединяет участников текущего сеанса.": "A squadron is a persistent commander organisation. A team groups participants in the current session.",
+  "Профессиональные ранги, военно-морские звания и Powerplay.": "Career ranks, naval ranks and Powerplay.",
+  "Ранги Федерации пилотов отражают продвижение в отдельных занятиях: бое, торговле, исследовании, наёмничестве, экзобиологии и CQC.": "Pilots Federation career ranks track combat, trade, exploration, mercenary activity, exobiology and CQC separately.",
+  "Военно-морские звания Федерации и Империи, репутация у фракций и лояльность Powerplay развиваются отдельно.": "Federal and Imperial naval ranks, minor-faction reputation and Powerplay allegiance progress separately.",
+  "Внутриигровые новости о галактических событиях.": "In-game news about galactic events.",
+  "GalNet публикует внутриигровые новости о галактических событиях. Дата публикации позволяет отличать исторические сообщения от текущих событий.": "GalNet publishes in-game news about galactic events. The publication date distinguishes historical reports from current events.",
+  "Сведения игровых журналов и открытых каталогов.": "Game journal and public catalogue observations.",
+  "Рыночные и исследовательские каталоги получают сведения из игровых журналов и наблюдений игроков. Полнота каталога зависит от переданных данных.": "Market and exploration catalogues receive game journal data and player observations. Catalogue coverage depends on the submitted data.",
+  "Время наблюдения рынка показывает возраст цены и запаса; оно может отличаться от времени поиска. Неизвестный запас обозначается прочерком.": "A market observation timestamp indicates the age of its price and stock; it can differ from the search time. Unknown stock is shown as a dash.",
+  "Для совместной встречи используйте открытую игру или одну частную группу.": "To meet other commanders, use Open Play or the same Private Group.",
+  "Для совместного полёта используйте открытую игру или одну частную группу и согласуйте место встречи.": "For a joint flight, use Open Play or the same Private Group and agree on a meeting place.",
+  "Внешние игровые каталоги": "Community game catalogues"
+}

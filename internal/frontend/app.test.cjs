@@ -229,11 +229,11 @@ test('dashboard uses the Go pilot credit observation, including zero and unknown
     // Commander intentionally carries a different value to expose the former wrong lookup.
     api.C.state = { commander: { credits: 999 }, pilot: { credits: balance, creditsSource: 'Status.json' } };
     const html = api.renderOverview();
-    const card = html.match(/Баланс командира<\/div><div class="metric-value">([^<]*)<\/div><div class="metric-foot">([^<]*)/);
+    const card = html.match(/Баланс командира<\/div><div class="metric-value">([^<]*)<\/div>/);
     assert.ok(card);
     const expected = balance === null ? '—' : new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 }).format(balance) + ' кр.';
     assert.equal(card[1], expected);
-    assert.equal(card[2], 'Средства командира');
+    assert.doesNotMatch(html, /Средства командира/);
     assert.doesNotMatch(html,/Status\.json/);
   }
 });
@@ -246,7 +246,7 @@ test('dashboard binds the carrier location and preserves a known zero cargo capa
   assert.match(html, /Вместимость 0 т/);
   assert.doesNotMatch(html, /Вместимость уточняется/);
   delete api.C.state.commander.cargoCapacity;
-  assert.match(api.renderOverview(), /Вместимость уточняется в игре/);
+  assert.match(api.renderOverview(), /Вместимость неизвестна/);
 });
 
 test('header reports the actual journal Reader.State lifecycle rather than assuming connection', () => {
@@ -367,7 +367,14 @@ test('construction and supply empty states select the next action for the curren
   assert.doesNotMatch(api.renderEmptyState(), /data-action-id="colony.select"/);
   api.C.state.colonization.activeProject.buildings = [{ id: 'port' }];
   assert.match(api.renderEmptyState(), /data-action-id="colony.resource-upsert"/);
-  assert.match(api.renderEmptyState(), /постройку.*смету/);
+  assert.match(api.renderEmptyState(), /Добавьте смету или посетите строительный склад/);
+});
+
+test('generic empty states use a compact factual status and preserve relevant real actions',()=>{
+ const {api}=fixture();api.C.tab='targets';api.C.mode='Цели';api.C.page={Rows:[],Modes:['Цели']};api.C.actions=[{id:'goal.add',title:'Добавить цель'}];
+ let html=api.renderEmptyState();assert.match(html,/Нет активных целей/);assert.match(html,/data-action-id="goal.add"/);
+ assert.doesNotMatch(html,/Здесь появятся|выберите другой экран|<p><\/p>|^<div class="empty-state"><svg/);
+ api.C.tab='unlisted';html=api.renderEmptyState();assert.match(html,/Нет записей/);assert.doesNotMatch(html,/<p>|Дождитесь/);
 });
 
 test('an unmatched query offers only clearing the query and keeps the selected mode', async () => {

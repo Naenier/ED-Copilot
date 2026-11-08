@@ -30,7 +30,7 @@ test('carrier trade separates the two legs and keeps unknown market prices blank
  assert.match(html,/Неизвестные расходы/);assert.match(html,/капитал|Капитал/);
  assert.doesNotMatch(html,/NaN|undefined|Infinity|onclick=/);
  C.mode='Расходы';assert.match(api.render(C,ui),/Закупка уже учтена/);
- C.mode='Проверки';assert.match(api.render(C,ui),/Пустое значение означает/);
+ C.mode='Проверки';assert.match(api.render(C,ui),/Укажите цены, объём, топливо и длительность рейса/);
 });
 
 test('Booze Cruise explains the M pad and never invents a holiday price',()=>{

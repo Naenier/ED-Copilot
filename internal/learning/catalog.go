@@ -146,13 +146,20 @@ func buildCatalog(raw []byte, language string) (catalogData, error) {
 		base := Lesson{CourseID: seed.ID, Difficulty: seed.Difficulty, Tags: seed.Tags, SourceURLs: []string{seed.SourceURL}}
 		basics := base
 		basics.ID, basics.Title, basics.Summary, basics.Kind, basics.Minutes, basics.Order = ids[0], seed.BasicsTitle, seed.Summary, "reading", minutes(seed.BasicsMinutes, 5), 1
-		basics.Sections = append([]Section{{ID: "mechanics", Title: text("Как устроено занятие", "How the activity works"), Paragraphs: seed.Mechanics}, {ID: "outcome", Title: text("Результат урока", "Learning outcome"), Paragraphs: []string{text("Объясните своими словами, какие исходные условия нужно проверить до начала. Затем переходите к практикуму: там вы превратите решение в собственный план ED Copilot.", "Explain which starting conditions you need to check before proceeding. Then move on to the practical lesson and turn your decision into a personal ED Copilot plan.")}}}, seed.BasicsSections...)
+		basics.Sections = append([]Section{{ID: "mechanics", Title: text("Как устроено занятие", "How the activity works"), Paragraphs: seed.Mechanics}}, seed.BasicsSections...)
 		practice := base
-		practice.ID, practice.Title, practice.Summary, practice.Kind, practice.Minutes, practice.Order = ids[1], seed.PracticeTitle, text("Практика в ED Copilot: свой план, контрольные точки и разбор результата.", "Practice in ED Copilot: build a plan, define checkpoints and review the result."), "practice", minutes(seed.PracticeMinutes, 8), 2
+		practice.ID, practice.Title, practice.Kind, practice.Minutes, practice.Order = ids[1], seed.PracticeTitle, "practice", minutes(seed.PracticeMinutes, 8), 2
+		if len(seed.Practice) > 0 {
+			practice.Summary = seed.Practice[0]
+		}
 		practice.Sections = append([]Section{{ID: "workflow", Title: text("Рабочий порядок", "Workflow"), Paragraphs: seed.Practice, AppSection: seed.AppSection, AppAction: text("Открыть нужный раздел", "Open the relevant section")}, {ID: "checklist", Title: text("Проверьте перед выполнением", "Before you begin"), Checklist: seed.Checklist}}, seed.PracticeSections...)
 		checkpoint := base
 		checkpoint.ID, checkpoint.Title, checkpoint.Summary, checkpoint.Kind, checkpoint.Minutes, checkpoint.Order = ids[2], text("Самопроверка: ", "Self-check: ")+seed.Title, text("Учебный пример, объяснение расчёта и короткие вопросы.", "A worked scenario, calculation walkthrough and short questions."), "checkpoint", minutes(seed.CheckpointMinutes, 5), 3
-		checkpoint.Sections = append([]Section{{ID: "exercise", Title: text("Решите самостоятельно", "Try it yourself"), Paragraphs: []string{seed.Exercise}}, {ID: "solution", Title: text("Разбор учебного примера", "Worked example"), Paragraphs: []string{seed.Solution}}, {ID: "reflection", Title: text("Примените к своей игре", "Apply it to your own game"), Paragraphs: []string{seed.Reflection}}}, seed.CheckpointSections...)
+		checkpoint.Sections = []Section{{ID: "exercise", Title: text("Решите самостоятельно", "Try it yourself"), Paragraphs: []string{seed.Exercise}}, {ID: "solution", Title: text("Разбор учебного примера", "Worked example"), Paragraphs: []string{seed.Solution}}}
+		if strings.TrimSpace(seed.Reflection) != "" {
+			checkpoint.Sections = append(checkpoint.Sections, Section{ID: "reflection", Title: text("Примените к своей игре", "Apply it to your own game"), Paragraphs: []string{seed.Reflection}})
+		}
+		checkpoint.Sections = append(checkpoint.Sections, seed.CheckpointSections...)
 		checkpoint.Quiz = seed.Quiz
 		course := Course{ID: seed.ID, Title: seed.Title, Summary: seed.Summary, Category: seed.Category, Icon: seed.Icon, Difficulty: seed.Difficulty, Minutes: basics.Minutes + practice.Minutes + checkpoint.Minutes, Tags: seed.Tags, LessonIDs: ids, SourceURLs: []string{seed.SourceURL}}
 		value.Courses = append(value.Courses, course)

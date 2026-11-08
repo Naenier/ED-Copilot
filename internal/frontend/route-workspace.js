@@ -44,15 +44,15 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     return `<div class="rw-metric ${extra}"><span class="rw-metric-label">${u.icon(icon)}${title}</span><strong class="rw-metric-value">${value}</strong>${detail ? `<span class="rw-metric-detail">${detail}</span>` : ''}</div>`;
   }
   function statusHTML(m, u) {
-    if (m.pending) return `<div class="rw-status rw-status-pending" role="status">${u.icon('refresh-cw')}<div><strong>${th("Рассчитываем маршрут")}</strong><span>${esc(u, label(m.s.progress?.label) || t("Запрашиваем системы, расход трития и остановки."))}${m.hasRoute ? t(" Предыдущий расчёт показан ниже и пока не обновлён.") : ''}</span></div></div>`;
-    if (m.failed) return `<div class="rw-status rw-status-error" role="alert">${u.icon('circle-help')}<div><strong>${th("Маршрут не рассчитан")}</strong><span>${esc(u, label(m.s.error) || t("Не удалось получить результат. Проверьте параметры и повторите расчёт."))}${m.hasRoute ? t(" Ниже сохранён предыдущий расчёт.") : ''}</span></div></div>`;
+    if (m.pending) return `<div class="rw-status rw-status-pending" role="status">${u.icon('refresh-cw')}<div><strong>${th("Рассчитываем маршрут")}</strong><span>${esc(u, label(m.s.progress?.label) || t("Загрузка данных…"))}${m.hasRoute ? t(" Показан предыдущий маршрут.") : ''}</span></div></div>`;
+    if (m.failed) return `<div class="rw-status rw-status-error" role="alert">${u.icon('circle-help')}<div><strong>${th("Маршрут не рассчитан")}</strong><span>${esc(u, label(m.s.error) || t("Повторите расчёт."))}${m.hasRoute ? t(" Ниже сохранён предыдущий расчёт.") : ''}</span></div></div>`;
     if (m.s.status === 'cancelled') return `<div class="rw-status" role="status">${u.icon('minus')}<div><strong>${th("Расчёт остановлен")}</strong><span>${m.hasRoute ? t("Предыдущий маршрут сохранён.") : t("Измените параметры и запустите расчёт снова.")}</span></div></div>`;
     return '';
   }
   function renderSummary(C, u) {
     if (C.tab !== 'route') return '';
     const m = model(C), status = statusHTML(m, u);
-    if (!m.hasRoute) return `<section class="route-workspace" aria-label="${th("Сводка маршрута флотоносца")}">${status}${!m.pending && !m.failed ? `<div class="rw-empty">${u.icon('route')}<div><strong>${th("Подготовьте маршрут флотоносца")}</strong><p>${th("Укажите начало, назначение и загрузку. После расчёта здесь появятся следующий прыжок, топливо, резерв и время.")}</p></div></div>` : ''}</section>`;
+    if (!m.hasRoute) return `<section class="route-workspace" aria-label="${th("Сводка маршрута флотоносца")}">${status}${!m.pending && !m.failed ? `<div class="rw-empty">${u.icon('route')}<div><strong>${th("Маршрут не построен")}</strong><p>${th("Укажите пункт назначения и загрузку флотоносца.")}</p></div></div>` : ''}</section>`;
     const s = m.summary, next = m.next, canCopy = !!label(next?.name) && !m.pending && !m.failed;
     const calculationOptions = m.pending || m.failed ? (m.route.options || m.s.options || {}) : (m.s.options || m.route.options || {});
     const hasPrice = known(calculationOptions.tritiumPrice) && calculationOptions.tritiumPrice > 0;

@@ -60,12 +60,12 @@ test('topic buttons explain the active setting and focus follows the real contro
  const input=f.control({actionId:'settings.prices'});input.value='12500';
  f.fire('focusin',input);
  assert.equal(f.C.settingsPane.topic,'prices');assert.equal(input.value,'12500');
- assert.match(f.body.innerHTML,/кредитах за тонну/);assert.match(f.body.innerHTML,/Пустое значение возвращает/);
+ assert.match(f.body.innerHTML,/для оценки груза/);assert.match(f.body.innerHTML,/Пустое поле сбрасывает/);assert.match(f.body.innerHTML,/Ноль задаёт нулевую оценку/);
  assert.equal(f.buttons.find(button=>button.dataset.settingsTopic==='prices').attributes['aria-pressed'],'true');
  f.fire('click',f.buttons.find(button=>button.dataset.settingsTopic==='overlay'));
  assert.equal(f.C.settingsPane.topic,'overlay');assert.match(f.body.innerHTML,/только при активном окне Elite Dangerous/);
  f.fire('focusin',f.control({},'main-game-palette'));
- assert.equal(f.C.settingsPane.topic,'theme');assert.match(f.body.innerHTML,/предварительный результат/);
+ assert.equal(f.C.settingsPane.topic,'theme');assert.match(f.body.innerHTML,/предпросмотр/);
  f.fire('focusin',f.control({actionId:'settings.filters'}));
  assert.equal(f.C.settingsPane.topic,'mining');assert.match(f.body.innerHTML,/лазерной добыче/);
  assert.equal(f.C.inspector,true);assert.equal(f.calls.length,0);

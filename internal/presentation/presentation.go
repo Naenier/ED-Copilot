@@ -225,7 +225,6 @@ func buildPage(tab, mode, query string, s M) Page {
 	case "carrier-trade":
 		return CarrierTradePage(mode, query, s)
 	case "overview":
-		p.Description = "Положение, корабль и следующие действия для ваших занятий."
 		p.Modes = []string{"Планы", "Состояние", "Корабль и груз", "Миссии", "Журнал"}
 		p.Summary = v.Text(cmd["system"], "Ожидание журналов") + "  ·  " + Ship(cmd) + "  ·  " + Number(v.At(s, "pilot", "credits")) + " кр."
 		switch mode {
@@ -261,7 +260,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "targets":
-		p.Description = "Личные цели, курс корабля и выбранные места добычи."
 		p.Modes = []string{"Личные цели", "Места добычи", "Сохранённые места", "Навигация", "Инженеры"}
 		switch mode {
 		case "Сохранённые места":
@@ -302,7 +300,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "sale":
-		p.Description = "Сравните рынки по цене, запасу, спросу, расстоянию и дате наблюдения."
 		p.Modes = []string{"Продать", "Купить", "Журнал сделок"}
 		trade := v.Obj(s["trading"])
 		p.Summary = v.Text(trade["status"], trade["error"])
@@ -340,7 +337,6 @@ func buildPage(tab, mode, query string, s M) Page {
 	case "deals":
 		return DealsPage(mode, query, s)
 	case "carrier":
-		p.Description = "Личный флотоносец: состояние, склад, приказы и журнал операций."
 		p.Modes = []string{"Состояние", "Склад", "Торговые приказы", "История", "Финансы", "Службы"}
 		c := v.Obj(s["carrier"])
 		p.Summary = v.Text(c["name"], "Данные флотоносца ещё не прочитаны") + " · " + v.Str(c["callsign"]) + " · " + v.Str(v.At(c, "location", "system"))
@@ -379,7 +375,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "route":
-		p.Description = "Маршрут только для флотоносца: прыжки, тритий, резерв, дозаправки и время."
 		p.Modes = []string{"Остановки", "Итоги"}
 		r := v.Obj(s["carrierRoute"])
 		p.Summary = fields(v.Obj(r["summary"]), "remainingJumps", "Осталось прыжков", "fuelTons", "Расход трития, т", "totalMinutes", "Время, мин")
@@ -395,7 +390,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Rows = append(p.Rows, row(stop, []string{Number(stop["index"]), v.Text(stop["name"], stop["system"]), Number(v.First(stop["distanceLy"], stop["distance"])), Number(stop["fuelUsedTons"]), Number(v.First(stop["tankTons"], stop["tankAfterTons"], stop["fuelRemainingTons"])), Number(stop["restockTons"]), Format(stop["visited"])}, fields(stop, "cargoTritiumTons", "Тритий в грузе, т", "elapsedMinutes", "Время от начала, мин", "refuelMinutes", "Дозаправка, мин", "estimatedArrival", "Прибытие", "estimatedDeparture", "Отправление", "estimatedReady", "Готовность")+"\r\n"+joinStrings(r["warnings"])+"\r\n"+joinStrings(r["assumptions"])))
 		}
 	case "colonization":
-		p.Description = "Отдельные колонии, порядок строительства и независимые очереди снабжения."
 		p.Modes = []string{"Выбор системы", "Строительство", "Очередь снабжения", "Снабжение", "Бюджет", "Поставки"}
 		c := v.Obj(s["colonization"])
 		project := v.Obj(c["activeProject"])
@@ -455,7 +449,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "engineering":
-		p.Description = "План улучшений, материалы, обмен у торговцев и доступ к инженерам."
 		p.Modes = []string{"План", "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана", "Обмен", "Инженеры"}
 		e := v.Obj(s["engineering"])
 		p.Summary = "Нужно материалов: " + Number(v.At(e, "shopping", "neededUnits")) + " · Не хватает: " + Number(v.At(e, "shopping", "missingUnits"))
@@ -491,7 +484,6 @@ func buildPage(tab, mode, query string, s M) Page {
 	case "encyclopedia":
 		return encyclopedia(mode, query, s)
 	case "help":
-		p.Description = "Инструкции по работе с ED Copilot и игровыми инструментами."
 		p.Columns = []string{"Раздел", "Тема", "Кратко"}
 		for _, r := range data.Array("help.json") {
 			if contains(query, r["title"], r["summary"], r["body"], r["keywords"]) {
@@ -528,7 +520,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Columns, p.Rows, p.Summary = sub.Columns, sub.Rows, sub.Summary
 		}
 	case "mining":
-		p.Description = "Текущий заход добычи, оборудование и план дохода."
 		p.Modes = []string{"Текущий заход", "История", "Снаряжение", "План"}
 		m := v.Obj(s["mining"])
 		p.Summary = "Добыто: " + Number(v.At(m, "current", "refinedTons")) + " т · Темп: " + Number(v.At(m, "current", "tonsPerHour")) + " т/ч"
@@ -557,12 +548,10 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "settings":
-		p.Description = "Окно, палитра, папка журналов и необязательные ориентиры цен."
 		for _, r := range []M{{"name": "Папка журналов", "value": v.At(s, "connection", "journalDir")}, {"name": "Режим оверлея", "value": Label(v.At(s, "settings", "activity"))}, {"name": "Палитра", "value": v.At(s, "theme", "settings", "preset")}, {"name": "Данные приложения", "value": v.At(s, "app", "profileDir")}} {
 			p.Rows = append(p.Rows, row(r, []string{v.Str(r["name"]), Format(r["value"])}, "Изменения сохраняются в личном профиле Windows."))
 		}
 	case "account":
-		p.Description = "Вход через официальный сайт Frontier. Пароль остаётся в браузере."
 		a := v.Obj(s["frontier"])
 		p.Summary = v.Text(a["lastError"], a["error"])
 		p.Rows = append(p.Rows, row(M{"key": "connected"}, []string{"Вход сохранён", Format(a["connected"])}, ""))
@@ -570,7 +559,6 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Rows = append(p.Rows, row(M{"key": pair[0]}, []string{pair[1], Format(v.At(a, strings.Split(pair[0], ".")...))}, "Данные Companion API могут запаздывать относительно игры."))
 		}
 	case "integrations":
-		p.Description = "Сохраните личный API-ключ Inara и включите отправку событий."
 		a := v.Obj(s["integrations"])
 		p.Summary = v.Text(a["lastError"], a["blockedReason"])
 		for _, pair := range [][2]string{{"apiKeySet", "Ключ сохранён"}, {"enabled", "Отправлять события"}, {"queued", "В очереди"}, {"sent", "Подтверждено событий"}, {"lastSuccess", "Последняя успешная отправка"}, {"nextRetryAt", "Следующая попытка"}} {
@@ -639,7 +627,7 @@ func capabilityDetails(r M) string {
 	return strings.Join(out, "\r\n")
 }
 func encyclopedia(mode, query string, s M) Page {
-	p := Page{Title: "Энциклопедия", Description: "Справочник по всем основным занятиям Elite Dangerous с поиском и источниками.", Modes: []string{"Статьи", "Корабли", "Товары", "Материалы", "Инженеры", "Чертежи", "Модули", "Эффекты"}, Columns: []string{"Название", "Раздел", "Кратко"}}
+	p := Page{Title: "Энциклопедия", Modes: []string{"Статьи", "Корабли", "Товары", "Материалы", "Инженеры", "Чертежи", "Модули", "Эффекты"}, Columns: []string{"Название", "Раздел", "Кратко"}}
 	switch mode {
 	case "Корабли":
 		p.Columns = []string{"Модель", "Производитель", "Площадка", "Масса корпуса, т"}

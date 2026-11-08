@@ -37,7 +37,7 @@ test('renders both carriers, nullable figures and built-in shipyard without edit
   assert.doesNotMatch(html, /data-calc-service="shipyard"/);
   assert.doesNotMatch(html, /NaN|undefined/);
   C.mode = 'Сравнение';
-  assert.match(api.render(C, ui), /Сравните два независимых сценария/);
+  assert.match(api.render(C, ui), /Сравнение флотоносцев/);
 });
 
 test('escapes text coming from backend data', () => {

@@ -1,50 +1,57 @@
 package ranks
 
-// The guides below are original practical workflows. Credit/kill thresholds
-// are intentionally not estimated: only the game's observed percentage is used.
-var guides = map[string][]text{
-	"combat": {
-		{"Боевой ранг относится к боям на корабле. Начните с доступного оснащению боя, проверяйте законность цели и сохраняйте деньги на восстановление. Ранг цели и обстоятельства боя влияют на продвижение; одинаковое число уничтожений не гарантирует одинаковый прирост.", "Combat rank covers ship combat. Choose encounters your build can handle, verify target legality and retain a rebuy reserve. Target rank and combat circumstances affect advancement; an equal kill count does not guarantee equal progress."},
-		{"Практика: отметьте текущий ранг и процент, проведите ограниченный боевой сеанс, затем сравните новое наблюдение журнала. Если процент не обновился, перезагрузите игровой сеанс для нового Rank/Progress. Copilot не пересчитывает скрытые очки по числу убийств.", "Practice: note your rank and percentage, complete a bounded combat session and compare the next journal observation. If the percentage has not refreshed, start a new game session to obtain Rank/Progress. Copilot does not reconstruct hidden XP from kill counts."},
-	},
-	"trade": {
-		{"Торговое продвижение связано с учитываемой игрой прибылью, а не с общим балансом или оборотом. Покупка флотоносца и перевод собственного груза сами по себе не доказывают рост ранга. Проверяйте результат по игровому проценту.", "Trade advancement follows profit recognised by the game, not your total balance or turnover. Buying a carrier or transferring your own cargo does not itself prove rank progress. Verify the result using the game's percentage."},
-		{"Практика: в «Рейсах» выберите выполнимый маршрут, сохраните котировки, выполните сделки и сравните процент до и после сеанса. Отдельно оценивайте прибыль, время и риск. Высокая выручка при дорогой закупке может дать небольшую маржу.", "Practice: choose a feasible trade route, save its quotes, complete the trades and compare progress before and after the session. Evaluate profit, duration and risk separately. High revenue can still produce a small margin when the purchase cost is high."},
-	},
+type guideSection struct {
+	ID         string
+	Title      text
+	Paragraphs []text
+}
+
+// Keep discipline-specific methods here. Unlocks live beside their rank in
+// the timeline; unknown progression thresholds are not estimated.
+var guides = map[string][]guideSection{
+	"combat": {{"method", text{"Бой на корабле", "Ship combat"}, []text{
+		{"Боевой ранг повышается в боях на корабле. Ранг цели и обстоятельства боя влияют на продвижение.", "Combat rank advances through ship combat. Target rank and combat circumstances affect progression."},
+	}}},
+	"trade": {{"method", text{"Торговая прибыль", "Trading profit"}, []text{
+		{"Торговый ранг повышается за прибыль, которую учитывает игра. Для торгового рейса прибыль от товара равна выручке от продажи минус затраты на закупку.", "Trade rank advances through profit recognised by the game. A trade trip's commodity profit is sale revenue minus purchase cost."},
+	}}},
 	"explore": {
-		{"Исследовательский ранг и экзобиология — разные направления. Данные звёзд и планет продаются через Universal Cartographics; генетические образцы — через Vista Genomics. Не складывайте обе выплаты в один расчёт ранга.", "Exploration and exobiology are separate careers. Sell stellar and planetary data through Universal Cartographics and genetic samples through Vista Genomics. Do not combine both payouts into one rank calculation."},
-		{"Практика: выберите посильную экспедицию, отмечайте картографированные тела и запланируйте безопасную продажу данных. После продажи проверьте новый процент. До сдачи данных предполагаемая стоимость не является подтверждённым продвижением.", "Practice: choose a manageable expedition, track mapped bodies and plan a safe data sale. Check the next percentage after selling. An estimated data value before sale is not confirmed rank advancement."},
+		{"method", text{"Звёзды и планеты", "Stars and planets"}, []text{{"Сканируйте звёзды и планеты, картографируйте тела и сохраняйте данные до продажи.", "Scan stars and planets, map bodies and retain the data until sale."}}},
+		{"sale", text{"Universal Cartographics", "Universal Cartographics"}, []text{{"Данные астрономической разведки продаются через Universal Cartographics. Продажа генетических образцов относится к отдельному экзобиологическому рангу.", "Sell astronomical exploration data through Universal Cartographics. Genetic sample sales contribute to the separate Exobiologist rank."}}},
 	},
-	"soldier": {
-		{"Ранг наёмника относится к пешему бою Odyssey и не заменяет корабельный боевой ранг. Отделяйте награды и продвижение, подтверждённое игрой, от примерной доходности выбранной зоны конфликта.", "Mercenary rank covers Odyssey on-foot combat and is separate from ship Combat rank. Distinguish financial rewards and game-confirmed advancement from a conflict zone's estimated earnings."},
-		{"Практика: проверьте костюм и оружие в инженерном плане, выберите подходящую сложность и ограничьте сеанс по времени. Сопоставляйте завершённые бои с наблюдениями Rank/Progress; не обещайте себе следующий ранг по фиксированному числу зон.", "Practice: review suit and weapon requirements in your engineering plan, select an appropriate difficulty and set a session time limit. Compare completed battles with Rank/Progress observations rather than promising the next rank after a fixed number of zones."},
-	},
+	"soldier": {{"method", text{"Пешие бои Odyssey", "Odyssey on-foot combat"}, []text{
+		{"Ранг наёмника повышается в пеших боях Odyssey, в том числе в наземных зонах конфликта.", "Mercenary rank advances through Odyssey on-foot combat, including ground conflict zones."},
+	}}},
 	"exobiologist": {
-		{"Экзобиологический ранг связан с учтённой игрой продажей органических данных. Три пробы завершают набор, но сами по себе ещё не подтверждают выплату. Предполагаемый бонус первого высаживания не следует считать полученным заранее.", "Exobiologist rank follows organic data sales recognised by the game. Three samples complete a set but do not yet confirm a payout. Do not count a prospective first-footfall bonus as already received."},
-		{"Практика: в «Экзобиологии» сохраните планету, соберите три разнесённые пробы, проверьте данные на борту и продайте их в Vista Genomics. Затем сравните подтверждённую продажу с новым процентом. Неизвестные координаты старых проб остаются неизвестными.", "Practice: bookmark a planet in Exobiology, collect three sufficiently separated samples, review data on board and sell it to Vista Genomics. Compare the confirmed sale with the next rank percentage. Unknown coordinates of historical samples remain unknown."},
+		{"method", text{"Сбор образцов", "Collecting samples"}, []text{{"Соберите три разнесённые пробы одного вида. Завершённый набор остаётся на борту до продажи.", "Collect three sufficiently separated samples of one species. The completed set remains on board until sold."}}},
+		{"sale", text{"Vista Genomics", "Vista Genomics"}, []text{{"Экзобиологический ранг повышается при продаже органических данных в Vista Genomics. Бонус первой высадки подтверждается при продаже.", "Exobiologist rank advances when organic data is sold to Vista Genomics. The first-footfall bonus is confirmed at sale."}}},
 	},
 	"cqc": {
-		{"Здесь показан карьерный ранг CQC Федерации пилотов, включая Elite I–V. У арены также есть отдельная шкала уровней 1–50 и сброс Prestige.", "This screen tracks Pilots Federation CQC career rank, including Elite I–V. Arena also has its own level 1–50 progression and Prestige reset."},
-		{"Для разрешения CD-43 11917 требуется отдельный Prestige арены после уровня 50. Attilius Orbital предлагает скидки 20% на отдельные корабли и 30% на отдельное вооружение.", "The CD-43 11917 permit requires the separate Arena Prestige option after level 50. Attilius Orbital offers 20% off selected ships and 30% off selected weapon modules."},
+		{"method", text{"Ранг CQC", "CQC rank"}, []text{{"Карьерный ранг CQC Федерации пилотов включает Elite I–V. У арены есть отдельная шкала уровней 1–50 и сброс Prestige.", "Pilots Federation CQC career rank includes Elite I–V. Arena has a separate level 1–50 progression and Prestige reset."}}},
+		{"permit", text{"Разрешение CD-43 11917", "CD-43 11917 permit"}, []text{{"Для разрешения CD-43 11917 требуется Prestige арены после уровня 50. Attilius Orbital предлагает скидки 20% на отдельные корабли и 30% на отдельное вооружение.", "The CD-43 11917 permit requires Arena Prestige after level 50. Attilius Orbital offers 20% off selected ships and 30% off selected weapon modules."}}},
 	},
 	"federation": {
-		{"Выберите нужную цель: Sol открывается на Petty Officer, Federal Corvette — на Rear Admiral. Работа выполняется для малых фракций, связанных с Федерацией. Репутация и военно-морское звание — разные шкалы; союзная репутация сама по себе не означает высокий чин.", "Choose a practical target: Sol opens at Petty Officer and the Federal Corvette at Rear Admiral. Work for minor factions aligned with the Federation. Reputation and naval rank are separate scales; Allied reputation does not itself imply a high naval rank."},
-		{"Когда шкала достигнет 100%, проверьте предложения повышения Federal Navy на корабельной доске миссий. Прочитайте цель задания и завершите его в игре. Пока Promotion не подтверждено, Copilot сохраняет прежнее звание и показывает 100%, не выдавая его за автоматическое повышение.", "At 100%, look for a Federal Navy promotion opportunity on the ship mission board. Read its requirements and complete it in the game. Until Promotion is confirmed, Copilot retains your existing rank and displays 100% rather than treating it as an automatic promotion."},
+		{"method", text{"Федеральные фракции", "Federal factions"}, []text{{"Выполняйте задания малых фракций, связанных с Федерацией. Petty Officer открывает Sol, Rear Admiral — покупку Federal Corvette.", "Complete missions for minor factions aligned with the Federation. Petty Officer unlocks Sol; Rear Admiral unlocks Federal Corvette purchase access."}}},
+		{"promotion", text{"Повышение при 100%", "Promotion at 100%"}, []text{{"При 100% найдите и выполните задание повышения Federal Navy на корабельной доске миссий.", "At 100%, find and complete a Federal Navy promotion mission on the ship mission board."}}},
 	},
 	"empire": {
-		{"Планируйте продвижение под цель: Imperial Courier — Master, Achenar — Squire, Imperial Clipper — Baron, Imperial Cutter — Duke. Выполняйте подходящие задания имперских малых фракций и сравнивайте репутационную награду с затратами и риском.", "Plan advancement around a target: Imperial Courier at Master, Achenar at Squire, Imperial Clipper at Baron and Imperial Cutter at Duke. Complete suitable missions for Imperial minor factions, weighing reputation rewards against cost and risk."},
-		{"При 100% ищите задание повышения Imperial Navy на корабельной доске миссий. Одновременно можно развивать оба флота. Запланируйте бюджет на корпус, модули и восстановление открытого корабля.", "At 100%, look for an Imperial Navy promotion mission on the ship mission board. You can advance in both navies. Budget for the unlocked ship's hull, outfitting and rebuy."},
+		{"method", text{"Имперские фракции", "Imperial factions"}, []text{{"Выполняйте задания имперских малых фракций. Imperial Courier открывается на Master, Achenar — Squire, Imperial Clipper — Baron, Imperial Cutter — Duke.", "Complete missions for Imperial minor factions. Imperial Courier unlocks at Master, Achenar at Squire, Imperial Clipper at Baron and Imperial Cutter at Duke."}}},
+		{"promotion", text{"Повышение при 100%", "Promotion at 100%"}, []text{{"При 100% найдите и выполните задание повышения Imperial Navy на корабельной доске миссий. Продвижение во флотах Империи и Федерации доступно одновременно.", "At 100%, find and complete an Imperial Navy promotion mission on the ship mission board. You can advance in both the Imperial and Federal navies."}}},
 	},
 }
 
 func guideFor(id, language string) M {
 	sections := []M{}
-	for index, paragraph := range guides[id] {
-		title := text{"Как продвигаться", "How to advance"}
-		if index > 0 {
-			title = text{"Практический следующий шаг", "A practical next step"}
+	for _, section := range guides[id] {
+		paragraphs := []string{}
+		for _, paragraph := range section.Paragraphs {
+			if value := paragraph.Get(language); value != "" {
+				paragraphs = append(paragraphs, value)
+			}
 		}
-		sections = append(sections, M{"id": []string{"method", "practice"}[index], "title": title.Get(language), "paragraphs": []string{paragraph.Get(language)}})
+		if len(paragraphs) > 0 {
+			sections = append(sections, M{"id": section.ID, "title": section.Title.Get(language), "paragraphs": paragraphs})
+		}
 	}
-	return M{"title": text{"Ранг как рабочая цель", "Turn rank into a practical goal"}.Get(language), "sections": sections}
+	return M{"title": "", "sections": sections}
 }
