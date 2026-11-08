@@ -1,45 +1,110 @@
 {
+  "applicationVersion": "2.7.0",
   "language": "ru",
+  "data": "synthetic",
+  "displayMode": "fullscreen",
   "images": [
     {
-      "file": "academy.png",
-      "sha256": "4c126f262e29060361dcc024c6eb2514beb554830b012d7a4069a81be306fa7b"
+      "file": "overview.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "647902b549a0b6d2e4a57045a64fc5f251f56fe54d7ec6123a1eedc62df2487b"
     },
     {
-      "file": "article.png",
-      "sha256": "d38bfeb949f9abcbf30bd403fae43ff7c34a0a5d46263380b2e8dcbc221b111b"
+      "file": "commander.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "b4542e34aef3607d54615f403fd72455834d9d7e2d7a14c24f9ab2f0a4c8fd51"
     },
     {
-      "file": "carrier-trade.png",
-      "sha256": "0f31a7dc2733faddd18cd2412475b0c2e553ab6186e807ee4366590a5f738a66"
+      "file": "ranks.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4b94e7fdfda1f01897d6d0d26394ea5b75df13487f05400c1ce073c6161069ee"
     },
     {
-      "file": "colonization.png",
-      "sha256": "f55f6705dc99a1dc5aba6a222acd18eff00363a8f6e7484e080b2f5bd2041b92"
+      "file": "fleet.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "93cd5a69cee2123c248c806ae4db2762ed2acc6d8c5ea456c3b098fb7dea6a13"
+    },
+    {
+      "file": "inventory.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "61f380cbf97bcfbf9c12ecc81a26772e76f75d8cda100b71a876c96fb9ee29da"
+    },
+    {
+      "file": "navigation.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9107ca5c2881293d9c5009fa020086a89e68cdf3edef65c0e92fa657dc6f4c81"
+    },
+    {
+      "file": "navigation-compact.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4416de60b2cb5f299ff46759c0d742e6d19a82383ea67ae81baf8b02c2ab82c8"
     },
     {
       "file": "deals.png",
-      "sha256": "501b24be061215470dd2cefbffcc0eaba111f40e616eb6849afe692f92eaa6b9"
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9cc10dc331a554b462e5b9dba8f9025160888ff269aa21ec27507cf0eafe1d63"
     },
     {
-      "file": "engineer.png",
-      "sha256": "bf1b8f2a280d1d308f505d8b577dad487db646db4f33a4bbc95fdd7647e61d4f"
-    },
-    {
-      "file": "overview.png",
-      "sha256": "0d5107dba06843ad44d76407e4ede12a1fe961cc77e2ca7daaa2ddefe050a2a2"
+      "file": "carrier-trade.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "5aea751f06b0b16e93d616b564fd35fece6fb0a46d97353ffe9ced521855d46e"
     },
     {
       "file": "route.png",
-      "sha256": "2efd7f11c3833212682df8c37bdd0f5c701b95d7066992b8c193856260aaed4f"
-    },
-    {
-      "file": "ship.png",
-      "sha256": "95cd3053fc76743d7dbdc75957a5ecfd1bb39422871cbb8a88683347764f836a"
+      "width": 1920,
+      "height": 1080,
+      "sha256": "ab0ea794995f7f20cf21313792db1ecc65a8eb9c48278f1e13e673a23b5d3024"
     },
     {
       "file": "ships.png",
-      "sha256": "ea09d51db5a8d5c5c4d961f3cc8be8f66fa7c10e7eb73bca90fa3dbdf6072412"
+      "width": 1920,
+      "height": 1080,
+      "sha256": "b3334f4d24d5e62002ef4a4b93cc74e695f3937f53e991c9a224a3431772e8d6"
+    },
+    {
+      "file": "ship.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f20510c3948da9d76d4092fd87b9805c751c234a36c3da6be3e4aa58276cccce"
+    },
+    {
+      "file": "engineer.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4426d291a79b69a07e8097d8f0c3bdcb5267204e59fa3973370545b84fceb300"
+    },
+    {
+      "file": "article.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "903c4de4a9659871bf35b7f032eb54be35e17341d193899beb778f0673db801d"
+    },
+    {
+      "file": "colonization.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8ffda7425bc15ddc44f9549ab5aa52e05f0d5fbc4ccd51e781454c2e50ffaac4"
+    },
+    {
+      "file": "academy.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "7a127e6b84366c474d114165cd0ac4a9892e02296dc60d40a7474c7264c2f352"
+    },
+    {
+      "file": "exobiology.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "b9d68592e8c0360bcb73fbcf317b9f2fc78c552526658b82bc50d61870696293"
     }
   ]
 }

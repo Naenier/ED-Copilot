@@ -19,7 +19,7 @@ function fixture(){
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'colonization-workspace.js'),'utf8'),{window});
  const api=window.ColonyWorkspaceUI;
  const origin=(name='Home system')=>C.state.colonization.search={running:false,origin:{name,faction:'System controlling faction'},options:{originSystem:name},factions:[{name:'Station Faction'},{name:'System controlling faction'}],claimStations:[{marketId:9001,name:'Home port',system:name,faction:'Station Faction',hasColonisationContact:true,distanceLs:0,type:'Coriolis'},{marketId:9002,name:'Other port',system:name,faction:'Other Station Faction',hasColonisationContact:null}]};
- return {C,ui,api,calls,toasts,nodes,origin,setRPC(value){rpc=value;},get renders(){return renders;},get loads(){return loads;}};
+ return {window,C,ui,api,calls,toasts,nodes,origin,setRPC(value){rpc=value;},get renders(){return renders;},get loads(){return loads;}};
 }
 function project(id,name,extra={}){
  return {id,name,targetSystem:name+' system',originSystem:name+' origin',faction:name+' faction',status:'building',buildings:[{status:'building'},{status:'planned'}],unknownBills:1,totalMissing:80,concurrent:1,points:{tier2:0,tier3:null},economyPlan:{name:'Промышленность'},operationalSupplies:[{commodity:'steel',name:'Сталь',missing:80,cargoAvailable:0}],nextTask:{kind:'delivery',text:'Доставить сталь — 80 т'},...extra};
@@ -169,6 +169,66 @@ test('unknown contact remains selectable with an explicit game check and stale i
  f.C.state.colonization.search.claimStations[1].hasColonisationContact=false;f.api.init(f.C,f.ui);
  assert.equal(f.C.colonizationWorkspace.station,'');assert.equal(f.C.colonizationWorkspace.faction,'');
  html=f.api.render(f.C,f.ui);assert.doesNotMatch(html,/Other port/);
+});
+
+test('carrier warehouse controls distinguish unknown and zero with separate squadron availability',()=>{
+ const f=fixture();f.C.mode='Снабжение';
+ f.C.state.colonization.carrierWarehouses=[{kind:'fleet',known:false,included:true,knownTons:null,receivedAt:'2031-01-01T12:00:00Z',reason:'Склад не прочитан или требует обновления Frontier.'},{kind:'squadron',known:true,included:false,knownTons:0,callsign:'<SYN-001>'}];
+ let html=f.api.render(f.C,f.ui);
+ assert.match(html,/Учитывать склад флотоносца/);assert.doesNotMatch(html,/id="colony-squadron-stock-access"/);
+ assert.match(html,/Личный флотоносец<\/strong> · Неизвестно/);
+ assert.match(html,/Флотоносец эскадрильи · &lt;SYN-001&gt;<\/strong> · 0 т/);
+ assert.match(html,/Ожидает данных/);assert.match(html,/Получено /);
+ f.C.state.colonization.includeCarrierWarehouse=true;html=f.api.render(f.C,f.ui);
+ assert.match(html,/id="colony-squadron-stock-access" type="checkbox"/);
+ assert.match(html,/Доступен груз эскадры/);
+ const dictionary={};
+ for(const filename of fs.readdirSync(path.join(__dirname,'../localization')).filter(x=>x.endsWith('_en.json')).sort())Object.assign(dictionary,JSON.parse(fs.readFileSync(path.join(__dirname,'../localization',filename),'utf8')));
+ f.window.CopilotI18n={t:key=>dictionary[key]??key,locale:()=> 'en-GB'};
+ html=f.api.render(f.C,f.ui);assert.match(html,/Include carrier warehouse/);assert.match(html,/Squadron cargo is available to me/);assert.match(html,/Awaiting data/);
+});
+
+test('warehouse checkbox persists both options and finishes without a disabled stale control',async()=>{
+ const f=fixture();f.C.mode='Снабжение';f.C.colonizationWorkspace={origin:'Keep draft',faction:'Keep faction'};
+ const pending=deferred();f.setRPC(()=>pending.promise);
+ const event={target:{id:'colony-include-carrier-stock',checked:true}};
+ assert.equal(f.api.handleChange(event,f.C,f.ui),true);
+ assert.equal(f.C.colonizationWorkspace.warehousePending,true);assert.equal(f.calls.length,1);
+ assert.match(f.api.render(f.C,f.ui),/id="colony-include-carrier-stock" type="checkbox" disabled/);
+ f.api.handleChange(event,f.C,f.ui);assert.equal(f.calls.length,1);
+ assert.deepEqual(f.calls[0],{op:'action',params:{tab:'colonization',mode:'Снабжение',selected:'unrelated-row',query:'filter',actionId:'colony.carrier-stock',values:{includeCarrierWarehouse:true,squadronWarehouseAccessConfirmed:false}}});
+ pending.resolve({ok:true});await f.C.colonizationWorkspace.warehouseSave;
+ assert.equal(f.C.state.colonization.includeCarrierWarehouse,true);assert.equal(f.C.colonizationWorkspace.warehousePending,false);
+ assert.equal(f.C.colonizationWorkspace.origin,'Keep draft');assert.equal(f.loads,1);
+ assert.doesNotMatch(f.api.render(f.C,f.ui),/id="colony-include-carrier-stock"[^>]*disabled/);
+});
+
+test('warehouse save failure preserves settings and completion does not redraw a different tab',async()=>{
+ const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ f.C.state.commander.fid='F1';f.C.state.colonization.carrierWarehouses=[{kind:'squadron',id:'43',known:true}];
+ f.setRPC(async()=>{throw new Error('<save failed>');});
+ f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);
+ await f.C.colonizationWorkspace.warehouseSave;
+ assert.notEqual(f.C.state.colonization.squadronWarehouseAccessConfirmed,true);
+ assert.match(f.api.render(f.C,f.ui),/&lt;save failed&gt;/);
+ const pending=deferred();f.setRPC(()=>pending.promise);
+ f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);
+ f.C.tab='settings';const rendered=f.renders;
+ pending.resolve({ok:true});await f.C.colonizationWorkspace.warehouseSave;
+ assert.equal(f.renders,rendered);assert.equal(f.loads,0);assert.equal(f.C.colonizationWorkspace.warehousePending,false);
+});
+
+test('shared stock confirmation is disabled without identity and submits the displayed owner and carrier scope',async()=>{
+ const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ let html=f.api.render(f.C,f.ui);
+ assert.match(html,/id="colony-squadron-stock-access"[^>]*disabled/);
+ assert.match(html,/Сначала обновите Frontier, чтобы прочитать флотоносец эскадры/);
+ f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);assert.equal(f.calls.length,0);
+ f.C.state.commander.fid='F1';f.C.state.colonization.carrierWarehouses=[{kind:'squadron',id:'43',known:true,callsign:'SYN-043',knownTons:10}];
+ html=f.api.render(f.C,f.ui);assert.doesNotMatch(html,/id="colony-squadron-stock-access"[^>]*disabled/);assert.doesNotMatch(html,/<select/);
+ f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);
+ await f.C.colonizationWorkspace.warehouseSave;
+ assert.equal(f.calls[0].params.values.squadronWarehouseAccessScope,'F1|43');
 });
 
 test('manual placeholder faction is rejected before any search or persistence request',async()=>{

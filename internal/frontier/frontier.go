@@ -438,7 +438,7 @@ func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 	c.mu.Unlock()
 	c.notify()
 	defer func() { c.mu.Lock(); c.syncing = false; c.mu.Unlock(); c.notify() }()
-	data, issues, observed := v.M{}, v.M{}, v.M{}
+	data, issues, observed, requested := v.M{}, v.M{}, v.M{}, v.M{}
 	current := c.opts.Now()
 	c.mu.Lock()
 	profileDue := c.endpointTimes["profile"].IsZero() || !current.Before(c.endpointTimes["profile"].Add(time.Minute))
@@ -500,6 +500,7 @@ func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 	}
 	c.mu.Unlock()
 	if carrierDue {
+		requested["carrier"] = v.ISO(c.opts.Now())
 		record, err := c.capi(ctx, "fleetcarrier")
 		if err == nil && record != nil && v.Str(v.At(record, "name", "callsign")) == "" {
 			err = fail("Frontier не вернул данные флотоносца.", "CARRIER_INVALID", 502)
@@ -516,6 +517,16 @@ func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 			data["carrier"] = record
 			observed["carrier"] = v.ISO(c.opts.Now())
 		}
+		// Squadron data is optional and separate from the personal carrier.
+		// Never use bank.commodities as the physical squadron carrier hold.
+		requested["squadron"] = v.ISO(c.opts.Now())
+		squadron, squadronErr := c.capi(ctx, "squadron")
+		if squadronErr != nil {
+			issues["squadron"] = squadronErr.Error()
+		} else {
+			data["squadron"] = squadron
+			observed["squadron"] = v.ISO(c.opts.Now())
+		}
 	}
 	c.mu.Lock()
 	if epoch != c.epoch {
@@ -528,7 +539,7 @@ func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 	}
 	c.lastError = strings.Join(messages, " ")
 	c.mu.Unlock()
-	return v.M{"status": c.Status(), "data": data, "errors": issues, "metadata": v.M{"source": "Frontier CAPI", "observedAt": observed}}, nil
+	return v.M{"status": c.Status(), "data": data, "errors": issues, "metadata": v.M{"source": "Frontier CAPI", "observedAt": observed, "requestStartedAt": requested}}, nil
 }
 func (c *Client) Logout() error {
 	c.mu.Lock()

@@ -41,14 +41,6 @@ func HUDVisible(enabled bool, running any, foregroundProcess string) bool {
 
 func BuildHUD(s M, now time.Time) HUDDocument { return LocalizeHUD(buildHUDContent(s, now), s) }
 
-func hudActivity(id string) string {
-	for _, a := range Activities {
-		if a.Value == id {
-			return strings.ToUpper(a.Label)
-		}
-	}
-	return "ПОЛЁТ И НАВИГАЦИЯ"
-}
 func hudGood(s M, key string) string {
 	for _, r := range v.Rows(s["goods"]) {
 		if v.Key(r["key"]) == v.Key(key) {

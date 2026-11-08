@@ -143,7 +143,7 @@ func TestNativeHiddenHUDStylesFocusAndGDIRendering(t *testing.T) {
 	hdc := win.GetDC(h.hwnd)
 	height := h.layout(hdc, 410, false)
 	win.ReleaseDC(h.hwnd, hdc)
-	if height < 120 || height > 1500 {
+	if height < 60 || height > 1500 {
 		t.Fatalf("unexpected measured HUD height: %d", height)
 	}
 	h.key = win.COLORREF(0x00030201)

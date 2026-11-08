@@ -1,0 +1,22 @@
+{
+  "Учёт склада флотоносца": "Carrier warehouse accounting",
+  "Учитывать склад флотоносца": "Include carrier warehouse",
+  "Доступен груз эскадры": "Squadron cargo is available to me",
+  "Ожидает данных": "Awaiting data",
+  "На флотоносце: ": "On carrier: ",
+  "Купить: ": "To buy: ",
+  "Не более ": "At most ",
+  "Frontier CAPI показывает общий склад, но не подтверждает право вывоза. Оставьте выключенным, если груз вам недоступен.": "Frontier CAPI shows shared stock but does not confirm withdrawal rights. Leave this off if you cannot access the cargo.",
+  "Только прочитанный груз отдельно от корабля и доставок. Ручной склад не прибавляется. Груз не резервируется между колониями.": "Read cargo only, separate from the ship hold and deliveries. Manual stock is not added. Cargo is not reserved between colonies.",
+  "Frontier показывает общий склад, но не подтверждает право вывоза. Оставьте выключенным, если груз недоступен.": "Frontier shows shared stock but does not confirm withdrawal rights. Leave this off if the cargo is unavailable to you.",
+  "Учтён в плане": "Included in the plan",
+  "Не учтён в плане": "Not included in the plan",
+  "Получено ": "Received ",
+  "Склад не прочитан или требует обновления Frontier.": "Warehouse not read or Frontier refresh required.",
+  "Снимок Frontier CAPI; изменения других игроков могут запаздывать.": "Frontier CAPI snapshot; changes by other players may be delayed.",
+  "Общий склад не учтён: подтвердите право вывоза груза.": "Shared warehouse excluded: confirm cargo withdrawal rights.",
+  "Frontier подтвердил отсутствие личного флотоносца.": "Frontier confirmed there is no personal carrier.",
+  "Не удалось сохранить учёт склада. Повторите действие.": "Could not save warehouse accounting. Try again.",
+  "Параметр учёта склада должен быть включён или выключен.": "The warehouse accounting option must be on or off.",
+  "Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.": "Refresh Frontier first to read the squadron carrier."
+}

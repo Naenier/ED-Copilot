@@ -18,7 +18,7 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
 var DefaultTabs = []string{"overview", "ranks", "politics", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
@@ -210,6 +210,8 @@ func buildPage(tab, mode, query string, s M) Page {
 	p := Page{Title: Title(tab), Columns: []string{"Параметр", "Значение"}}
 	cmd := v.Obj(s["commander"])
 	switch tab {
+	case "commander":
+		return CommanderPage(s, mode, query)
 	case "ranks":
 		return RanksPage(s)
 	case "politics":
@@ -424,9 +426,9 @@ func buildPage(tab, mode, query string, s M) Page {
 				}
 			}
 		case "Снабжение":
-			p.Columns = []string{"Товар", "Нужно, т", "Сдано, т", "Осталось, т", "На борту, т", "На флотоносце, т", "Основание"}
+			p.Columns = []string{"Товар", "Нужно, т", "Сдано, т", "Осталось, т", "На борту, т", "На флотоносце, т", "Купить, т", "Основание"}
 			for _, r := range v.Rows(project["supplies"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["delivered"]), Number(r["missing"]), Number(r["cargoAvailable"]), Number(r["carrierAvailable"]), Label(r["source"])}, "Остаток по строительному складу уже включает принятые поставки. Груз на борту ещё не доставлен.\r\n"+fields(r, "updatedAt", "Наблюдение", "sourceNote", "Источник оценки")))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["delivered"]), Number(r["missing"]), Number(r["cargoAvailable"]), Number(r["carrierAvailable"]), Number(r["toBuy"]), Label(r["source"])}, "Остаток по строительному складу уже включает принятые поставки. Груз на борту ещё не доставлен.\r\n"+fields(r, "updatedAt", "Наблюдение", "sourceNote", "Источник оценки")))
 			}
 		case "Поставки":
 			p.Columns = []string{"Время", "Товар", "Объём, т", "Основание", "Объект"}

@@ -51,6 +51,7 @@ var modernPreviewNames = map[string]bool{
 	"exobiology":   true,
 	"readme-deals": true, "settings-details": true, "route-details": true,
 	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
+	"readme-commander": true, "readme-ranks": true, "readme-fleet": true, "readme-inventory": true, "readme-navigation": true, "readme-navigation-compact": true,
 }
 
 type modernPreviewCapture struct {

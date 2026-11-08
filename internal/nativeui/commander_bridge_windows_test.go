@@ -25,6 +25,16 @@ func TestCommanderDomainsReachActualWebBridgeWithoutUnrelatedCatalogues(t *testi
 		if _, err := dispatchWeb(e, "settings", M{"values": M{"language": language}}); err != nil {
 			t.Fatal(err)
 		}
+		profile, err := dispatchWeb(e, "view", M{"tab": "commander"})
+		if err != nil || v.At(profile, "state", "commanderProfile", "commanderFID") != "FNATIVE-SYNTHETIC" || v.Num(v.At(profile, "state", "commanderProfile", "finance", "netWorth")) != 8734000000 {
+			t.Fatal("commander observations were removed at the WebView boundary", err)
+		}
+		if len(v.Rows(v.At(profile, "state", "commanderProfile", "fleet", "entries"))) != 3 || len(v.Rows(v.At(profile, "state", "commanderProfile", "statistics", "sections"))) < 4 {
+			t.Fatal("fleet and game statistics did not reach the actual renderer")
+		}
+		if v.At(profile, "state", "engineeringInventory") == nil || v.At(profile, "state", "coloniesSelectors") == nil || v.At(profile, "state", "world") != nil {
+			t.Fatal("commander did not receive its lightweight supporting domains")
+		}
 		ranks, err := dispatchWeb(e, "view", M{"tab": "ranks"})
 		if err != nil || len(v.Rows(v.At(ranks, "state", "ranks", "disciplines"))) != 8 {
 			t.Fatal("rank data was removed at the WebView boundary", err)

@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/assets/copilot-mark.png" width="76" alt="ED Copilot logo"></p>
 
-# ED Copilot 2.6.0
+# ED Copilot
 
 **English** · [Русский](README.ru.md)
 
@@ -14,12 +14,20 @@ A desktop companion for Elite Dangerous: trading, mining, exobiology, fleet carr
 
 ## Getting started
 
-1. Install **ED-Copilot-2.6.0-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
+1. Install the **Windows Setup** from the latest release, or extract the portable archive and run `ED Copilot.exe`.
 2. Start Elite Dangerous. Copilot reads the game journals; choose their folder in Settings if it is not detected automatically.
-3. Use **…** in the sidebar to add the activities you need. Fleet carrier, colonisation and other optional tools can be hidden.
+3. Choose a workspace using the icons on the far left, then open a tool from that workspace’s sidebar. Use **…** to customise the visible tools.
 4. Select an activity for the overlay and start working through your plan.
 
 Windows 10/11 x64 is supported. The application window requires Microsoft Edge WebView2 Runtime; the installer offers to install it if needed. You do not need Go, Python or Node.js. You can choose the installation folder, including `C:\Games\ED Copilot`.
+
+## Workspaces and your commander
+
+The slim left rail groups tools into Work, Trading, Industry and development, Exploration, Fleet carriers, Galaxy, Library and Connections. The sidebar shows the selected group. Collapse it when you need more space; the group icons remain available. **Settings** has one permanent button at the bottom of the rail. **Ctrl+K** finds a tool across all groups.
+
+Your avatar opens **Commander**: summary, ranks, finances, inventory, property, fleet, statistics, reputation and journal. Review the current ship alongside observed stored ships, modules, cargo, engineering materials, ship locker and backpack. Each inventory distinguishes an unknown stock from a confirmed empty one.
+
+![Commander summary and grouped navigation](docs/screenshots/en/commander.png)
 
 ## Star system search
 
@@ -89,6 +97,8 @@ Manage multiple colonies independently. Choose a system using your preferred sta
 
 Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
 
+Carrier stock is optional in each colony’s plan. Enable **Use fleet carrier stock** to include known personal-carrier cargo; enable **Squadron cargo is available** as well when you can use that stock. The plan shows these sources separately with their callsigns and observation times. Refresh them through Frontier. Stock aboard a carrier remains separate from cargo on your ship and deliveries accepted by a construction depot.
+
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
 Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
@@ -96,6 +106,10 @@ Engineering plans combine material requirements for multiple modules and upgrade
 ## Commander ranks and galactic politics
 
 Track all eight in-game rank disciplines with individual progress bars. Open a rank for advancement methods and a ladder of practical unlocks, including rank-gated ships, permits and discounts. Journal observations and promotions are dated separately; unknown progress remains unknown.
+
+Career cards use the emblem for your observed rank, while naval cards use their faction’s crest. Unknown ranks have a neutral symbol.
+
+![Commander ranks and practical unlocks](docs/screenshots/en/ranks.png)
 
 Politics brings together public community goals, your recorded contribution, Powerplay powers and indexed systems, local faction influence and conflicts, and reported Thargoid states. Search a system or filter political observations, inspect timestamps and copy a destination into the galaxy map. Cached observations remain available offline.
 
@@ -109,7 +123,7 @@ Nine courses and 27 lessons cover trading, group operations, getting started wit
 
 The overlay displays panels for the selected activity only while Elite Dangerous is focused. It adapts to ship, SRV/Nomad and on-foot play; switching to Copilot hides the game panels.
 
-Compact panels fill the right side first, then continue on the left. In a ship or SRV, they stay above the lower cockpit instruments. Empty plans and repeated information are hidden, keeping the next step and relevant warnings visible. Your colonies are recovered from journal claims and become available in the overlay selector.
+Compact panels fill the right side first, then continue on the left. In a ship or SRV, they stay above the lower cockpit instruments. The overlay starts with useful task information, without a permanent product or activity header. Location appears briefly within a relevant panel when needed. Empty plans and repeated information are hidden; an idle activity leaves the game clear. Your colonies are recovered from journal claims and become available in the overlay selector.
 
 | Shortcut | Action |
 | --- | --- |
@@ -135,4 +149,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.6.0](docs/RELEASE-2.6.0.md) · [Building and testing (RU)](docs/TESTING.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.7.0](docs/RELEASE-2.7.0.md) · [Building and testing (RU)](docs/TESTING.md)

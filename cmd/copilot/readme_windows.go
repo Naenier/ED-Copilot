@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -18,24 +19,47 @@ import (
 // those of the actual Go engine.
 type readmeController struct{ *app.Engine }
 
+func readmeCaptureLanguage(enabled bool, requested string) (string, error) {
+	if !enabled && requested != "" {
+		return "", errors.New("--readme-language is available only with --readme-screenshots")
+	}
+	if requested == "" {
+		return "en", nil
+	}
+	if requested != "en" && requested != "ru" {
+		return "", errors.New("--readme-language must be en or ru")
+	}
+	return requested, nil
+}
+
 func newReadmeController(engine *app.Engine) (*readmeController, error) {
-	if engine.Commander()["fid"] != "FNATIVE-SYNTHETIC" || !strings.HasPrefix(filepath.Base(filepath.Dir(engine.DataDir())), "ed-copilot-native-smoke-") || engine.Language() != "en" {
-		return nil, errors.New("README capture requires the temporary English synthetic profile")
+	root := filepath.Dir(engine.DataDir())
+	temporary := strings.EqualFold(filepath.Clean(filepath.Dir(root)), filepath.Clean(os.TempDir()))
+	if engine.Commander()["fid"] != "FNATIVE-SYNTHETIC" || !temporary || !strings.HasPrefix(filepath.Base(root), "ed-copilot-native-smoke-") || (engine.Language() != "en" && engine.Language() != "ru") {
+		return nil, errors.New("README capture requires the isolated temporary synthetic profile in English or Russian")
 	}
 	return &readmeController{engine}, nil
 }
 
 func (c *readmeController) Snapshot() v.M {
-	return englishReadmeFixture(c.Engine.Snapshot()).(map[string]any)
+	return c.fixture(c.Engine.Snapshot())
 }
 func (c *readmeController) SnapshotForUI(tab string) v.M {
-	return englishReadmeFixture(c.Engine.SnapshotForUI(tab)).(map[string]any)
+	return c.fixture(c.Engine.SnapshotForUI(tab))
 }
 func (c *readmeController) SnapshotForHUD() v.M {
-	return englishReadmeFixture(c.Engine.SnapshotForHUD()).(map[string]any)
+	return c.fixture(c.Engine.SnapshotForHUD())
+}
+
+func (c *readmeController) fixture(state v.M) v.M {
+	if c.Engine.Language() == "en" {
+		return englishReadmeFixture(state).(map[string]any)
+	}
+	return state
 }
 
 var readmeFixtureNames = strings.NewReplacer(
+	"Снабжение новой станции", "Supply a new station",
 	"Тестовый командир", "Demo Commander",
 	"Звёздный попутчик", "Star Voyager",
 	"Тестовая колония А", "Demo Colony Alpha",

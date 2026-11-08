@@ -15,6 +15,11 @@ func HelpForLanguage(tab, language string) string {
 }
 
 var englishSectionHelp = map[string]string{
+	"commander": `Commander centre
+
+Use the views to inspect observed finances, inventory, possessions, ships, statistics, reputation and recent journal activity. A dash means no confirmed observation is available; zero means a known zero value.
+
+The current ship is separate from an owned-ship inventory. Visiting a shipyard provides a stored-ship list. After backpack or storage changes, an older inventory may require a replacement snapshot; an unknown total is never presented as exact. Ship engineering materials follow the existing collection and expense ledger. Frontier can supplement observations only for the matching active commander.`,
 	"ranks": `Commander ranks
 
 Eight cards show your in-game ranks and the observed percentage towards the next rank. Open a discipline to read advancement methods and rank-specific rewards. Progress comes from journal Progress events and promotions from Promotion events; first observation is not an achievement date. Frontier can supplement a known rank without inventing an unknown percentage.

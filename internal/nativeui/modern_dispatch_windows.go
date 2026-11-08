@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
+	"github.com/Naenier/ED-Copilot/internal/frontend"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/reference"
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -32,6 +33,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "rank.insignia":
+		return frontend.RankInsignia(input)
 	case "exo.sites":
 		if provider, ok := backend.(interface{ ExobiologySites(M) (M, error) }); ok {
 			return provider.ExobiologySites(input)
@@ -279,7 +282,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "ranks", "politics", "politicsNetwork", "updates"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
 		out[key] = state[key]
 	}
 	return p.LocalizeWebState(redactWebSecrets(out))

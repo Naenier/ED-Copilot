@@ -48,6 +48,16 @@ func TestLegacyBehaviorParity(t *testing.T) {
 		got = append(got, r)
 	}
 	// Go omits a zero millisecond fraction; JavaScript writes .000Z.
+	// Carrier supply is now explicit opt-in and requires a verified observation.
+	// Keep the historic fixture intact; only its old implicit warehouse field
+	// changes. The new accounting contract has dedicated carrier_stock tests.
+	for _, project := range rows(fixture["want"]) {
+		for _, building := range rows(project["buildings"]) {
+			for _, requirement := range rows(building["requirements"]) {
+				requirement["carrierAvailable"] = nil
+			}
+		}
+	}
 	actual, _ := json.MarshalIndent(normalizeTimes(value.Clone(got)), "", "  ")
 	expected, _ := json.MarshalIndent(normalizeTimes(fixture["want"]), "", "  ")
 	if !bytes.Equal(actual, expected) {

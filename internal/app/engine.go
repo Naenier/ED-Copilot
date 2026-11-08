@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	"github.com/Naenier/ED-Copilot/internal/colonization"
+	"github.com/Naenier/ED-Copilot/internal/commander"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	"github.com/Naenier/ED-Copilot/internal/frontier"
@@ -38,7 +39,7 @@ import (
 
 type M = v.M
 
-const Version = "2.6.0"
+const Version = "2.7.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -58,6 +59,7 @@ type Engine struct {
 	Engineering                                    *engineering.Planner
 	Exobiology                                     *exobiology.Service
 	Pilot                                          *pilot.Tracker
+	CommanderProfile                               *commander.Tracker
 	Ranks                                          *ranks.Tracker
 	Politics                                       *politics.Service
 	Trading                                        *trading.Service
@@ -144,6 +146,7 @@ func New(o Options) (*Engine, error) {
 	x.Engineering = engineering.New(v.Obj(saved["engineering"]))
 	x.Exobiology = exobiology.New(v.Obj(saved["exobiology"]))
 	x.Pilot = pilot.New()
+	x.CommanderProfile = commander.New()
 	x.Ranks = ranks.New(v.Obj(saved["ranks"]))
 	x.Politics = politics.New(v.Obj(saved["politics"]), politics.Options{HTTPClient: o.HTTPClient, DisableNetwork: o.DisableNetwork})
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
@@ -234,6 +237,7 @@ func (e *Engine) resetObserved() {
 	e.Engineering.Reset()
 	e.Exobiology.Reset()
 	e.Pilot.Reset()
+	e.CommanderProfile.Reset()
 	e.Ranks.Reset()
 	e.Politics.ResetObserved()
 	e.Colonies.Reset()
@@ -246,6 +250,7 @@ func (e *Engine) Apply(event, meta M) {
 	side := v.Bool(meta["side"])
 	e.mu.Lock()
 	cmd := e.commander
+	previousFID := v.Str(cmd["fid"])
 	switch kind {
 	case "Fileheader":
 		version := v.Str(event["gameversion"])
@@ -343,6 +348,12 @@ func (e *Engine) Apply(event, meta M) {
 	e.revision++
 	e.mu.Unlock()
 	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "side": meta["side"]}
+	if previousFID != "" && v.Str(cmdCopy["fid"]) != previousFID && (kind == "Commander" || kind == "LoadGame") {
+		// Reader normally resets all observations before changing FID. Keep
+		// direct journal dispatch equally safe for owner-scoped projections.
+		e.Engineering.Reset()
+		e.Pilot.Reset()
+	}
 	e.Carrier.Apply(event, ctx)
 	ctx["carrierId"] = v.First(event["CarrierID"], e.Carrier.OwnerID)
 	if kind == "CargoTransfer" {
@@ -356,6 +367,7 @@ func (e *Engine) Apply(event, meta M) {
 	e.Engineering.Apply(event, ctx)
 	e.Exobiology.Apply(event, v.Merge(v.Copy(meta), ctx))
 	e.Pilot.Apply(event, ctx)
+	e.CommanderProfile.Apply(event, ctx)
 	e.Ranks.Apply(event, ctx)
 	e.Politics.Apply(event)
 	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
@@ -422,6 +434,7 @@ func (e *Engine) Snapshot() M {
 	}
 	cmd["cargo"] = cargo
 	cmd["cargoTons"] = tons
+	cmd["cargoKnown"] = cargoSync["inventory"] != nil
 	cmd["cargoForSync"] = cargoSync["inventory"]
 	cmd["cargoForSyncAt"] = cargoSync["timestamp"]
 	cmd["cargoVessel"] = cmd["vehicle"]
@@ -469,6 +482,9 @@ func (e *Engine) Snapshot() M {
 	state["carrierTrade"] = e.carrierTradeSnapshot(c)
 	state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
 	state["ranks"] = e.Ranks.SnapshotForLanguage(v.Str(settings["language"]))
+	state["engineeringInventory"] = e.Engineering.InventorySnapshot()
+	state["coloniesSelectors"] = e.Colonies.SelectorSnapshot()
+	state["commanderProfile"] = e.commanderProfileSnapshot(v.Obj(state["engineeringInventory"]))
 	state["politics"] = e.Politics.Snapshot()
 	state["updates"] = e.updateSnapshot()
 	if len(v.Obj(state["trading"])) == 0 {

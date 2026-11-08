@@ -11,7 +11,7 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
-func TestDocumentationControllerRequiresSyntheticTemporaryEnglishProfile(t *testing.T) {
+func TestDocumentationControllerRequiresSyntheticTemporaryProfileAndAdaptsOnlyEnglish(t *testing.T) {
 	root, err := os.MkdirTemp("", "ed-copilot-native-smoke-")
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +46,56 @@ func TestDocumentationControllerRequiresSyntheticTemporaryEnglishProfile(t *test
 	if _, err = engine.Do("/api/settings", v.M{"language": "ru"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = newReadmeController(engine); err == nil {
-		t.Fatal("Russian profile accepted for English photographs")
+	russian, err := newReadmeController(engine)
+	if err != nil {
+		t.Fatal("Russian isolated capture rejected", err)
+	}
+	for _, state := range []v.M{russian.SnapshotForUI("overview"), russian.SnapshotForHUD(), russian.Snapshot()} {
+		if v.At(state, "settings", "language") != "ru" || v.At(state, "commander", "name") != "Тестовый командир" || v.At(state, "commander", "system") != "Тестовая колония А" {
+			t.Fatal("Russian documentation changed synthetic names or language", v.Obj(state["commander"]))
+		}
+	}
+	if _, err = engine.Do("/api/settings", v.M{"language": "en"}); err != nil {
+		t.Fatal(err)
+	}
+	if v.At(controller.SnapshotForUI("overview"), "commander", "name") != "Demo Commander" || engine.Commander()["name"] != "Тестовый командир" {
+		t.Fatal("returning to English did not preserve raw fixture observations")
+	}
+}
+
+func TestDocumentationLanguageOptionIsRestrictedToTheCaptureMode(t *testing.T) {
+	for _, tc := range []struct {
+		enabled   bool
+		requested string
+		want      string
+		valid     bool
+	}{
+		{false, "", "en", true}, {true, "", "en", true},
+		{true, "en", "en", true}, {true, "ru", "ru", true},
+		{false, "en", "", false}, {false, "ru", "", false},
+		{true, "de", "", false}, {true, "EN", "", false}, {true, "ru ", "", false},
+	} {
+		got, err := readmeCaptureLanguage(tc.enabled, tc.requested)
+		if (err == nil) != tc.valid || got != tc.want {
+			t.Fatalf("%+v: %q, %v", tc, got, err)
+		}
+	}
+}
+
+func TestDocumentationControllerRejectsSyntheticNamedFoldersOutsideTheIsolatedTempRoot(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "ed-copilot-native-smoke-misleading")
+	engine, err := app.New(app.Options{DataDir: filepath.Join(root, "profile"), JournalDir: filepath.Join(root, "journals"), DisableNetwork: true, ManualPolling: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer engine.Close()
+	engine.Apply(v.M{"event": "LoadGame", "FID": "FNATIVE-SYNTHETIC", "Commander": "Тестовый командир", "Ship": "sidewinder"}, v.M{})
+	for _, language := range []string{"en", "ru"} {
+		if _, err = engine.Do("/api/settings", v.M{"language": language}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = newReadmeController(engine); err == nil {
+			t.Fatal("folder name substituted for an actual isolated temporary profile", language)
+		}
 	}
 }

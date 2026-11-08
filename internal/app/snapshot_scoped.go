@@ -59,6 +59,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		connection = e.Reader.State()
 	}
 	connection["gameRunning"] = running
+	cmd["cargoKnown"] = cargoSync["inventory"] != nil
 	cmd["cargoForSync"], cmd["cargoForSyncAt"], cmd["cargoVessel"] = cargoSync["inventory"], cargoSync["timestamp"], cmd["vehicle"]
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "connection": connection, "pilot": e.Pilot.Snapshot()}
 	if syncOnly {
@@ -113,6 +114,11 @@ func (e *Engine) snapshotScoped(tab string) M {
 	if fullEngineering {
 		state["engineering"] = eng
 	}
+	if tab == "commander" {
+		state["engineeringInventory"] = eng
+		state["commanderProfile"] = e.commanderProfileSnapshot(eng)
+		state["coloniesSelectors"] = e.Colonies.SelectorSnapshot()
+	}
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	ctx["engineering"] = eng
 	if tab == "exobiology" || tab == "statistics" {
@@ -122,7 +128,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	} else if tab == "overview" {
 		state["exobiology"] = e.Exobiology.SelectorSnapshot()
 	}
-	wantCarrier := oneOf(tab, "overview", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
+	wantCarrier := oneOf(tab, "overview", "commander", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)
 		ctx["carrier"] = state["carrier"]
@@ -156,7 +162,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	} else if !hud {
 		state["learning"] = e.Learning.ProgressSnapshot()
 	}
-	if tab == "ranks" {
+	if tab == "ranks" || tab == "commander" {
 		state["ranks"] = e.Ranks.SnapshotForLanguage(v.Str(settings["language"]))
 	}
 	if tab == "politics" {

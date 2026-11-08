@@ -42,14 +42,14 @@ func hudTarget(system, body string, distance any, raw bool) M {
 	return m
 }
 
-func TestHUDIdleActivitiesHaveOnlyOneDeduplicatedContext(t *testing.T) {
+func TestHUDIdleActivitiesDoNotReserveAHeaderPanel(t *testing.T) {
 	for _, activity := range Activities {
 		t.Run(activity.Value, func(t *testing.T) {
 			s := M{"settings": M{"activity": activity.Value}, "commander": M{"system": "Synthetic System", "station": "Synthetic Port", "body": "Synthetic Port", "docked": true, "vehicle": "ship", "ship": "Synthetic Ship Model", "shipName": "Synthetic Personal Name"}, "tradePlan": M{"key": "gold", "quantity": 0, "grossMargin": 0}, "engineering": M{"items": []M{}, "shopping": M{"neededUnits": 0, "missingUnits": 0}}}
 			doc := BuildHUD(s, hudFixtureNow)
 			text := hudProse(doc)
-			if len(doc.Sections) != 1 || len(doc.Sections[0].Lines) != 1 || strings.Count(text, "Synthetic System") != 1 || strings.Count(text, "Synthetic Port") != 1 {
-				t.Fatal("idle overlay contains empty or duplicated panels", doc)
+			if len(doc.Sections) != 0 {
+				t.Fatal("idle overlay reserves space without a working panel", doc)
 			}
 			for _, forbidden := range []string{"Synthetic Ship Model", "Synthetic Personal Name", "Добавьте", "Запустите дрон", "Найдите рынок", "По плану нужно: 0"} {
 				if strings.Contains(text, forbidden) {
@@ -59,15 +59,16 @@ func TestHUDIdleActivitiesHaveOnlyOneDeduplicatedContext(t *testing.T) {
 		})
 	}
 }
-func TestHUDHeaderNeverUsesStaleBodyForSpaceFlight(t *testing.T) {
-	s := M{"settings": M{"activity": "flight"}, "commander": M{"system": "Alpha", "body": "Old Body", "station": "Old Station", "vehicle": "ship", "docked": false}}
-	if header := BuildHUD(s, hudFixtureNow).Sections[0]; len(header.Lines) != 1 || header.Lines[0].Text != "Alpha" {
-		t.Fatal("stale place leaked into flight context", header)
+func TestHUDWorkingPanelRetainsCompactLocationWithoutStaleSpaceBody(t *testing.T) {
+	s := M{"settings": M{"activity": "flight"}, "commander": M{"system": "Alpha", "body": "Old Body", "station": "Old Station", "vehicle": "ship", "docked": false}, "pilot": M{"fuel": M{"mainTons": 10}}}
+	doc := BuildHUD(s, hudFixtureNow)
+	if len(doc.Sections) != 1 || doc.Sections[0].Title != "ТОПЛИВО И ГРУЗ" || doc.Sections[0].Lines[1].Text != "Alpha" || strings.Contains(hudProse(doc), "Old") {
+		t.Fatal("location was lost or stale space body leaked into working panel", doc)
 	}
 	for _, vehicle := range []string{"srv", "foot"} {
 		v.Obj(s["commander"])["vehicle"] = vehicle
-		if header := BuildHUD(s, hudFixtureNow).Sections[0]; header.Lines[0].Text != "Alpha · Old Body" {
-			t.Fatal("surface location was lost", vehicle, header)
+		if panel := BuildHUD(s, hudFixtureNow).Sections[0]; panel.Lines[len(panel.Lines)-1].Text != "Alpha · Old Body" {
+			t.Fatal("surface location was lost", vehicle, panel)
 		}
 	}
 }
@@ -75,7 +76,7 @@ func TestHUDNavigationPrioritizesNextUnvisitedStepAndKnownFuel(t *testing.T) {
 	s := M{"settings": M{"activity": "flight"}, "commander": M{"system": "Alpha", "cargoTons": 0, "cargoCapacity": 64}, "pilot": M{"navTarget": M{"system": "Alpha"}, "navRoute": []M{{"system": "Alpha"}, {"system": "Beta", "starClass": "G"}}, "fuel": M{"mainTons": 0, "mainCapacityTons": 16}}, "objectives": []M{{"title": "Unrelated goal", "system": "Gamma", "status": "active", "priority": "high"}}}
 	doc := BuildHUD(s, hudFixtureNow)
 	text := hudProse(doc)
-	if len(doc.Sections) < 2 || doc.Sections[1].Title != "СЛЕДУЮЩИЙ ПРЫЖОК" || strings.Count(text, "Beta") != 1 || strings.Contains(text, "Unrelated goal") || !hudHasWarning(doc, "Топливо: 0 / 16") {
+	if len(doc.Sections) < 2 || doc.Sections[0].Title != "СЛЕДУЮЩИЙ ПРЫЖОК" || strings.Count(text, "Beta") != 1 || strings.Contains(text, "Unrelated goal") || !hudHasWarning(doc, "Топливо: 0 / 16") {
 		t.Fatal("flight action priority or zero-fuel warning lost", doc)
 	}
 	v.Obj(v.At(s, "pilot", "fuel"))["mainTons"] = nil
@@ -95,7 +96,7 @@ func TestHUDAsteroidCurrentContextValuableCompositionAndPreparation(t *testing.T
 	s := M{"settings": M{"activity": "asteroid", "minTier": "medium"}, "commander": M{"system": "Alpha", "body": "Alpha 1", "cargoTons": 0, "cargoCapacity": 100}, "mining": M{"cargo": M{"limpets": nil}, "current": M{"refinedTons": 0, "tonsPerHour": 0}}, "prospect": M{"system": "Alpha", "body": "Alpha 1", "decision": "mine", "remaining": 80, "materials": []M{{"name": "Cheap water", "tier": "low", "percent": 70}, {"name": "Useful ore", "tier": "high", "percent": 5}}}}
 	doc := BuildHUD(s, hudFixtureNow)
 	scan := hudSection(doc, "СКАН АСТЕРОИДА")
-	if scan == nil || doc.Sections[1].Title != scan.Title || !strings.Contains(hudProse(doc), "Useful ore") || strings.Contains(hudProse(doc), "Cheap water") || hudHasWarning(doc, "Дронов") || strings.Contains(hudProse(doc), "За заход: 0") {
+	if scan == nil || doc.Sections[0].Title != scan.Title || !strings.Contains(hudProse(doc), "Useful ore") || strings.Contains(hudProse(doc), "Cheap water") || hudHasWarning(doc, "Дронов") || strings.Contains(hudProse(doc), "За заход: 0") {
 		t.Fatal("current useful scan or unknown prep was distorted", doc)
 	}
 	v.Obj(v.At(s, "mining", "cargo"))["limpets"] = 0
@@ -104,7 +105,7 @@ func TestHUDAsteroidCurrentContextValuableCompositionAndPreparation(t *testing.T
 	}
 	v.Obj(s["prospect"])["remaining"] = 0
 	scan = hudSection(BuildHUD(s, hudFixtureNow), "СКАН АСТЕРОИДА")
-	if scan == nil || len(scan.Lines) != 1 || scan.Lines[0].Role != "warn" || strings.Contains(scan.Lines[0].Text, "Можно добывать") {
+	if scan == nil || scan.Lines[0].Role != "warn" || strings.Contains(scan.Lines[0].Text, "Можно добывать") {
 		t.Fatal("exhausted asteroid still recommended", scan)
 	}
 	for _, change := range []M{{"docked": true}, {"system": "Other"}, {"body": "Other body"}} {
@@ -190,7 +191,7 @@ func TestHUDNearbyTargetsPreferCurrentSystemThenDistanceScoreAndStableID(t *test
 	s := M{"settings": M{"activity": "surface", "minTier": "low"}, "commander": M{"system": "Alpha"}, "targets": []M{farHigh, nearTie, nearLow, current, cheap, nearBest}}
 	doc := BuildHUD(s, hudFixtureNow)
 	section := hudSection(doc, "МЕСТА ПОБЛИЗОСТИ")
-	if section == nil || len(section.Lines) != 4 || section.Lines[0].Text != "Current body" || !strings.Contains(section.Lines[2].Text, "Higher score stable first") || strings.Contains(hudProse(doc), "Low value site") {
+	if section == nil || len(section.Lines) != 5 || section.Lines[0].Text != "Current body" || !strings.Contains(section.Lines[2].Text, "Higher score stable first") || section.Lines[4].Text != "Alpha" || strings.Contains(hudProse(doc), "Low value site") {
 		t.Fatal("nearby target priority/value boundary changed", doc)
 	}
 }
@@ -222,7 +223,7 @@ func TestHUDTradeArrivalKeepsOneStationAndSelectedCommodityWarnings(t *testing.T
 func TestHUDCarrierPendingJumpFuelSafetyAndStalePlanIsolation(t *testing.T) {
 	s := M{"settings": M{"activity": "carrier"}, "commander": M{"system": "Alpha"}, "carrier": M{"owned": true, "callsign": "TEST-1", "location": M{"system": "Alpha"}, "fuel": M{"tankTons": 0, "reserveTons": 100}, "jump": M{"pending": M{"system": "Beta", "departureTime": v.ISO(hudFixtureNow.Add(5 * time.Minute))}}}, "carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Alpha", "visited": true}, {"name": "Beta", "fuelUsedTons": 92, "distanceLy": 450}}}, "summary": M{"remainingJumps": 1}}}
 	doc := BuildHUD(s, hudFixtureNow)
-	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[1].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "через 5 мин") || !hudHasWarning(doc, "Перелейте в бак 92") {
+	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[0].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "через 5 мин") || !hudHasWarning(doc, "Перелейте в бак 92") {
 		t.Fatal("pending action, de-duplication or known fuel prep failed", doc)
 	}
 	v.Obj(v.At(s, "carrier", "fuel"))["tankTons"] = nil
@@ -272,7 +273,7 @@ func TestHUDEngineeringDisplaysOnlyPlannedDeficitsAndFeasibleExchange(t *testing
 		t.Fatal("engineering deficit/feasibility priority failed", doc)
 	}
 	v.Obj(s["engineering"])["items"] = []M{}
-	if len(BuildHUD(s, hudFixtureNow).Sections) != 1 {
+	if len(BuildHUD(s, hudFixtureNow).Sections) != 0 {
 		t.Fatal("unconfigured engineering plan still occupies the overlay")
 	}
 }

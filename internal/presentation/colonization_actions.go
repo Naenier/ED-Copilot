@@ -24,7 +24,14 @@ func ColonyActions(mode string, state M, selected M) []Action {
 	projects := v.Rows(c["projects"])
 	search := v.Obj(c["search"])
 	commander := v.Obj(state["commander"])
-	actions := []Action{}
+	scope, carrierChoices := "", []Choice{}
+	for _, warehouse := range v.Rows(c["carrierWarehouses"]) {
+		if warehouse["kind"] == "squadron" && v.Str(warehouse["id"]) != "" && v.Str(commander["fid"]) != "" {
+			scope = v.Str(commander["fid"]) + "|" + v.Str(warehouse["id"])
+			carrierChoices = []Choice{{Value: scope, Label: v.Text(warehouse["callsign"], "Флотоносец эскадрильи")}}
+		}
+	}
+	actions := []Action{{ID: "colony.carrier-stock", Title: "Учёт склада флотоносца", Path: "/api/colonization", Payload: M{"action": "configure"}, Fields: []Field{boolField("includeCarrierWarehouse", "Учитывать склад флотоносца", c["includeCarrierWarehouse"]), {Key: "squadronWarehouseAccessConfirmed", Label: "Доступен груз эскадры", Kind: "bool", Default: v.Bool(c["squadronWarehouseAccessConfirmed"]), Help: "Frontier CAPI показывает общий склад, но не подтверждает право вывоза. Оставьте выключенным, если груз вам недоступен."}, {Key: "squadronWarehouseAccessScope", Label: "Флотоносец эскадрильи", Kind: "select", Default: scope, Choices: carrierChoices}}}}
 	post := func(id, title, command string, payload M, fields ...Field) Action {
 		return Action{ID: id, Title: title, Path: "/api/colonization", Payload: v.Merge(M{"action": command, "projectId": projectID}, payload), Fields: fields}
 	}

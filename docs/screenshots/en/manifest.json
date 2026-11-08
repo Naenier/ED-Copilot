@@ -1,5 +1,5 @@
 {
-  "applicationVersion": "2.5.0",
+  "applicationVersion": "2.7.0",
   "language": "en",
   "data": "synthetic",
   "displayMode": "fullscreen",
@@ -8,67 +8,103 @@
       "file": "overview.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "f92ab11130fba79f85376b283fde27998a0ea45cec1744924572ac8853898d46"
+      "sha256": "5fbc03850bf0df792e837bce5db4c1357e124194a85001e0484255c80f429ab9"
+    },
+    {
+      "file": "commander.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4f068be8011b9938e9dcb3574332699b2e8284d5eb0f43c14d61330ea8f446f4"
+    },
+    {
+      "file": "ranks.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "a8cb580faec81a5825ca2edae1ac30871b45616b9dbc9207f2e502162a83e69c"
+    },
+    {
+      "file": "fleet.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "246608815be0be394acb7924cbb5330f8be1ea390a467693806bec70c5263554"
+    },
+    {
+      "file": "inventory.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9dc32bb34fdfb9308d162fac86d80c6eee29e222c799590d45702307e26d6c07"
+    },
+    {
+      "file": "navigation.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9a4c049692c34df7aea6f504fbb24c07b2c43c42be9c54bdfda6260be4f4161a"
+    },
+    {
+      "file": "navigation-compact.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "b9f8b28f97c3fcc0aed8db72c775b87ee9d0260c9544501160f29875630d13be"
     },
     {
       "file": "deals.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "b660375078f3297cbc2da34dfc6f3cad81ea527f76aa32795747e74d20b3e589"
+      "sha256": "484acb0aa8b68fd9d59a133886f5dd5b0f359a826db0d7ebb593ee7ca0164b91"
     },
     {
       "file": "carrier-trade.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "0d45f26096957891149fe947f1bffff2924553a0cc2100acb73c2e56cbf59bba"
+      "sha256": "4310fa9a1c1f7b7976bde27ce5334a53b3708608fb75375184e880a0ada86af5"
     },
     {
       "file": "route.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "0f023b13c426b8f6fe9e1c54c7e85f4ed8cc3e52b5f3f4f3a73ff158b8756c08"
+      "sha256": "959e18370beec32ebc3b7182e0d966ca9828f8eada32585090e4a8573e516793"
     },
     {
       "file": "ships.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "8d6a91df6c0bf2a2124c26ecd7484a603ea3d120e9e35065deaa9b973e3f3b90"
+      "sha256": "074f79076c795dd44a4853e99e0645ce886cb0bb81d1396a2bec5814371619b2"
     },
     {
       "file": "ship.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "7ac3f0cd85b8e8cf6448663d560b29f9571f995622a65fed484944a066cbb6a9"
+      "sha256": "e4af4bf7038148ccac0a6ed3467cd9b7b6dd9362dc63077ffb4c8468a48cf442"
     },
     {
       "file": "engineer.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "d4871d08966dbcaa8f52fddebd0dfe412bf4bd05c5df56d6e9f7a975e4de23d7"
+      "sha256": "fdb5b151435a85fdb17d9cecef6f2d849fd7f2027d5b0b3ace08018a279317f9"
     },
     {
       "file": "article.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "da390fbad0531e781d33f2296e78f5b2ca8b8d64b8418940366904b0da20bc73"
+      "sha256": "28aec8bef83d42bfb75c03f353ea71aee8ac8f166e936e25094aa50c702679df"
     },
     {
       "file": "colonization.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "4a673eb69929a826c42a8f407106cb9dd459879c510a4e0e1f231f66a7a0b626"
+      "sha256": "0ed1e47bbac43aa1add9a87bb127aee3e30a0d5e7eeadf2bc60dc5e1ebd78d97"
     },
     {
       "file": "academy.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "306aab60b694783695648760a2560d98571652a91334c7ca8c8ae078e95dd150"
+      "sha256": "e669714d6f1b11b103f332e57627dc663596c14d229ace40d82e1ab7a50b1fb5"
     },
     {
       "file": "exobiology.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "6fc5e42323b9315acb042e406c5c721a04033253f7e5b433a4f6191646d3f993"
+      "sha256": "22ca503913ed717f8fc270b41d887e728b135c931e89a09fff337efd6650c3c3"
     }
   ]
 }

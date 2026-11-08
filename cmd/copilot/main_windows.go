@@ -32,12 +32,18 @@ func main() {
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
 	demo := flag.Bool("demo", false, "Открыть демонстрацию с новым временным профилем и без сети")
-	readmeScreens := flag.Bool("readme-screenshots", false, "Capture English README pages in an isolated offline profile")
+	readmeScreens := flag.Bool("readme-screenshots", false, "Capture README pages in an isolated offline profile")
+	readmeLanguage := flag.String("readme-language", "", "README capture language: en or ru; only with --readme-screenshots")
 	stress := flag.Bool("stress", false, "Большая синтетическая история для --demo или --smoke")
 	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
 	flag.Parse()
 	if *version {
 		fmt.Printf("ED Copilot %s · %s · native Windows\n", app.Version, runtime.Version())
+		return
+	}
+	captureLanguage, err := readmeCaptureLanguage(*readmeScreens, *readmeLanguage)
+	if err != nil {
+		fail(err, "")
 		return
 	}
 	isolated := *smoke || *headless || *demo || *readmeScreens
@@ -103,8 +109,12 @@ func main() {
 			fail(fmt.Errorf("fresh profile must default to English"), *dataDir)
 			return
 		}
-		if *smoke || *headless {
-			if _, err = engine.Do("/api/settings", v.M{"language": "ru"}); err != nil {
+		if *smoke || *headless || *readmeScreens {
+			language := "ru"
+			if *readmeScreens {
+				language = captureLanguage
+			}
+			if _, err = engine.Do("/api/settings", v.M{"language": language}); err != nil {
 				fail(err, *dataDir)
 				return
 			}

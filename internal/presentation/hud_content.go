@@ -41,24 +41,6 @@ func hudContextMatches(record, commander M) bool {
 func buildHUDContent(s M, now time.Time) HUDDocument {
 	activity := v.Text(v.At(s, "settings", "activity"), "flight")
 	doc := HUDDocument{Activity: activity}
-	cmd := v.Obj(s["commander"])
-	place := v.Str(cmd["system"])
-	local := ""
-	if v.Bool(cmd["docked"]) {
-		local = v.Str(cmd["station"])
-	} else if cmd["vehicle"] == "foot" || cmd["vehicle"] == "srv" {
-		local = v.Str(cmd["body"])
-	}
-	if local != "" && !hudEqual(local, place) {
-		if place != "" {
-			place += " · "
-		}
-		place += local
-	}
-	if place == "" {
-		place = "Ожидаем игровые данные"
-	}
-	hudAdd(&doc, "ED COPILOT · "+hudActivity(activity), hudMuted(place))
 	switch activity {
 	case "exobiology":
 		hudExobiology(&doc, s)
@@ -82,7 +64,51 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	default:
 		hudFlight(&doc, s)
 	}
+	hudCompactContext(&doc, v.Obj(s["commander"]))
 	return doc
+}
+
+// Location supports the current task rather than occupying a permanent panel.
+// A body or destination already named by a working section is not repeated.
+func hudCompactContext(doc *HUDDocument, cmd M) {
+	if len(doc.Sections) == 0 {
+		return
+	}
+	parts := []string{v.Str(cmd["system"])}
+	if v.Bool(cmd["docked"]) {
+		parts = append(parts, v.Str(cmd["station"]))
+	} else if cmd["vehicle"] == "foot" || cmd["vehicle"] == "srv" {
+		parts = append(parts, v.Str(cmd["body"]))
+	}
+	known := []string{}
+	for _, section := range doc.Sections {
+		known = append(known, strings.ToLower(section.Title))
+		for _, line := range section.Lines {
+			known = append(known, strings.ToLower(line.Text))
+		}
+	}
+	missing, seen := []string{}, map[string]bool{}
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		key := strings.ToLower(part)
+		if part == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		mentioned := false
+		for _, text := range known {
+			if strings.Contains(text, key) {
+				mentioned = true
+				break
+			}
+		}
+		if !mentioned {
+			missing = append(missing, part)
+		}
+	}
+	if len(missing) > 0 {
+		doc.Sections[0].Lines = append(doc.Sections[0].Lines, hudMuted(strings.Join(missing, " · ")))
+	}
 }
 
 func hudCargo(s M, empty, limpets bool) []HUDLine {

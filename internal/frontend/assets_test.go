@@ -27,6 +27,11 @@ func TestHTMLIsCompleteOfflineDocument(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			document := HTML(nonce, smoke)
+			// WebView2 NavigateToString rejects documents over 2 MiB. Keep a
+			// useful margin so adding embedded art cannot silently prevent startup.
+			if len([]byte(document)) >= 1800*1024 {
+				t.Fatalf("inline HTML exceeds the WebView2 startup budget: %d bytes", len([]byte(document)))
+			}
 			for _, required := range []string{"<!doctype html>", `<html lang="en">`, `id="app"`, `id="layers"`, `id="toasts"`, "</body></html>"} {
 				if !strings.Contains(document, required) {
 					t.Errorf("document is missing %s", required)

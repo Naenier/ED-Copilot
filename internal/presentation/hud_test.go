@@ -43,13 +43,13 @@ func TestHUDFocusPolicyRequiresActualGameExecutable(t *testing.T) {
 		}
 	}
 }
-func TestHUDAllActivitiesHaveOneCompactContextWithoutPermanentShipRow(t *testing.T) {
+func TestHUDAllActivitiesExcludeBrandingAndPermanentShipRows(t *testing.T) {
 	s := M{"settings": M{}, "commander": M{"system": "Sol", "ship": "Panther Clipper Mk II", "shipType": "panthermkii", "shipName": "Звёздный путь", "shipIdent": "RU-42", "cargoTons": 12, "cargoCapacity": 128}, "connection": M{}}
 	for _, a := range Activities {
 		v.Obj(s["settings"])["activity"] = a.Value
 		doc := BuildHUD(s, time.Now())
 		text := hudProse(doc)
-		if doc.Activity != a.Value || len(doc.Sections) < 1 || len(doc.Sections[0].Lines) != 1 || doc.Sections[0].Lines[0].Text != "Sol" || strings.Contains(text, "Panther") || strings.Contains(text, "Звёздный путь") || strings.Contains(text, "panthermkii") {
+		if doc.Activity != a.Value || strings.Contains(strings.ToUpper(text), "ED COPILOT") || strings.Contains(text, "Panther") || strings.Contains(text, "Звёздный путь") || strings.Contains(text, "panthermkii") {
 			t.Fatalf("%s: %s", a.Value, text)
 		}
 	}

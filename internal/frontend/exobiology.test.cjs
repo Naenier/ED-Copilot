@@ -22,6 +22,23 @@ const button=dataset=>({dataset});
 test('all seven screens render in Russian and English while internal modes remain stable',()=>{
  for(const language of ['ru','en']){const f=fixture(language),names=['Обзор','Планеты','Образцы','Продажи','Находки','Места','Статистика'];for(const mode of names){f.C.mode=mode;const html=f.render();assert.match(html,/data-exobiology=/);assert.equal((html.match(/data-mode=/g)||[]).length,7);assert.ok(html.includes('data-mode="'+mode+'"'));assert.doesNotMatch(html,/NaN|undefined|onclick=/);assert.equal(f.calls.length,0);if(language==='en'){assert.match(html,/>Exobiology<\/h1>/);assert.doesNotMatch(html,/>Экзобиология<\/h1>/);}}}
 });
+
+test('known scan enums use Russian display names only in their fields without changing observations or body identities',()=>{
+ for(const language of ['ru','en']){
+  const f=fixture(language);f.body.scan.PlanetClass='Rocky body';f.body.scan.Atmosphere='Thin Carbon Dioxide';f.body.system='Rocky body';f.body.name='Thin Carbon Dioxide';const before=clone(f.C.state),html=f.render();
+  assert.match(html,language==='ru'?/<dd>Каменистое тело<\/dd>/:/<dd>Rocky body<\/dd>/);
+  assert.match(html,language==='ru'?/<dd>Разрежённая углекислая атмосфера<\/dd>/:/<dd>Thin Carbon Dioxide<\/dd>/);
+  assert.match(html,/<h2>Thin Carbon Dioxide<\/h2>/);assert.match(html,/<span class="eyebrow">Rocky body<\/span>/);assert.deepEqual(f.C.state,before);
+  f.body.scan.PlanetClass='Rocky body custom';f.body.scan.Atmosphere='Thin Carbon Dioxide custom';const unknown=f.render();assert.match(unknown,/<dd>Rocky body custom<\/dd>/);assert.match(unknown,/<dd>Thin Carbon Dioxide custom<\/dd>/);
+ }
+});
+
+test('the standard journal planet ladder and atmosphere classes have Russian displays while English keeps the exact raw enum',()=>{
+ const planets=['Metal rich body','High metal content body','Rocky body','Icy body','Rocky ice body','Earthlike body','Water world','Ammonia world','Water giant','Water giant with life','Gas giant with water based life','Gas giant with ammonia based life','Sudarsky class I gas giant','Sudarsky class II gas giant','Sudarsky class III gas giant','Sudarsky class IV gas giant','Sudarsky class V gas giant','Helium rich gas giant','Helium gas giant'];
+ const atmospheres=['No atmosphere','Suitable for water-based life','Ammonia and oxygen','Ammonia','Water','Carbon dioxide','Sulphur dioxide','Nitrogen','Water-rich','Methane-rich','Ammonia-rich','Carbon dioxide-rich','Methane','Helium','Silicate vapour','Metallic vapour','Neon-rich','Argon-rich','Neon','Argon','Oxygen','thin neon rich atmosphere','hot thick sulphur dioxide atmosphere','CarbonDioxide','ArgonRich'];
+ for(const language of ['ru','en']){const f=fixture(language);for(const [field,values]of [['PlanetClass',planets],['Atmosphere',atmospheres]])for(const value of values){f.body.scan[field]=value;const html=f.render();if(language==='ru')assert.equal(html.includes('<dd>'+value+'</dd>'),false,field+': '+value);else assert.ok(html.includes('<dd>'+value+'</dd>'),field+': '+value);assert.equal(f.body.scan[field],value);}}
+ const f=fixture('ru');f.body.scan.Atmosphere='';f.body.scan.AtmosphereType='CarbonDioxide';assert.match(f.render(),/<dd>Углекислая атмосфера<\/dd>/);f.body.scan.AtmosphereType='Unknown Gas';assert.match(f.render(),/<dd>Unknown Gas<\/dd>/);
+});
 test('sample tracker distinguishes unknown historical positions from confirmed sufficient distance',()=>{
  const f=fixture('en'),m=f.C.state.exobiology;let html=f.render();assert.equal((html.match(/<li class="complete">/g)||[]).length,2);assert.match(html,/Distance not known yet/);assert.match(html,/Samples without saved coordinates: 2/);assert.match(html,/Minimum separation/);assert.doesNotMatch(html,/99\s*%|probabilityPercent/);
  Object.assign(m.tracker,{positionKnown:true,nearestSampleDistanceM:550,remainingDistanceM:0,nearestSampleMeetsMin:true});html=f.render();assert.match(html,/Sufficient separation/);assert.match(html,/550 m/);assert.match(html,/Still to travel/);

@@ -15,7 +15,7 @@ func (p *Planner) Snapshot(context M) M {
 }
 func (p *Planner) snapshotLocked(context M) M {
 	cargo, cargoKnown := AvailableCargo(value.Obj(context["commander"]))
-	warehouse := availableWarehouse(value.Obj(context["carrier"]))
+	warehouses, warehouse := p.carrierWarehouses(context)
 	projects := []M{}
 	var active M
 	for _, project := range p.projects {
@@ -60,7 +60,7 @@ func (p *Planner) snapshotLocked(context M) M {
 		supplies = rows(active["supplies"])
 		capacity = active["cargoCapacity"]
 	}
-	return merge(copyM(p.config), M{"config": copyM(p.config), "cargoCapacity": capacity, "selectedProjectId": p.selected, "projects": projects, "activeProject": activeValue, "catalog": Catalog(), "economies": cloneRows(economies), "rules": Rules(), "sources": cloneRows(sources), "search": search, "aggregateSupplies": supplies, "depots": depots, "claims": claims, "cargoKnown": cargoKnown, "carrierWarehouseComplete": warehouse != nil && warehouse.complete, "journalContributionCount": len(p.contributions), "limitations": []string{"Список кандидатов отражает только наблюдения Spansh; заявки и разрешения проверяются в игре.", "Точная потребность загружается из журнала при посещении строительного депо. Ручные планы помечены как оценки.", "Баланс очков задаётся по экрану архитектора. Экономические направления не являются прогнозом объёмов рынка."}})
+	return merge(copyM(p.config), M{"config": copyM(p.config), "cargoCapacity": capacity, "selectedProjectId": p.selected, "projects": projects, "activeProject": activeValue, "catalog": Catalog(), "economies": cloneRows(economies), "rules": Rules(), "sources": cloneRows(sources), "search": search, "aggregateSupplies": supplies, "depots": depots, "claims": claims, "cargoKnown": cargoKnown, "carrierWarehouses": warehouses, "carrierWarehouseComplete": !warehouse.excluded && warehouse.complete, "journalContributionCount": len(p.contributions), "limitations": []string{"Список кандидатов отражает только наблюдения Spansh; заявки и разрешения проверяются в игре.", "Точная потребность загружается из журнала при посещении строительного депо. Ручные планы помечены как оценки.", "Баланс очков задаётся по экрану архитектора. Экономические направления не являются прогнозом объёмов рынка."}})
 }
 func (p *Planner) statusOf(b M) string {
 	if d := p.depots[str(b["marketId"])]; d != nil {
@@ -354,6 +354,7 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 type stock struct {
 	items    map[string]float64
 	complete bool
+	excluded bool
 }
 
 func AvailableCargo(commander M) (map[string]float64, bool) {
@@ -393,7 +394,7 @@ func availableWarehouse(carrier M) *stock {
 	return s
 }
 func warehouseCount(s *stock, key string) any {
-	if s == nil {
+	if s == nil || s.excluded {
 		return nil
 	}
 	if n, ok := s.items[key]; ok {
@@ -438,18 +439,19 @@ func aggregateResources(buildings []M, cargo map[string]float64, cargoKnown bool
 	for _, key := range sortedKeys(by) {
 		row := by[key]
 		ship, carrier := nullableCount(cargo, key, cargoKnown), warehouseCount(warehouse, key)
-		var toLoad, toBuy, covered, trips any
+		var toLoad, toBuy, toBuyAtMost, covered, trips any
 		if ship != nil {
 			toLoad = max0(num(row["missing"]) - num(ship))
 			covered = math.Min(num(row["missing"]), num(ship))
-			if carrier != nil {
-				toBuy = max0(num(toLoad) - num(carrier))
+			toBuyAtMost = max0(num(toLoad) - num(carrier))
+			if warehouse != nil && (warehouse.excluded || warehouse.complete) || num(toLoad) == 0 || carrier != nil && num(carrier) >= num(toLoad) {
+				toBuy = toBuyAtMost
 			}
 		}
 		if num(capacity) > 0 {
 			trips = math.Ceil(num(row["missing"]) / num(capacity))
 		}
-		merge(row, M{"source": strings.Join(stringsOf(row["sources"]), "+"), "cargoAvailable": ship, "carrierAvailable": carrier, "toLoad": toLoad, "toBuy": toBuy, "trips": trips, "coveredByCargo": covered, "carrierComplete": warehouse != nil && warehouse.complete})
+		merge(row, M{"source": strings.Join(stringsOf(row["sources"]), "+"), "cargoAvailable": ship, "carrierAvailable": carrier, "toLoad": toLoad, "toBuy": toBuy, "toBuyAtMost": toBuyAtMost, "trips": trips, "coveredByCargo": covered, "carrierComplete": warehouse != nil && !warehouse.excluded && warehouse.complete, "carrierIncluded": warehouse != nil && !warehouse.excluded})
 		result = append(result, row)
 	}
 	sort.SliceStable(result, func(i, j int) bool {

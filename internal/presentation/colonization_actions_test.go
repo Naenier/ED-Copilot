@@ -50,6 +50,24 @@ func colonyTestApply(t *testing.T, p *colonization.Planner, a Action, overrides 
 }
 func colonyTestProject(p *colonization.Planner) M { return v.Obj(p.Snapshot(nil)["activeProject"]) }
 
+func TestColonyCarrierStockOptionsUseGlobalTypedConfiguration(t *testing.T) {
+	p := colonization.New(nil)
+	p.ApplyCAPI(M{"status": M{"connected": true, "fid": "F1"}, "data": M{"squadron": M{"squadronCarrier": M{"market": M{"id": "43"}, "cargo": []M{}}}}, "metadata": M{"observedAt": M{"squadron": "2026-11-08T12:00:00Z"}}}, M{"fid": "F1"})
+	for _, mode := range []string{"Выбор системы", "Строительство", "Снабжение"} {
+		a := colonyTestAction(t, ColonyActions(mode, colonyTestState(p), nil), "colony.carrier-stock")
+		body := colonyTestBody(t, a, M{"includeCarrierWarehouse": true, "squadronWarehouseAccessConfirmed": true})
+		if body["action"] != "configure" || body["projectId"] != nil {
+			t.Fatal("warehouse options incorrectly depend on a selected colony", body)
+		}
+		if err := p.Update(body); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !v.Bool(p.ExportSettings()["includeCarrierWarehouse"]) || !v.Bool(p.ExportSettings()["squadronWarehouseAccessConfirmed"]) {
+		t.Fatal("typed warehouse options were not persisted")
+	}
+}
+
 func TestNativeColoniesFormWorkflow(t *testing.T) {
 	p := colonization.New(nil)
 	state := colonyTestState(p)

@@ -10,13 +10,19 @@ func (p *Planner) Apply(event, context M) {
 	typ := str(event["event"])
 	if typ == "LoadGame" && str(event["FID"]) != "" {
 		fid := str(event["FID"])
+		if bound := str(p.config["squadronWarehouseAccessFID"]); bound != "" && bound != fid {
+			p.clearSquadronAccess()
+		}
+		if p.carrierOwner != "" && p.carrierOwner != fid {
+			p.carrierStocks, p.carrierOwner = M{}, ""
+		}
 		if p.commander != "" && p.commander != fid {
 			p.resetLocked()
 		}
 		p.commander = fid
 		p.ensureSelectedLocked()
 	}
-	if !has([]string{"ColonisationConstructionDepot", "ColonisationContribution", "ColonisationSystemClaim", "ColonisationSystemClaimRelease", "ColonisationBeaconDeployed", "Docked", "Location"}, typ) {
+	if !has([]string{"ColonisationConstructionDepot", "ColonisationContribution", "ColonisationSystemClaim", "ColonisationSystemClaimRelease", "ColonisationBeaconDeployed", "Docked", "Location", "CargoTransfer", "MarketBuy", "MarketSell"}, typ) {
 		return
 	}
 	var identity string
@@ -38,6 +44,10 @@ func (p *Planner) Apply(event, context M) {
 	commander := value.Obj(context["commander"])
 	system := text(firstText(event["StarSystem"], commander["system"], commander["starSystem"]), 200)
 	station := text(firstText(event["StationName"], commander["station"]), 200)
+	if typ == "CargoTransfer" || typ == "MarketBuy" || typ == "MarketSell" {
+		p.applyCarrierMovement(event, context)
+		return
+	}
 	if typ == "Docked" || typ == "Location" {
 		id := marketID(event["MarketID"])
 		if id != "" && station != "" {

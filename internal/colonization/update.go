@@ -24,6 +24,33 @@ func (p *Planner) updateLocked(body M) error {
 	action := str(body["action"])
 	switch action {
 	case "configure":
+		for _, key := range []string{"includeCarrierWarehouse", "squadronWarehouseAccessConfirmed"} {
+			if raw, exists := body[key]; exists {
+				checked, valid := raw.(bool)
+				if !valid {
+					return errors.New("Параметр учёта склада должен быть включён или выключен.")
+				}
+				if key == "squadronWarehouseAccessConfirmed" {
+					if !checked {
+						p.clearSquadronAccess()
+						continue
+					}
+					id := marketID(value.At(p.carrierStocks, "squadron", "id"))
+					alreadyBound := p.squadronAccessConfirmed()
+					if id == "" && alreadyBound {
+						id = str(p.config["squadronWarehouseAccessCarrierID"])
+					}
+					if scope := str(body["squadronWarehouseAccessScope"]); scope != "" && scope != p.carrierOwner+"|"+id {
+						return errors.New("Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.")
+					}
+					if p.carrierOwner == "" || id == "" || p.commander != "" && p.commander != p.carrierOwner {
+						return errors.New("Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.")
+					}
+					p.config["squadronWarehouseAccessFID"], p.config["squadronWarehouseAccessCarrierID"] = p.carrierOwner, id
+				}
+				p.config[key] = checked
+			}
+		}
 		for _, key := range []string{"originSystem", "faction"} {
 			if v, ok := body[key]; ok {
 				p.config[key] = text(v, 200)

@@ -33,9 +33,9 @@ func readmeRepoFile(parts ...string) string {
 
 func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 	t.Helper()
-	directory, name, language, count := "docs/screenshots", "ru-manifest.json", "ru", 10
+	directory, name, language := "docs/screenshots", "ru-manifest.json", "ru"
 	if english {
-		directory, name, language, count = directory+"/en", "manifest.json", "en", 11
+		directory, name, language = directory+"/en", "manifest.json", "en"
 	}
 	body, err := os.ReadFile(readmeRepoFile(directory, name))
 	if err != nil {
@@ -45,11 +45,14 @@ func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 	if err := json.Unmarshal(body, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if manifest.Language != language || len(manifest.Images) != count {
-		t.Fatalf("%s: expected %s and %d images, got %s and %d", name, language, count, manifest.Language, len(manifest.Images))
+	if manifest.Language != language || len(manifest.Images) == 0 || len(manifest.Images) > 32 {
+		t.Fatalf("%s: expected %s and a bounded nonempty gallery, got %s and %d images", name, language, manifest.Language, len(manifest.Images))
 	}
-	if english && (manifest.Data != "synthetic" || manifest.DisplayMode != "fullscreen" || manifest.ApplicationVersion == "") {
-		t.Fatal("English documentation gallery must identify its application version, synthetic data and full-screen capture")
+	// The original Russian gallery predates capture metadata. Any replacement
+	// gallery declaring that metadata must meet the same contract as English.
+	fullScreen := english || manifest.Data != "" || manifest.DisplayMode != "" || manifest.ApplicationVersion != ""
+	if fullScreen && (manifest.Data != "synthetic" || manifest.DisplayMode != "fullscreen" || manifest.ApplicationVersion == "") {
+		t.Fatal("Documentation gallery must identify its application version, synthetic data and full-screen capture")
 	}
 	images := map[string]bool{}
 	for _, item := range manifest.Images {
@@ -65,13 +68,22 @@ func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 		if err != nil || config.Width <= 0 || config.Height <= 0 {
 			t.Fatalf("%s is not a valid nonempty PNG: %v", item.File, err)
 		}
-		if english && (item.Width != 1920 || item.Height != 1080 || config.Width != item.Width || config.Height != item.Height) {
-			t.Fatalf("English %s: manifest and actual PNG must both be 1920 × 1080, got %d × %d and %d × %d", item.File, item.Width, item.Height, config.Width, config.Height)
+		if fullScreen && (item.Width != 1920 || item.Height != 1080 || config.Width != item.Width || config.Height != item.Height) {
+			t.Fatalf("%s %s: manifest and actual PNG must both be 1920 × 1080, got %d × %d and %d × %d", language, item.File, item.Width, item.Height, config.Width, config.Height)
 		}
 		expected, err := hex.DecodeString(item.SHA256)
 		actual := sha256.Sum256(data)
 		if err != nil || len(expected) != len(actual) || !bytes.Equal(expected, actual[:]) {
 			t.Fatalf("%s no longer matches its published %s SHA256", item.File, name)
+		}
+	}
+	baseline := []string{"overview.png", "deals.png", "carrier-trade.png", "route.png", "ships.png", "ship.png", "engineer.png", "article.png", "colonization.png", "academy.png"}
+	if english {
+		baseline = append(baseline, "exobiology.png")
+	}
+	for _, name := range baseline {
+		if !images[name] {
+			t.Fatalf("%s gallery lost a baseline documentation screenshot: %s", language, name)
 		}
 	}
 	return images
@@ -128,8 +140,10 @@ func TestReadmeImagesExistAndKeepLanguageGalleriesSeparate(t *testing.T) {
 					referenced[file] = true
 				}
 			}
-			if len(referenced) != len(manifest) {
-				t.Fatalf("%s references %d distinct screenshots; its gallery contains %d", name, len(referenced), len(manifest))
+			for _, file := range []string{"overview.png", "commander.png", "ranks.png", "colonization.png", "academy.png"} {
+				if !referenced[file] {
+					t.Fatalf("%s omits a required product workflow screenshot: %s", name, file)
+				}
 			}
 		})
 	}

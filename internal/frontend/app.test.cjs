@@ -18,7 +18,7 @@ function fixture() {
     getElementById: id => nodes.get(id), addEventListener: (event, handler) => listeners.set(event, handler), createElement: () => ({ style: {}, remove() { selectors.delete('.menu'); } }),
   };
   const window = { addEventListener() {}, COPILOT_SMOKE: false };
-	for (const moduleName of ['updates.js','ranks.js','politics.js']) vm.runInNewContext(fs.readFileSync(path.join(__dirname, moduleName), 'utf8'), {window});
+	for (const moduleName of ['navigation.js','commander.js','updates.js','ranks.js','politics.js']) vm.runInNewContext(fs.readFileSync(path.join(__dirname, moduleName), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'overview.js'), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
@@ -39,6 +39,18 @@ test('rank and politics readers do not expose a nonfunctional generic details to
  for(const tab of ['ranks','politics']){
   a.C.tab=tab;a.C.page={Rows:[{ID:'known'}]};a.C.actions=[];a.C.state={settings:{}};
   assert.equal(a.rendererKind(),tab);
+  assert.equal(f.window.SettingsPaneUI.canToggle(a.rendererKind()),false);
+ }
+});
+
+test('commander pages render against the actual shared UI contract',()=>{
+ const f=fixture(),a=f.api;a.C.state={commander:{name:'Synthetic Pilot'},settings:{language:'en'}};
+ assert.equal(typeof a.uiContext().metric,'function');
+ for(const mode of ['Сводка','Финансы','Инвентарь','Имущество','Флот','Статистика','Репутация','Журнал']){
+  a.C.tab='commander';a.C.mode=mode;
+  const html=f.window.CommanderUI.render(a.C,a.uiContext());
+  assert.ok(html.includes('data-commander-section="'+mode+'"'));
+  assert.equal(a.rendererKind(),'commander');
   assert.equal(f.window.SettingsPaneUI.canToggle(a.rendererKind()),false);
  }
 });

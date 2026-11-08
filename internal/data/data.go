@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-//go:embed *.json *.ico *.png exobiology-photos/*.webp
+//go:embed *.json *.ico *.png exobiology-photos/*.webp rank-insignia/*.png
 var Files embed.FS
 var cache sync.Map
 

@@ -78,27 +78,30 @@ func WithClock(now func() time.Time) Option {
 }
 
 type Planner struct {
-	mu            sync.RWMutex
-	config        M
-	projects      []M
-	selected      string
-	depots        map[string]M
-	contributions []M
-	claims        map[string]M
-	stations      map[string]M
-	seen          map[string]bool
-	sequence      int64
-	commander     string
-	search        M
-	searchSerial  uint64
-	cancel        context.CancelFunc
-	client        HTTPClient
-	baseURL       string
-	now           func() time.Time
+	mu                sync.RWMutex
+	config            M
+	projects          []M
+	selected          string
+	depots            map[string]M
+	contributions     []M
+	claims            map[string]M
+	stations          map[string]M
+	seen              map[string]bool
+	sequence          int64
+	commander         string
+	carrierOwner      string
+	carrierStocks     M
+	carrierMovementAt M
+	search            M
+	searchSerial      uint64
+	cancel            context.CancelFunc
+	client            HTTPClient
+	baseURL           string
+	now               func() time.Time
 }
 
 func New(saved M, opts ...Option) *Planner {
-	p := &Planner{config: M{"originSystem": text(saved["originSystem"], 200), "faction": text(saved["faction"], 200), "cargoCapacity": natural(saved["cargoCapacity"], 100000)}, projects: []M{}, client: &http.Client{Timeout: 25 * time.Second}, baseURL: "https://spansh.co.uk/api", now: time.Now}
+	p := &Planner{config: M{"originSystem": text(saved["originSystem"], 200), "faction": text(saved["faction"], 200), "cargoCapacity": natural(saved["cargoCapacity"], 100000), "includeCarrierWarehouse": value.Bool(saved["includeCarrierWarehouse"]), "squadronWarehouseAccessConfirmed": value.Bool(saved["squadronWarehouseAccessConfirmed"])}, projects: []M{}, client: &http.Client{Timeout: 25 * time.Second}, baseURL: "https://spansh.co.uk/api", now: time.Now}
 	for _, opt := range opts {
 		opt(p)
 	}
@@ -116,13 +119,29 @@ func New(saved M, opts ...Option) *Planner {
 	p.search = initialSearch()
 	p.search["options"] = merge(M{"originSystem": "", "faction": "", "rangeLy": 15}, p.config)
 	p.resetLocked()
+	p.restoreCarrierStocks(value.Obj(saved["carrierInventoryCache"]))
+	accessFID, accessID := text(saved["squadronWarehouseAccessFID"], 100), marketID(saved["squadronWarehouseAccessCarrierID"])
+	currentCarrier := str(value.At(p.carrierStocks, "squadron", "id"))
+	if value.Bool(saved["squadronWarehouseAccessConfirmed"]) && accessFID != "" && accessFID == p.carrierOwner && accessID != "" && (currentCarrier == "" || accessID == currentCarrier) {
+		p.config["squadronWarehouseAccessFID"], p.config["squadronWarehouseAccessCarrierID"] = accessFID, accessID
+	} else {
+		p.clearSquadronAccess()
+	}
 	return p
 }
 func Catalog() []M { return cloneRows(types) }
 func Rules() M {
 	return M{"rangeLy": 15, "claimCost": 25000000, "beaconHours": 24, "primaryDays": 28, "maxConcurrent": 5}
 }
-func (p *Planner) Reset() { p.mu.Lock(); defer p.mu.Unlock(); p.resetLocked() }
+func (p *Planner) Reset() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	// Journal replay does not re-create CAPI observations. Retain the bounded
+	// cache, but count it only after the journal confirms the same FID again.
+	owner, stocks := p.carrierOwner, p.carrierStocks
+	p.resetLocked()
+	p.carrierOwner, p.carrierStocks = owner, stocks
+}
 func (p *Planner) resetLocked() {
 	p.depots = map[string]M{}
 	p.contributions = []M{}
@@ -131,11 +150,14 @@ func (p *Planner) resetLocked() {
 	p.seen = map[string]bool{}
 	p.sequence = 0
 	p.commander = ""
+	p.carrierOwner = ""
+	p.carrierStocks = M{}
+	p.carrierMovementAt = M{}
 }
 func (p *Planner) ExportSettings() M {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	return merge(copyM(p.config), M{"projects": cloneRows(p.projects), "selectedProjectId": p.selected})
+	return merge(copyM(p.config), M{"projects": cloneRows(p.projects), "selectedProjectId": p.selected, "carrierInventoryCache": M{"fid": p.carrierOwner, "warehouses": value.Copy(p.carrierStocks)}})
 }
 func (p *Planner) projectLocked(id string) M {
 	if id == "" {

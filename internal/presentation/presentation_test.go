@@ -105,7 +105,11 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	s["politics"] = political.Snapshot()
 	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
-	if len(Tabs) != 21 {
+	s["commanderProfile"] = M{"finance": M{"credits": 0}, "fleet": M{"known": true, "count": 1, "currentShip": M{"known": true, "ship": "Python"}, "entries": []M{{"shipId": "42", "ship": "Python", "system": "Synthetic A"}}}, "storedModules": M{"known": true, "count": 0, "entries": []M{}}, "inventory": M{"materials": M{"raw": M{"known": true, "count": 2, "entries": []M{{"key": "iron", "name": "Iron", "count": 2}}}}}, "statistics": M{"sections": []M{{"id": "Combat", "label": "Combat", "entries": []M{{"id": "Bounties_Claimed", "label": "Bounties Claimed", "value": 0}}}}}, "reputation": M{"federation": 0}}
+	if len(v.Rows(v.At(s, "pilot", "recent"))) == 0 {
+		v.Obj(s["pilot"])["recent"] = []M{{"timestamp": "2026-11-07T12:00:00Z", "event": "LoadGame", "label": "Начало сеанса", "system": "Synthetic A"}}
+	}
+	if len(Tabs) != 22 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {

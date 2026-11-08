@@ -413,9 +413,14 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			return nil, errors.New("Обновите Frontier: нужен подтверждённый снимок вашего флотоносца с совпадающим позывным")
 		}
 		items := []M{}
+		observedCargo := []M{}
 		for _, r := range v.Rows(actual["cargo"]) {
 			items = append(items, M{"name": r["name"], "count": r["count"]})
+			observedCargo = append(observedCargo, M{"commodity": r["name"], "qty": r["count"], "stolen": r["stolen"], "mission": r["mission"]})
 		}
+		// Re-use the same verified observation contract as a normal CAPI sync.
+		// The planner rejects same-date reapplication after journal movements.
+		e.Colonies.ApplyCAPI(M{"status": account, "data": M{"carrier": M{"market": M{"id": own["id"]}, "name": M{"callsign": actual["callsign"]}, "cargo": observedCargo}}, "metadata": M{"observedAt": M{"carrier": account["lastCarrierSync"]}}}, e.Commander())
 		e.domainMu.Lock()
 		err := e.Carrier.SetStockBaseline(M{"carrierId": own["id"], "items": items, "timestamp": account["lastCarrierSync"], "complete": true})
 		e.domainMu.Unlock()
@@ -537,10 +542,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err != nil {
 			return nil, err
 		}
-		status := v.Obj(result["status"])
-		if v.Bool(status["connected"]) && !v.Bool(status["commanderMismatch"]) {
-			e.Ranks.ApplyCAPI(v.Obj(v.At(result, "data", "profile")), M{"identityVerified": true, "commander": e.Commander(), "observedAt": v.At(result, "metadata", "observedAt", "profile")})
-		}
+		e.applyVerifiedProfileCAPI(result)
 		market := frontier.MarketSnapshot(result)
 		if market != nil {
 			cmd := e.Commander()
@@ -550,6 +552,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		}
 		if e.Inara != nil {
 			e.Inara.ObserveCAPI(result)
+		}
+		if err := e.Save(); err != nil {
+			return nil, err
 		}
 		e.Notify()
 		return M{"ok": true}, nil
