@@ -12,6 +12,7 @@ import (
 )
 
 func (s *Service) resetObserved() {
+	s.invalidateHUDTargets()
 	s.World = map[string]M{}
 	s.Signals = map[string][]M{}
 	s.LocalSignals = map[string]bool{}
@@ -145,6 +146,9 @@ func (s *Service) record(event, context M, kind string, resource M, count, value
 }
 func (s *Service) observe(event, context M) {
 	typ := v.Str(event["event"])
+	if typ == "Location" || typ == "FSDJump" || typ == "CarrierJump" || typ == "Scan" || typ == "SAASignalsFound" || typ == "FSSBodySignals" || typ == "MiningRefined" && trading.Vessel(v.At(context, "commander", "vehicle")) == "srv" {
+		s.invalidateHUDTargets()
+	}
 	cmd := v.Obj(context["commander"])
 	timestamp := v.Str(event["timestamp"])
 	if typ == "LoadGame" {
@@ -329,6 +333,7 @@ func (s *Service) WorldSnapshot() []M {
 	return rows
 }
 func (s *Service) MergeRemoteSystem(incoming M) {
+	s.invalidateHUDTargets()
 	name := v.Str(incoming["name"])
 	system := s.system(M{"StarSystem": name, "SystemAddress": incoming["address"], "StarPos": incoming["coordinates"], "timestamp": incoming["timestamp"]}, M{})
 	for _, body := range bodiesRows(incoming["bodies"]) {
@@ -399,7 +404,11 @@ func (s *Service) observedSnapshot(context M) M {
 		resources = trading.Resources()
 	}
 	prospect := AssessProspect(s.Prospect, v.Obj(context["settings"]), resources)
-	world := s.WorldSnapshot()
+	var world []M
+	includeTargets, includeWorld := context["snapshotTargets"] != false, context["snapshotWorld"] != false
+	if includeTargets || includeWorld {
+		world = s.WorldSnapshot()
+	}
 	statsRows := []M{}
 	for _, r := range s.StatsRows {
 		statsRows = append(statsRows, v.Copy(r))
@@ -435,5 +444,12 @@ func (s *Service) observedSnapshot(context M) M {
 	if elapsed >= 60 {
 		rate = v.Num(s.StatsTotal["miningRevenue"]) * 3600 / elapsed
 	}
-	return M{"targets": BuildTargets(world, s.Signals, resources, v.Obj(context["commander"]), v.Obj(context["settings"])), "prospect": prospect, "surface": v.Copy(s.Surface), "world": world, "stats": M{"since": v.First(context["statsSince"], s.FirstStatsEvent, nowISO()), "total": v.Copy(s.StatsTotal), "byResource": statsRows, "sessions": daily, "recent": v.Clone(s.Recent), "elapsedSeconds": math.Max(0, elapsed), "timeBasis": "journal-sessions", "revenuePerHour": rate}}
+	out := M{"prospect": prospect, "surface": v.Copy(s.Surface), "stats": M{"since": v.First(context["statsSince"], s.FirstStatsEvent, nowISO()), "total": v.Copy(s.StatsTotal), "byResource": statsRows, "sessions": daily, "recent": v.Clone(s.Recent), "elapsedSeconds": math.Max(0, elapsed), "timeBasis": "journal-sessions", "revenuePerHour": rate}}
+	if includeTargets {
+		out["targets"] = BuildTargets(world, s.Signals, resources, v.Obj(context["commander"]), v.Obj(context["settings"]))
+	}
+	if includeWorld {
+		out["world"] = world
+	}
+	return out
 }

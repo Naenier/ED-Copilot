@@ -28,10 +28,12 @@ try {
     Invoke-Go -Arguments @('build', '-trimpath', '-buildvcs=false', '-ldflags', '-s -w -H=windowsgui', '-o', 'dist/ED Copilot.exe', './cmd/copilot')
     $binary = Join-Path $projectRoot 'dist/ED Copilot.exe'
     function Invoke-Smoke {
-        param([string]$Mode, [string]$ReportName)
+        param([string]$Mode, [string]$ReportName, [switch]$StressRun)
         $report = Join-Path $projectRoot ('dist/' + $ReportName)
         if (Test-Path -LiteralPath $report) { Remove-Item -LiteralPath $report -Force }
-        $process = Start-Process -FilePath $binary -ArgumentList @($Mode, '--smoke-report', ('"' + $report + '"')) -WindowStyle Hidden -PassThru
+        $smokeArguments = @($Mode, '--smoke-report', ('"' + $report + '"'))
+        if ($StressRun) { $smokeArguments += '--stress' }
+        $process = Start-Process -FilePath $binary -ArgumentList $smokeArguments -WindowStyle Hidden -PassThru
         $timeoutMs = if ($Mode -eq '--smoke') { 180000 } else { 60000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id
@@ -43,7 +45,10 @@ try {
         if ($result.version -ne (Get-Item -LiteralPath $binary).VersionInfo.ProductVersion) { throw 'Executable resource version differs from application version.' }
     }
     Invoke-Smoke -Mode '--smoke-headless' -ReportName 'smoke-headless.json'
-    if ($Smoke) { Invoke-Smoke -Mode '--smoke' -ReportName 'smoke-native.json' }
+    if ($Smoke) {
+        Invoke-Smoke -Mode '--smoke' -ReportName 'smoke-native.json'
+        Invoke-Smoke -Mode '--smoke' -ReportName 'smoke-stress.json' -StressRun
+    }
     $version = (Get-Item -LiteralPath $binary).VersionInfo.ProductVersion
     if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid executable product version.' }
     $artifacts = @($binary)
@@ -55,7 +60,10 @@ try {
         Copy-Item -LiteralPath 'docs' -Destination $stage -Recurse
         Copy-Item -LiteralPath 'lib' -Destination $stage -Recurse
         Copy-Item -LiteralPath 'dist/smoke-headless.json' -Destination $stage
-        if ($Smoke) { Copy-Item -LiteralPath 'dist/smoke-native.json' -Destination $stage }
+        if ($Smoke) {
+            Copy-Item -LiteralPath 'dist/smoke-native.json' -Destination $stage
+            Copy-Item -LiteralPath 'dist/smoke-stress.json' -Destination $stage
+        }
         if ($Package) {
             $archive = Join-Path $projectRoot "dist/ED-Copilot-$version-windows-amd64.zip"
             Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -CompressionLevel Optimal -Force

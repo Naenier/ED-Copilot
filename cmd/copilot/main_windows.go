@@ -24,6 +24,7 @@ func main() {
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
 	demo := flag.Bool("demo", false, "Открыть демонстрацию с новым временным профилем и без сети")
+	stress := flag.Bool("stress", false, "Большая синтетическая история для --demo или --smoke")
 	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
 	flag.Parse()
 	if *version {
@@ -31,6 +32,10 @@ func main() {
 		return
 	}
 	isolated := *smoke || *headless || *demo
+	if *stress && !isolated {
+		fail(fmt.Errorf("--stress используется только с --demo или --smoke"), "")
+		return
+	}
 	if !isolated {
 		release, acquired, err := nativeui.AcquireDesktopInstance()
 		if err != nil {
@@ -54,6 +59,12 @@ func main() {
 		if err = smokeJournal(*journalDir); err != nil {
 			fail(err, root)
 			return
+		}
+		if *stress {
+			if err = stressJournal(*journalDir); err != nil {
+				fail(err, root)
+				return
+			}
 		}
 		if *report == "" {
 			*report = filepath.Join(root, "smoke-report.json")

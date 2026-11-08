@@ -274,6 +274,7 @@ func TestHiddenModernWindowModesPersistAndRespectWorkArea(t *testing.T) {
 		if _, err := m.windowAction(mode); err != nil {
 			t.Fatal(err)
 		}
+		m.flushDesktop()
 		if u.modeValue != mode || v.At(backend.state, "desktop", "displayMode") != mode {
 			t.Fatal("mode not persisted", mode, u.modeValue, backend.state)
 		}
@@ -281,12 +282,14 @@ func TestHiddenModernWindowModesPersistAndRespectWorkArea(t *testing.T) {
 	if _, err := m.windowAction("toggle-fullscreen"); err != nil {
 		t.Fatal(err)
 	}
+	m.flushDesktop()
 	if u.modeValue != "fullscreen" {
 		t.Fatal("F11 did not enter fullscreen")
 	}
 	if _, err := m.windowAction("toggle-fullscreen"); err != nil {
 		t.Fatal(err)
 	}
+	m.flushDesktop()
 	if u.modeValue != "windowed" {
 		t.Fatal("F11 did not restore window")
 	}

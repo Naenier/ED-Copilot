@@ -160,26 +160,29 @@ func Preflight(loadout M, method string, commander M, limpets any) M {
 }
 
 type Service struct {
-	Options                       M
-	ResetAt                       string
-	Current                       M
-	History                       []M
-	Loadout                       M
-	sequence                      int
-	LastEventAt                   string
-	Limpets                       any
-	LastLimpetsAt                 string
-	GameRunning, resetApplied     bool
-	World                         map[string]M
-	Signals                       map[string][]M
-	LocalSignals                  map[string]bool
-	Prospect, Surface, StatsTotal M
-	StatsRows, Daily              map[string]M
-	Recent                        []M
-	FirstStatsEvent               string
-	intervals                     map[string][2]time.Time
-	session                       int
-	lastSystem                    string
+	Options                          M
+	ResetAt                          string
+	Current                          M
+	History                          []M
+	Loadout                          M
+	sequence                         int
+	LastEventAt                      string
+	Limpets                          any
+	LastLimpetsAt                    string
+	GameRunning, resetApplied        bool
+	World                            map[string]M
+	Signals                          map[string][]M
+	LocalSignals                     map[string]bool
+	Prospect, Surface, StatsTotal    M
+	StatsRows, Daily                 map[string]M
+	Recent                           []M
+	FirstStatsEvent                  string
+	intervals                        map[string][2]time.Time
+	session                          int
+	lastSystem                       string
+	hudWorldVersion                  uint64
+	hudTargetsKey                    string
+	hudSurfaceTargets, hudRawTargets []M
 }
 
 func New(saved M) *Service {

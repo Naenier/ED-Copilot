@@ -183,8 +183,20 @@ func (u *Window) applyMode(mode string) {
 }
 
 func (u *Window) saveBounds() {
-	if u.main == nil || u.disposed.Load() {
+	body := u.boundsPayload()
+	if body == nil {
 		return
+	}
+	if u.modern != nil && !u.quitting {
+		u.modern.persistDesktop(body)
+		return
+	}
+	_, _ = u.backend.Do("/api/desktop", body)
+}
+
+func (u *Window) boundsPayload() M {
+	if u.main == nil || u.disposed.Load() {
+		return nil
 	}
 	b := u.main.BoundsPixels()
 	maximized := false
@@ -201,8 +213,8 @@ func (u *Window) saveBounds() {
 		normal = b
 	}
 	if normal.Width < 900 || normal.Height < 700 {
-		return
+		return nil
 	}
 	mapRect := func(r walk.Rectangle) M { return M{"x": r.X, "y": r.Y, "width": r.Width, "height": r.Height} }
-	_, _ = u.backend.Do("/api/desktop", M{"windowedBounds": mapRect(normal), "bounds": mapRect(b), "maximized": maximized})
+	return M{"windowedBounds": mapRect(normal), "bounds": mapRect(b), "maximized": maximized}
 }

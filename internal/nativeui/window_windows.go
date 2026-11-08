@@ -70,6 +70,7 @@ type Window struct {
 	columns                                                []string
 	refreshing, dialogOpen, quitting                       bool
 	stop                                                   chan struct{}
+	refreshRequested                                       chan struct{}
 	disposed                                               atomic.Bool
 	tray                                                   *walk.NotifyIcon
 	hud                                                    *hudWindow
@@ -432,6 +433,10 @@ func NewWindow(backend Controller, options Options) (*Window, error) {
 	return u, nil
 }
 func (u *Window) watch() {
+	if u.modern != nil {
+		u.modern.watch()
+		return
+	}
 	ticker := time.NewTicker(400 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -440,6 +445,7 @@ func (u *Window) watch() {
 			return
 		case <-u.backend.Updates():
 		case <-ticker.C:
+		case <-u.refreshRequested:
 		}
 		if u.disposed.Load() {
 			return
@@ -680,6 +686,10 @@ func (u *Window) execute(action p.Action, values M) {
 		u.error(err)
 		return
 	}
+	if u.modern != nil {
+		u.modern.executeAction(action, body)
+		return
+	}
 	if u.footer != nil {
 		u.footer.SetText("Выполняем: " + v.Text(action.Title, "действие"))
 	}
@@ -709,6 +719,9 @@ func (u *Window) quit() {
 		return
 	}
 	u.quitting = true
+	if u.modern != nil {
+		u.modern.flushDesktop()
+	}
 	u.saveBounds()
 	u.backend.Close()
 	u.disposed.Store(true)

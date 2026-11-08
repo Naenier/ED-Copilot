@@ -39,7 +39,22 @@ func maxTier(resources []M) string {
 	return tier
 }
 func resourceView(resource M) M {
-	return M{"key": resource["key"], "name": resource["name"], "tier": v.Text(resource["tier"], "unknown"), "methods": resource["methods"], "requiresCore": v.Bool(resource["requiresCore"])}
+	methods := resource["methods"]
+	switch values := methods.(type) {
+	case []string:
+		if values != nil {
+			cloned := make([]string, len(values))
+			copy(cloned, values)
+			methods = cloned
+		}
+	case []any:
+		if values != nil {
+			cloned := make([]any, len(values))
+			copy(cloned, values)
+			methods = cloned
+		}
+	}
+	return M{"key": resource["key"], "name": resource["name"], "tier": v.Text(resource["tier"], "unknown"), "methods": methods, "requiresCore": v.Bool(resource["requiresCore"])}
 }
 func ringResource(resource M, ringType string) M {
 	r := v.Copy(resource)
@@ -89,12 +104,62 @@ func BuildTargets(world []M, signalMap map[string][]M, resources []M, commander,
 			commodities = append(commodities, r)
 		}
 	}
+	aliases := map[string]M{}
 	find := func(raw any) M {
 		key := v.Key(raw)
-		if r := trading.Resource(raw); r != nil {
-			key = v.Str(r["key"])
+		if known := lookup[key]; known != nil {
+			return known
 		}
-		return lookup[key]
+		if cached, seen := aliases[key]; seen {
+			return cached
+		}
+		if r := trading.Resource(raw); r != nil {
+			aliases[key] = lookup[v.Str(r["key"])]
+		} else {
+			aliases[key] = nil
+		}
+		return aliases[key]
+	}
+	// Inputs and resource prices are constant for this evaluation. Reusing
+	// per-type templates avoids JSON-copying the same resource for every ring.
+	ringTemplates := map[string]M{}
+	forRing := func(resource M, ringType string) M {
+		if lookup[v.Str(resource["key"])] == nil {
+			return ringResource(resource, ringType)
+		}
+		key := v.Str(resource["key"]) + "\x00" + ringType
+		if cached, exists := ringTemplates[key]; exists {
+			return cached
+		}
+		row := ringResource(resource, ringType)
+		ringTemplates[key] = row
+		return row
+	}
+	possibleByType := map[string][]M{}
+	possibleFor := func(ringType string) []M {
+		if cached, exists := possibleByType[ringType]; exists {
+			return cached
+		}
+		possible := []M{}
+		for _, resource := range commodities {
+			available := false
+			if resource["availability"] != nil {
+				for _, entry := range v.Rows(resource["availability"]) {
+					for _, typ := range v.Arr(entry["ringTypes"]) {
+						available = available || RingKey(typ) == ringType
+					}
+				}
+			} else {
+				for _, typ := range v.Arr(resource["ringTypes"]) {
+					available = available || RingKey(typ) == ringType
+				}
+			}
+			if available {
+				possible = append(possible, resource)
+			}
+		}
+		possibleByType[ringType] = possible
+		return possible
 	}
 	method := v.Text(settings["method"], "all")
 	for _, system := range world {
@@ -129,26 +194,9 @@ func BuildTargets(world []M, signalMap map[string][]M, resources []M, commander,
 					if resource["kind"] != "commodity" {
 						continue
 					}
-					hotspots = append(hotspots, v.Merge(resourceView(ringResource(resource, typ)), M{"count": count}))
+					hotspots = append(hotspots, v.Merge(resourceView(forRing(resource, typ)), M{"count": count}))
 				}
-				possible := []M{}
-				for _, r := range commodities {
-					available := false
-					if r["availability"] != nil {
-						for _, entry := range v.Rows(r["availability"]) {
-							for _, ringType := range v.Arr(entry["ringTypes"]) {
-								available = available || RingKey(ringType) == typ
-							}
-						}
-					} else {
-						for _, ringType := range v.Arr(r["ringTypes"]) {
-							available = available || RingKey(ringType) == typ
-						}
-					}
-					if available {
-						possible = append(possible, r)
-					}
-				}
+				possible := possibleFor(typ)
 				candidates := hotspots
 				if len(candidates) == 0 {
 					for _, r := range possible {
@@ -163,7 +211,7 @@ func BuildTargets(world []M, signalMap map[string][]M, resources []M, commander,
 					if resource == nil {
 						resource = r
 					}
-					resource = ringResource(resource, typ)
+					resource = forRing(resource, typ)
 					if method == "all" || has(resource["methods"], method) {
 						useful = append(useful, resource)
 					}

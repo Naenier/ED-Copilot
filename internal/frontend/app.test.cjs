@@ -20,7 +20,7 @@ function fixture() {
   const window = { addEventListener() {}, COPILOT_SMOKE: false };
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,context,uiContext,emptyStateInfo,renderEmptyState,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
@@ -328,3 +328,19 @@ test('statistics does not prompt to reset a period and engineering empty prompts
   assert.doesNotMatch(api.renderEmptyState(), /Добавьте улучшение/);
   api.C.mode = 'Материалы плана'; assert.match(api.renderEmptyState(), /data-mode="План"/);
 });
+
+
+test('large tables keep all rows searchable while mounting at most one hundred rows',()=>{
+ const {api}=fixture();api.C.tab='targets';api.C.mode='Места добычи';api.C.inspector=false;api.C.state={};api.C.actions=[];api.C.page={Title:'Места добычи',Description:'',Summary:'',Modes:[],Columns:['Система'],Rows:Array.from({length:240},(_,i)=>({ID:String(i),Cells:['Система '+i]}))};
+ let html=api.renderGeneral();assert.equal((html.match(/data-row=/g)||[]).length,100);assert.match(html,/1–100 из 240/);assert.match(html,/data-click="table-next"/);assert.equal(api.C.page.Rows.length,240);
+ api.C.tablePage=2;html=api.renderGeneral();assert.equal((html.match(/data-row=/g)||[]).length,40);assert.match(html,/201–240 из 240/);assert.match(html,/data-row="239"/);assert.doesNotMatch(html,/data-row="0"/);
+ api.C.query='Система 239';api.C.page.Rows=[api.C.page.Rows.at(-1)];const window=api.tableWindow();assert.equal(window.page,0);assert.equal(window.rows[0].ID,'239');assert.equal(api.renderTablePager(window),'');
+});
+
+
+test('asynchronous desktop save errors remain visible to the user',()=>{const {window,messages}=fixture();window.copilotReceive({event:'notice',data:{message:'Не удалось сохранить настройки'}});assert.equal(messages.length,1);assert.equal(messages[0].message,'Не удалось сохранить настройки');assert.equal(messages[0].error,true);});
+
+
+test('canonical view context opens a screen with matching actions in one request',async()=>{const {api}=fixture();let calls=0,renders=0;api.C.tab='overview';api.C.mode='';api.C.selected='';api.setCall(async()=>{calls++;return {context:{mode:'Планы',selected:'goal-b'},page:{Title:'Обзор',Modes:['Планы'],Rows:[{ID:'goal-a'},{ID:'goal-b'}]},actions:[{id:'goal.edit',fields:[{key:'title',default:'Вторая цель'}]}],state:{}};});api.setRender(()=>{renders++;});await api.loadView();assert.equal(calls,1);assert.equal(renders,1);assert.equal(api.C.selected,'goal-b');assert.equal(api.C.mode,'Планы');assert.equal(api.C.actions[0].fields[0].default,'Вторая цель');});
+
+test('a hidden webview never polls the backend for a quiet refresh',async()=>{const {api,document}=fixture();document.hidden=true;let calls=0;api.setCall(async()=>{calls++;return {};});await api.loadView(true);assert.equal(calls,0);});

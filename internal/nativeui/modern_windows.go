@@ -26,24 +26,40 @@ import (
 )
 
 type modernShell struct {
-	owner         *Window
-	view          *edge.Chromium
-	core          *edge.ICoreWebView2
-	document      string
-	ready, closed bool
-	focusing      bool
-	smokeOnce     sync.Once
-	lastSummary   string
-	diagnostics   int
-	captures      []*modernPreviewCapture
+	owner            *Window
+	view             *edge.Chromium
+	core             *edge.ICoreWebView2
+	document         string
+	ready, closed    bool
+	focusing         bool
+	focusQueued      bool
+	resizeQueued     bool
+	positionQueued   bool
+	visibilityQueued bool
+	browserVisible   bool
+	uiPost           func(func())
+	snapshotMu       sync.Mutex
+	pendingState     M
+	stateQueued      bool
+	hudQueued        bool
+	actionMu         sync.Mutex
+	desktopMu        sync.Mutex
+	desktopPending   M
+	desktopDone      chan struct{}
+	desktopSaving    bool
+	desiredMode      string
+	smokeOnce        sync.Once
+	lastSummary      string
+	diagnostics      int
+	captures         []*modernPreviewCapture
 }
 
 func newModernWindow(backend Controller, options Options) (*Window, error) {
 	if _, err := webviewloader.GetAvailableCoreWebView2BrowserVersionString(""); err != nil {
 		return nil, errors.New("Для интерфейса нужен Microsoft Edge WebView2. Запустите установщик ED Copilot — он предложит добавить этот компонент Windows.")
 	}
-	u := &Window{backend: backend, options: options, page: "overview", modes: map[string]string{}, queries: map[string]string{}, prefill: M{}, stop: make(chan struct{})}
-	u.state = backend.Snapshot()
+	u := &Window{backend: backend, options: options, page: "overview", modes: map[string]string{}, queries: map[string]string{}, prefill: M{}, stop: make(chan struct{}), refreshRequested: make(chan struct{}, 1)}
+	u.state = nativeHUDSnapshot(backend)
 	var err error
 	u.main, err = walk.NewMainWindow()
 	if err != nil {
@@ -66,7 +82,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	if icon, e := walk.NewIconFromResource("APP"); e == nil {
 		_ = u.main.SetIcon(icon)
 	}
-	u.modern = &modernShell{owner: u}
+	u.modern = &modernShell{owner: u, uiPost: u.main.Synchronize}
 	u.hud, err = newHUD(u)
 	if err != nil {
 		u.dispose()
@@ -143,7 +159,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		}
 		if source, e := sender.GetSource(); e != nil || !trustedWebSource(source) {
 			u.modern.ready = false
-			browser.NavigateToString(u.modern.document)
+			u.modern.postUI(func() { browser.NavigateToString(u.modern.document) })
 		}
 	}
 	browser.SetBackgroundColour(25, 25, 25, 255)
@@ -168,11 +184,9 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		u.dispose()
 		return nil, fmt.Errorf("Отображение WebView2: %w", err)
 	}
+	u.modern.browserVisible = true
 	u.main.AsContainerBase().SizeChanged().Attach(func() {
-		if !u.modern.closed && browser.GetController() != nil {
-			browser.Resize()
-			u.modern.logGeometry("client-size")
-		}
+		u.modern.resizeBrowser()
 	})
 	go u.watch()
 	return u, nil
@@ -202,12 +216,171 @@ func (m *modernShell) close() {
 var copyNativeFrameRect = kernelDLL.NewProc("RtlMoveMemory")
 
 func (m *modernShell) focusBrowser() {
-	if m.closed || m.focusing || m.view == nil || m.view.GetController() == nil {
+	if m.closed || m.focusing || m.focusQueued || m.view == nil || m.view.GetController() == nil {
 		return
 	}
-	m.focusing = true
-	defer func() { m.focusing = false }()
-	_ = m.view.GetController().MoveFocus(edge.COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC)
+	m.focusQueued = true
+	m.postUI(func() {
+		m.focusQueued = false
+		if m.focusing || m.view == nil || m.view.GetController() == nil {
+			return
+		}
+		// A delayed WM_SETFOCUS can arrive after WebView already received
+		// focus. Repeating MoveFocus here would create a focus-message storm.
+		host, focused := m.owner.main.AsContainerBase().Handle(), win.GetFocus()
+		if focused != 0 && focused != host && win.IsChild(host, focused) {
+			return
+		}
+		m.focusing = true
+		defer func() { m.focusing = false }()
+		_ = m.view.GetController().MoveFocus(edge.COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC)
+	})
+}
+
+// WebView2 serializes its STA event handlers. A nested Win32 move/resize loop,
+// modal dialog or focus callback must start after WebMessageReceived returns.
+// Synchronize posts work to the UI message pump; it never runs it inline.
+func (m *modernShell) postUI(work func()) {
+	if m.owner.disposed.Load() {
+		return
+	}
+	post := m.uiPost
+	if post == nil {
+		post = m.owner.main.Synchronize
+	}
+	post(func() {
+		if !m.closed && !m.owner.disposed.Load() {
+			work()
+		}
+	})
+}
+
+func (m *modernShell) resizeBrowser() {
+	if m.closed || m.resizeQueued || m.view == nil || m.view.GetController() == nil {
+		return
+	}
+	m.resizeQueued = true
+	m.postUI(func() {
+		m.resizeQueued = false
+		if m.view != nil && m.view.GetController() != nil {
+			m.view.Resize()
+			m.logGeometry("client-size")
+		}
+	})
+}
+
+func (m *modernShell) notifyBrowserPosition() {
+	if m.closed || m.positionQueued || m.view == nil || m.view.GetController() == nil {
+		return
+	}
+	m.positionQueued = true
+	m.postUI(func() {
+		m.positionQueued = false
+		if m.view != nil && m.view.GetController() != nil {
+			_ = m.view.NotifyParentWindowPositionChanged()
+		}
+	})
+}
+
+func (m *modernShell) syncBrowserVisibility() {
+	if m.closed || m.visibilityQueued || m.view == nil || m.view.GetController() == nil {
+		return
+	}
+	m.visibilityQueued = true
+	m.postUI(func() {
+		m.visibilityQueued = false
+		visible := win.IsWindowVisible(m.owner.main.Handle()) && !win.IsIconic(m.owner.main.Handle())
+		if m.view != nil && m.view.GetController() != nil && visible != m.browserVisible {
+			if err := m.view.GetController().PutIsVisible(visible); err == nil {
+				m.browserVisible = visible
+			}
+		}
+	})
+}
+
+type modernSnapshotGate struct {
+	dirty bool
+	last  time.Time
+}
+
+func (g *modernSnapshotGate) due(now time.Time) bool {
+	if now.Sub(g.last) < 400*time.Millisecond || (!g.dirty && now.Sub(g.last) < 5*time.Second) {
+		return false
+	}
+	g.dirty, g.last = false, now
+	return true
+}
+
+func (m *modernShell) watch() {
+	u := m.owner
+	ticker := time.NewTicker(400 * time.Millisecond)
+	defer ticker.Stop()
+	// The initial snapshot precedes browser creation. Refresh it once on the
+	// first tick, then remain idle until a real update or the slow fallback.
+	gate := modernSnapshotGate{dirty: true, last: time.Now().Add(-400 * time.Millisecond)}
+	for {
+		select {
+		case <-u.stop:
+			return
+		case <-u.backend.Updates():
+			gate.dirty = true
+			continue
+		case <-u.refreshRequested:
+			gate.dirty = true
+			continue
+		case now := <-ticker.C:
+			if u.disposed.Load() {
+				return
+			}
+			if gate.due(now) {
+				state := nativeHUDSnapshot(u.backend)
+				if u.disposed.Load() {
+					return
+				}
+				m.postSnapshot(state)
+			}
+			m.postHUDRefresh()
+		}
+	}
+}
+
+func (m *modernShell) postHUDRefresh() {
+	m.snapshotMu.Lock()
+	if m.hudQueued {
+		m.snapshotMu.Unlock()
+		return
+	}
+	m.hudQueued = true
+	m.snapshotMu.Unlock()
+	m.postUI(func() {
+		m.snapshotMu.Lock()
+		m.hudQueued = false
+		m.snapshotMu.Unlock()
+		if m.owner.hud != nil {
+			m.owner.hud.refresh()
+		}
+	})
+}
+
+func (m *modernShell) executeAction(action p.Action, body M) {
+	go func() {
+		m.actionMu.Lock()
+		result, err := m.owner.backend.Do(action.Path, body)
+		delete(body, "apiKey")
+		m.actionMu.Unlock()
+		m.postUI(func() {
+			if err != nil {
+				m.send("notice", M{"message": err.Error()})
+				return
+			}
+			if raw := v.Str(result["url"]); raw != "" {
+				if err := openExternal(raw); err != nil {
+					m.send("notice", M{"message": err.Error()})
+				}
+			}
+			m.owner.refreshModern()
+		})
+	}()
 }
 
 // Geometry diagnostics belong only to disposable demo/smoke profiles. They do
@@ -252,11 +425,14 @@ func (m *modernShell) windowMessage(hwnd win.HWND, msg uint32, wParam, lParam ui
 	if msg == win.WM_SETFOCUS {
 		m.focusBrowser()
 	}
-	if (msg == win.WM_MOVE || msg == win.WM_DPICHANGED) && m.view != nil && !m.closed {
-		_ = m.view.NotifyParentWindowPositionChanged()
+	if msg == win.WM_MOVE || msg == win.WM_DPICHANGED {
+		m.notifyBrowserPosition()
 	}
-	if msg == win.WM_SIZE && m.view != nil && !m.closed && m.view.GetController() != nil {
-		m.view.Resize()
+	if msg == win.WM_SIZE {
+		m.resizeBrowser()
+	}
+	if msg == win.WM_SIZE || msg == win.WM_SHOWWINDOW || msg == win.WM_ACTIVATE {
+		m.syncBrowserVisibility()
 	}
 	if msg == win.WM_NCHITTEST && !win.IsZoomed(hwnd) && m.owner.modeValue != "fullscreen" && m.owner.modeValue != "borderless" {
 		x, y := int(int16(uint16(lParam))), int(int16(uint16(lParam>>16)))
@@ -287,8 +463,54 @@ func (m *modernShell) windowMessage(hwnd win.HWND, msg uint32, wParam, lParam ui
 }
 
 func (u *Window) refreshModern() {
-	u.state = u.backend.Snapshot()
+	// Snapshot can wait for journal/domain locks and must not run on the
+	// WebView STA. The watch worker coalesces requests and posts its result.
+	if u.disposed.Load() {
+		return
+	}
+	select {
+	case u.refreshRequested <- struct{}{}:
+	default:
+	}
+}
+
+func (m *modernShell) postSnapshot(state M) {
+	m.snapshotMu.Lock()
+	m.pendingState = state
+	if m.stateQueued {
+		m.snapshotMu.Unlock()
+		return
+	}
+	m.stateQueued = true
+	m.snapshotMu.Unlock()
+	m.postUI(func() {
+		m.snapshotMu.Lock()
+		next := m.pendingState
+		m.pendingState = nil
+		m.stateQueued = false
+		m.snapshotMu.Unlock()
+		if next != nil {
+			m.owner.applyModernSnapshot(next)
+		}
+	})
+}
+
+func (u *Window) applyModernSnapshot(state M) {
+	u.state = state
+	if u.dialogOpen {
+		if u.hud != nil {
+			u.hud.refresh()
+		}
+		return
+	}
 	mode := v.Text(v.At(u.state, "desktop", "displayMode"), "windowed")
+	if desired := u.modern.desiredMode; desired != "" {
+		if mode == desired {
+			u.modern.desiredMode = ""
+		} else {
+			mode = desired
+		}
+	}
 	if u.modeValue != mode {
 		u.applyMode(mode)
 	}
@@ -301,16 +523,25 @@ func (u *Window) refreshModern() {
 }
 
 func (m *modernShell) send(kind string, payload any) {
+	wire, err := encodeWebEvent(kind, payload)
+	if err == nil {
+		m.sendEncoded(wire)
+	}
+}
+
+func encodeWebEvent(kind string, payload any) (string, error) {
+	wire, err := json.Marshal(redactWebSecrets(M{"event": kind, "data": payload}))
+	return string(wire), err
+}
+
+func (m *modernShell) sendEncoded(wire string) {
 	if m.closed || m.owner.disposed.Load() || m.view == nil || m.view.GetController() == nil || m.core == nil {
 		return
 	}
 	if source, err := m.core.GetSource(); err != nil || !trustedWebSource(source) {
 		return
 	}
-	b, e := json.Marshal(redactWebSecrets(M{"event": kind, "data": payload}))
-	if e == nil {
-		m.view.Eval("window.copilotReceive&&window.copilotReceive(" + string(b) + ")")
-	}
+	m.view.Eval("window.copilotReceive&&window.copilotReceive(" + wire + ")")
 }
 
 type webRequest struct {
@@ -358,6 +589,10 @@ func (m *modernShell) message(raw string, sender *edge.ICoreWebView2, args *edge
 	if err != nil {
 		return
 	}
+	m.postUI(func() { m.handleRequest(req) })
+}
+
+func (m *modernShell) handleRequest(req webRequest) {
 	if req.Op == "window" {
 		result, e := m.windowAction(v.Str(req.Params["action"]))
 		m.reply(req.ID, result, e)
@@ -380,20 +615,34 @@ func (m *modernShell) message(raw string, sender *edge.ICoreWebView2, args *edge
 		return
 	}
 	if req.Op == "native" {
+		if m.owner.dialogOpen {
+			m.reply(req.ID, nil, errors.New("Сначала закройте открытое системное окно"))
+			return
+		}
 		result, e := m.nativeAction(req.Params)
+		if work, ok := result.(func() (M, error)); e == nil && ok {
+			m.runAsyncResponse(req.ID, work)
+			return
+		}
 		m.reply(req.ID, result, e)
 		return
 	}
+	m.runAsyncResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) })
+}
+
+func (m *modernShell) runAsyncResponse(id string, work func() (M, error)) {
 	go func() {
-		result, e := dispatchWeb(m.owner.backend, req.Op, req.Params)
+		result, e := work()
+		packet := webResponse(id, result, e)
+		wire, marshalErr := encodeWebEvent("response", packet)
+		if marshalErr != nil {
+			wire, _ = encodeWebEvent("response", webResponse(id, nil, marshalErr))
+		}
 		if m.owner.disposed.Load() {
 			return
 		}
-		m.owner.main.Synchronize(func() {
-			if m.closed {
-				return
-			}
-			m.reply(req.ID, result, e)
+		m.postUI(func() {
+			m.sendEncoded(wire)
 			if e == nil {
 				m.owner.refreshModern()
 			}
@@ -419,23 +668,36 @@ func (m *modernShell) smokeViewport(raw any) (M, error) {
 	return M{"ok": true, "compact": compact, "width": size.Width, "height": size.Height}, nil
 }
 func (m *modernShell) reply(id string, result any, err error) {
+	m.send("response", webResponse(id, result, err))
+}
+
+func webResponse(id string, result any, err error) M {
 	r := M{"id": id, "result": result}
 	if err != nil {
 		r["error"] = err.Error()
 	}
-	m.send("response", r)
+	return r
 }
 
 func (m *modernShell) windowAction(action string) (M, error) {
 	u := m.owner
 	switch action {
+	case "status":
+		return M{"ok": true, "maximized": win.IsZoomed(u.main.Handle()), "minimized": win.IsIconic(u.main.Handle()), "displayMode": u.modeValue}, nil
 	case "drag":
+		if state, _, _ := userDLL.NewProc("GetAsyncKeyState").Call(win.VK_LBUTTON); uint16(state)&0x8000 == 0 {
+			return M{"ok": true, "cancelled": true}, nil
+		}
 		win.ReleaseCapture()
 		var cursor win.POINT
 		win.GetCursorPos(&cursor)
 		win.SendMessage(u.main.Handle(), win.WM_NCLBUTTONDOWN, 2, uintptr(uint16(cursor.X))|uintptr(uint16(cursor.Y))<<16)
 	case "minimize":
 		win.ShowWindow(u.main.Handle(), win.SW_MINIMIZE)
+	case "restore":
+		win.ShowWindow(u.main.Handle(), win.SW_RESTORE)
+		m.focusBrowser()
+		u.saveBounds()
 	case "maximize":
 		if win.IsZoomed(u.main.Handle()) {
 			win.ShowWindow(u.main.Handle(), win.SW_RESTORE)
@@ -466,23 +728,84 @@ func (m *modernShell) windowAction(action string) (M, error) {
 	return M{"ok": true, "maximized": win.IsZoomed(u.main.Handle())}, nil
 }
 
+func nativeHUDSnapshot(backend Controller) M {
+	if scoped, ok := backend.(interface{ SnapshotForHUD() M }); ok {
+		return scoped.SnapshotForHUD()
+	}
+	return backend.Snapshot()
+}
+
 func (m *modernShell) changeWindowMode(mode string) (M, error) {
 	if mode != "fullscreen" && mode != "windowed" && mode != "borderless" {
 		return nil, errors.New("Неизвестный режим окна")
 	}
 	u := m.owner
 	u.saveBounds()
-	result, err := u.backend.Do("/api/desktop", M{"displayMode": mode})
-	if err != nil {
-		return nil, err
-	}
-	u.state = u.backend.Snapshot()
 	u.applyMode(mode)
-	u.saveBounds()
-	return v.Merge(v.Copy(result), M{"ok": true, "displayMode": mode, "maximized": win.IsZoomed(u.main.Handle())}), nil
+	m.desiredMode = mode
+	body := u.boundsPayload()
+	if body == nil {
+		body = M{}
+	}
+	body["displayMode"] = mode
+	m.persistDesktop(body)
+	return M{"ok": true, "displayMode": mode, "maximized": win.IsZoomed(u.main.Handle())}, nil
 }
 
-func (m *modernShell) nativeAction(params M) (M, error) {
+// Geometry and mode changes are captured on the UI thread, while persistence
+// runs serially in a worker. Rapid window actions replace pending values instead
+// of queueing unbounded Save/Snapshot calls on the WebView message pump.
+func (m *modernShell) persistDesktop(body M) {
+	if m.owner.disposed.Load() {
+		return
+	}
+	m.desktopMu.Lock()
+	if m.desktopPending == nil {
+		m.desktopPending = M{}
+	}
+	v.Merge(m.desktopPending, body)
+	if m.desktopSaving {
+		m.desktopMu.Unlock()
+		return
+	}
+	m.desktopSaving = true
+	m.desktopDone = make(chan struct{})
+	m.desktopMu.Unlock()
+	go func() {
+		for {
+			m.desktopMu.Lock()
+			next := m.desktopPending
+			m.desktopPending = nil
+			if next == nil {
+				m.desktopSaving = false
+				close(m.desktopDone)
+				m.desktopMu.Unlock()
+				return
+			}
+			m.desktopMu.Unlock()
+			if _, err := m.owner.backend.Do("/api/desktop", next); err != nil {
+				m.postUI(func() {
+					if v.Str(next["displayMode"]) == m.desiredMode {
+						m.desiredMode = ""
+					}
+					m.send("notice", M{"message": err.Error()})
+				})
+			}
+			m.owner.refreshModern()
+		}
+	}()
+}
+
+func (m *modernShell) flushDesktop() {
+	m.desktopMu.Lock()
+	done := m.desktopDone
+	m.desktopMu.Unlock()
+	if done != nil {
+		<-done
+	}
+}
+
+func (m *modernShell) nativeAction(params M) (any, error) {
 	u := m.owner
 	u.dialogOpen = true
 	defer func() { u.dialogOpen = false }()
@@ -500,7 +823,7 @@ func (m *modernShell) nativeAction(params M) (M, error) {
 		if !ok {
 			return M{"cancelled": true}, nil
 		}
-		return u.backend.Do("/api/journal-dir", M{"path": d.FilePath})
+		return func() (M, error) { return u.backend.Do("/api/journal-dir", M{"path": d.FilePath}) }, nil
 	case "import-plan":
 		d := walk.FileDialog{Title: "План инженерных улучшений", Filter: "JSON (*.json)|*.json"}
 		ok, e := d.ShowOpen(u.main)
@@ -510,16 +833,18 @@ func (m *modernShell) nativeAction(params M) (M, error) {
 		if !ok {
 			return M{"cancelled": true}, nil
 		}
-		file, e := os.Open(d.FilePath)
-		if e != nil {
-			return nil, e
-		}
-		defer file.Close()
-		plan, e := readWebEngineeringPlan(file)
-		if e != nil {
-			return nil, e
-		}
-		return u.backend.Do("/api/engineering", M{"action": "import", "items": plan["items"]})
+		return func() (M, error) {
+			file, e := os.Open(d.FilePath)
+			if e != nil {
+				return nil, e
+			}
+			defer file.Close()
+			plan, e := readWebEngineeringPlan(file)
+			if e != nil {
+				return nil, e
+			}
+			return u.backend.Do("/api/engineering", M{"action": "import", "items": plan["items"]})
+		}, nil
 	case "export":
 		kind := v.Str(params["kind"])
 		asJSON := v.Bool(params["json"])
@@ -535,30 +860,32 @@ func (m *modernShell) nativeAction(params M) (M, error) {
 		if !ok {
 			return M{"cancelled": true}, nil
 		}
-		var content []byte
-		if asJSON {
-			if exp, ok := u.backend.(interface {
-				ExportPlanFor(string, string) ([]byte, error)
-			}); ok {
-				content, e = exp.ExportPlanFor(kind, v.Str(params["projectId"]))
+		return func() (M, error) {
+			var content []byte
+			if asJSON {
+				if exp, ok := u.backend.(interface {
+					ExportPlanFor(string, string) ([]byte, error)
+				}); ok {
+					content, e = exp.ExportPlanFor(kind, v.Str(params["projectId"]))
+				} else {
+					content, e = u.backend.ExportPlan(kind)
+				}
 			} else {
-				content, e = u.backend.ExportPlan(kind)
+				var text string
+				if exp, ok := u.backend.(interface {
+					ExportCSVFor(string, string) (string, error)
+				}); ok {
+					text, e = exp.ExportCSVFor(kind, v.Str(params["projectId"]))
+				} else {
+					text, e = u.backend.ExportCSV(kind)
+				}
+				content = []byte(text)
 			}
-		} else {
-			var text string
-			if exp, ok := u.backend.(interface {
-				ExportCSVFor(string, string) (string, error)
-			}); ok {
-				text, e = exp.ExportCSVFor(kind, v.Str(params["projectId"]))
-			} else {
-				text, e = u.backend.ExportCSV(kind)
+			if e == nil {
+				e = os.WriteFile(d.FilePath, content, 0600)
 			}
-			content = []byte(text)
-		}
-		if e == nil {
-			e = os.WriteFile(d.FilePath, content, 0600)
-		}
-		return M{"ok": e == nil, "file": filepath.Base(d.FilePath)}, e
+			return M{"ok": e == nil, "file": filepath.Base(d.FilePath)}, e
+		}, nil
 	}
 	return nil, errors.New("Неизвестное действие приложения")
 }
@@ -624,166 +951,4 @@ func (m *modernShell) finishSmoke(report M) {
 			m.owner.quit()
 		})
 	}()
-}
-
-// The renderer receives serializable views and action descriptions. Raw engine
-// methods, API keys and arbitrary filesystem paths are not exposed to scripts.
-func dispatchWeb(backend Controller, op string, input M) (M, error) {
-	state := backend.Snapshot()
-	tab, mode, query := v.Text(input["tab"], "overview"), v.Str(input["mode"]), v.Str(input["query"])
-	valid := false
-	for _, t := range p.Tabs {
-		if t.ID == tab {
-			valid = true
-		}
-	}
-	if !valid {
-		return nil, errors.New("Раздел не найден")
-	}
-	page := p.Build(tab, mode, query, state)
-	selected := M{}
-	selectedDetails, selectedTitle := "", page.Title
-	for _, row := range page.Rows {
-		if row.ID == v.Str(input["selected"]) {
-			selected = v.Copy(row.Data)
-			selectedDetails = row.Details
-			selectedTitle = v.Text(row.Data["title"], row.Data["name"], page.Title)
-			break
-		}
-	}
-	actions := p.CoreActions(tab, mode, state, selected, v.Obj(input["prefill"]))
-	switch op {
-	case "boot":
-		return M{"app": state["app"], "tabs": p.Tabs, "navigation": state["navigation"], "activities": p.Activities, "state": webState(state)}, nil
-	case "view":
-		return M{"page": page, "actions": webActions(actions), "state": webState(state), "help": p.HelpFor(tab)}, nil
-	case "catalog":
-		return M{"engineering": v.At(state, "engineering", "catalog")}, nil
-	case "navigation":
-		return backend.Do("/api/navigation", M{"tabs": input["tabs"]})
-	case "settings":
-		return backend.Do("/api/settings", v.Obj(input["values"]))
-	case "desktop":
-		return backend.Do("/api/desktop", v.Obj(input["values"]))
-	case "theme-apply":
-		return backend.Do("/api/theme", M{"settings": v.Obj(input["values"])})
-	case "learning":
-		return backend.Do("/api/learning", v.Obj(input["values"]))
-	case "calculator":
-		return backend.Do("/api/carrier/calculator", v.Obj(input["values"]))
-	case "select-colony":
-		return backend.Do("/api/colonization", M{"action": "select-project", "id": input["id"]})
-	case "action":
-		for _, a := range actions {
-			if a.ID != v.Str(input["actionId"]) {
-				continue
-			}
-			if a.Disabled {
-				return nil, errors.New("Сначала выберите подходящую строку")
-			}
-			values := M{}
-			for _, f := range a.Fields {
-				raw, present := v.Obj(input["values"])[f.Key]
-				if !present {
-					raw = f.Default
-				}
-				parsed, e := p.ParseField(f, raw)
-				if e != nil {
-					return nil, e
-				}
-				values[f.Key] = parsed
-			}
-			body, e := a.Body(values)
-			if e != nil {
-				return nil, e
-			}
-			switch a.Kind {
-			case "purchase":
-				prefill, e := p.PurchasePrefill(a, values)
-				return M{"navigate": "sale", "mode": "Купить", "prefill": prefill}, e
-			case "navigate":
-				return M{"navigate": a.Path, "mode": v.Str(a.Payload["mode"])}, nil
-			case "help":
-				return M{"help": p.HelpFor(tab)}, nil
-			case "details":
-				return M{"details": selectedDetails, "title": selectedTitle}, nil
-			case "copy":
-				return M{"copy": v.Text(a.Path, a.Payload["text"], a.Payload["system"])}, nil
-			case "url":
-				return M{"url": a.Path}, nil
-			case "export":
-				return M{"export": a.Path, "projectId": a.Payload["projectId"]}, nil
-			case "folder", "import-plan":
-				return M{"native": a.Kind}, nil
-			case "engineering-trade":
-				result, e := backend.Do(a.Path, body)
-				if e != nil {
-					return nil, e
-				}
-				return v.Merge(v.Copy(result), M{"navigate": "engineering", "mode": "Обмен"}), nil
-			case "theme-import":
-				result, e := backend.Do(a.Path, body)
-				if e != nil {
-					return nil, e
-				}
-				return M{"themePreview": v.Copy(v.Obj(result["theme"]))}, nil
-			}
-			result, e := backend.Do(a.Path, body)
-			delete(body, "apiKey")
-			return result, e
-		}
-		return nil, errors.New("Действие больше недоступно. Обновите раздел.")
-	}
-	return nil, errors.New("Неизвестный запрос интерфейса")
-}
-
-func webState(state M) M {
-	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "tradePlan", "carrier", "carrierRoute", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
-		out[key] = state[key]
-	}
-	return redactWebSecrets(v.Obj(v.Clone(out)))
-}
-
-func redactWebSecrets(input M) M {
-	result := M{}
-	for key, value := range input {
-		normalized := strings.NewReplacer("_", "", "-", "").Replace(strings.ToLower(key))
-		switch normalized {
-		case "apikey", "accesstoken", "refreshtoken", "clientsecret", "codeverifier", "password":
-			continue
-		}
-		switch item := value.(type) {
-		case map[string]any:
-			result[key] = redactWebSecrets(item)
-		case []any:
-			out := make([]any, len(item))
-			for i, entry := range item {
-				if row, ok := entry.(map[string]any); ok {
-					out[i] = redactWebSecrets(row)
-				} else {
-					out[i] = entry
-				}
-			}
-			result[key] = out
-		default:
-			result[key] = value
-		}
-	}
-	return result
-}
-func webActions(actions []p.Action) []M {
-	out := []M{}
-	for _, a := range actions {
-		fields := []M{}
-		for _, f := range a.Fields {
-			defaultValue := f.Default
-			if f.Kind == "password" {
-				defaultValue = nil
-			}
-			fields = append(fields, M{"key": f.Key, "label": f.Label, "kind": f.Kind, "help": f.Help, "default": defaultValue, "choices": f.Choices, "required": f.Required, "min": f.Min, "max": f.Max})
-		}
-		out = append(out, M{"id": a.ID, "title": a.Title, "kind": a.Kind, "path": a.Path, "confirm": a.Confirm, "disabled": a.Disabled, "fields": fields})
-	}
-	return out
 }

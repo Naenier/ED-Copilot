@@ -1,0 +1,1526 @@
+{
+  "all": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 2,
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "count": 1,
+          "key": "unknownsyntheticresource",
+          "methods": [],
+          "name": "Unknown Synthetic Resource",
+          "tier": "unknown"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Metallic Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Платина, Unknown Synthetic Resource",
+        "Часть сигналов отсутствует в справочнике; их ценность неизвестна.",
+        "Нетронутые запасы — преимущество для лазерной добычи."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "key": "unknownsyntheticresource",
+          "methods": [],
+          "name": "Unknown Synthetic Resource",
+          "requiresCore": false,
+          "tier": "unknown"
+        }
+      ],
+      "ring": "Alpha Metallic Ring",
+      "ringType": "Металлическое",
+      "ringTypeKey": "metallic",
+      "score": 95,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": true,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "geology": 1,
+      "gravity": 0.8,
+      "hotspots": [],
+      "id": "alpha:1:surface",
+      "kind": "surface",
+      "landable": true,
+      "materials": [
+        {
+          "grade": 4,
+          "key": "polonium",
+          "name": "Полоний",
+          "percent": 1.2,
+          "tier": "high"
+        },
+        {
+          "grade": 1,
+          "key": "carbon",
+          "name": "Углерод",
+          "percent": 15,
+          "tier": "low"
+        }
+      ],
+      "methods": [
+        "surface-planet",
+        "raw"
+      ],
+      "miningSites": 2,
+      "observedResources": [
+        {
+          "count": 3,
+          "key": "gold",
+          "name": "Золото"
+        }
+      ],
+      "reasons": [
+        "Synthetic Site. По журналу: Золото 3 т",
+        "Сканер подтвердил участки планетарной добычи: 2. Состав требует разведки.",
+        "Есть сырьё высоких категорий для инженерии.",
+        "Геологических сигналов: 1."
+      ],
+      "recommendation": "Выберите участок в навигации и разведайте залежь на Rhino.",
+      "reserve": "",
+      "resources": [
+        {
+          "key": "polonium",
+          "methods": [
+            "raw"
+          ],
+          "name": "Полоний",
+          "requiresCore": false,
+          "tier": "high"
+        }
+      ],
+      "ring": "",
+      "ringType": "",
+      "score": 88,
+      "siteFinds": [
+        {
+          "resources": [
+            {
+              "count": 3,
+              "key": "gold",
+              "name": "Золото"
+            }
+          ],
+          "site": "Synthetic Site"
+        }
+      ],
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 1,
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Rich Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Пейнит",
+        "Платина и пейнит здесь требуют разработки ядра. Для лазерной добычи ищите металлическое кольцо."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Rich Ring",
+      "ringType": "Богатое металлами",
+      "ringTypeKey": "metalrich",
+      "score": 85,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Rocky Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Для лазерной добычи запасы слабые. Ядра оценивайте отдельно.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "benitoite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Бенитоит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "monazite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Монацит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "musgravite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Мусгравит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "serendibite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Серендибит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "samarium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Самарий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Rocky Ring",
+      "ringType": "Каменистое",
+      "ringTypeKey": "rocky",
+      "score": 24,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "medium",
+      "updatedAt": null
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Icy Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Для лазерной добычи запасы слабые. Ядра оценивайте отдельно.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "lowtemperaturediamond",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Низкотемпературные алмазы",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "key": "opal",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Опал бездны",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "grandidierite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Грандидьерит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "bromellite",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Бромеллит",
+          "requiresCore": false,
+          "tier": "medium"
+        },
+        {
+          "key": "tritium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Тритий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Icy Ring",
+      "ringType": "Ледяное",
+      "ringTypeKey": "icy",
+      "score": 0,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "low",
+      "updatedAt": null
+    }
+  ],
+  "core": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 2,
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "count": 1,
+          "key": "unknownsyntheticresource",
+          "methods": [],
+          "name": "Unknown Synthetic Resource",
+          "tier": "unknown"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Metallic Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Платина, Unknown Synthetic Resource",
+        "Часть сигналов отсутствует в справочнике; их ценность неизвестна."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Metallic Ring",
+      "ringType": "Металлическое",
+      "ringTypeKey": "metallic",
+      "score": 85,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 1,
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Rich Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Пейнит",
+        "Платина и пейнит здесь требуют разработки ядра. Для лазерной добычи ищите металлическое кольцо."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Rich Ring",
+      "ringType": "Богатое металлами",
+      "ringTypeKey": "metalrich",
+      "score": 85,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Rocky Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "benitoite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Бенитоит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "monazite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Монацит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "musgravite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Мусгравит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "serendibite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Серендибит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Rocky Ring",
+      "ringType": "Каменистое",
+      "ringTypeKey": "rocky",
+      "score": 42,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "medium",
+      "updatedAt": null
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Icy Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "lowtemperaturediamond",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Низкотемпературные алмазы",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "key": "opal",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Опал бездны",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "grandidierite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Грандидьерит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "bromellite",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Бромеллит",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Icy Ring",
+      "ringType": "Ледяное",
+      "ringTypeKey": "icy",
+      "score": 14,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "low",
+      "updatedAt": null
+    }
+  ],
+  "laser": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 2,
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "count": 1,
+          "key": "unknownsyntheticresource",
+          "methods": [],
+          "name": "Unknown Synthetic Resource",
+          "tier": "unknown"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Metallic Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Платина, Unknown Synthetic Resource",
+        "Часть сигналов отсутствует в справочнике; их ценность неизвестна.",
+        "Нетронутые запасы — преимущество для лазерной добычи."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Metallic Ring",
+      "ringType": "Металлическое",
+      "ringTypeKey": "metallic",
+      "score": 95,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Rocky Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Для лазерной добычи запасы слабые. Ядра оценивайте отдельно.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "samarium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Самарий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Rocky Ring",
+      "ringType": "Каменистое",
+      "ringTypeKey": "rocky",
+      "score": 19,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "medium",
+      "updatedAt": null
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Icy Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Для лазерной добычи запасы слабые. Ядра оценивайте отдельно.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "lowtemperaturediamond",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Низкотемпературные алмазы",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "key": "bromellite",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Бромеллит",
+          "requiresCore": false,
+          "tier": "medium"
+        },
+        {
+          "key": "tritium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Тритий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Icy Ring",
+      "ringType": "Ледяное",
+      "ringTypeKey": "icy",
+      "score": 0,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "low",
+      "updatedAt": null
+    }
+  ],
+  "raw": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "geology": 1,
+      "gravity": 0.8,
+      "hotspots": [],
+      "id": "alpha:1:surface",
+      "kind": "surface",
+      "landable": true,
+      "materials": [
+        {
+          "grade": 4,
+          "key": "polonium",
+          "name": "Полоний",
+          "percent": 1.2,
+          "tier": "high"
+        },
+        {
+          "grade": 1,
+          "key": "carbon",
+          "name": "Углерод",
+          "percent": 15,
+          "tier": "low"
+        }
+      ],
+      "methods": [
+        "raw"
+      ],
+      "miningSites": 2,
+      "observedResources": [
+        {
+          "count": 3,
+          "key": "gold",
+          "name": "Золото"
+        }
+      ],
+      "reasons": [
+        "Synthetic Site. По журналу: Золото 3 т",
+        "Сканер подтвердил участки планетарной добычи: 2. Состав требует разведки.",
+        "Есть сырьё высоких категорий для инженерии.",
+        "Геологических сигналов: 1."
+      ],
+      "recommendation": "Посадка ради сырья для инженеров и синтеза. Проценты не определяют скорость сбора.",
+      "reserve": "",
+      "resources": [
+        {
+          "key": "polonium",
+          "methods": [
+            "raw"
+          ],
+          "name": "Полоний",
+          "requiresCore": false,
+          "tier": "high"
+        }
+      ],
+      "ring": "",
+      "ringType": "",
+      "score": 88,
+      "siteFinds": [
+        {
+          "resources": [
+            {
+              "count": 3,
+              "key": "gold",
+              "name": "Золото"
+            }
+          ],
+          "site": "Synthetic Site"
+        }
+      ],
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    }
+  ],
+  "surface": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 2,
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "count": 1,
+          "key": "unknownsyntheticresource",
+          "methods": [],
+          "name": "Unknown Synthetic Resource",
+          "tier": "unknown"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Metallic Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Платина, Unknown Synthetic Resource",
+        "Часть сигналов отсутствует в справочнике; их ценность неизвестна."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "platinum",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Платина",
+          "requiresCore": false,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Metallic Ring",
+      "ringType": "Металлическое",
+      "ringTypeKey": "metallic",
+      "score": 85,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": false,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "gravity": 0.8,
+      "hotspots": [
+        {
+          "count": 1,
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "id": "alpha:1:ring:Alpha Rich Ring",
+      "kind": "ring",
+      "landable": true,
+      "materials": [],
+      "methods": [
+        "core",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Горячие точки подтверждены сканированием: Пейнит",
+        "Платина и пейнит здесь требуют разработки ядра. Для лазерной добычи ищите металлическое кольцо.",
+        "Сначала нужно раскрыть ядро сейсмическими зарядами, затем снять отложения абразивным бластером."
+      ],
+      "recommendation": "Выберите метод добычи и проверьте астероид разведчиком.",
+      "reserve": "Нетронутые",
+      "reserveKey": "pristine",
+      "resources": [
+        {
+          "key": "painite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Пейнит",
+          "requiresCore": true,
+          "tier": "high"
+        }
+      ],
+      "ring": "Alpha Rich Ring",
+      "ringType": "Богатое металлами",
+      "ringTypeKey": "metalrich",
+      "score": 85,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "high",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Rocky Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Сначала нужно раскрыть ядро сейсмическими зарядами, затем снять отложения абразивным бластером.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "benitoite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Бенитоит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "monazite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Монацит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "musgravite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Мусгравит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "serendibite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Серендибит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "samarium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Самарий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Rocky Ring",
+      "ringType": "Каменистое",
+      "ringTypeKey": "rocky",
+      "score": 42,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "medium",
+      "updatedAt": null
+    },
+    {
+      "body": "Synthetic Alpha 2",
+      "bodyId": 2,
+      "compositionUnknown": false,
+      "confidence": "potential",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 12000,
+      "distanceLy": 3,
+      "gravity": null,
+      "hotspots": [],
+      "id": "alpha:2:ring:Alpha Icy Ring",
+      "kind": "ring",
+      "landable": false,
+      "materials": [],
+      "methods": [
+        "core",
+        "laser",
+        "subsurface",
+        "surface"
+      ],
+      "miningSites": 0,
+      "reasons": [
+        "Оценка по типу кольца. Нужны зонды ПСП и разведчик.",
+        "Сначала нужно раскрыть ядро сейсмическими зарядами, затем снять отложения абразивным бластером.",
+        "Долгий перелёт от звезды прибытия."
+      ],
+      "recommendation": "Разведать кольцо перед добычей.",
+      "reserve": "Бедные",
+      "reserveKey": "low",
+      "resources": [
+        {
+          "key": "lowtemperaturediamond",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Низкотемпературные алмазы",
+          "requiresCore": false,
+          "tier": "high"
+        },
+        {
+          "key": "opal",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Опал бездны",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "alexandrite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Александрит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "grandidierite",
+          "methods": [
+            "core",
+            "surface"
+          ],
+          "name": "Грандидьерит",
+          "requiresCore": true,
+          "tier": "high"
+        },
+        {
+          "key": "bromellite",
+          "methods": [
+            "core",
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Бромеллит",
+          "requiresCore": false,
+          "tier": "medium"
+        },
+        {
+          "key": "tritium",
+          "methods": [
+            "laser",
+            "subsurface",
+            "surface"
+          ],
+          "name": "Тритий",
+          "requiresCore": false,
+          "tier": "medium"
+        }
+      ],
+      "ring": "Alpha Icy Ring",
+      "ringType": "Ледяное",
+      "ringTypeKey": "icy",
+      "score": 14,
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "low",
+      "updatedAt": null
+    }
+  ],
+  "surface-planet": [
+    {
+      "body": "Synthetic Alpha 1",
+      "bodyId": 1,
+      "compositionUnknown": true,
+      "confidence": "confirmed",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "distanceLs": 200,
+      "distanceLy": 3,
+      "geology": 1,
+      "gravity": 0.8,
+      "hotspots": [],
+      "id": "alpha:1:surface",
+      "kind": "surface",
+      "landable": true,
+      "materials": [
+        {
+          "grade": 4,
+          "key": "polonium",
+          "name": "Полоний",
+          "percent": 1.2,
+          "tier": "high"
+        },
+        {
+          "grade": 1,
+          "key": "carbon",
+          "name": "Углерод",
+          "percent": 15,
+          "tier": "low"
+        }
+      ],
+      "methods": [
+        "surface-planet"
+      ],
+      "miningSites": 2,
+      "observedResources": [
+        {
+          "count": 3,
+          "key": "gold",
+          "name": "Золото"
+        }
+      ],
+      "reasons": [
+        "Synthetic Site. По журналу: Золото 3 т",
+        "Сканер подтвердил участки планетарной добычи: 2. Состав требует разведки.",
+        "Геологических сигналов: 1."
+      ],
+      "recommendation": "Выберите участок в навигации и разведайте залежь на Rhino.",
+      "reserve": "",
+      "resources": [],
+      "ring": "",
+      "ringType": "",
+      "score": 66,
+      "siteFinds": [
+        {
+          "resources": [
+            {
+              "count": 3,
+              "key": "gold",
+              "name": "Золото"
+            }
+          ],
+          "site": "Synthetic Site"
+        }
+      ],
+      "source": "journal",
+      "system": "Synthetic Alpha",
+      "systemAddress": null,
+      "tier": "medium",
+      "updatedAt": "2026-11-08T12:00:00Z"
+    }
+  ]
+}

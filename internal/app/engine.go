@@ -32,7 +32,7 @@ import (
 
 type M = v.M
 
-const Version = "2.1.0"
+const Version = "2.1.1"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -166,7 +166,7 @@ func New(o Options) (*Engine, error) {
 		}
 		x.callback = &http.Server{Handler: http.HandlerFunc(x.handleCallback), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 75 * time.Second, MaxHeaderBytes: 16 * 1024}
 		go func() { _ = x.callback.Serve(listener) }()
-		x.Inara, e = inara.New(inara.Options{DataDir: o.DataDir, HTTPClient: o.HTTPClient, GetState: x.Snapshot, OnUpdate: x.Notify})
+		x.Inara, e = inara.New(inara.Options{DataDir: o.DataDir, HTTPClient: o.HTTPClient, AppVersion: Version, GetState: x.SnapshotForSync, OnUpdate: x.Notify})
 		if e != nil {
 			x.Close()
 			return nil, e
