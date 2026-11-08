@@ -149,8 +149,16 @@ func TestHUDColonyPartialWarehouseShowsLowerBoundAndUncertainProcurement(t *test
 	row := v.Rows(v.At(s, "colonization", "activeProject", "operationalSupplies"))[0]
 	row["cargoAvailable"], row["toBuyAtMost"] = nil, nil
 	text = hudProse(BuildHUD(s, hudFixtureNow))
-	if strings.Contains(text, "на борту 0") || strings.Contains(text, "купить") || strings.Contains(text, "✓") || !strings.Contains(text, "Steel: осталось 100 т · ФН: ?") {
+	if strings.Contains(text, "на борту 0") || strings.Contains(text, "купить") || strings.Contains(text, "✓") || !strings.Contains(text, "Steel: осталось 100 т · ФН: ≥30 т") {
 		t.Fatal("unknown ship cargo became zero or an invented purchase amount", text)
+	}
+}
+
+func TestHUDColonyKnownEmptyCarrierWithUnknownShipDoesNotBecomeUnknownCarrier(t *testing.T) {
+	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"includeCarrierWarehouse": true, "carrierWarehouses": []M{{"id": "42", "known": true, "accessible": true, "items": []M{}}}, "activeProject": M{"name": "Synthetic", "status": "building", "operationalSupplies": []M{{"commodity": "steel", "name": "Steel", "missing": 100, "cargoAvailable": nil, "carrierIncluded": true, "carrierAvailable": 0, "carrierComplete": true}}}}}
+	text := hudProse(BuildHUD(s, hudFixtureNow))
+	if !strings.Contains(text, "Steel: осталось 100 т") || strings.Contains(text, "ФН: ?") || strings.Contains(text, "купить") || strings.Contains(text, "✓") {
+		t.Fatal("unknown ship cargo changed confirmed empty carrier stock", text)
 	}
 }
 

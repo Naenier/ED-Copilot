@@ -41,7 +41,17 @@ try {
         }
         if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw "Smoke failed: $Mode" }
         $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
-        if (-not $result.ok) { throw "Smoke reported failure: $Mode" }
+        if (-not $result.ok) {
+            # These reports belong to the isolated, network-disabled profile.
+            # Preserve the actual failing checks in CI instead of only a mode.
+            if ($result.PSObject.Properties.Name -contains 'scenarios') {
+                $result.scenarios | Where-Object { $_.ok -eq $false } | ConvertTo-Json -Depth 6 | Write-Output
+            }
+            foreach ($property in $result.PSObject.Properties) {
+                if ($property.Name -match 'error|fail|problem') { Write-Output ($property.Name + ': ' + ($property.Value | ConvertTo-Json -Depth 6 -Compress)) }
+            }
+            throw "Smoke reported failure: $Mode"
+        }
         if ($result.version -ne (Get-Item -LiteralPath $binary).VersionInfo.ProductVersion) { throw 'Executable resource version differs from application version.' }
     }
     Invoke-Smoke -Mode '--smoke-headless' -ReportName 'smoke-headless.json'

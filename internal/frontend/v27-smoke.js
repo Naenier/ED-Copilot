@@ -41,8 +41,20 @@ async function run(C,u){
    if(language==='en')check('English colony budget has no untranslated prose',!/[\p{Script=Cyrillic}]/u.test(budget.innerText));
    await u.navigate('colonization',{mode:'Бюджет'});
    check(language+': detailed budget table includes observed average prices and commodity totals',C.page.Columns.includes(u.t('Средняя по галактике, кр./т'))&&C.page.Columns.includes(u.t('Полная стоимость, кр.'))&&C.page.Columns.includes(u.t('Цена получена'))&&C.page.Rows.length===(C.state.colonization?.activeProject?.supplies||[]).length);
-   check(language+': budget gives the resource table room without a side inspector',!u.$('.data-split .inspector')&&u.$('.table-scroll thead')?.getBoundingClientRect().top<innerHeight*.75);
+   if(language==='ru'){
+    await u.call('smoke-viewport',{compact:true});
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+   }
+   const budgetTable=u.$('.table-scroll table');
+   if(innerHeight<800){
+    budgetTable.scrollIntoView({block:'start',inline:'nearest',behavior:'instant'});
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const head=budgetTable.querySelector('thead').getBoundingClientRect(),rows=[...budgetTable.querySelectorAll('tbody tr')],bounds=u.$('#page-scroll').getBoundingClientRect();
+    check(language+': small-window budget table is reachable by scrolling',head.top>=bounds.top&&head.bottom<bounds.bottom&&rows.slice(0,Math.min(3,rows.length)).every(row=>row.getBoundingClientRect().bottom<=bounds.bottom));
+   }else check(language+': budget leaves at least a quarter of the viewport for the resource table',budgetTable.querySelector('thead').getBoundingClientRect().top<innerHeight*.75);
+   check(language+': budget preserves table width without a side inspector',!u.$('.data-split .inspector'));
    await u.smokeCapture('colony-budget-'+language);
+   if(language==='ru')await u.call('smoke-viewport',{compact:false});
    await u.navigate('colonization',{mode:'Снабжение'});
    const warehouseBefore=C.state.colonization?.includeCarrierWarehouse===true;
    const warehouse=u.$('#colony-include-carrier-stock');check(language+': colony warehouse option is available',!!warehouse);warehouse.click();
@@ -64,7 +76,7 @@ async function run(C,u){
   }
   await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));check('Workspace sidebar can collapse',C.collapsed===true);
   u.$('.rail [data-group="trade"]').click();await wait(()=>C.group==='trade'&&!C.collapsed&&!!C.page);check('Choosing a group reopens its own sidebar',!u.$('.sidebar').classList.contains('collapsed'));
- }finally{await u.call('settings',{values:{language:before.language}});await u.navigate(before.tab,{mode:before.mode});if(C.collapsed!==before.collapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));}
+ }finally{await u.call('smoke-viewport',{compact:false});await u.call('settings',{values:{language:before.language}});await u.navigate(before.tab,{mode:before.mode});if(C.collapsed!==before.collapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));}
  return results;
 }
 window.V27Smoke={run};

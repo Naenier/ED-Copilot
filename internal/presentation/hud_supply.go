@@ -120,7 +120,15 @@ func hudColonySupplyLines(colony, project M, supplies []hudColonySupply) []HUDLi
 			case item.covered && v.Num(r["cargoAvailable"]) > 0:
 				text = v.Text(r["name"], r["commodity"]) + ": доставить " + Number(min(v.Num(r["cargoAvailable"]), v.Num(r["missing"]))) + " т"
 			default:
-				text += " · ФН: ?"
+				if v.Num(item.carrier) > 0 {
+					qualifier := ""
+					if !item.carrierComplete {
+						qualifier = "≥"
+					}
+					text += " · ФН: " + qualifier + Number(item.carrier) + " т"
+				} else if item.carrier == nil || !item.carrierComplete {
+					text += " · ФН: ?"
+				}
 			}
 			role := "text"
 			if item.covered {
