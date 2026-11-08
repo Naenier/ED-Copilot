@@ -33,10 +33,15 @@
 .colony-supply-heading button{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent)}
 .colony-supply-heading button .icon{height:13px;width:13px}
 .colony-supply-items{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.colony-supply-items>div{padding:12px;border-radius:8px;background:var(--bg);min-width:0}
+.colony-supply-items>div{display:grid;align-content:start;row-gap:5px;padding:12px;border-radius:8px;background:var(--bg);min-width:0}
 .colony-supply-items span{display:block;font-size:11px;line-height:1.6;overflow-wrap:anywhere}
-.colony-supply-items strong{display:block;font-size:14px;font-weight:500;margin:5px 0}
-.colony-supply-items small{font-size:10px;color:var(--muted);line-height:1.5}
+.colony-supply-items strong{display:block;font-size:14px;font-weight:500;margin:0}
+.colony-supply-items small{display:block;min-width:0;overflow-wrap:anywhere;font-size:10px;color:var(--muted);line-height:1.5}
+.colony-warehouse-options{display:grid;gap:12px;margin:20px 0}
+.colony-warehouse-options>.route-clipboard-option{margin:0}
+.colony-warehouse-options>.colony-source-note{margin:0}
+.colony-warehouse-options>.colony-source-note p{margin:0}
+.colony-warehouse-options>.colony-source-note p+p{margin-top:8px}
 .colony-data-warnings{margin-top:17px;color:var(--muted);font-size:11px;line-height:1.8}
 .colony-data-warnings summary{cursor:pointer;color:var(--warn)}
 .colony-data-warnings ul{padding-left:17px;margin:9px 0 0}

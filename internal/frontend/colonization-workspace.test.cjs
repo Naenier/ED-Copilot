@@ -188,6 +188,19 @@ test('carrier warehouse controls distinguish unknown and zero with separate squa
  html=f.api.render(f.C,f.ui);assert.match(html,/Include carrier warehouse/);assert.match(html,/Squadron cargo is available to me/);assert.match(html,/Awaiting data/);
 });
 
+test('enabled supply preview keeps ship carrier and purchase values separate from warehouse controls',()=>{
+ const f=fixture();f.C.mode='Снабжение';
+ f.C.state.colonization.includeCarrierWarehouse=true;
+ f.C.state.colonization.activeProject=project('supplies','Supply preview',{operationalSupplies:[{commodity:'steel',name:'Сталь',missing:80,cargoAvailable:0,carrierAvailable:null,toBuy:null,toBuyAtMost:80}]});
+ const html=f.api.render(f.C,f.ui),preview=html.match(/<div class="colony-supply-items">([\s\S]*?)<\/div><\/div>/)?.[1]||'';
+ assert.equal((preview.match(/<small>/g)||[]).length,3);
+ assert.match(preview,/<small>В корабле: 0 т<\/small>/);
+ assert.match(preview,/<small>На флотоносце: Неизвестно<\/small>/);
+ assert.match(preview,/<small>Купить: Не более 80 т<\/small>/);
+ assert.match(html,/<div class="colony-warehouse-options" role="group" aria-label="Учёт склада флотоносца">/);
+ assert.doesNotMatch(html,/<section class="colony-warehouse-options"/);
+});
+
 test('warehouse checkbox persists both options and finishes without a disabled stale control',async()=>{
  const f=fixture();f.C.mode='Снабжение';f.C.colonizationWorkspace={origin:'Keep draft',faction:'Keep faction'};
  const pending=deferred();f.setRPC(()=>pending.promise);

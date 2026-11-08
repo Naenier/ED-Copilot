@@ -28,7 +28,18 @@ async function run(C,u){
    const warehouse=u.$('#colony-include-carrier-stock');check(language+': colony warehouse option is available',!!warehouse);warehouse.click();
    await wait(()=>C.state.colonization?.includeCarrierWarehouse===!warehouseBefore&&!u.$('#colony-include-carrier-stock')?.disabled);
    check(language+': colony warehouse option saves through the real backend',u.$('#colony-include-carrier-stock')?.checked===!warehouseBefore);
-   if(!warehouseBefore)check(language+': unread squadron warehouse requires an observed carrier',u.$('#colony-squadron-stock-access')?.disabled===true);
+   if(!warehouseBefore){
+    check(language+': unread squadron warehouse requires an observed carrier',u.$('#colony-squadron-stock-access')?.disabled===true);
+    const cards=u.$$('.colony-supply-items>div');check(language+': enabled warehouse supply cards are present',cards.length>0);
+    check(language+': enabled warehouse metrics have separate readable rows',cards.every(card=>{
+     const rows=[...card.querySelectorAll('small')],box=card.getBoundingClientRect();
+     return rows.length===3&&rows.every((row,index)=>{
+      const bounds=row.getBoundingClientRect(),previous=index?rows[index-1].getBoundingClientRect():null;
+      return bounds.width>0&&bounds.height>0&&bounds.left>=box.left&&bounds.right<=box.right+1&&row.scrollWidth<=row.clientWidth+1&&(!previous||bounds.top-previous.bottom>=4);
+     });
+    }));
+    const stockGroup=u.$('.colony-warehouse-options');check(language+': warehouse controls remain an independent visible group',stockGroup?.tagName==='DIV'&&stockGroup.getAttribute('role')==='group'&&!stockGroup.closest('summary,.summary-trigger,.section-summary-trigger'));
+   }
    u.$('#colony-include-carrier-stock').click();await wait(()=>C.state.colonization?.includeCarrierWarehouse===warehouseBefore&&!u.$('#colony-include-carrier-stock')?.disabled);
   }
   await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));check('Workspace sidebar can collapse',C.collapsed===true);
