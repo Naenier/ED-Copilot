@@ -69,6 +69,12 @@ foreach ($name in @('smoke-start-menu')) {
 }
 $note = Join-Path $appDirectory 'user-note.txt'
 [IO.File]::WriteAllText($note, 'User-created files must survive uninstall.', [Text.UTF8Encoding]::new($false))
+$legacyTaskMarker = @((Get-ItemProperty -LiteralPath $registryPath).PSObject.Properties | Where-Object { $_.Name -like '*ShortcutTasksV2' })
+Confirm-Scenario -Name 'Independent shortcut schema is persisted' -Passed ($legacyTaskMarker.Count -eq 1)
+Remove-ItemProperty -LiteralPath $registryPath -Name $legacyTaskMarker[0].Name
+Set-ItemProperty -LiteralPath $registryPath -Name 'Inno Setup: Selected Tasks' -Value ''
+$null = Invoke-InstallerProcess -File $testSetup -Arguments ($common + @(('/LOG="' + (Join-Path $testRoot 'legacy-shortcuts.log') + '"'))) -Name 'legacy shortcut migration'
+Confirm-Scenario -Name 'Legacy unconditional Start Menu shortcut is retained' -Passed ((Test-Path -LiteralPath (Join-Path $appDirectory 'smoke-start-menu/ED Copilot.lnk')) -and -not (Test-Path -LiteralPath (Join-Path $appDirectory 'smoke-desktop/ED Copilot.lnk')))
 $reportPath = Join-Path $testRoot 'installed-headless.json'
 $null = Invoke-InstallerProcess -File $installed -Arguments @('--smoke-headless', '--smoke-report', ('"' + $reportPath + '"')) -Name 'installed application'
 $model = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
@@ -78,6 +84,16 @@ Confirm-Scenario -Name 'Upgrade preserves profile and unknown files' -Passed ((G
 $desktopLink = Join-Path $appDirectory 'smoke-desktop/ED Copilot.lnk'
 $desktopShortcut = $shell.CreateShortcut($desktopLink)
 Confirm-Scenario -Name 'Opting in creates a valid isolated desktop shortcut' -Passed ((Test-Path -LiteralPath $desktopLink) -and [string]::Equals($desktopShortcut.TargetPath, $installed, [StringComparison]::OrdinalIgnoreCase))
+$startMenuLink = Join-Path $appDirectory 'smoke-start-menu/ED Copilot.lnk'
+Confirm-Scenario -Name 'Start Menu shortcut can be independently disabled' -Passed (-not (Test-Path -LiteralPath $startMenuLink))
+$preserveArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/LANG=english', ('/LOG="' + (Join-Path $testRoot 'preserve-choices.log') + '"'))
+$null = Invoke-InstallerProcess -File $testSetup -Arguments $preserveArguments -Name 'upgrade preserving directory and choices'
+Confirm-Scenario -Name 'Quiet upgrade restores previous directory without DIR override' -Passed ((Test-Path -LiteralPath $installed) -and [string]::Equals((Get-ItemProperty -LiteralPath $registryPath).InstallLocation.TrimEnd('\'), $appDirectory.TrimEnd('\'), [StringComparison]::OrdinalIgnoreCase))
+Confirm-Scenario -Name 'Quiet upgrade preserves independent shortcut choices' -Passed ((Test-Path -LiteralPath $desktopLink) -and -not (Test-Path -LiteralPath $startMenuLink))
+$null = Invoke-InstallerProcess -File $testSetup -Arguments ($common + @('/TASKS="startmenuicon"', ('/LOG="' + (Join-Path $testRoot 'startmenu-only.log') + '"'))) -Name 'startmenu only'
+Confirm-Scenario -Name 'Start Menu can be selected without a desktop shortcut' -Passed ((Test-Path -LiteralPath $startMenuLink) -and -not (Test-Path -LiteralPath $desktopLink))
+$null = Invoke-InstallerProcess -File $testSetup -Arguments $preserveArguments -Name 'second upgrade preserving choices'
+Confirm-Scenario -Name 'Second quiet upgrade preserves Start Menu only choice' -Passed ((Test-Path -LiteralPath $startMenuLink) -and -not (Test-Path -LiteralPath $desktopLink))
 $uninstaller = Join-Path $appDirectory 'uninstall/unins000.exe'
 Confirm-Scenario -Name 'Uninstaller is available' -Passed (Test-Path -LiteralPath $uninstaller)
 $mutex = [Threading.Mutex]::new($false, ('Local\EDCopilot.InstallerSmoke.' + $identifier))

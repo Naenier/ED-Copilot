@@ -18,6 +18,7 @@ function fixture() {
     getElementById: id => nodes.get(id), addEventListener: (event, handler) => listeners.set(event, handler), createElement: () => ({ style: {}, remove() { selectors.delete('.menu'); } }),
   };
   const window = { addEventListener() {}, COPILOT_SMOKE: false };
+	for (const moduleName of ['updates.js','ranks.js','politics.js']) vm.runInNewContext(fs.readFileSync(path.join(__dirname, moduleName), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'overview.js'), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
@@ -32,6 +33,15 @@ window.TestUI={C,referenceCell,context,uiContext,currentLanguage,applyLanguage,c
   api.setClose(() => { api.C.layer = false; api.C.themePreview = null; });
   return { api, window, document, nodes, selectors, styles, classes, messages, dialogs, host, listeners, timers };
 }
+
+test('rank and politics readers do not expose a nonfunctional generic details toggle',()=>{
+ const f=fixture(),a=f.api;
+ for(const tab of ['ranks','politics']){
+  a.C.tab=tab;a.C.page={Rows:[{ID:'known'}]};a.C.actions=[];a.C.state={settings:{}};
+  assert.equal(a.rendererKind(),tab);
+  assert.equal(f.window.SettingsPaneUI.canToggle(a.rendererKind()),false);
+ }
+});
 
 test('dialog autofocus prefers a body field and preserves a user-selected field before the delayed focus',()=>{
  for(const alreadyFocused of [false,true]){

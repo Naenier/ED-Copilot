@@ -37,6 +37,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=no
 DisableWelcomePage=no
 UsePreviousAppDir=yes
+UsePreviousTasks=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -66,26 +67,47 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Ярлыки:"; Flags: unchecked
+Name: "startmenuicon"; Description: "{cm:StartMenuShortcut}"; GroupDescription: "{cm:ShortcutGroup}"
+Name: "desktopicon"; Description: "{cm:DesktopShortcut}"; GroupDescription: "{cm:ShortcutGroup}"; Flags: unchecked
+
+[CustomMessages]
+english.ShortcutGroup=Shortcuts:
+english.StartMenuShortcut=Create a Start Menu shortcut
+english.DesktopShortcut=Create a desktop shortcut
+english.LaunchCopilot=Launch ED Copilot
+russian.ShortcutGroup=Ярлыки:
+russian.StartMenuShortcut=Создать ярлык в меню «Пуск»
+russian.DesktopShortcut=Создать ярлык на рабочем столе
+russian.LaunchCopilot=Запустить ED Copilot
 
 [Files]
 Source: "ED Copilot.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "README.ru.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "lib\*"; DestDir: "{app}\lib"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#WebViewBootstrapper}"; Flags: dontcopy
 
 [Icons]
 #ifdef TestAppId
-Name: "{app}\smoke-start-menu\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"
+Name: "{app}\smoke-start-menu\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"; Tasks: startmenuicon
 Name: "{app}\smoke-desktop\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 #else
-Name: "{autoprograms}\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"
+Name: "{autoprograms}\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"; Tasks: startmenuicon
 Name: "{autodesktop}\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 #endif
 
+[InstallDelete]
+#ifdef TestAppId
+Type: files; Name: "{app}\smoke-start-menu\ED Copilot.lnk"; Tasks: not startmenuicon
+Type: files; Name: "{app}\smoke-desktop\ED Copilot.lnk"; Tasks: not desktopicon
+#else
+Type: files; Name: "{autoprograms}\ED Copilot.lnk"; Tasks: not startmenuicon
+Type: files; Name: "{autodesktop}\ED Copilot.lnk"; Tasks: not desktopicon
+#endif
+
 [Run]
-Filename: "{app}\ED Copilot.exe"; Description: "Запустить ED Copilot"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ED Copilot.exe"; Description: "{cm:LaunchCopilot}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 const
@@ -93,6 +115,7 @@ const
 
 var
   RuntimePage: TInputOptionWizardPage;
+  ShortcutMigrationApplied: Boolean;
 
 function GetCurrentProcessId: LongWord;
   external 'GetCurrentProcessId@kernel32.dll stdcall';
@@ -156,6 +179,44 @@ begin
 #endif
 end;
 
+function ShortcutTasksOverridden: Boolean;
+var
+  I: Integer;
+  Parameter: String;
+begin
+  Result := HasParameter('NOICONS');
+  for I := 1 to ParamCount do
+  begin
+    Parameter := UpperCase(ParamStr(I));
+    if (Copy(Parameter, 1, 7) = '/TASKS=') or
+       (Copy(Parameter, 1, 12) = '/MERGETASKS=') then
+      Result := True;
+  end;
+end;
+
+procedure RestoreLegacyShortcutChoice;
+var
+  PreviousStartMenuLink: String;
+begin
+  if ShortcutMigrationApplied then
+    Exit;
+  ShortcutMigrationApplied := True;
+  { Releases before independent shortcut tasks always created a Start Menu
+    link. Preserve that existing choice once, without overriding an explicit
+    task command line or any choices saved by this release. }
+  if (GetPreviousData('ShortcutTasksV2', '') = '') and
+     not ShortcutTasksOverridden then
+  begin
+#ifdef TestAppId
+    PreviousStartMenuLink := ExpandConstant('{app}\smoke-start-menu\ED Copilot.lnk');
+#else
+    PreviousStartMenuLink := ExpandConstant('{autoprograms}\ED Copilot.lnk');
+#endif
+    if FileExists(PreviousStartMenuLink) then
+      WizardSelectTasks('startmenuicon');
+  end;
+end;
+
 procedure InitializeWizard;
 begin
   RuntimePage := CreateInputOptionPage(wpSelectDir,
@@ -164,6 +225,23 @@ begin
     False, False);
   RuntimePage.Add('Установить Microsoft Edge WebView2 Runtime');
   RuntimePage.Values[0] := True;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpSelectTasks then
+    RestoreLegacyShortcutChoice;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssInstall then
+    RestoreLegacyShortcutChoice;
+end;
+
+procedure RegisterPreviousData(PreviousDataKey: Integer);
+begin
+  SetPreviousData(PreviousDataKey, 'ShortcutTasksV2', '2');
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;

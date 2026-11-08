@@ -44,6 +44,7 @@ type previewCallback struct {
 // Captures are available only in --smoke and only under the report directory.
 // No renderer-provided path, arbitrary CDP method or desktop image is accepted.
 var modernPreviewNames = map[string]bool{
+	"ranks-en": true, "ranks-ru": true, "politics-en": true, "politics-ru": true, "politics-factions": true, "politics-goals": true,
 	"overview": true, "academy": true, "reader": true, "calculator": true,
 	"calculator-squadron": true, "colonization": true, "settings": true, "overview-900": true,
 	"construction": true, "form": true,
@@ -69,8 +70,11 @@ func (m *modernShell) capturePreview(id, name string) error {
 	if !m.owner.options.Smoke || !modernPreviewNames[name] {
 		return errors.New("Снимки интерфейса доступны только в изолированной проверке")
 	}
-	if m.closed || m.core == nil || !m.ready || len(m.captures) >= 24 {
+	if m.closed || m.core == nil || !m.ready {
 		return errors.New("Интерфейс не готов к снимку")
+	}
+	if len(m.captures) >= 32 {
+		return errors.New("Достигнут предел снимков изолированной проверки")
 	}
 	if source, err := m.core.GetSource(); err != nil || !trustedWebSource(source) {
 		return errors.New("Недопустимый источник снимка")
@@ -192,7 +196,7 @@ func (m *modernShell) smokeVisualState(report M) {
 		completed[capture.name] = completed[capture.name] || ok
 	}
 	complete := true
-	required := []string{"overview", "academy", "reader", "calculator", "calculator-squadron", "colonization", "settings"}
+	required := []string{"overview", "academy", "reader", "calculator", "calculator-squadron", "colonization", "settings", "ranks-en", "ranks-ru", "politics-en", "politics-ru", "politics-factions", "politics-goals"}
 	if m.owner != nil && m.owner.options.ReadmeScreenshots {
 		required = []string{"readme-overview", "readme-deals", "readme-carrier-trade", "route-details", "readme-ships", "readme-ship", "readme-engineer", "readme-article", "readme-colonization", "readme-academy", "exobiology"}
 	}

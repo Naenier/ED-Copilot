@@ -48,7 +48,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		goals, bookmarks, notices = v.Clone(e.objectives), v.Clone(e.bookmarks), v.Clone(e.notices)
 		manual, prices = v.Copy(e.manualPrices), v.Copy(e.prices)
 		for key, value := range e.network {
-			if key == "trading" && (oneOf(tab, "sale", "deals", "statistics", "carrier-trade", "encyclopedia", "reference") || hud && oneOf(activity, "trade", "asteroid")) || key == "tradeRoutes" && tab == "deals" || key == "search" && tab == "targets" {
+			if key == "trading" && (oneOf(tab, "sale", "deals", "statistics", "carrier-trade", "encyclopedia", "reference") || hud && oneOf(activity, "trade", "asteroid")) || key == "tradeRoutes" && tab == "deals" || key == "search" && tab == "targets" || key == "politics" && tab == "politics" {
 				network[key] = v.Copy(value)
 			}
 		}
@@ -64,6 +64,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	if syncOnly {
 		state["engineering"] = e.Engineering.InventorySnapshot()
 		return state
+	}
+	if !hud {
+		state["updates"] = e.updateSnapshot()
 	}
 	palette, _ := theme.Palette(appearance)
 	state["desktop"], state["theme"], state["navigation"] = desktop, M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, M{"tabs": navigation}
@@ -152,6 +155,13 @@ func (e *Engine) snapshotScoped(tab string) M {
 		state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
 	} else if !hud {
 		state["learning"] = e.Learning.ProgressSnapshot()
+	}
+	if tab == "ranks" {
+		state["ranks"] = e.Ranks.SnapshotForLanguage(v.Str(settings["language"]))
+	}
+	if tab == "politics" {
+		state["politics"] = e.Politics.Snapshot()
+		state["politicsNetwork"] = network["politics"]
 	}
 	if tr := network["trading"]; tr != nil {
 		updated := []M{}

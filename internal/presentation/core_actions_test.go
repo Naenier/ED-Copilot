@@ -83,7 +83,7 @@ func TestCoreActionsEveryTabAndVisibleMode(t *testing.T) {
 	selected := M{"id": "selected", "key": "gold", "system": "Sol", "title": "Test goal", "kind": "trade", "moduleKey": "am", "blueprintKey": "AFM_Shielded", "rolls": []int{1, 2, 3, 4, 5}, "index": 1, "quotes": []M{{"key": "gold", "price": 200, "quantity": 10}}, "sourceIds": []string{"manual"}, "url": "https://spansh.co.uk"}
 	kinds := map[string]bool{"": true, "export": true, "copy": true, "navigate": true, "purchase": true, "url": true, "details": true, "help": true, "theme-import": true, "folder": true, "import-plan": true, "tabs-reset": true, "engineering-trade": true}
 	fieldKinds := map[string]bool{"text": true, "password": true, "number": true, "integer": true, "bool": true, "select": true, "combo": true, "datetime": true, "multiline": true, "color": true, "file": true}
-	if len(Tabs) != 19 {
+	if len(Tabs) != 21 {
 		t.Fatal("tab coverage changed", len(Tabs))
 	}
 	count := 0

@@ -116,6 +116,14 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/desktop", v.Obj(input["values"]))
 	case "theme-apply":
 		return backend.Do("/api/theme", M{"settings": v.Obj(input["values"])})
+	case "politics":
+		return backend.Do("/api/politics", v.Obj(input["values"]))
+	case "politics-refresh":
+		return backend.Do("/api/politics/refresh", v.Obj(input["values"]))
+	case "updates-check":
+		return backend.Do("/api/updates/check", nil)
+	case "updates-dismiss":
+		return backend.Do("/api/updates/dismiss", nil)
 	case "learning":
 		return backend.Do("/api/learning", v.Obj(input["values"]))
 	case "calculator":
@@ -271,7 +279,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "ranks", "politics", "politicsNetwork", "updates"} {
 		out[key] = state[key]
 	}
 	return p.LocalizeWebState(redactWebSecrets(out))

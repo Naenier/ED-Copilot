@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/assets/copilot-mark.png" width="76" alt="ED Copilot logo"></p>
 
-# ED Copilot 2.5.0
+# ED Copilot 2.6.0
 
 **English** · [Русский](README.ru.md)
 
@@ -14,7 +14,7 @@ A desktop companion for Elite Dangerous: trading, mining, exobiology, fleet carr
 
 ## Getting started
 
-1. Install **ED-Copilot-2.5.0-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
+1. Install **ED-Copilot-2.6.0-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
 2. Start Elite Dangerous. Copilot reads the game journals; choose their folder in Settings if it is not detected automatically.
 3. Use **…** in the sidebar to add the activities you need. Fleet carrier, colonisation and other optional tools can be hidden.
 4. Select an activity for the overlay and start working through your plan.
@@ -93,6 +93,12 @@ Start with an origin system and its stations, then select the station and contro
 
 Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
 
+## Commander ranks and galactic politics
+
+Track all eight in-game rank disciplines with individual progress bars. Open a rank for advancement methods and a ladder of practical unlocks, including rank-gated ships, permits and discounts. Journal observations and promotions are dated separately; unknown progress remains unknown.
+
+Politics brings together public community goals, your recorded contribution, Powerplay powers and indexed systems, local faction influence and conflicts, and reported Thargoid states. Search a system or filter political observations, inspect timestamps and copy a destination into the galaxy map. Cached observations remain available offline.
+
 ## Academy
 
 Nine courses and 27 lessons cover trading, group operations, getting started with Odyssey, fleet carriers and passenger runs. Follow practical Copilot workflows, worked fictional examples, decision checklists and recovery steps. All lessons are available in English and Russian, with saved answers, favourites and reading positions.
@@ -123,8 +129,10 @@ This README is also available [in Russian](README.ru.md).
 
 Sign in with Frontier to retrieve account information. To send supported events to Inara, add your personal API key and enable sending in Synchronization.
 
+Automatic updates are enabled by default and can be switched off in Settings. Stable GitHub releases download quietly and are checked against published SHA256 digests. Installation waits until you fully exit Copilot; the next launch shows the changes. Setup provides separate Start Menu and desktop shortcut choices and preserves them during updates.
+
 Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separately from the application. Before updating, fully exit through the File menu or the system tray icon. The installer preserves your personal profile.
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.5.0](docs/RELEASE-2.5.0.md) · [Building and testing (RU)](docs/TESTING.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.6.0](docs/RELEASE-2.6.0.md) · [Building and testing (RU)](docs/TESTING.md)

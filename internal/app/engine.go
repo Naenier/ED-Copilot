@@ -16,12 +16,15 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/localization"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
+	"github.com/Naenier/ED-Copilot/internal/politics"
 	"github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/profile"
+	"github.com/Naenier/ED-Copilot/internal/ranks"
 	"github.com/Naenier/ED-Copilot/internal/ships"
 	"github.com/Naenier/ED-Copilot/internal/systems"
 	"github.com/Naenier/ED-Copilot/internal/theme"
 	"github.com/Naenier/ED-Copilot/internal/trading"
+	"github.com/Naenier/ED-Copilot/internal/updater"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"net"
 	"net/http"
@@ -35,7 +38,7 @@ import (
 
 type M = v.M
 
-const Version = "2.5.0"
+const Version = "2.6.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -55,6 +58,8 @@ type Engine struct {
 	Engineering                                    *engineering.Planner
 	Exobiology                                     *exobiology.Service
 	Pilot                                          *pilot.Tracker
+	Ranks                                          *ranks.Tracker
+	Politics                                       *politics.Service
 	Trading                                        *trading.Service
 	Carrier                                        *carrier.Tracker
 	Calculator                                     *carrier.Calculator
@@ -84,6 +89,10 @@ type Engine struct {
 	listener                                       net.Listener
 	closed                                         bool
 	onlineCache                                    *onlineCache
+	UpdateManager                                  *updater.Manager
+	updateNotice                                   M
+	updateError                                    string
+	updateDone                                     chan struct{}
 }
 
 func New(o Options) (*Engine, error) {
@@ -113,6 +122,9 @@ func New(o Options) (*Engine, error) {
 	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
 		x.settings["routeAutoCopyNext"] = true
 	}
+	if _, exists := x.settings["autoUpdateEnabled"]; !exists {
+		x.settings["autoUpdateEnabled"] = true
+	}
 	delete(x.settings, "hideUnfocused")
 	x.appearance, _ = theme.Normalize(v.Obj(saved["appearance"]))
 	if x.appearance == nil {
@@ -132,6 +144,8 @@ func New(o Options) (*Engine, error) {
 	x.Engineering = engineering.New(v.Obj(saved["engineering"]))
 	x.Exobiology = exobiology.New(v.Obj(saved["exobiology"]))
 	x.Pilot = pilot.New()
+	x.Ranks = ranks.New(v.Obj(saved["ranks"]))
+	x.Politics = politics.New(v.Obj(saved["politics"]), politics.Options{HTTPClient: o.HTTPClient, DisableNetwork: o.DisableNetwork})
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
 	x.Calculator = carrier.NewCalculator(v.Obj(saved["carrierCalculator"]))
@@ -190,6 +204,7 @@ func New(o Options) (*Engine, error) {
 	if !o.ManualPolling {
 		go x.Reader.Run(ctx)
 	}
+	x.initializeUpdates()
 	return x, nil
 }
 func (e *Engine) Notify() {
@@ -219,6 +234,8 @@ func (e *Engine) resetObserved() {
 	e.Engineering.Reset()
 	e.Exobiology.Reset()
 	e.Pilot.Reset()
+	e.Ranks.Reset()
+	e.Politics.ResetObserved()
 	e.Colonies.Reset()
 	e.Notify()
 }
@@ -339,6 +356,8 @@ func (e *Engine) Apply(event, meta M) {
 	e.Engineering.Apply(event, ctx)
 	e.Exobiology.Apply(event, v.Merge(v.Copy(meta), ctx))
 	e.Pilot.Apply(event, ctx)
+	e.Ranks.Apply(event, ctx)
+	e.Politics.Apply(event)
 	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
 	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
 	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
@@ -449,6 +468,9 @@ func (e *Engine) Snapshot() M {
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(c)
 	state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
+	state["ranks"] = e.Ranks.SnapshotForLanguage(v.Str(settings["language"]))
+	state["politics"] = e.Politics.Snapshot()
+	state["updates"] = e.updateSnapshot()
 	if len(v.Obj(state["trading"])) == 0 {
 		state["trading"] = M{"results": []M{}}
 	}
@@ -470,12 +492,14 @@ func (e *Engine) Save() error {
 	defer e.saveMu.Unlock()
 	e.domainMu.Lock()
 	e.mu.RLock()
-	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 2, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
+	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 3, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
 	desktop := v.Copy(e.desktop)
 	e.mu.RUnlock()
 	saved["carrier"] = e.Carrier.ExportSettings()
 	saved["carrierCalculator"] = e.Calculator.ExportSettings()
 	saved["learning"] = e.Learning.ExportSettings()
+	saved["ranks"] = e.Ranks.ExportSettings()
+	saved["politics"] = e.Politics.ExportSettings()
 	saved["carrierRouteGo"] = e.Route.ExportSettings()
 	saved["carrierTrade"] = e.CarrierTrade.ExportSettings()
 	saved["colonization"] = e.Colonies.ExportSettings()
@@ -530,6 +554,9 @@ func (e *Engine) Close() {
 	}
 	e.mu.Unlock()
 	e.cancel()
+	if e.updateDone != nil {
+		<-e.updateDone
+	}
 	if e.Systems != nil {
 		e.Systems.Close()
 	}

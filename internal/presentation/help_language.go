@@ -15,6 +15,16 @@ func HelpForLanguage(tab, language string) string {
 }
 
 var englishSectionHelp = map[string]string{
+	"ranks": `Commander ranks
+
+Eight cards show your in-game ranks and the observed percentage towards the next rank. Open a discipline to read advancement methods and rank-specific rewards. Progress comes from journal Progress events and promotions from Promotion events; first observation is not an achievement date. Frontier can supplement a known rank without inventing an unknown percentage.
+
+A dash means no observation is available. Start the game or reread journals to update your record. Ship and system unlocks appear beside their relevant rank.`,
+	"politics": `Galactic politics
+
+Choose a system and refresh its observations. Separate views cover community goals, powers, faction conflicts and Thargoid states. Select a system suggestion or copy a name for the galaxy map.
+
+Each block identifies its observation time and data source. A failed refresh keeps the last available data. A public index covers reported systems; missing records do not establish that the entire galaxy is free of conflict. Your personal community-goal contribution is read separately from the game journal.`,
 	"overview": `Commander dashboard
 
 Use this page to check your current location, ship, cargo and the tasks relevant to your chosen activity. Journal observations update as you play; a missing value means the application has not observed it yet.

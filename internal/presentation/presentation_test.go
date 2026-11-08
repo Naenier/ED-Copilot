@@ -13,6 +13,8 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/learning"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
+	"github.com/Naenier/ED-Copilot/internal/politics"
+	"github.com/Naenier/ED-Copilot/internal/ranks"
 	"github.com/Naenier/ED-Copilot/internal/trading"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
@@ -95,9 +97,15 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 		}
 	}
 	s["learning"] = lib.Snapshot()
+	rankTracker := ranks.New(nil)
+	rankTracker.Apply(M{"event": "Rank", "timestamp": "2026-11-08T12:00:00Z", "Combat": 1, "Trade": 4}, M{"commander": M{"fid": "FSYNTHETIC"}})
+	s["ranks"] = rankTracker.Snapshot()
+	political := politics.New(nil, politics.Options{DisableNetwork: true})
+	political.Apply(M{"event": "Location", "timestamp": "2026-11-08T12:00:00Z", "StarSystem": "Synthetic A", "SystemAddress": 1})
+	s["politics"] = political.Snapshot()
 	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
-	if len(Tabs) != 19 {
+	if len(Tabs) != 21 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {

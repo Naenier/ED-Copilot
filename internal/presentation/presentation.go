@@ -18,8 +18,8 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
-var DefaultTabs = []string{"overview", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var DefaultTabs = []string{"overview", "ranks", "politics", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
 type Choice struct{ Value, Label string }
@@ -210,6 +210,10 @@ func buildPage(tab, mode, query string, s M) Page {
 	p := Page{Title: Title(tab), Columns: []string{"Параметр", "Значение"}}
 	cmd := v.Obj(s["commander"])
 	switch tab {
+	case "ranks":
+		return RanksPage(s)
+	case "politics":
+		return PoliticsPage(s)
 	case "exobiology":
 		return ExobiologyPage(mode, query, s)
 	case "learning":
@@ -673,6 +677,9 @@ func encyclopedia(mode, query string, s M) Page {
 	return p
 }
 func HelpFor(tab string) string {
+	if text := newSectionHelp[tab]; text != "" {
+		return text
+	}
 	if tab == "learning" {
 		return "Академия — отдельное пространство для изучения игры.\n\nВыберите курс на главной странице. В каждом курсе есть основы, практикум в ED Copilot и самопроверка. Оглавление слева помогает переходить между уроками, а справа — между разделами статьи.\n\nОтмечайте полезные уроки закладкой. Приложение сохраняет избранное, выполненные пункты, ответы и место чтения в вашем профиле. «Режим чтения» скрывает основное меню, чтобы сосредоточиться на материале.\n\nКнопка «Изучено» отмечает урок завершённым; ответы на вопросы сами по себе не завершают его. Кнопки перехода в инструменты открывают связанные разделы Copilot.\n\nМатериалы доступны без интернета. Ссылки в конце уроков открывают дополнительные материалы PTN в браузере. Игровые механики и доступность конкретных операций могут меняться; окончательные условия всегда видны в самой игре."
 	}

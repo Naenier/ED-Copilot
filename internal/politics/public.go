@@ -1,0 +1,222 @@
+package politics
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	v "github.com/Naenier/ED-Copilot/internal/value"
+	"io"
+	"net/http"
+	"net/url"
+	"sort"
+	"strings"
+	"time"
+)
+
+const maxResponseBytes = 4 << 20
+
+func (s *Service) request(ctx context.Context, method, address string, body M) (M, error) {
+	var input io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		input = bytes.NewReader(b)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, address, input)
+	if err != nil {
+		return nil, errors.New("Invalid public endpoint")
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "ED-Copilot/politics (public observations)")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	response, err := s.opts.HTTPClient.Do(req)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, errors.New("Public data request failed")
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("Public data HTTP %d", response.StatusCode)
+	}
+	b, err := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes+1))
+	if err != nil {
+		return nil, errors.New("Could not read public data")
+	}
+	if len(b) > maxResponseBytes {
+		return nil, errors.New("Public response exceeds size limit")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(b))
+	decoder.UseNumber()
+	var result M
+	if err = decoder.Decode(&result); err != nil || result == nil {
+		return nil, errors.New("Invalid public JSON response")
+	}
+	var tail any
+	if decoder.Decode(&tail) != io.EOF {
+		return nil, errors.New("Invalid trailing public JSON")
+	}
+	return result, nil
+}
+
+func (s *Service) fetch(ctx context.Context, kind, name, power, state string, page int) (M, error) {
+	now := s.now()
+	base := strings.TrimRight(s.opts.SpanshURL, "/")
+	if kind == "goals" {
+		separator := "?"
+		if strings.Contains(s.opts.GoalsURL, "?") {
+			separator = "&"
+		}
+		raw, err := s.request(ctx, "GET", s.opts.GoalsURL+separator+"lang=en", nil)
+		if err != nil {
+			return nil, err
+		}
+		items, ok := raw["activeInitiatives"]
+		if !ok || v.Arr(items) == nil {
+			return nil, errors.New("Community-goal response has no activeInitiatives list")
+		}
+		entries := []M{}
+		for _, r := range boundedRows(items, 100) {
+			if clean(r["id"], 100) == "" {
+				continue
+			}
+			expiry := clean(r["expiry"], 100)
+			if parsed, err := time.Parse("2006-01-02 15:04:05", expiry); err == nil {
+				expiry = v.ISO(parsed)
+			} else {
+				expiry = date(expiry)
+			}
+			entries = append(entries, M{"id": clean(r["id"], 100), "title": clean(r["title"], 500), "system": clean(r["starsystem_name"], 200), "station": clean(r["market_name"], 200), "expiry": expiry, "activityType": clean(r["activityType"], 100), "objective": goalText(r["objective"], 4000), "commodities": goalText(r["target_commodity_list"], 4000), "currentTotal": numericString(r["qty"]), "target": numericString(r["target_qty"]), "description": goalText(v.First(r["bulletin"], r["news"]), 24000)})
+		}
+		goals := meta("frontier-public", "", now, "https://www.elitedangerous.com/community/goals")
+		goals["entries"] = entries
+		return M{"goals": goals}, nil
+	}
+	if kind == "system" {
+		names, err := s.request(ctx, "GET", base+"/systems/field_values/system_names?q="+url.QueryEscape(name), nil)
+		if err != nil {
+			return nil, err
+		}
+		address := ""
+		for _, candidate := range boundedRows(names["min_max"], 30) {
+			if key(v.Str(candidate["name"])) == key(name) {
+				address = clean(candidate["id64"], 100)
+				break
+			}
+		}
+		if address == "" {
+			return nil, errors.New("Exact system is not present in the public name index")
+		}
+		for _, r := range address {
+			if r < '0' || r > '9' {
+				return nil, errors.New("Invalid public system address")
+			}
+		}
+		raw, err := s.request(ctx, "GET", base+"/system/"+address, nil)
+		if err != nil {
+			return nil, err
+		}
+		record := v.Obj(raw["record"])
+		if key(v.Str(record["name"])) != key(name) {
+			return nil, errors.New("Public system response does not match the requested name")
+		}
+		normalized := NormalizePublicSystem(record, now)
+		if normalized == nil {
+			return nil, errors.New("Public system record is missing")
+		}
+		return M{"system": normalized}, nil
+	}
+	field := "power_state"
+	if kind == "thargoid" {
+		field = "thargoid_war_state"
+	}
+	indexRaw, err := s.request(ctx, "GET", base+"/systems/field_values/"+field, nil)
+	if err != nil {
+		return nil, err
+	}
+	available, ok := indexRaw["values"]
+	if !ok || v.Arr(available) == nil {
+		return nil, errors.New("Public state index is missing")
+	}
+	index := meta("spansh", "", now, "https://spansh.co.uk/systems")
+	index["states"] = indexRows(indexRaw)
+	filters := M{}
+	if kind == "powerplay" {
+		powers, err := s.request(ctx, "GET", base+"/systems/field_values/controlling_power", nil)
+		if err != nil {
+			return nil, err
+		}
+		index["powers"] = indexRows(powers)
+		if power != "" {
+			valid := false
+			for _, r := range v.Rows(index["powers"]) {
+				valid = valid || r["name"] == power
+			}
+			if !valid {
+				return nil, errors.New("Power is not present in the public index")
+			}
+			filters["controlling_power"] = M{"value": []string{power}}
+		}
+	}
+	values := []string{}
+	if state != "" {
+		values = []string{state}
+	} else if kind == "thargoid" {
+		for _, name := range states(available) {
+			if name != "None" {
+				values = append(values, name)
+			}
+		}
+	}
+	if kind == "thargoid" && state == "None" {
+		return nil, errors.New("Choose an affected Thargoid state, not None")
+	}
+	search := meta("spansh", "", now, "https://spansh.co.uk/systems")
+	search["kind"], search["power"], search["state"], search["page"], search["limit"], search["entries"], search["states"] = kind, power, state, page, 10, []M{}, index["states"]
+	if kind == "thargoid" && len(values) == 0 {
+		// A successful state-index response can establish no indexed affected state,
+		// not that the galaxy contains no Thargoid activity.
+		search["total"], search["indexHasAffectedStates"] = 0, false
+		return M{"search": search}, nil
+	}
+	if len(values) > 0 {
+		filters[field] = M{"value": values}
+	}
+	request := M{"filters": filters, "sort": []M{{"name": M{"direction": "asc"}}}, "size": 10, "page": page}
+	raw, err := s.request(ctx, "POST", base+"/systems/search", request)
+	if err != nil {
+		return nil, err
+	}
+	items, ok := raw["results"]
+	if !ok || v.Arr(items) == nil {
+		return nil, errors.New("Public system search results are missing")
+	}
+	entries := []M{}
+	for _, r := range boundedRows(items, 10) {
+		if normalized := NormalizePublicSystem(r, now); normalized != nil {
+			entries = append(entries, normalized)
+		}
+	}
+	search["entries"], search["total"], search["indexHasAffectedStates"] = entries, number(raw["count"]), true
+	return M{"index": index, "search": search}, nil
+}
+
+func numericString(raw any) any {
+	return number(raw)
+}
+func indexRows(raw M) []M {
+	entries := []M{}
+	counts := v.Obj(raw["min_max"])
+	for _, name := range states(raw["values"]) {
+		entries = append(entries, M{"name": name, "indexedSystems": number(counts[name])})
+	}
+	sort.Slice(entries, func(i, j int) bool { return v.Str(entries[i]["name"]) < v.Str(entries[j]["name"]) })
+	return entries
+}

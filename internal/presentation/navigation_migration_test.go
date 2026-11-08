@@ -21,3 +21,17 @@ func TestSidebarUpgradePreservesPersonalMenu(t *testing.T) {
 		t.Fatal("new profile default", got)
 	}
 }
+
+func TestNewCommanderSectionsUpgradeOnlyUntouchedVersionTwoMenu(t *testing.T) {
+	previous := []string{"overview", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+	if got := MigrateNavigation(previous, 2); !reflect.DeepEqual(got, DefaultTabs) {
+		t.Fatal("new sections missing", got)
+	}
+	if got := MigrateNavigation(previous, 3); !reflect.DeepEqual(got, previous) {
+		t.Fatal("explicitly hidden sections reappeared", got)
+	}
+	custom := append([]string{"politics"}, previous...)
+	if got := MigrateNavigation(custom, 2); !reflect.DeepEqual(got, custom) {
+		t.Fatal("custom menu was overwritten", got)
+	}
+}

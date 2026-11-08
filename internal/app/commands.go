@@ -79,6 +79,32 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		body = M{}
 	}
 	switch path {
+	case "/api/updates/dismiss":
+		e.mu.Lock()
+		e.updateNotice = nil
+		e.mu.Unlock()
+		e.Notify()
+		return M{"ok": true}, nil
+	case "/api/updates/check":
+		if err := e.networkAllowed(); err != nil {
+			return nil, err
+		}
+		if e.UpdateManager == nil {
+			return nil, errors.New("Обновления пока недоступны")
+		}
+		return e.start("updates", nil, func(ctx context.Context, id uint64) (M, error) {
+			err := e.UpdateManager.Check(ctx)
+			return e.updateSnapshot(), err
+		}), nil
+	case "/api/politics":
+		if err := e.Politics.Update(body); err != nil {
+			return nil, err
+		}
+	case "/api/politics/refresh":
+		if err := e.networkAllowed(); err != nil {
+			return nil, err
+		}
+		return e.start("politics", body, func(ctx context.Context, id uint64) (M, error) { return e.Politics.Fetch(ctx, body) }), nil
 	case "/api/exobiology":
 		if err := e.Exobiology.Update(body); err != nil {
 			return nil, err
@@ -126,7 +152,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 				next[r.k] = v.Clamp(n, r.min, r.max)
 			}
 		}
-		for _, k := range []string{"hideDepleted", "overlayEnabled", "routeAutoCopyNext"} {
+		for _, k := range []string{"hideDepleted", "overlayEnabled", "routeAutoCopyNext", "autoUpdateEnabled"} {
 			if raw, ok := body[k]; ok {
 				b, valid := raw.(bool)
 				if !valid {
@@ -139,6 +165,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		e.settings = next
 		if disabled, exists := next["routeAutoCopyNext"]; exists && !v.Bool(disabled) {
 			e.clipboardCommand = nil
+		}
+		if _, changed := body["autoUpdateEnabled"]; changed && e.UpdateManager != nil {
+			e.UpdateManager.SetEnabled(v.Bool(next["autoUpdateEnabled"]))
 		}
 		e.mu.Unlock()
 	case "/api/navigation":
@@ -507,6 +536,10 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		result, err := e.Frontier.Sync(e.ctx, body["carrier"] != false)
 		if err != nil {
 			return nil, err
+		}
+		status := v.Obj(result["status"])
+		if v.Bool(status["connected"]) && !v.Bool(status["commanderMismatch"]) {
+			e.Ranks.ApplyCAPI(v.Obj(v.At(result, "data", "profile")), M{"identityVerified": true, "commander": e.Commander(), "observedAt": v.At(result, "metadata", "observedAt", "profile")})
 		}
 		market := frontier.MarketSnapshot(result)
 		if market != nil {

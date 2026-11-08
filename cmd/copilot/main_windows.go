@@ -3,12 +3,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/Naenier/ED-Copilot/internal/app"
 	"github.com/Naenier/ED-Copilot/internal/nativeui"
 	"github.com/Naenier/ED-Copilot/internal/profile"
+	"github.com/Naenier/ED-Copilot/internal/updater"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"github.com/lxn/walk"
 	"os"
@@ -18,6 +20,12 @@ import (
 )
 
 func main() {
+	if handled, err := updater.HandleHelper(os.Args[1:]); handled {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		return
+	}
 	dataDir := flag.String("data-dir", "", "Отдельная папка профиля")
 	journalDir := flag.String("journal-dir", "", "Папка игровых журналов")
 	version := flag.Bool("version", false, "Версия приложения")
@@ -38,7 +46,15 @@ func main() {
 		return
 	}
 	if !isolated {
+		gateContext, cancelGate := context.WithTimeout(context.Background(), 2*time.Minute)
+		releaseGate, gateErr := updater.AcquireStartupGate(gateContext)
+		cancelGate()
+		if gateErr != nil {
+			fail(fmt.Errorf("ED Copilot is being updated; please try launching again shortly: %w", gateErr), "")
+			return
+		}
 		release, acquired, err := nativeui.AcquireDesktopInstance()
+		releaseGate()
 		if err != nil {
 			fail(err, "")
 			return
@@ -105,6 +121,10 @@ func main() {
 			fail(err, *dataDir)
 			return
 		}
+		if err = engine.SeedDemoCommanderAndPolitics(); err != nil {
+			fail(err, *dataDir)
+			return
+		}
 		if *headless {
 			state := engine.Snapshot()
 			result := v.M{"ok": len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true}
@@ -127,6 +147,12 @@ func main() {
 	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens})
 	if err != nil {
 		fail(err, *dataDir)
+	}
+	engine.Close()
+	if !isolated {
+		if err := engine.ApplyPendingUpdate(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
 	}
 }
 func fail(err error, dir string) {

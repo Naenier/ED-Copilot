@@ -1,0 +1,365 @@
+// Package politics keeps dated public political observations separate from
+// personally observed journal progress. Snapshot and Apply never use the network.
+package politics
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"math"
+	"net/http"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+	"unicode"
+	"unicode/utf8"
+
+	v "github.com/Naenier/ED-Copilot/internal/value"
+)
+
+type M = v.M
+
+const MaxSystems = 40
+
+type Options struct {
+	HTTPClient          *http.Client
+	DisableNetwork      bool
+	Now                 func() time.Time
+	SpanshURL, GoalsURL string // Endpoint overrides are for deterministic tests.
+}
+
+type Service struct {
+	mu                                                             sync.RWMutex
+	opts                                                           Options
+	selected, current, commander                                   string
+	systems                                                        map[string]M
+	publicGoals, personalGoals, powerIndex, search, pledge, status M
+	lastRequests                                                   map[string]time.Time
+	failedRequests                                                 map[string]time.Time
+}
+
+func New(saved M, opts Options) *Service {
+	if opts.Now == nil {
+		opts.Now = time.Now
+	}
+	if opts.HTTPClient == nil {
+		opts.HTTPClient = &http.Client{}
+	}
+	client := *opts.HTTPClient
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	opts.HTTPClient = &client
+	if opts.SpanshURL == "" {
+		opts.SpanshURL = "https://spansh.co.uk/api"
+	}
+	if opts.GoalsURL == "" {
+		opts.GoalsURL = "https://api.orerve.net/2.0/website/initiatives/list"
+	}
+	s := &Service{opts: opts, systems: map[string]M{}, lastRequests: map[string]time.Time{}, failedRequests: map[string]time.Time{}, publicGoals: M{}, personalGoals: M{}, powerIndex: M{}, search: M{}, pledge: M{}, status: M{"running": false}}
+	s.selected = clean(saved["selectedSystem"], 200)
+	// Only bounded normalized snapshots are persisted. They remain observations,
+	// not evidence that a system or goal still has the same state today.
+	for _, row := range boundedRows(saved["systems"], MaxSystems) {
+		if name := clean(row["name"], 200); name != "" {
+			s.systems[key(name)] = v.Copy(row)
+		}
+	}
+	for name, target := range map[string]*M{"publicGoals": &s.publicGoals, "personalGoals": &s.personalGoals, "powerIndex": &s.powerIndex, "search": &s.search} {
+		if raw := v.Obj(saved[name]); len(raw) > 0 {
+			*target = v.Copy(raw)
+		}
+	}
+	// Discard oversized imported state rather than making startup unbounded.
+	if len(v.Rows(s.publicGoals["entries"])) > 100 {
+		s.publicGoals = M{}
+	}
+	if len(v.Rows(s.personalGoals["entries"])) > 100 {
+		s.personalGoals = M{}
+	}
+	if len(v.Rows(s.search["entries"])) > 10 {
+		s.search = M{}
+	}
+	return s
+}
+
+func clean(raw any, limit int) string {
+	text := strings.TrimSpace(v.Str(raw))
+	if !utf8.ValidString(text) || utf8.RuneCountInString(text) > limit {
+		return ""
+	}
+	for _, r := range text {
+		if unicode.IsControl(r) && r != '\n' && r != '\t' {
+			return ""
+		}
+	}
+	return text
+}
+func key(name string) string { return strings.ToLower(strings.Join(strings.Fields(name), " ")) }
+func boundedRows(raw any, max int) []M {
+	rows := v.Rows(raw)
+	if len(rows) > max {
+		rows = rows[:max]
+	}
+	return rows
+}
+func number(raw any) any {
+	if n, ok := v.Number(raw); ok {
+		return n
+	}
+	return nil
+}
+func fraction(raw any) any {
+	if n, ok := v.Number(raw); ok && n >= 0 && n <= 1 {
+		return n
+	}
+	return nil
+}
+func date(raw any) string {
+	if t := v.Time(raw); !t.IsZero() {
+		return v.ISO(t)
+	}
+	return ""
+}
+func (s *Service) now() string { return v.ISO(s.opts.Now()) }
+func meta(source, observed, fetched, url string) M {
+	return M{"source": source, "observedAt": observed, "fetchedAt": fetched, "sourceURL": url, "known": true}
+}
+
+func (s *Service) trimLocked() {
+	if len(s.systems) <= MaxSystems {
+		return
+	}
+	rows := make([]M, 0, len(s.systems))
+	for _, row := range s.systems {
+		rows = append(rows, row)
+	}
+	sort.Slice(rows, func(i, j int) bool { return v.Str(rows[i]["updatedAt"]) > v.Str(rows[j]["updatedAt"]) })
+	keep := map[string]M{}
+	for _, row := range rows[:MaxSystems] {
+		keep[key(v.Str(row["name"]))] = row
+	}
+	s.systems = keep
+}
+
+func (s *Service) mergeLocked(row M) {
+	name := clean(row["name"], 200)
+	if name == "" {
+		return
+	}
+	id := key(name)
+	old := s.systems[id]
+	if old == nil {
+		old = M{"name": name}
+	}
+	if row["address"] != nil && v.Str(row["address"]) != "" {
+		old["address"] = row["address"]
+	}
+	for _, domain := range []string{"info", "factions", "conflicts", "powerplay", "thargoid"} {
+		next := v.Obj(row[domain])
+		if len(next) == 0 {
+			continue
+		}
+		previous := v.Obj(old[domain])
+		// Unknown upstream observation time must not silently supersede a dated
+		// journal record. Each domain retains its own provenance and timestamp.
+		if len(previous) > 0 && date(previous["observedAt"]) != "" && (date(next["observedAt"]) == "" || v.Time(next["observedAt"]).Before(v.Time(previous["observedAt"]))) {
+			continue
+		}
+		old[domain] = v.Copy(next)
+	}
+	old["updatedAt"] = s.now()
+	s.systems[id] = old
+	s.trimLocked()
+}
+
+func (s *Service) Update(body M) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	switch v.Text(body["action"], "select-system") {
+	case "select-system":
+		name := clean(body["system"], 200)
+		if name == "" {
+			return errors.New("Enter a system name")
+		}
+		s.selected = name
+		for _, row := range v.Rows(s.search["entries"]) {
+			if key(v.Str(row["name"])) == key(name) {
+				s.mergeLocked(row)
+				break
+			}
+		}
+	case "select-current":
+		if s.current == "" {
+			return errors.New("Current system is not observed yet")
+		}
+		s.selected = s.current
+	default:
+		return errors.New("Unknown politics action")
+	}
+	return nil
+}
+
+func (s *Service) ResetObserved() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.current = ""
+	s.commander = ""
+	s.personalGoals = M{}
+	s.pledge = M{}
+	// Public cache survives journal replay. Remove journal-only domains so replay
+	// reconstructs the actual current commander's observations without leakage.
+	for id, row := range s.systems {
+		for _, domain := range []string{"info", "factions", "conflicts", "powerplay", "thargoid"} {
+			if v.At(row, domain, "source") == "journal" {
+				delete(row, domain)
+			}
+		}
+		if len(row) <= 3 {
+			delete(s.systems, id)
+		}
+	}
+}
+
+func (s *Service) Snapshot() M {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	name := s.selected
+	if name == "" {
+		name = s.current
+	}
+	active := v.Copy(s.systems[key(name)])
+	if len(active) == 0 && name != "" {
+		active = M{"name": name}
+	}
+	systems := []M{}
+	for _, row := range s.systems {
+		systems = append(systems, v.Copy(row))
+	}
+	sort.Slice(systems, func(i, j int) bool { return v.Str(systems[i]["name"]) < v.Str(systems[j]["name"]) })
+	stale := func(raw M) M {
+		out := v.Copy(raw)
+		stamp := v.Text(out["observedAt"], out["fetchedAt"])
+		out["stale"] = stamp == "" || s.opts.Now().Sub(v.Time(stamp)) > 30*time.Minute
+		return out
+	}
+	for _, domain := range []string{"info", "factions", "conflicts", "powerplay", "thargoid"} {
+		if raw := v.Obj(active[domain]); len(raw) > 0 {
+			active[domain] = stale(raw)
+		}
+	}
+	return M{"selectedSystem": name, "currentSystem": s.current, "activeSystem": active, "systems": systems, "communityGoals": stale(s.publicGoals), "personalGoals": stale(s.personalGoals), "powerIndex": stale(s.powerIndex), "search": stale(s.search), "pledge": v.Copy(s.pledge), "status": v.Merge(v.Copy(s.status), M{"offline": s.opts.DisableNetwork}), "limits": M{"systems": MaxSystems, "searchPageSize": 10, "cacheMinutes": 5}, "sources": []M{{"name": "Frontier community goals", "url": "https://www.elitedangerous.com/community/goals"}, {"name": "Spansh system index", "url": "https://spansh.co.uk/systems"}, {"name": "Frontier journal manual", "url": "https://hosting.zaonce.net/community/journal/v37/Journal_Manual_v37.pdf"}, {"name": "Thargoid reporting", "url": "https://navbeacon.app/"}}}
+}
+
+func (s *Service) ExportSettings() M {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows := []M{}
+	for _, row := range s.systems {
+		rows = append(rows, row)
+	}
+	return v.Copy(M{"version": 1, "selectedSystem": s.selected, "systems": rows, "publicGoals": s.publicGoals, "personalGoals": s.personalGoals, "powerIndex": s.powerIndex, "search": s.search})
+}
+
+func (s *Service) Fetch(ctx context.Context, body M) (M, error) {
+	for _, field := range []string{"kind", "system", "power", "state"} {
+		if raw, exists := body[field]; exists {
+			value, ok := raw.(string)
+			limit := 100
+			if field == "system" {
+				limit = 200
+			}
+			if !ok || strings.ContainsAny(value, "\r\n\t") || (strings.TrimSpace(value) != "" && clean(value, limit) == "") {
+				return nil, fmt.Errorf("Invalid politics %s", field)
+			}
+		}
+	}
+	if raw, exists := body["page"]; exists {
+		page, ok := v.Number(raw)
+		if !ok || page != math.Trunc(page) || page < 0 || page > 100 {
+			return nil, errors.New("Page must be a whole number between 0 and 100")
+		}
+	}
+	kind := v.Text(body["kind"], "system")
+	if kind != "system" && kind != "goals" && kind != "powerplay" && kind != "thargoid" {
+		return nil, errors.New("Unknown political data request")
+	}
+	s.mu.Lock()
+	if s.opts.DisableNetwork {
+		s.status = M{"running": false, "kind": kind, "error": "offline", "failedAt": s.now()}
+		s.mu.Unlock()
+		return M{"status": "offline"}, nil
+	}
+	if v.Bool(s.status["running"]) {
+		s.mu.Unlock()
+		return nil, errors.New("A politics refresh is already running")
+	}
+	name := clean(body["system"], 200)
+	if name == "" {
+		name = s.selected
+	}
+	if name == "" {
+		name = s.current
+	}
+	if kind == "system" && name == "" {
+		s.mu.Unlock()
+		return nil, errors.New("Enter a system name")
+	}
+	power, state := clean(body["power"], 100), clean(body["state"], 100)
+	if raw, exists := body["system"]; exists && clean(raw, 200) == "" && v.Str(raw) != "" {
+		s.mu.Unlock()
+		return nil, errors.New("Invalid system name")
+	}
+	page := v.Int(body["page"])
+	if page < 0 || page > 100 {
+		s.mu.Unlock()
+		return nil, errors.New("Page must be between 0 and 100")
+	}
+	requestKey := fmt.Sprintf("%s|%s|%s|%s|%d", kind, key(name), power, state, page)
+	if at := s.failedRequests[requestKey]; !at.IsZero() && s.opts.Now().Sub(at) < time.Minute {
+		s.mu.Unlock()
+		return nil, errors.New("Wait one minute before retrying this public request")
+	}
+	cacheAvailable := kind == "system" && s.systems[key(name)] != nil || kind == "goals" && v.Bool(s.publicGoals["known"]) || (kind == "powerplay" || kind == "thargoid") && s.search["requestKey"] == requestKey
+	if at := s.lastRequests[requestKey]; cacheAvailable && !at.IsZero() && s.opts.Now().Sub(at) < 5*time.Minute {
+		if kind == "system" {
+			s.selected = name
+		}
+		s.mu.Unlock()
+		return M{"status": "cached", "kind": kind}, nil
+	}
+	s.status = M{"running": true, "kind": kind, "startedAt": s.now()}
+	s.mu.Unlock()
+	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+	defer cancel()
+	result, err := s.fetch(ctx, kind, name, power, state, page)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err != nil {
+		s.status = M{"running": false, "kind": kind, "error": err.Error(), "failedAt": s.now()}
+		s.failedRequests[requestKey] = s.opts.Now()
+		if len(s.failedRequests) > 128 {
+			s.failedRequests = map[string]time.Time{requestKey: s.opts.Now()}
+		}
+		return nil, err
+	}
+	s.lastRequests[requestKey] = s.opts.Now()
+	if len(s.lastRequests) > 128 {
+		s.lastRequests = map[string]time.Time{requestKey: s.opts.Now()}
+	}
+	switch kind {
+	case "system":
+		s.mergeLocked(v.Obj(result["system"]))
+		s.selected = name
+	case "goals":
+		s.publicGoals = v.Obj(result["goals"])
+	case "powerplay":
+		s.powerIndex = v.Obj(result["index"])
+		s.search = v.Obj(result["search"])
+		s.search["requestKey"] = requestKey
+	case "thargoid":
+		s.search = v.Obj(result["search"])
+		s.search["requestKey"] = requestKey
+	}
+	s.status = M{"running": false, "kind": kind, "updatedAt": s.now()}
+	return M{"status": "updated", "kind": kind}, nil
+}
