@@ -34,10 +34,12 @@ var (
 type hudWindow struct {
 	owner                         *Window
 	hwnd                          win.HWND
+	leftHwnd                      win.HWND
 	mainProcedure                 uintptr
 	foregroundHook                uintptr
 	hotkeyRegistered              bool
 	closed, visible               bool
+	leftVisible                   bool
 	modeApplied, restoreMaximized bool
 	document                      p.HUDDocument
 	colors                        M
@@ -46,6 +48,11 @@ type hudWindow struct {
 	key                           win.COLORREF
 	alpha                         byte
 	bounds                        p.HUDRect
+	leftBounds                    p.HUDRect
+	plan                          p.HUDLayout
+	metrics                       []hudSectionMetrics
+	layoutView                    p.HUDRect
+	layoutVehicle                 string
 }
 
 func newHUD(u *Window) (*hudWindow, error) {
@@ -60,11 +67,18 @@ func newHUD(u *Window) (*hudWindow, error) {
 	}
 	h := &hudWindow{owner: u, colors: M{}, restoreMaximized: v.Bool(v.At(u.state, "desktop", "maximized"))}
 	u.normalBounds = u.main.BoundsPixels()
-	h.hwnd = win.CreateWindowEx(win.WS_EX_TOPMOST|win.WS_EX_TOOLWINDOW|win.WS_EX_NOACTIVATE|win.WS_EX_LAYERED|win.WS_EX_TRANSPARENT, hudClassName, wide("ED Copilot · игровой оверлей"), win.WS_POPUP, 0, 0, 410, 300, 0, 0, win.GetModuleHandle(nil), nil)
+	h.hwnd = win.CreateWindowEx(win.WS_EX_TOPMOST|win.WS_EX_TOOLWINDOW|win.WS_EX_NOACTIVATE|win.WS_EX_LAYERED|win.WS_EX_TRANSPARENT, hudClassName, wide("ED Copilot · игровой оверлей"), win.WS_POPUP, 0, 0, 330, 300, 0, 0, win.GetModuleHandle(nil), nil)
 	if h.hwnd == 0 {
 		return nil, fmt.Errorf("Не удалось создать игровой оверлей: %v", syscall.GetLastError())
 	}
 	hudWindows[h.hwnd] = h
+	h.leftHwnd = win.CreateWindowEx(win.WS_EX_TOPMOST|win.WS_EX_TOOLWINDOW|win.WS_EX_NOACTIVATE|win.WS_EX_LAYERED|win.WS_EX_TRANSPARENT, hudClassName, wide("ED Copilot · дополнительные панели"), win.WS_POPUP, 0, 0, 330, 300, 0, 0, win.GetModuleHandle(nil), nil)
+	if h.leftHwnd == 0 {
+		createErr := syscall.GetLastError()
+		h.close()
+		return nil, fmt.Errorf("Не удалось создать дополнительную колонку оверлея: %v", createErr)
+	}
+	hudWindows[h.leftHwnd] = h
 	mainHUDWindows[u.main.Handle()] = h
 	h.mainProcedure = win.SetWindowLongPtr(u.main.Handle(), win.GWLP_WNDPROC, mainHUDProcedure)
 	if h.mainProcedure == 0 {
@@ -134,7 +148,7 @@ func hudWndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	}
 	switch msg {
 	case win.WM_PAINT:
-		h.paint()
+		h.paintWindow(hwnd)
 		return 0
 	case win.WM_ERASEBKGND:
 		return 1
@@ -153,6 +167,10 @@ func (h *hudWindow) hide() {
 	if h.visible {
 		win.ShowWindow(h.hwnd, win.SW_HIDE)
 		h.visible = false
+	}
+	if h.leftVisible {
+		win.ShowWindow(h.leftHwnd, win.SW_HIDE)
+		h.leftVisible = false
 	}
 }
 
@@ -194,7 +212,8 @@ func (h *hudWindow) refresh() {
 	if dpi < 72 || dpi > 480 {
 		dpi = 96
 	}
-	if dpi != h.dpi {
+	fontsChanged := dpi != h.dpi
+	if fontsChanged {
 		h.setFonts(dpi)
 	}
 	colors := v.Obj(v.At(s, "theme", "palette"))
@@ -212,7 +231,8 @@ func (h *hudWindow) refresh() {
 	}
 	colors = roles
 	doc := p.BuildHUD(s, time.Now())
-	changed := !reflect.DeepEqual(doc, h.document) || !reflect.DeepEqual(colors, h.colors)
+	documentChanged := !reflect.DeepEqual(doc, h.document)
+	changed := fontsChanged || documentChanged || !reflect.DeepEqual(colors, h.colors)
 	h.document = doc
 	h.colors = v.Copy(colors)
 	alpha := byte(math.Round(255 * v.Clamp(v.Num(v.First(v.At(s, "theme", "settings", "overlayOpacity"), 0.82)), 0.4, 1)))
@@ -226,25 +246,39 @@ func (h *hudWindow) refresh() {
 	if h.key != key || h.alpha != alpha {
 		h.key, h.alpha = key, alpha
 		setLayeredAttributes.Call(uintptr(h.hwnd), uintptr(key), uintptr(alpha), 3)
+		setLayeredAttributes.Call(uintptr(h.leftHwnd), uintptr(key), uintptr(alpha), 3)
 		changed = true
 	}
-	width := p.HUDGeometry(view, v.Str(v.At(s, "commander", "vehicle")), dpi, 0).Width
-	hdc := win.GetDC(h.hwnd)
-	height := h.layout(hdc, width, false)
-	win.ReleaseDC(h.hwnd, hdc)
-	bounds := p.HUDGeometry(view, v.Str(v.At(s, "commander", "vehicle")), dpi, height)
-	if bounds.Width <= 0 || bounds.Height <= 0 {
+	vehicle := v.Str(v.At(s, "commander", "vehicle"))
+	plan := h.arrange(view, vehicle, dpi, fontsChanged || documentChanged)
+	if plan.Bounds[0].Width <= 0 || plan.Bounds[0].Height <= 0 {
+		h.layoutView = p.HUDRect{}
 		h.hide()
 		return
 	}
-	if bounds != h.bounds || !h.visible {
-		h.bounds = bounds
-		win.SetWindowPos(h.hwnd, win.HWND_TOPMOST, int32(bounds.X), int32(bounds.Y), int32(bounds.Width), int32(bounds.Height), win.SWP_NOACTIVATE|win.SWP_SHOWWINDOW)
-		h.visible = true
-		changed = true
+	changed = changed || !reflect.DeepEqual(plan, h.plan)
+	h.plan = plan
+	applyColumn := func(hwnd win.HWND, next p.HUDRect, previous *p.HUDRect, visible *bool) {
+		if next.Width <= 0 || next.Height <= 0 {
+			if *visible {
+				win.ShowWindow(hwnd, win.SW_HIDE)
+				*visible = false
+			}
+			*previous = next
+			return
+		}
+		if next != *previous || !*visible {
+			*previous = next
+			win.SetWindowPos(hwnd, win.HWND_TOPMOST, int32(next.X), int32(next.Y), int32(next.Width), int32(next.Height), win.SWP_NOACTIVATE|win.SWP_SHOWWINDOW)
+			*visible = true
+			changed = true
+		}
 	}
+	applyColumn(h.hwnd, plan.Bounds[0], &h.bounds, &h.visible)
+	applyColumn(h.leftHwnd, plan.Bounds[1], &h.leftBounds, &h.leftVisible)
 	if changed {
 		win.InvalidateRect(h.hwnd, nil, false)
+		win.InvalidateRect(h.leftHwnd, nil, false)
 	}
 }
 
@@ -284,68 +318,17 @@ func hudText(s string, maxRunes int) string {
 	return s
 }
 
-// layout uses GDI's actual Cyrillic glyph metrics for both measurement and
-// drawing. Each section is a separate translucent panel with a clear gap.
-func (h *hudWindow) layout(hdc win.HDC, width int, draw bool) int {
-	if hdc == 0 {
-		return 0
-	}
-	scale := float64(h.dpi) / 96
-	px := func(n int) int { return max(1, int(math.Round(float64(n)*scale))) }
-	pad, gap := px(12), px(8)
-	y := 0
-	oldFont := win.SelectObject(hdc, win.HGDIOBJ(h.regular))
-	defer win.SelectObject(hdc, oldFont)
-	win.SetBkMode(hdc, win.TRANSPARENT)
-	textHeight := func(text string, bold bool) int {
-		f := h.regular
-		if bold {
-			f = h.bold
-		}
-		win.SelectObject(hdc, win.HGDIOBJ(f))
-		rect := win.RECT{Left: int32(pad), Top: 0, Right: int32(max(pad+10, width-pad)), Bottom: 0}
-		win.DrawTextEx(hdc, wide(text), -1, &rect, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_CALCRECT, nil)
-		return min(max(px(17), int(rect.Bottom)), px(52))
-	}
-	for _, section := range h.document.Sections {
-		title := hudText(section.Title, 100)
-		titleH := textHeight(title, true)
-		heights := make([]int, len(section.Lines))
-		sectionH := pad + titleH + px(7) + pad
-		for i, line := range section.Lines {
-			heights[i] = textHeight(hudText(line.Text, 280), false)
-			sectionH += heights[i] + px(3)
-		}
-		if draw {
-			fillSolid(hdc, win.RECT{Left: 0, Top: int32(y), Right: int32(width), Bottom: int32(y + sectionH)}, h.ink("panel"))
-			fillSolid(hdc, win.RECT{Left: 0, Top: int32(y), Right: int32(px(2)), Bottom: int32(y + sectionH)}, h.ink("accent"))
-			win.SelectObject(hdc, win.HGDIOBJ(h.bold))
-			win.SetTextColor(hdc, h.ink("accent"))
-			r := win.RECT{Left: int32(pad), Top: int32(y + pad), Right: int32(width - pad), Bottom: int32(y + pad + titleH)}
-			win.DrawTextEx(hdc, wide(title), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_END_ELLIPSIS, nil)
-			lineY := y + pad + titleH + px(7)
-			win.SelectObject(hdc, win.HGDIOBJ(h.regular))
-			for i, line := range section.Lines {
-				win.SetTextColor(hdc, h.ink(line.Role))
-				r := win.RECT{Left: int32(pad), Top: int32(lineY), Right: int32(width - pad), Bottom: int32(lineY + heights[i])}
-				win.DrawTextEx(hdc, wide(hudText(line.Text, 280)), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_END_ELLIPSIS, nil)
-				lineY += heights[i] + px(3)
-			}
-		}
-		y += sectionH + gap
-	}
-	return max(1, y-gap)
-}
+func (h *hudWindow) paint() { h.paintWindow(h.hwnd) }
 
-func (h *hudWindow) paint() {
+func (h *hudWindow) paintWindow(hwnd win.HWND) {
 	var ps win.PAINTSTRUCT
-	target := win.BeginPaint(h.hwnd, &ps)
+	target := win.BeginPaint(hwnd, &ps)
 	if target == 0 {
 		return
 	}
-	defer win.EndPaint(h.hwnd, &ps)
+	defer win.EndPaint(hwnd, &ps)
 	var client win.RECT
-	if !win.GetClientRect(h.hwnd, &client) {
+	if !win.GetClientRect(hwnd, &client) {
 		return
 	}
 	width, height := client.Right-client.Left, client.Bottom-client.Top
@@ -365,7 +348,33 @@ func (h *hudWindow) paint() {
 	old := win.SelectObject(hdc, win.HGDIOBJ(bitmap))
 	defer win.SelectObject(hdc, old)
 	fillSolid(hdc, client, h.key)
-	h.layout(hdc, int(width), true)
+	column, bounds := 0, h.bounds
+	if hwnd == h.leftHwnd {
+		column, bounds = 1, h.leftBounds
+	}
+	for _, panel := range h.plan.Panels {
+		if panel.Column != column || panel.Index >= len(h.document.Sections) {
+			continue
+		}
+		var metrics hudSectionMetrics
+		if panel.Index < len(h.metrics) {
+			metrics = h.metrics[panel.Index]
+		} else {
+			metrics = h.measureSection(hdc, int(width), h.document.Sections[panel.Index])
+		}
+		h.drawSection(hdc, int(width), panel.Bounds.Y-bounds.Y, panel.Bounds.Height, h.document.Sections[panel.Index], metrics, panel.Clipped)
+	}
+	if column == 1 && h.plan.Hidden > 0 && h.plan.Overflow.Height > 0 {
+		r := h.plan.Overflow
+		rect := win.RECT{Left: 0, Top: int32(r.Y - bounds.Y), Right: int32(width), Bottom: int32(r.Y - bounds.Y + r.Height)}
+		fillSolid(hdc, rect, h.ink("panel"))
+		old := win.SelectObject(hdc, win.HGDIOBJ(h.regular))
+		win.SetBkMode(hdc, win.TRANSPARENT)
+		win.SetTextColor(hdc, h.ink("muted"))
+		rect.Left += int32(h.hudPX(9))
+		win.DrawTextEx(hdc, wide(fmt.Sprintf("Ещё панелей: %d · в ED Copilot", h.plan.Hidden)), -1, &rect, win.DT_SINGLELINE|win.DT_VCENTER|win.DT_END_ELLIPSIS|win.DT_NOPREFIX, nil)
+		win.SelectObject(hdc, old)
+	}
 	win.BitBlt(target, 0, 0, width, height, hdc, 0, 0, win.SRCCOPY)
 }
 
@@ -394,6 +403,11 @@ func (h *hudWindow) close() {
 		win.DestroyWindow(h.hwnd)
 		h.hwnd = 0
 	}
+	if h.leftHwnd != 0 {
+		delete(hudWindows, h.leftHwnd)
+		win.DestroyWindow(h.leftHwnd)
+		h.leftHwnd = 0
+	}
 	for _, font := range []win.HFONT{h.regular, h.bold} {
 		if font != 0 {
 			win.DeleteObject(win.HGDIOBJ(font))
@@ -401,4 +415,5 @@ func (h *hudWindow) close() {
 	}
 	h.regular, h.bold = 0, 0
 	h.visible = false
+	h.leftVisible = false
 }

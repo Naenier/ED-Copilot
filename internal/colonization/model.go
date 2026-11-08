@@ -142,7 +142,7 @@ func (p *Planner) projectLocked(id string) M {
 		id = p.selected
 	}
 	for _, r := range p.projects {
-		if str(r["id"]) == id {
+		if str(r["id"]) == id && p.projectVisible(r) {
 			return r
 		}
 	}
@@ -177,7 +177,15 @@ func cleanBuilding(v M) M {
 		tier = nil
 	}
 	bill, _ := resourceRows(v["resourcePlan"])
-	return M{"id": id, "typeId": t["id"], "name": firstText(v["name"], t["name"]), "status": status, "body": text(v["body"], 200), "isPrimary": value.Bool(v["isPrimary"]) && value.Bool(t["canBePrimary"]), "marketId": marketID(v["marketId"]), "notes": text(v["notes"], 4000), "dependsOn": uniqueStrings(v["dependsOn"], 100), "tierOverride": tier, "pointCostOverride": natural(v["pointCostOverride"], 100000), "pointRewardOverride": natural(v["pointRewardOverride"], 100000), "resourcePlan": bill, "sourceNote": text(v["sourceNote"], 1000)}
+	journalStatus := str(v["journalStatus"])
+	if !has([]string{"building", "complete", "failed"}, journalStatus) || validDate(v["journalUpdatedAt"]) == nil {
+		journalStatus = ""
+	}
+	journalSource := str(v["journalSource"])
+	if !has([]string{"station", "depot"}, journalSource) {
+		journalSource = ""
+	}
+	return M{"id": id, "typeId": t["id"], "name": firstText(v["name"], t["name"]), "status": status, "body": text(v["body"], 200), "isPrimary": value.Bool(v["isPrimary"]) && value.Bool(t["canBePrimary"]), "marketId": marketID(v["marketId"]), "notes": text(v["notes"], 4000), "dependsOn": uniqueStrings(v["dependsOn"], 100), "tierOverride": tier, "pointCostOverride": natural(v["pointCostOverride"], 100000), "pointRewardOverride": natural(v["pointRewardOverride"], 100000), "resourcePlan": bill, "sourceNote": text(v["sourceNote"], 1000), "journalDiscovered": value.Bool(v["journalDiscovered"]), "journalStatus": journalStatus, "journalUpdatedAt": validDate(v["journalUpdatedAt"]), "journalStationName": text(v["journalStationName"], 200), "journalDisplayName": text(v["journalDisplayName"], 200), "journalStationType": text(v["journalStationType"], 200), "journalSource": journalSource}
 }
 func cleanProject(v M) M {
 	id := text(v["id"], 80)
@@ -204,7 +212,9 @@ func cleanProject(v M) M {
 			ds = append(ds, M{"id": firstText(r["id"], value.ID()), "buildingId": text(r["buildingId"], 80), "commodity": key, "count": count, "timestamp": validDate(r["timestamp"]), "notes": text(r["notes"], 1000), "source": "manual"})
 		}
 	}
-	return M{"id": id, "name": firstText(v["name"], v["targetSystem"], "Новая колония"), "originSystem": text(v["originSystem"], 200), "faction": text(v["faction"], 200), "targetSystem": text(v["targetSystem"], 200), "coordinates": coordinates(v["coordinates"]), "systemAddress": marketID(v["systemAddress"]), "status": status, "goalEconomy": text(v["goalEconomy"], 80), "claimedAt": validDate(v["claimedAt"]), "deadline": validDate(v["deadline"]), "notes": text(v["notes"], 4000), "points": M{"tier2": point(value.Obj(v["points"])["tier2"]), "tier3": point(value.Obj(v["points"])["tier3"])}, "externalPortCount": natural(v["externalPortCount"], 1000), "cargoCapacity": natural(v["cargoCapacity"], 100000), "supplyOrder": uniqueStrings(v["supplyOrder"], 200), "buildings": bs, "deliveries": ds}
+	project := M{"id": id, "name": firstText(v["name"], v["targetSystem"], "Новая колония"), "originSystem": text(v["originSystem"], 200), "faction": text(v["faction"], 200), "targetSystem": text(v["targetSystem"], 200), "coordinates": coordinates(v["coordinates"]), "systemAddress": marketID(v["systemAddress"]), "status": status, "goalEconomy": text(v["goalEconomy"], 80), "claimedAt": validDate(v["claimedAt"]), "deadline": validDate(v["deadline"]), "notes": text(v["notes"], 4000), "points": M{"tier2": point(value.Obj(v["points"])["tier2"]), "tier3": point(value.Obj(v["points"])["tier3"])}, "externalPortCount": natural(v["externalPortCount"], 1000), "cargoCapacity": natural(v["cargoCapacity"], 100000), "supplyOrder": uniqueStrings(v["supplyOrder"], 200), "buildings": bs, "deliveries": ds, "journalOwnership": cleanJournalOwnership(v["journalOwnership"])}
+	pruneShipBuildings(project, "")
+	return project
 }
 func resourceRows(v any) ([]M, error) {
 	if v == nil {
@@ -260,6 +270,9 @@ func (p *Planner) uniqueDepot(id string, except M) error {
 	if id == "" {
 		return nil
 	}
+	if IsColonisationShip(p.depots[id]) || IsColonisationShip(p.stations[id]) {
+		return errors.New("Колонизационный корабль снабжения не является зданием или стройплощадкой.")
+	}
 	exceptID := str(except["id"])
 	for _, project := range p.projects {
 		for _, b := range rows(project["buildings"]) {
@@ -272,6 +285,9 @@ func (p *Planner) uniqueDepot(id string, except M) error {
 }
 func (p *Planner) uniqueColony(system, address string, except M) error {
 	for _, project := range p.projects {
+		if !p.projectVisible(project) {
+			continue
+		}
 		if str(project["id"]) != str(except["id"]) && (equal(project["targetSystem"], system) || address != "" && str(project["systemAddress"]) == address) {
 			return errors.New("Эта колония уже есть в списке. Выберите её в поле «Колония».")
 		}

@@ -19,6 +19,9 @@ func (p *Planner) snapshotLocked(context M) M {
 	projects := []M{}
 	var active M
 	for _, project := range p.projects {
+		if !p.projectVisible(project) {
+			continue
+		}
 		row := p.projectSnapshot(project, cargo, cargoKnown, warehouse)
 		projects = append(projects, row)
 		if str(row["id"]) == p.selected {
@@ -30,6 +33,9 @@ func (p *Planner) snapshotLocked(context M) M {
 	depots := []M{}
 	for _, id := range sortedKeys(p.depots) {
 		row := copyM(p.depots[id])
+		if IsColonisationShip(row) {
+			continue
+		}
 		row["stationName"] = row["station"]
 		linked := false
 		for _, project := range p.projects {
@@ -58,6 +64,9 @@ func (p *Planner) snapshotLocked(context M) M {
 }
 func (p *Planner) statusOf(b M) string {
 	if d := p.depots[str(b["marketId"])]; d != nil {
+		if journalStatus := str(b["journalStatus"]); journalStatus != "" && value.Time(b["journalUpdatedAt"]).After(value.Time(d["timestamp"])) {
+			return journalStatus
+		}
 		if value.Bool(d["failed"]) {
 			return "failed"
 		}
@@ -65,6 +74,9 @@ func (p *Planner) statusOf(b M) string {
 			return "complete"
 		}
 		return "building"
+	}
+	if journalStatus := str(b["journalStatus"]); journalStatus != "" {
+		return journalStatus
 	}
 	return str(b["status"])
 }
@@ -229,13 +241,12 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		} else if len(resources) > 0 {
 			billSource = "manual"
 		}
-		buildings = append(buildings, merge(copyM(b), M{"manualStatus": b["status"], "tier": tier, "kind": t["kind"], "location": t["location"], "economy": t["economy"], "status": status, "effectiveStatus": status, "pointCost": cost, "pointReward": reward, "pointsBefore": before, "pointsAfter": copyM(points), "pointSource": pointSource, "requirements": resources, "authoritative": d != nil, "billSource": billSource, "warnings": ownWarnings, "prerequisites": value.Clone(t["prerequisites"]), "progress": d["constructionProgress"], "depotUpdatedAt": d["timestamp"], "ownDelivered": ownDelivered}))
+		buildings = append(buildings, merge(copyM(b), M{"name": displayBuildingName(b), "displayName": displayBuildingName(b), "manualStatus": b["status"], "tier": tier, "kind": t["kind"], "location": t["location"], "economy": t["economy"], "status": status, "effectiveStatus": status, "pointCost": cost, "pointReward": reward, "pointsBefore": before, "pointsAfter": copyM(points), "pointSource": pointSource, "requirements": resources, "authoritative": d != nil, "billSource": billSource, "warnings": ownWarnings, "prerequisites": value.Clone(t["prerequisites"]), "progress": d["constructionProgress"], "depotUpdatedAt": d["timestamp"], "ownDelivered": ownDelivered}))
 	}
 	if points0 := value.Obj(project["points"]); points0["tier2"] == nil || points0["tier3"] == nil {
 		warnings = append(warnings, "Укажите текущие доступные очки T2/T3. Уже построенные объекты включены в этот баланс и повторно очки не начисляют.")
 	}
 	concurrent, unknownBills := 0, 0
-	primaryComplete := false
 	allDone, anyComplete := len(buildings) > 0, false
 	for _, b := range buildings {
 		status := str(b["status"])
@@ -244,9 +255,6 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		}
 		if !has([]string{"complete", "cancelled", "failed"}, status) && len(rows(b["requirements"])) == 0 {
 			unknownBills++
-		}
-		if value.Bool(b["isPrimary"]) && status == "complete" {
-			primaryComplete = true
 		}
 		if status == "complete" {
 			anyComplete = true
@@ -266,12 +274,11 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		}
 	}
 	claimedAt := firstAny(project["claimedAt"], claim["claimedAt"])
+	primaryProject := merge(M{}, project, M{"buildings": buildings, "claimedAt": claimedAt, "claimObservation": claim})
+	primaryComplete := PrimaryPortComplete(primaryProject)
 	deadline := project["deadline"]
 	if deadline == nil && claimedAt != nil {
 		deadline = value.ISO(value.Time(claimedAt).Add(28 * 24 * time.Hour))
-	}
-	if deadline != nil && !primaryComplete && !has([]string{"complete", "cancelled"}, str(project["status"])) && value.Time(deadline).Before(p.now()) {
-		warnings = append(warnings, "Расчётный срок первичного порта истёк. Актуальный таймер проверьте в игре.")
 	}
 	capacity := firstAny(project["cargoCapacity"], p.config["cargoCapacity"])
 	supplies := aggregateResources(buildings, cargo, cargoKnown, warehouse, capacity)
@@ -283,7 +290,7 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 			status = "building"
 		}
 	}
-	if status == "planned" {
+	if status == "planned" || status == "claimed" {
 		for _, b := range buildings {
 			if has([]string{"building", "complete"}, str(b["status"])) {
 				status = "building"
@@ -296,6 +303,14 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 	}
 	if str(claim["status"]) == "released" {
 		warnings = append(warnings, "Журнал содержит отказ от заявки. Проверьте действительность колонии в игре.")
+	}
+	deadlineActive := deadline != nil && !primaryComplete && !has([]string{"complete", "cancelled"}, status)
+	var effectiveDeadline any
+	if deadlineActive {
+		effectiveDeadline = deadline
+		if value.Time(deadline).Before(p.now()) {
+			warnings = append(warnings, "Расчётный срок первичного порта истёк. Актуальный таймер проверьте в игре.")
+		}
 	}
 	totalRequired, totalMissing := float64(0), float64(0)
 	for _, r := range supplies {
@@ -326,14 +341,14 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		operational = []M{}
 	}
 	var taskValue any
-	if task := nextTask(merge(copyM(project), M{"status": status}), queue, deadline); task != nil {
+	if task := nextTask(merge(copyM(project), M{"status": status}), queue, effectiveDeadline); task != nil {
 		taskValue = task
 	}
 	var claimValue any
 	if claim != nil {
 		claimValue = copyM(claim)
 	}
-	return merge(copyM(project), M{"status": status, "manualStatus": project["status"], "cargoCapacity": capacity, "buildings": buildings, "supplyQueue": queue, "supplies": supplies, "aggregateSupplies": supplies, "operationalSupplies": operational, "claimedAt": claimedAt, "deadline": deadline, "deadlineSource": deadlineSource, "beaconDeadline": beacon, "claimObservation": claimValue, "pointsProjected": points, "warnings": warnings, "concurrent": concurrent, "unknownBills": unknownBills, "totalRequired": totalRequired, "totalMissing": totalMissing, "manualDeliveries": value.Clone(project["deliveries"]), "journalDeliveries": journalDeliveries, "economyPlan": economyPlan(str(project["goalEconomy"]), buildings), "buildAdvice": buildAdvice(project, buildings), "nextTask": taskValue})
+	return merge(copyM(project), M{"status": status, "manualStatus": project["status"], "cargoCapacity": capacity, "buildings": buildings, "supplyQueue": queue, "supplies": supplies, "aggregateSupplies": supplies, "operationalSupplies": operational, "claimedAt": claimedAt, "deadline": deadline, "primaryComplete": primaryComplete, "deadlineActive": deadlineActive, "effectiveDeadline": effectiveDeadline, "deadlineSource": deadlineSource, "beaconDeadline": beacon, "claimObservation": claimValue, "pointsProjected": points, "warnings": warnings, "concurrent": concurrent, "unknownBills": unknownBills, "totalRequired": totalRequired, "totalMissing": totalMissing, "manualDeliveries": value.Clone(project["deliveries"]), "journalDeliveries": journalDeliveries, "economyPlan": economyPlan(str(project["goalEconomy"]), buildings), "buildAdvice": buildAdvice(primaryProject, buildings), "nextTask": taskValue})
 }
 
 type stock struct {

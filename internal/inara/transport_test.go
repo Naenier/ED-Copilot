@@ -23,8 +23,16 @@ func TestTransportPartialReorderedAcknowledgements(t *testing.T) {
 		if json.NewDecoder(r.Body).Decode(&body) != nil {
 			t.Error("invalid request")
 		}
-		if v.Str(v.At(body, "header", "APIkey")) != "synthetic-key-only" || v.Str(v.At(body, "header", "appName")) != "ED Copilot" {
-			t.Error("wrong header")
+		if v.Str(v.At(body, "header", "APIkey")) != "synthetic-key-only" {
+			t.Error("wrong synthetic API key")
+		}
+		// The service registers this exact client name independently of the
+		// desktop product. Keep a literal wire-contract assertion here.
+		if got := v.Str(v.At(body, "header", "appName")); got != "Naenier ED Companion" {
+			t.Errorf("registered Inara appName = %q, want Naenier ED Companion", got)
+		}
+		if v.At(body, "header", "appVersion") != "2.3.1" || r.Header.Get("User-Agent") != "ED Copilot/2.3.1" {
+			t.Error("API and desktop User-Agent versions are inconsistent")
 		}
 		if len(v.Rows(body["events"])) != 2 {
 			t.Error("invalid events not removed")
@@ -33,7 +41,7 @@ func TestTransportPartialReorderedAcknowledgements(t *testing.T) {
 	}))
 	defer server.Close()
 	events := []Event{{"setCommanderCredits", v.ISO(now), v.M{"commanderCredits": 100, "commanderLoan": 0}}, {"setCommanderTravelLocation", v.ISO(now), v.M{"starsystemName": "Sol"}}, {"unsupported", v.ISO(now), v.M{}}}
-	result, err := SendBatch(context.Background(), SendOptions{HTTPClient: server.Client(), Endpoint: server.URL, APIKey: "synthetic-key-only", CommanderName: "Synthetic Pilot", FrontierID: "F1", Events: events, Now: func() time.Time { return now }})
+	result, err := SendBatch(context.Background(), SendOptions{HTTPClient: server.Client(), Endpoint: server.URL, APIKey: "synthetic-key-only", CommanderName: "Synthetic Pilot", FrontierID: "F1", AppVersion: "2.3.1", Events: events, Now: func() time.Time { return now }})
 	if err != nil {
 		t.Fatal(err)
 	}

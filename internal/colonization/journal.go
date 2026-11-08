@@ -14,6 +14,7 @@ func (p *Planner) Apply(event, context M) {
 			p.resetLocked()
 		}
 		p.commander = fid
+		p.ensureSelectedLocked()
 	}
 	if !has([]string{"ColonisationConstructionDepot", "ColonisationContribution", "ColonisationSystemClaim", "ColonisationSystemClaimRelease", "ColonisationBeaconDeployed", "Docked", "Location"}, typ) {
 		return
@@ -40,7 +41,14 @@ func (p *Planner) Apply(event, context M) {
 	if typ == "Docked" || typ == "Location" {
 		id := marketID(event["MarketID"])
 		if id != "" && station != "" {
-			p.stations[id] = M{"marketId": id, "name": station, "system": system, "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "type": text(event["StationType"], 200), "services": stringsOf(event["StationServices"]), "hasColonisationContact": colonisationContact(event, event["StationServices"]), "timestamp": timestamp}
+			localized := text(firstText(event["StationName_Localised"], event["StationName_Localized"]), 200)
+			if localized == "" && p.stations[id]["name"] == station {
+				localized = str(p.stations[id]["displayName"])
+			}
+			p.stations[id] = M{"marketId": id, "name": station, "displayName": localized, "system": system, "systemAddress": marketID(firstText(event["SystemAddress"], commander["systemAddress"])), "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "type": text(event["StationType"], 200), "services": stringsOf(event["StationServices"]), "hasColonisationContact": colonisationContact(event, event["StationServices"]), "timestamp": timestamp, "visited": typ == "Docked" || value.Bool(event["Docked"])}
+			if typ == "Docked" || value.Bool(event["Docked"]) {
+				p.discoverStationLocked(p.stations[id])
+			}
 		}
 		return
 	}
@@ -49,6 +57,8 @@ func (p *Planner) Apply(event, context M) {
 		if id == "" || event["ResourcesRequired"] == nil {
 			return
 		}
+		station = text(firstText(event["StationName"], p.stations[id]["name"], station), 200)
+		stationDisplayName := text(firstText(event["StationName_Localised"], event["StationName_Localized"], p.stations[id]["displayName"]), 200)
 		rs := []M{}
 		for _, r := range limitedRows(event["ResourcesRequired"], 500) {
 			key := value.Key(r["Name"])
@@ -59,7 +69,8 @@ func (p *Planner) Apply(event, context M) {
 			rs = append(rs, M{"commodity": key, "name": commodityName(key, str(r["Name_Localised"])), "required": required, "delivered": provided, "payment": natural(r["Payment"], 1e9), "missing": max0(num(required) - num(provided)), "source": "journal", "authoritative": true})
 		}
 		progress, known := value.Number(event["ConstructionProgress"])
-		p.depots[id] = M{"marketId": id, "system": system, "station": station, "timestamp": timestamp, "sequence": sequence, "constructionProgress": value.Nullable(value.Clamp(progress, 0, 1), known), "complete": value.Bool(event["ConstructionComplete"]), "failed": value.Bool(event["ConstructionFailed"]), "requirements": rs}
+		p.depots[id] = M{"marketId": id, "system": system, "systemAddress": marketID(firstText(event["SystemAddress"], commander["systemAddress"])), "station": station, "stationType": text(firstText(event["StationType"], p.stations[id]["type"]), 200), "stationDisplayName": stationDisplayName, "timestamp": timestamp, "sequence": sequence, "constructionProgress": value.Nullable(value.Clamp(progress, 0, 1), known), "complete": value.Bool(event["ConstructionComplete"]), "failed": value.Bool(event["ConstructionFailed"]), "requirements": rs}
+		p.discoverDepotLocked(p.depots[id])
 		return
 	}
 	if typ == "ColonisationContribution" {
@@ -102,10 +113,14 @@ func (p *Planner) Apply(event, context M) {
 	switch typ {
 	case "ColonisationSystemClaim":
 		record["claimedAt"], record["beaconAt"], record["releasedAt"], record["status"] = timestamp, nil, nil, "claimed"
+		if origin := text(commander["system"], 200); origin != "" && !equal(origin, target) {
+			record["originSystem"] = origin
+		}
 	case "ColonisationBeaconDeployed":
 		record["beaconAt"], record["status"] = timestamp, "beacon"
 	case "ColonisationSystemClaimRelease":
 		record["releasedAt"], record["status"] = timestamp, "released"
 	}
 	p.claims[key] = record
+	p.discoverClaimLocked(record, typ)
 }

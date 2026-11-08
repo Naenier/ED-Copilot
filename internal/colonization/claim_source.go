@@ -27,6 +27,9 @@ func placeholderFaction(name string) bool {
 }
 
 func claimSourceEligible(station M) bool {
+	if IsColonisationShip(station) {
+		return false
+	}
 	typ := value.Key(station["type"])
 	if strings.Contains(typ, "carrier") || strings.Contains(typ, "megaship") || strings.Contains(typ, "construction") || strings.Contains(typ, "depot") {
 		return false

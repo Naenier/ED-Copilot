@@ -7,6 +7,9 @@ func (p *Planner) SelectorSnapshot() M {
 	defer p.mu.RUnlock()
 	projects := make([]M, 0, len(p.projects))
 	for _, project := range p.projects {
+		if !p.projectVisible(project) {
+			continue
+		}
 		projects = append(projects, M{"id": project["id"], "name": project["name"], "targetSystem": project["targetSystem"], "status": project["status"]})
 	}
 	return M{"selectedProjectId": p.selected, "projects": projects}

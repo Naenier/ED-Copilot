@@ -42,11 +42,15 @@ func economyPlan(goal string, buildings []M) M {
 }
 func buildAdvice(project M, buildings []M) []M {
 	primary := value.Obj(adviceData["primary"])
-	for _, b := range buildings {
-		if value.Bool(b["isPrimary"]) && str(b["status"]) == "complete" {
-			primary = merge(copyM(value.Obj(adviceData["primaryComplete"])), M{"typeIds": []string{str(b["typeId"])}})
-			break
+	if PrimaryPortComplete(merge(M{}, project, M{"buildings": buildings})) {
+		types := []string{}
+		for _, b := range buildings {
+			if value.Bool(b["isPrimary"]) && str(b["status"]) == "complete" && str(b["typeId"]) != "custom" {
+				types = append(types, str(b["typeId"]))
+				break
+			}
 		}
+		primary = merge(copyM(value.Obj(adviceData["primaryComplete"])), M{"typeIds": types})
 	}
 	out := []M{copyM(primary), copyM(value.Obj(adviceData["tiers"]))}
 	directions := value.Obj(adviceData["directions"])

@@ -105,6 +105,20 @@ test('colony summary switches between independent projects and distinguishes unk
  beta.unknownBills=0;html=f.api.render(f.C,f.ui);assert.match(html,/<span>Осталось доставить<\/span><strong>0 т/);
 });
 
+test('primary deadline is shown only while active and later construction keeps its supply preview',()=>{
+ const f=fixture();f.C.mode='Строительство';
+ const historical='2031-01-28T12:00:00Z',effective='2031-02-12T12:00:00Z';
+ const p=project('synthetic-deadline','Synthetic established colony',{deadline:historical,primaryComplete:true,deadlineActive:false,effectiveDeadline:null});
+ f.C.state.colonization.activeProject=p;
+ let html=f.api.render(f.C,f.ui);
+ assert.doesNotMatch(html,/Срок первичного порта:/);assert.match(html,/Ближайшие потребности/);assert.match(html,/Сталь/);
+ p.primaryComplete=false;p.deadlineActive=true;p.effectiveDeadline=effective;
+ html=f.api.render(f.C,f.ui);assert.match(html,/Срок первичного порта:/);assert.match(html,/12\.02\.2031/);assert.doesNotMatch(html,/28\.01\.2031/);
+ p.deadlineActive=false;html=f.api.render(f.C,f.ui);assert.doesNotMatch(html,/Срок первичного порта:/);
+ delete p.primaryComplete;delete p.deadlineActive;delete p.effectiveDeadline;
+ html=f.api.render(f.C,f.ui);assert.match(html,/Срок первичного порта:/);assert.match(html,/28\.01\.2031/);
+});
+
 test('copy uses the active colony rather than stale button data and every rendered value is escaped',async()=>{
  const f=fixture();f.C.state.colonization.activeProject=project('a','<Colony>',{targetSystem:'Actual current system',warnings:['<script>bad()</script>'],nextTask:{text:'<img src=x>'}});
  let html=f.api.render(f.C,f.ui);

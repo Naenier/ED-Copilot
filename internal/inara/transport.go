@@ -107,7 +107,7 @@ func SendBatch(ctx context.Context, o SendOptions) (BatchResult, error) {
 	if len(outbound) == 0 {
 		return result, nil
 	}
-	header := v.M{"appName": "ED Copilot", "appVersion": o.AppVersion, "isBeingDeveloped": o.IsBeingDeveloped, "APIkey": o.APIKey, "commanderName": str(o.CommanderName)}
+	header := v.M{"appName": APIApplicationName, "appVersion": o.AppVersion, "isBeingDeveloped": o.IsBeingDeveloped, "APIkey": o.APIKey, "commanderName": str(o.CommanderName)}
 	if str(o.FrontierID) != "" {
 		header["commanderFrontierID"] = str(o.FrontierID)
 	}

@@ -519,7 +519,11 @@ func (u *Window) applyModernSnapshot(state M) {
 		u.hud.refresh()
 	}
 	if u.modern.ready && !u.modern.closed && win.IsWindowVisible(u.main.Handle()) && !win.IsIconic(u.main.Handle()) {
-		u.modern.send("update", M{"revision": u.state["revision"], "connection": u.state["connection"], "settings": u.state["settings"], "commander": u.state["commander"]})
+		update := M{"revision": u.state["revision"], "connection": u.state["connection"], "settings": u.state["settings"], "commander": u.state["commander"]}
+		if v.At(u.state, "settings", "activity") == "colonization" {
+			update["overlayColonies"] = overlayColonyUpdate(u.state)
+		}
+		u.modern.send("update", update)
 	}
 }
 
@@ -928,7 +932,7 @@ func (m *modernShell) finishSmoke(report M) {
 	m.smokeVisualState(report)
 	if m.owner.hud != nil {
 		m.owner.hud.refresh()
-		report["hudHidden"] = !win.IsWindowVisible(m.owner.hud.hwnd)
+		report["hudHidden"] = !win.IsWindowVisible(m.owner.hud.hwnd) && !win.IsWindowVisible(m.owner.hud.leftHwnd)
 		if !v.Bool(report["hudHidden"]) {
 			report["ok"] = false
 			report["problems"] = append(v.Arr(report["problems"]), "Оверлей виден при фокусе приложения")

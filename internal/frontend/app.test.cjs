@@ -22,7 +22,7 @@ function fixture() {
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
@@ -506,4 +506,149 @@ test('an explicit refresh uses fresh disclosure defaults instead of restoring a 
  api.setRender(()=>selectors.set('#page details',defaults));
  await api.loadView(false);
  assert.deepEqual(defaults.map(node=>node.open),[false,true,false]);
+});
+
+function activityFixture(){
+ const f=fixture();f.api.C.boot={activities:[{Value:'flight',Label:'Полёт'},{Value:'colonization',Label:'Колонизация'}]};
+ f.api.C.state={settings:{overlayEnabled:true,activity:'colonization'},colonization:{projects:[],selectedProjectId:''}};
+ return f;
+}
+
+test('the activity bar explains an empty colony list and offers a real navigation action instead of an empty select',async()=>{
+ const {api}=activityFixture();let destination='';api.setNavigate(async id=>{destination=id;});
+ let html=api.activityHtml();
+ assert.match(html,/Колонии пока не найдены/);assert.match(html,/data-click="navigate-colonization"/);
+ assert.doesNotMatch(html,/id="overlay-colony"/);
+ await api.handleClick('navigate-colonization',{});assert.equal(destination,'colonization');
+ api.C.state.connection={scanning:true};html=api.activityHtml();assert.match(html,/Читаем журналы — ищем ваши колонии/);
+ delete api.C.state.colonization;delete api.C.state.connection;html=api.activityHtml();assert.match(html,/Список колоний обновляется/);
+ api.C.state.settings.overlayEnabled=false;assert.equal(api.activityHtml(),'');
+});
+
+test('the colony selector uses scoped project rows, explicit selection and a single-colony fallback without saving',()=>{
+ const {api}=activityFixture();const a={id:'a',name:'Колония А',targetSystem:'Система А'},b={id:'b',name:'Колония Б',targetSystem:'Система Б'};
+ api.C.state.colonization={projects:[a],selectedProjectId:''};
+ assert.match(api.activityHtml(),/value="a" selected>Колония А · Система А/);
+ api.C.state.colonization={projects:[a,b],selectedProjectId:'b',activeProject:a};
+ assert.equal(api.colonySelectorModel().selected,'b');
+ api.C.state.colonization.projects=[b,{id:'new',name:'Новая колония'},a];
+ assert.equal(api.colonySelectorModel().selected,'b');assert.match(api.activityHtml(),/value="b" selected/);
+ api.C.state.colonization.selectedProjectId='removed';assert.equal(api.colonySelectorModel().selected,'a');
+ delete api.C.state.colonization.activeProject;assert.match(api.activityHtml(),/<option value="" selected disabled>Выберите колонию/);
+ api.C.state.colonization={activeProject:a};assert.equal(api.colonySelectorModel().selected,'a');
+});
+
+test('activity options never become a blank arrow and escape game or user supplied labels and IDs',()=>{
+ const {api}=activityFixture();api.C.state.colonization={selectedProjectId:'x"<id>',projects:[{id:'x"<id>',name:'<Colony>',targetSystem:'<System>'},{id:'x"<id>',name:'Duplicate'},{id:'',name:'Invalid'},null]};
+ let html=api.activityHtml();assert.match(html,/value="x&quot;&lt;id&gt;" selected/);assert.match(html,/&lt;Colony&gt; · &lt;System&gt;/);
+ assert.doesNotMatch(html,/>Duplicate<|>Invalid<|<Colony>|<System>/);assert.equal((html.match(/value="x&quot;&lt;id&gt;"/g)||[]).length,1);
+ api.C.boot=null;html=api.activityHtml();assert.match(html,/id="activity-select"[^>]*disabled/);assert.match(html,/Загружаем занятия/);
+ api.C.boot={activities:[{Value:'colonization',Label:'<Activity>'}]};html=api.activityHtml();assert.match(html,/&lt;Activity&gt;/);
+});
+
+test('the real colony change handler keeps a pending user choice while options refresh and clears it after backend acknowledgement',async()=>{
+ const {api,listeners}=activityFixture();const rows=[{id:'a',name:'A'},{id:'b',name:'B'}];
+ api.C.state.colonization={projects:rows,selectedProjectId:'a'};
+ let resolve,loads=0;const request=new Promise(done=>{resolve=done;}),calls=[];
+ api.setCall(async(op,params)=>{calls.push({op,params});return request;});api.setLoad(async()=>{loads++;});
+ const change=listeners.get('change')({target:{id:'overlay-colony',value:'b'}});
+ for(let turn=0;turn<6;turn++)await Promise.resolve();
+ assert.equal(api.C.colonySelection.id,'b');assert.equal(api.C.colonySelection.pending,true);
+ api.C.state.colonization={projects:[{id:'c',name:'Discovered'},...rows].reverse(),selectedProjectId:'a'};
+ assert.match(api.activityHtml(),/value="b" selected/);
+ resolve({ok:true});await change;
+ assert.equal(calls.length,1);assert.equal(calls[0].op,'select-colony');assert.equal(calls[0].params.id,'b');assert.equal(loads,1);
+ assert.equal(api.C.colonySelection.pending,false);assert.match(api.activityHtml(),/value="b" selected/);
+ api.C.state.colonization.selectedProjectId='b';assert.match(api.activityHtml(),/value="b" selected/);assert.equal(api.C.colonySelection,undefined);
+});
+
+test('invalid or unchanged colony values do not write and a failed change restores the confirmed choice',async()=>{
+ const {api,listeners,messages,nodes}=activityFixture();api.C.state.colonization={projects:[{id:'a',name:'A'},{id:'b',name:'B'}],selectedProjectId:'a'};
+ const select={value:'b'};nodes.set('overlay-colony',select);
+ let calls=0;api.setCall(async()=>{calls++;throw new Error('Synthetic save failure');});
+ await listeners.get('change')({target:{id:'overlay-colony',value:''}});
+ await listeners.get('change')({target:{id:'overlay-colony',value:'not-a-project'}});
+ await listeners.get('change')({target:{id:'colony-select',value:'a'}});assert.equal(calls,0);
+ await listeners.get('change')({target:{id:'colony-select',value:'b'}});
+ assert.equal(calls,1);assert.equal(api.C.colonySelection,undefined);assert.match(api.activityHtml(),/value="a" selected/);assert.equal(select.value,'a');
+ assert.equal(messages.at(-1).message,'Synthetic save failure');
+});
+
+test('an older colony save failure cannot clear a newer explicit selection',async()=>{
+ const {api,listeners}=activityFixture();api.C.state.colonization={projects:[{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}],selectedProjectId:'a'};
+ let failFirst,finishSecond;
+ const first=new Promise((resolve,reject)=>{failFirst=reject;}),second=new Promise(resolve=>{finishSecond=resolve;});
+ api.setCall(async(op,params)=>params.id==='b'?first:second);api.setLoad(async()=>{});
+ const one=listeners.get('change')({target:{id:'overlay-colony',value:'b'}}),two=listeners.get('change')({target:{id:'overlay-colony',value:'c'}});
+ for(let turn=0;turn<6;turn++)await Promise.resolve();
+ failFirst(new Error('Earlier selection failed'));await one;
+ assert.equal(api.C.colonySelection.id,'c');assert.match(api.activityHtml(),/value="c" selected/);
+ finishSecond({ok:true});await two;assert.match(api.activityHtml(),/value="c" selected/);
+});
+
+test('background activity updates keep the focused selector DOM intact and apply after focus leaves the bar',async()=>{
+ const {api,window,document,nodes,listeners}=activityFixture();let replacements=0,html='';
+ const strip={set outerHTML(value){replacements++;html=value;}};nodes.set('activity-strip',strip);
+ api.C.page={};const control={closest:selector=>selector==='#activity-strip'?strip:null};document.activeElement=control;
+ window.copilotReceive({event:'update',data:{settings:{overlayEnabled:true,activity:'flight'},connection:{},commander:{},revision:4}});
+ assert.equal(replacements,0);assert.equal(api.C.activityRefreshPending,true);
+ listeners.get('focusout')({target:control});await Promise.resolve();assert.equal(replacements,0);
+ document.activeElement=null;listeners.get('focusout')({target:control});await Promise.resolve();await Promise.resolve();
+ assert.equal(replacements,1);assert.equal(api.C.activityRefreshPending,false);assert.match(html,/value="flight" selected/);assert.doesNotMatch(html,/id="overlay-colony"/);
+});
+
+test('turning the overlay off removes the activity controls even if a selector had focus',()=>{
+ const {api,document,nodes}=activityFixture();let html='unchanged';const strip={set outerHTML(value){html=value;}};nodes.set('activity-strip',strip);
+ api.C.page={};document.activeElement={closest:()=>strip};api.C.state.settings.overlayEnabled=false;
+ api.renderActivity();assert.equal(html,'');assert.equal(api.C.activityRefreshPending,false);
+});
+
+function selectorUpdate(f,revision,overlayColonies){
+ f.window.copilotReceive({event:'update',data:{revision,overlayColonies,settings:f.api.C.state.settings,commander:f.api.C.state.commander||{},connection:f.api.C.state.connection||{}}});
+}
+
+test('a live selector DTO updates the activity bar without replacing full colony construction data',()=>{
+ const f=activityFixture(),{api,nodes}=f;let html='',renders=0;
+ const full={projects:[{id:'a',name:'A',targetSystem:'System A',buildings:[{id:'construction-a',requirements:[{commodity:'steel',missing:80}]}]}],selectedProjectId:'a',activeProject:{id:'a',buildings:[{id:'construction-a'}]},catalog:[{id:'coriolis'}]};
+ api.C.page={};api.C.state.revision=10;api.C.state.colonization=full;
+ nodes.set('activity-strip',{set outerHTML(value){html=value;renders++;}});
+ const dto={projects:[{id:'a',name:'A',targetSystem:'System A',status:'building'},{id:'b',name:'Discovered B',targetSystem:'System B',status:'claimed'}],selectedProjectId:'b',activeProject:{id:'b'}};
+ selectorUpdate(f,11,dto);
+ assert.equal(renders,1);assert.match(html,/value="b" selected>Discovered B · System B/);
+ assert.equal(api.C.state.colonization,full);assert.equal(api.C.state.colonization.activeProject.id,'a');assert.equal(api.C.state.colonization.projects[0].buildings[0].requirements[0].missing,80);
+ assert.equal(api.C.overlayColoniesRevision,11);assert.equal(api.C.overlayColonies.selectedProjectId,'b');
+ dto.projects[1].name='Mutation after delivery';assert.equal(api.C.overlayColonies.projects[1].name,'Discovered B');
+ selectorUpdate(f,12,{...dto,projects:[{id:'a',name:'A',targetSystem:'System A',status:'building'},{id:'b',name:'Discovered B',targetSystem:'System B',status:'claimed'}]});
+ assert.equal(renders,1);assert.equal(api.C.overlayColoniesRevision,12);
+});
+
+test('a fresh full view wins over an older selector update and cache revisions cannot go backwards',async()=>{
+ const f=activityFixture(),{api,nodes}=f;nodes.set('activity-strip',{outerHTML:''});
+ const rows=[{id:'a',name:'A'},{id:'b',name:'B'}];api.C.state.revision=20;api.C.state.colonization={projects:rows,selectedProjectId:'b'};
+ selectorUpdate(f,19,{projects:rows,selectedProjectId:'a',activeProject:{id:'a'}});
+ assert.equal(api.C.overlayColonies,undefined);assert.equal(api.colonySelectorModel().selected,'b');
+ selectorUpdate(f,21,{projects:rows,selectedProjectId:'a',activeProject:{id:'a'}});assert.equal(api.colonySelectorModel().selected,'a');
+ api.setCall(async()=>({context:{mode:'Строительство',selected:''},state:{revision:22,settings:{overlayEnabled:true,activity:'colonization'},colonization:{projects:rows,selectedProjectId:'b',activeProject:{id:'b',buildings:[{id:'full-planner-data'}]}}},page:{Rows:[],Modes:['Строительство'],Columns:[]},actions:[]}));
+ api.setRender(()=>{});await api.loadView();assert.equal(api.colonySelectorModel().selected,'b');
+ selectorUpdate(f,21,{projects:rows,selectedProjectId:'a'});assert.equal(api.colonySelectorModel().selected,'b');assert.equal(api.C.overlayColoniesRevision,21);
+ selectorUpdate(f,22,{projects:rows,selectedProjectId:'a'});assert.equal(api.colonySelectorModel().selected,'a');
+ selectorUpdate(f,20,{projects:rows,selectedProjectId:'b'});assert.equal(api.C.overlayColoniesRevision,22);assert.equal(api.colonySelectorModel().selected,'a');
+ assert.equal(api.C.state.colonization.activeProject.buildings[0].id,'full-planner-data');
+});
+
+test('malformed or unversioned live selector data does not discard a confirmed full-state selection',()=>{
+ const f=activityFixture(),{api}=f;api.C.state.revision=7;api.C.state.colonization={projects:[{id:'a',name:'A'}],selectedProjectId:'a'};
+ for(const [revision,dto]of [[undefined,{projects:[]}],['8',{projects:[]}],[8,{projects:null}],[NaN,{projects:[]}],[8,null]])selectorUpdate(f,revision,dto);
+ assert.equal(api.C.overlayColonies,undefined);assert.equal(api.colonySelectorModel().selected,'a');
+});
+
+test('a live colony update keeps the pending choice and focused selector until blur',async()=>{
+ const f=activityFixture(),{api,nodes,document,listeners}=f;let renders=0,html='',writes=0;
+ api.C.page={};api.C.state.revision=5;api.C.state.colonization={projects:[{id:'a',name:'A'},{id:'b',name:'B'}],selectedProjectId:'a'};
+ api.C.colonySelection={id:'b',pending:true,sequence:1};api.setCall(async()=>{writes++;});
+ const strip={set outerHTML(value){renders++;html=value;}};nodes.set('activity-strip',strip);const control={closest:selector=>selector==='#activity-strip'?strip:null};document.activeElement=control;
+ selectorUpdate(f,6,{projects:[{id:'c',name:'New C'},{id:'a',name:'A'},{id:'b',name:'B'}],selectedProjectId:'a',activeProject:{id:'a'}});
+ assert.equal(renders,0);assert.equal(api.C.activityRefreshPending,true);assert.equal(api.colonySelectorModel().selected,'b');assert.equal(writes,0);
+ document.activeElement=null;listeners.get('focusout')({target:control});await Promise.resolve();await Promise.resolve();
+ assert.equal(renders,1);assert.match(html,/value="b" selected/);assert.match(html,/New C/);assert.equal(writes,0);
 });

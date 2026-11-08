@@ -43,39 +43,13 @@ func TestHUDFocusPolicyRequiresActualGameExecutable(t *testing.T) {
 		}
 	}
 }
-func TestHUDGeometryShipSRVNomadFootAndMonitors(t *testing.T) {
-	view := HUDRect{X: -1920, Y: 100, Width: 1920, Height: 1080}
-	ship := HUDGeometry(view, "ship", 96, 650)
-	if ship != (HUDRect{X: -424, Y: 370, Width: 410, Height: 650}) {
-		t.Fatal(ship)
-	}
-	for _, vehicle := range []string{"srv", "Nomad", "unknown", "Scorpion"} {
-		if got := HUDGeometry(view, vehicle, 96, 650); got != ship {
-			t.Fatalf("%s=%+v ship=%+v", vehicle, got, ship)
-		}
-	}
-	foot := HUDGeometry(view, "foot", 96, 650)
-	if foot.Y != 114 || foot.X != ship.X {
-		t.Fatal(foot)
-	}
-	high := HUDGeometry(HUDRect{Width: 3840, Height: 2160}, "srv", 192, 9999)
-	if high.Y != 540 || high.Width != 820 || high.X != 2992 || high.Height != 1592 {
-		t.Fatal(high)
-	}
-	for _, size := range []HUDRect{{Width: 120, Height: 100}, {X: 3500, Y: -1000, Width: 1280, Height: 720}, {Width: 640, Height: 480}} {
-		r := HUDGeometry(size, "ship", 96, 5000)
-		if r.Width < 0 || r.Height < 0 || r.X < size.X || r.Y < size.Y || r.X+r.Width > size.X+size.Width || r.Y+r.Height > size.Y+size.Height {
-			t.Fatalf("escaped client area: view=%+v rect=%+v", size, r)
-		}
-	}
-}
-func TestHUDAllActivitiesAndShipPersonalName(t *testing.T) {
+func TestHUDAllActivitiesHaveOneCompactContextWithoutPermanentShipRow(t *testing.T) {
 	s := M{"settings": M{}, "commander": M{"system": "Sol", "ship": "Panther Clipper Mk II", "shipType": "panthermkii", "shipName": "Звёздный путь", "shipIdent": "RU-42", "cargoTons": 12, "cargoCapacity": 128}, "connection": M{}}
 	for _, a := range Activities {
 		v.Obj(s["settings"])["activity"] = a.Value
 		doc := BuildHUD(s, time.Now())
 		text := hudProse(doc)
-		if doc.Activity != a.Value || len(doc.Sections) < 2 || !strings.Contains(text, "Panther Clipper Mk II «Звёздный путь» · RU-42") || strings.Contains(text, "panthermkii") {
+		if doc.Activity != a.Value || len(doc.Sections) < 1 || len(doc.Sections[0].Lines) != 1 || doc.Sections[0].Lines[0].Text != "Sol" || strings.Contains(text, "Panther") || strings.Contains(text, "Звёздный путь") || strings.Contains(text, "panthermkii") {
 			t.Fatalf("%s: %s", a.Value, text)
 		}
 	}
@@ -85,7 +59,7 @@ func TestHUDColoniesSelectedOnlyUnknownBillsAndInactive(t *testing.T) {
 	b := M{"id": "b", "name": "Бета", "targetSystem": "Colony B", "status": "building", "nextTask": M{"text": "Доставить Бета"}, "operationalSupplies": []M{{"name": "Титан", "missing": 72, "cargoAvailable": nil}}}
 	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"activeProject": a, "projects": []M{a, b}, "aggregateSupplies": []M{{"name": "Чужой груз", "missing": 123}}}}
 	text := hudProse(BuildHUD(s, time.Now()))
-	for _, want := range []string{"Альфа", "Посетить депо Альфа", "Сметы неизвестны: 1", "Сталь: осталось 50 т · на борту 20 т"} {
+	for _, want := range []string{"Альфа", "Готово к доставке: Сталь · 20 т", "Сметы неизвестны: 1", "Сталь: осталось 50 т · на борту 20 т"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}
@@ -108,7 +82,7 @@ func TestHUDColoniesSelectedOnlyUnknownBillsAndInactive(t *testing.T) {
 		}
 	}
 	v.Obj(s["colonization"])["activeProject"] = nil
-	if text = hudProse(BuildHUD(s, time.Now())); !strings.Contains(text, "Выберите колонию") {
+	if text = hudProse(BuildHUD(s, time.Now())); strings.Contains(text, "ВЫБРАННАЯ КОЛОНИЯ") || strings.Contains(text, "Выберите колонию") {
 		t.Fatal(text)
 	}
 }
@@ -128,14 +102,14 @@ func TestHUDProspectorTradeQuoteAndNoStateMutation(t *testing.T) {
 	}
 	v.Obj(s["settings"])["activity"] = "raw"
 	text = hudProse(BuildHUD(s, now))
-	if strings.Contains(text, "РАЗВЕДКА АСТЕРОИДА") || strings.Contains(text, "ВЫБРАННЫЙ РЫНОК") {
+	if strings.Contains(text, "СКАН АСТЕРОИДА") || strings.Contains(text, "ПРОДАЖА ГРУЗА") {
 		t.Fatal(text)
 	}
 }
 func TestHUDCarrierArrivalAndUnknownFuel(t *testing.T) {
 	s := M{"settings": M{"activity": "carrier"}, "carrier": M{"owned": true, "name": "Ковчег", "callsign": "NAT-001", "fuel": M{"tankTons": nil, "reserveTons": nil}}, "carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "A"}, {"name": "B", "distanceLy": 450, "fuelUsedTons": 92, "restockTons": 50}}}, "summary": M{"remainingJumps": 3, "totalMinutes": 63}}}
 	text := hudProse(BuildHUD(s, time.Now()))
-	for _, want := range []string{"Тритий в баке: — т · В резерве: — т", "Далее: B", "Расход: 92 т", "Дозаправка: 50 т", "Осталось прыжков: 3"} {
+	for _, want := range []string{"Тритий: бак — · склад — т", "Далее: B", "Расход: 92 т", "Дозаправка: 50 т", "Осталось прыжков: 3"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}
@@ -143,7 +117,7 @@ func TestHUDCarrierArrivalAndUnknownFuel(t *testing.T) {
 }
 
 func TestHUDTradeUsesDomainMarginAndPreservesQuoteWarnings(t *testing.T) {
-	s := M{"settings": M{"activity": "trade"}, "tradePlan": M{"name": "Золото", "quantity": 40, "grossMargin": 1200000}, "trading": M{"destination": M{"station": "Market", "system": "Sol", "expired": true, "cargoChanged": true, "bulkTaxRisk": true, "quotes": []M{{"name": "Золото", "price": 100000, "demand": 20}}}}}
+	s := M{"settings": M{"activity": "trade"}, "tradePlan": M{"key": "gold", "name": "Золото", "quantity": 40, "grossMargin": 1200000}, "trading": M{"destination": M{"station": "Market", "system": "Sol", "expired": true, "cargoChanged": true, "bulkTaxRisk": true, "quotes": []M{{"name": "Золото", "price": 100000, "demand": 20}}}}}
 	text := hudProse(BuildHUD(s, time.Now()))
 	for _, want := range []string{"Плановая маржа: 1 200 000 кр.", "Котировка устарела", "Состав груза изменился", "Низкий спрос"} {
 		if !strings.Contains(text, want) {
@@ -151,7 +125,7 @@ func TestHUDTradeUsesDomainMarginAndPreservesQuoteWarnings(t *testing.T) {
 		}
 	}
 	v.Obj(s["settings"])["activity"] = "raw"
-	s["engineering"] = M{"items": []M{{"moduleName": "FSD"}}, "shopping": M{"knownCategories": M{"raw": false}}}
+	s["engineering"] = M{"items": []M{{"moduleName": "FSD"}}, "materials": []M{{"key": "polonium", "name": "Полоний", "category": "raw", "needed": 10, "owned": nil, "missing": nil}}, "shopping": M{"knownCategories": M{"raw": false}}}
 	text = hudProse(BuildHUD(s, time.Now()))
 	if !strings.Contains(text, "Запасы сырья ещё неизвестны") || strings.Contains(text, "нет дефицита") {
 		t.Fatal(text)

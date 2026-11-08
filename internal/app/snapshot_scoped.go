@@ -111,6 +111,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		state["engineering"] = eng
 	}
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
+	ctx["engineering"] = eng
 	wantCarrier := oneOf(tab, "overview", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)

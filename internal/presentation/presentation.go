@@ -405,7 +405,9 @@ func Build(tab, mode, query string, s M) Page {
 					missing += v.Num(item["missing"])
 				}
 				remaining := "Неизвестно"
-				if len(v.Rows(r["requirements"])) > 0 {
+				if r["status"] == "complete" {
+					remaining = "0"
+				} else if len(v.Rows(r["requirements"])) > 0 {
 					remaining = Number(missing)
 				}
 				p.Rows = append(p.Rows, row(r, []string{Number(i + 1), v.Str(r["name"]), v.Str(r["body"]), Number(r["tier"]), Label(r["status"]), remaining}, buildDetails(r, project)))

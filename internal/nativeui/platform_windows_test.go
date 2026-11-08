@@ -112,10 +112,18 @@ func TestNativeHiddenHUDStylesFocusAndGDIRendering(t *testing.T) {
 	}
 	defer h.close()
 	u.hud = h
-	style := uint32(win.GetWindowLong(h.hwnd, win.GWL_EXSTYLE))
-	for _, required := range []uint32{win.WS_EX_TOOLWINDOW, win.WS_EX_NOACTIVATE, win.WS_EX_LAYERED, win.WS_EX_TRANSPARENT, win.WS_EX_TOPMOST} {
-		if style&required == 0 {
-			t.Errorf("missing extended style %#x in %#x", required, style)
+	for _, hwnd := range []win.HWND{h.hwnd, h.leftHwnd} {
+		style := uint32(win.GetWindowLong(hwnd, win.GWL_EXSTYLE))
+		for _, required := range []uint32{win.WS_EX_TOOLWINDOW, win.WS_EX_NOACTIVATE, win.WS_EX_LAYERED, win.WS_EX_TRANSPARENT, win.WS_EX_TOPMOST} {
+			if style&required == 0 {
+				t.Errorf("missing extended style %#x in %#x", required, style)
+			}
+		}
+		if win.IsWindowVisible(hwnd) {
+			t.Fatal("HUD column appeared with gameRunning=false")
+		}
+		if hudWndProc(hwnd, win.WM_NCHITTEST, 0, 0) != ^uintptr(0) || hudWndProc(hwnd, win.WM_MOUSEACTIVATE, 0, 0) != 3 {
+			t.Fatal("HUD column intercepts input")
 		}
 	}
 	if h.visible || win.IsWindowVisible(h.hwnd) {
@@ -146,11 +154,102 @@ func TestNativeHiddenHUDStylesFocusAndGDIRendering(t *testing.T) {
 	}
 	h.close()
 	h.close()
-	if h.hwnd != 0 || h.hotkeyRegistered || h.foregroundHook != 0 || h.regular != 0 || h.bold != 0 {
+	if h.hwnd != 0 || h.leftHwnd != 0 || h.hotkeyRegistered || h.foregroundHook != 0 || h.regular != 0 || h.bold != 0 {
 		t.Fatal("HUD resource cleanup incomplete")
 	}
 	if _, exists := mainHUDWindows[main.Handle()]; exists {
 		t.Fatal("window subclass leaked after close")
+	}
+}
+
+func TestNativeHiddenHUDMeasuresAndRendersBothSafeColumns(t *testing.T) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	defer nativeTestControls(t)()
+	main, err := walk.NewMainWindow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer main.Dispose()
+	state := M{"settings": M{"overlayEnabled": true}, "connection": M{"gameRunning": false}}
+	h, err := newHUD(&Window{main: main, state: state, backend: &platformController{state: state}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer h.close()
+	h.setFonts(96)
+	for i := 0; i < 8; i++ {
+		h.document.Sections = append(h.document.Sections, p.HUDSection{Title: "Подтверждённая задача", Lines: []p.HUDLine{{Text: "Следующая система и станция", Role: "text"}, {Text: "Осталось доставить 125 т", Role: "warn"}, {Text: "На борту 40 т", Role: "muted"}}})
+	}
+	hdc := win.GetDC(h.hwnd)
+	heights := make([]int, len(h.document.Sections))
+	for i, section := range h.document.Sections {
+		m := h.measureSection(hdc, 330, section)
+		h.metrics = append(h.metrics, m)
+		heights[i] = m.Height
+	}
+	win.ReleaseDC(h.hwnd, hdc)
+	h.plan = p.LayoutHUDSections(p.HUDRect{X: -1920, Y: 100, Width: 1920, Height: 1080}, "ship", 96, heights)
+	h.bounds, h.leftBounds = h.plan.Bounds[0], h.plan.Bounds[1]
+	if h.bounds.Width != 330 || h.leftBounds.Width != 330 || h.plan.Hidden <= 0 || h.plan.Overflow.Height <= 0 {
+		t.Fatal("GDI measurement did not produce explicit two-column overflow", h.plan)
+	}
+	for i, hwnd := range []win.HWND{h.hwnd, h.leftHwnd} {
+		bounds := h.plan.Bounds[i]
+		win.SetWindowPos(hwnd, 0, 0, 0, int32(bounds.Width), int32(bounds.Height), win.SWP_NOZORDER|win.SWP_NOACTIVATE)
+		h.paintWindow(hwnd)
+		if win.IsWindowVisible(hwnd) {
+			t.Fatal("hidden render showed a HUD column")
+		}
+	}
+	h.visible, h.leftVisible = true, true
+	h.hide()
+	if h.visible || h.leftVisible || win.IsWindowVisible(h.hwnd) || win.IsWindowVisible(h.leftHwnd) {
+		t.Fatal("hiding did not cover both columns")
+	}
+	right, left := h.hwnd, h.leftHwnd
+	h.close()
+	if hudWindows[right] != nil || hudWindows[left] != nil {
+		t.Fatal("two-column window lookup leaked")
+	}
+}
+
+func TestNativeHUDReflowsChangedDocumentAndFontAfterNarrowClient(t *testing.T) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	defer nativeTestControls(t)()
+	main, err := walk.NewMainWindow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer main.Dispose()
+	state := M{"settings": M{"overlayEnabled": true}, "connection": M{"gameRunning": false}}
+	h, err := newHUD(&Window{main: main, state: state, backend: &platformController{state: state}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer h.close()
+	view := p.HUDRect{Width: 1920, Height: 1080}
+	h.setFonts(96)
+	h.document = p.HUDDocument{Sections: []p.HUDSection{{Title: "Исходный контекст", Lines: []p.HUDLine{{Text: "Одна строка", Role: "text"}}}}}
+	h.plan = h.arrange(view, "ship", 96, true)
+	if len(h.plan.Panels) != 1 {
+		t.Fatal(h.plan)
+	}
+	oldHeight := h.metrics[0].Height
+	h.setFonts(144)
+	h.document.Sections = append(h.document.Sections, p.HUDSection{Title: "Новая задача", Lines: []p.HUDLine{{Text: "Проверить выбранную стройку", Role: "text"}}})
+	if narrow := h.arrange(p.HUDRect{Width: 300, Height: 1080}, "ship", 144, true); len(narrow.Panels) != 0 {
+		t.Fatal(narrow)
+	}
+	// This is the same viewport as before narrowing; document/font change was
+	// consumed by the hidden refresh. The invalidated measurement must recover.
+	h.plan = h.arrange(view, "ship", 144, false)
+	if len(h.plan.Panels) != 2 || len(h.metrics) != 2 || h.metrics[0].Height <= oldHeight {
+		t.Fatal("stale layout survived narrow client", h.plan, h.metrics)
+	}
+	if win.IsWindowVisible(h.hwnd) || win.IsWindowVisible(h.leftHwnd) {
+		t.Fatal("measurement showed a HUD window")
 	}
 }
 
