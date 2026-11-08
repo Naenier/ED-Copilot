@@ -344,3 +344,42 @@ test('asynchronous desktop save errors remain visible to the user',()=>{const {w
 test('canonical view context opens a screen with matching actions in one request',async()=>{const {api}=fixture();let calls=0,renders=0;api.C.tab='overview';api.C.mode='';api.C.selected='';api.setCall(async()=>{calls++;return {context:{mode:'Планы',selected:'goal-b'},page:{Title:'Обзор',Modes:['Планы'],Rows:[{ID:'goal-a'},{ID:'goal-b'}]},actions:[{id:'goal.edit',fields:[{key:'title',default:'Вторая цель'}]}],state:{}};});api.setRender(()=>{renders++;});await api.loadView();assert.equal(calls,1);assert.equal(renders,1);assert.equal(api.C.selected,'goal-b');assert.equal(api.C.mode,'Планы');assert.equal(api.C.actions[0].fields[0].default,'Вторая цель');});
 
 test('a hidden webview never polls the backend for a quiet refresh',async()=>{const {api,document}=fixture();document.hidden=true;let calls=0;api.setCall(async()=>{calls++;return {};});await api.loadView(true);assert.equal(calls,0);});
+
+test('the real command shortcut opens the launcher with Russian physical K and Latin synthetic fallback', () => {
+  for (const keys of [
+    { key: 'л', code: 'KeyK', ctrlKey: true },
+    { key: 'Л', code: 'KeyK', ctrlKey: true, shiftKey: true },
+    { key: 'л', code: 'KeyK', metaKey: true },
+    { key: 'k', ctrlKey: true },
+    { key: 'K', code: 'Unidentified', ctrlKey: true },
+  ]) {
+    const { api, nodes, selectors, listeners, dialogs } = fixture();
+    const results = { innerHTML: '' };
+    nodes.set('command-results', results);
+    selectors.set('.dialog-body', { style: {} });
+    api.C.tabs = [{ ID: 'overview', Title: 'Обзор' }, { ID: 'sale', Title: 'Торговля' }];
+    let prevented = 0;
+    listeners.get('keydown')({ ...keys, preventDefault() { prevented++; } });
+    assert.equal(prevented, 1, JSON.stringify(keys));
+    assert.equal(dialogs.length, 1);
+    assert.equal(dialogs[0].title, 'Быстрый переход');
+    assert.match(dialogs[0].body, /id="command-query"/);
+    assert.match(results.innerHTML, /data-nav="overview"/);
+    assert.match(results.innerHTML, /data-nav="sale"/);
+  }
+});
+
+test('the command shortcut requires a modifier and ignores unrelated physical keys', () => {
+  for (const keys of [
+    { key: 'л', code: 'KeyK' },
+    { key: 'k', code: 'KeyK' },
+    { key: 'о', code: 'KeyJ', ctrlKey: true },
+    { key: 'л', ctrlKey: true },
+  ]) {
+    const { listeners, dialogs } = fixture();
+    let prevented = 0;
+    listeners.get('keydown')({ ...keys, preventDefault() { prevented++; } });
+    assert.equal(dialogs.length, 0, JSON.stringify(keys));
+    assert.equal(prevented, 0);
+  }
+});
