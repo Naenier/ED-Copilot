@@ -325,7 +325,7 @@ func (m *Manager) statusLocked() v.M {
 	if m.config.Bound != nil {
 		bound = v.M{"name": m.config.Bound.Name, "fid": m.config.Bound.FID}
 	}
-	return v.M{"enabled": m.config.Enabled, "apiKeySet": m.config.APIKey != "", "storageAvailable": m.available, "storageError": nullable(m.storageError), "commander": v.M{"name": current.Name, "fid": current.FID}, "boundCommander": bound, "identityMatches": same(current, m.config.Bound), "live": v.M{"ok": live.OK, "reason": live.Reason}, "blockedReason": reason, "sent": m.service.Sent, "failed": m.service.Failed, "lastSuccess": nullable(m.service.LastSuccess), "lastError": nullable(m.service.LastError), "retryAt": m.service.RetryAt, "queued": len(m.queue), "nextRetryAt": retry, "busy": m.busy, "lastSync": nullable(m.lastSync)}
+	return v.M{"enabled": m.config.Enabled, "apiKeySet": m.config.APIKey != "", "storageAvailable": m.available, "storageError": nullable(m.storageError), "commander": v.M{"name": current.Name, "fid": current.FID}, "boundCommander": bound, "identityMatches": same(current, m.config.Bound), "live": v.M{"ok": live.OK, "reason": live.Reason}, "blockedReason": reason, "sent": m.service.Sent, "failed": m.service.Failed, "lastSuccess": nullable(m.service.LastSuccess), "lastError": nullable(displayError(m.service.LastError, m.config.APIKey)), "retryAt": m.service.RetryAt, "queued": len(m.queue), "nextRetryAt": retry, "busy": m.busy, "lastSync": nullable(m.lastSync)}
 }
 func nullable(s string) any {
 	if s == "" {

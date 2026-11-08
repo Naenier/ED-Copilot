@@ -19,9 +19,10 @@ function fixture() {
   };
   const window = { addEventListener() {}, COPILOT_SMOKE: false };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'overview.js'), 'utf8'), {window});
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
@@ -397,4 +398,112 @@ test('the command shortcut requires a modifier and ignores unrelated physical ke
     assert.equal(dialogs.length, 0, JSON.stringify(keys));
     assert.equal(prevented, 0);
   }
+});
+
+function mountedPage(f){
+ const attributes=new Map(),page={innerHTML:'<div>Previous screen and obsolete controls</div>',setAttribute(key,value){attributes.set(key,value);},removeAttribute(key){attributes.delete(key);}};
+ f.nodes.set('page',page);
+ for(const id of ['page-toolbar','navigation','sidebar-ship','sidebar-system'])f.nodes.set(id,{innerHTML:'',textContent:''});
+ return {page,attributes};
+}
+
+test('the actual toolbar offers details only for the renderer that can display a real panel',()=>{
+ const f=fixture();mountedPage(f);const {api,nodes}=f;
+ api.C.page={Rows:[{ID:'selected',Cells:['Known row']}],Columns:['Value'],Modes:[]};
+ for(const [tab,mode,kind,details] of [
+  ['settings','','settings',true],['overview','','overview',false],['overview','Планы','overview',false],['overview','Состояние','overview',false],['overview','Корабль и груз','table',true],
+  ['encyclopedia','Корабли','reference',false],['engineering','Инженеры','reference',false],['targets','Инженеры','reference',false],['engineering','План','table',true],
+  ['learning','','learning',false],['carrier-calculator','','carrier-calculator',false],['carrier-trade','','carrier-trade',false],['deals','Поиск','deals',false],
+  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['sale','Продать','table',true],
+ ]){
+  api.C.tab=tab;api.C.mode=mode;api.renderChrome();
+  assert.equal(api.rendererKind(),kind,tab+' / '+mode);
+  assert.equal(nodes.get('page-toolbar').innerHTML.includes('data-click="inspector"'),details,tab+' / '+mode);
+ }
+ api.C.page.Rows=[];
+ for(const tab of ['sale','route','colonization']){api.C.tab=tab;api.C.mode='';api.renderChrome();assert.equal(nodes.get('page-toolbar').innerHTML.includes('data-click="inspector"'),false,'Empty '+tab+' has no details panel');}
+});
+
+test('the real details handler removes and restores the settings panel and persists both choices',async()=>{
+ const f=fixture(),{page}=mountedPage(f),{api}=f,calls=[];
+ api.C.tab='settings';api.C.inspector=true;api.C.page={Title:'Настройки',Rows:[],Columns:[],Modes:[]};
+ api.setCall(async(op,params)=>{calls.push({op,params});return {ok:true};});
+ api.renderPage();assert.match(page.innerHTML,/<aside class="inspector settings-help"/);
+ await api.handleClick('inspector',{});
+ assert.equal(api.C.inspector,false);assert.doesNotMatch(page.innerHTML,/<aside class="inspector settings-help"/);
+ await api.handleClick('inspector',{});
+ assert.equal(api.C.inspector,true);assert.match(page.innerHTML,/<aside class="inspector settings-help"/);
+ assert.deepEqual(calls.map(item=>[item.op,item.params.values.inspectorOpen]),[['desktop',false],['desktop',true]]);
+});
+
+test('navigation replaces obsolete content immediately and invalidates a reply during asynchronous menu saving',async()=>{
+ const f=fixture(),{page,attributes}=mountedPage(f),{api}=f;
+ let resolveOld,resolveNavigation;
+ const oldReply=new Promise(resolve=>{resolveOld=resolve;}),navigationSaved=new Promise(resolve=>{resolveNavigation=resolve;});
+ const response=title=>({context:{mode:'Торговля',selected:'row'},state:{responseTitle:title},page:{Title:title,Description:'',Rows:[{ID:'row',Cells:[title]}],Columns:['Название'],Modes:['Торговля']},actions:[]});
+ api.C.tab='route';api.C.mode='Маршрут';api.C.inspector=false;api.C.page={Title:'Old',Rows:[],Columns:[],Modes:[]};api.C.actions=[{id:'obsolete'}];api.C.help='Obsolete section help';
+ api.C.tabs=[{ID:'route',Title:'Маршрут флотоносца'},{ID:'statistics',Title:'Статистика'}];api.C.nav=['route'];
+ api.setCall(async(op,params)=>op==='navigation'?navigationSaved:params.tab==='route'?oldReply:response('Latest statistics response'));
+ const previousRequest=api.loadView();
+ const navigation=api.uiContext().navigate('statistics');
+ assert.equal(api.C.page,null);assert.equal(api.C.actions.length,0);assert.equal(api.C.help,'');
+ assert.match(page.innerHTML,/Открываю раздел/);assert.doesNotMatch(page.innerHTML,/Previous screen|obsolete controls/);
+ assert.equal(attributes.get('aria-busy'),'true');
+ resolveOld(response('Outdated route response'));await previousRequest;
+ const duringMenuSave={page:api.C.page,html:page.innerHTML};
+ resolveNavigation({ok:true});await navigation;
+ assert.equal(duringMenuSave.page,null);assert.match(duringMenuSave.html,/Открываю раздел/);assert.doesNotMatch(duringMenuSave.html,/Outdated route response/);
+ assert.equal(api.C.tab,'statistics');assert.equal(api.C.state.responseTitle,'Latest statistics response');
+ assert.match(page.innerHTML,/Latest statistics response/);assert.doesNotMatch(page.innerHTML,/Outdated route response|Открываю раздел/);
+ assert.equal(attributes.has('aria-busy'),false);
+});
+
+test('failed navigation shows a recoverable error instead of the obsolete page or endless loading',async()=>{
+ const f=fixture(),{page,attributes}=mountedPage(f),{api}=f;
+ api.C.tab='statistics';api.beginNavigation();
+ api.setCall(async()=>{throw new Error('<Temporary failure>');});
+ await api.loadView();
+ assert.match(page.innerHTML,/Не удалось открыть раздел/);assert.match(page.innerHTML,/&lt;Temporary failure&gt;/);
+ assert.match(page.innerHTML,/data-click="reload-page"/);assert.doesNotMatch(page.innerHTML,/Previous screen|Открываю раздел/);
+ assert.equal(attributes.has('aria-busy'),false);
+});
+
+function disclosure(kind,open,owner=''){
+ return {className:kind,open,closest(selector){return selector==='[data-deals-route]'&&owner?{dataset:{dealsRoute:owner}}:null;}};
+}
+
+test('quiet refresh preserves both opened and deliberately closed disclosures after replacing their DOM nodes',async()=>{
+ const {api,selectors}=fixture();
+ api.C.tab='deals';api.C.mode='Поиск';
+ const before=[disclosure('panel deals-active-plan',true),disclosure('panel deals-search',false),disclosure('deals-more',true),disclosure('rw-warnings',false)];
+ const defaults=[disclosure('panel deals-active-plan',false),disclosure('panel deals-search',true),disclosure('deals-more',false),disclosure('rw-warnings',true)];
+ selectors.set('#page details',before);
+ api.setCall(async()=>({context:{mode:'Поиск',selected:''},page:{Rows:[],Modes:[],Columns:[]},state:{revision:2},actions:[]}));
+ api.setRender(()=>selectors.set('#page details',defaults));
+ await api.loadView(true);
+ assert.deepEqual(defaults.map(node=>node.open),[true,false,true,false]);
+ assert.notEqual(selectors.get('#page details')[0],before[0]);
+ assert.deepEqual(before.map(node=>node.open),[true,false,true,false]);
+});
+
+test('quiet disclosure restore cannot alias a different route owner, changed section or shifted index',async()=>{
+ const {api,selectors}=fixture();api.C.tab='deals';api.C.mode='Поиск';
+ const before=[disclosure('same-class',true,'route-a'),disclosure('same-class',false,'route-b'),disclosure('rw-warnings',true),disclosure('calc-assumptions',false),disclosure('same-class',true,'unchanged-route')];
+ const after=[disclosure('same-class',false,'route-b'),disclosure('same-class',true,'route-a'),disclosure('colony-data-warnings',false),disclosure('new-section',true),disclosure('same-class',false,'unchanged-route'),disclosure('calc-assumptions',true)];
+ selectors.set('#page details',before);
+ api.setCall(async()=>({context:{mode:'Поиск',selected:''},page:{Rows:[],Modes:[],Columns:[]},state:{revision:3},actions:[]}));
+ api.setRender(()=>selectors.set('#page details',after));
+ await api.loadView(true);
+ assert.deepEqual(after.map(node=>node.open),[false,true,false,true,true,true]);
+});
+
+test('an explicit refresh uses fresh disclosure defaults instead of restoring a prior open state',async()=>{
+ const {api,selectors}=fixture();api.C.tab='deals';api.C.mode='Поиск';
+ const before=[disclosure('panel deals-active-plan',true),disclosure('panel deals-search',false),disclosure('deals-more',true)];
+ const defaults=[disclosure('panel deals-active-plan',false),disclosure('panel deals-search',true),disclosure('deals-more',false)];
+ selectors.set('#page details',before);
+ api.setCall(async()=>({context:{mode:'Поиск',selected:''},page:{Rows:[],Modes:[],Columns:[]},state:{revision:4},actions:[]}));
+ api.setRender(()=>selectors.set('#page details',defaults));
+ await api.loadView(false);
+ assert.deepEqual(defaults.map(node=>node.open),[false,true,false]);
 });

@@ -32,7 +32,7 @@ import (
 
 type M = v.M
 
-const Version = "2.2.0"
+const Version = "2.3.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -125,7 +125,7 @@ func New(o Options) (*Engine, error) {
 	x.Colonies = colonization.New(v.Obj(saved["colonization"]))
 	x.Engineering = engineering.New(v.Obj(saved["engineering"]))
 	x.Pilot = pilot.New()
-	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"]})
+	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
 	x.Calculator = carrier.NewCalculator(v.Obj(saved["carrierCalculator"]))
 	x.CarrierTrade = carrier.NewTradePlanner(v.Obj(saved["carrierTrade"]))
@@ -372,7 +372,7 @@ func (e *Engine) Snapshot() M {
 	}
 	manual, prices := v.Copy(e.manualPrices), v.Copy(e.prices)
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
-	running := e.gameRunning
+	running, statsSince := e.gameRunning, e.statsSince
 	revision := e.revision
 	notices := v.Clone(e.notices)
 	cmd["locationUpdatedAt"] = e.locationAt
@@ -425,7 +425,7 @@ func (e *Engine) Snapshot() M {
 	}
 	annotate(resources)
 	annotate(goods)
-	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game}
+	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	c := e.Carrier.Snapshot(ctx)
 	ctx["carrier"] = c
 	ms := e.Mining.Snapshot(ctx)
@@ -435,7 +435,7 @@ func (e *Engine) Snapshot() M {
 		connection = e.Reader.State()
 	}
 	connection["gameRunning"] = running
-	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
+	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "savedTradeRoutes": e.Trading.SavedRoutesSnapshot(), "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(c)
 	state["learning"] = e.Learning.Snapshot()

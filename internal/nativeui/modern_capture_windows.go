@@ -47,6 +47,7 @@ var modernPreviewNames = map[string]bool{
 	"overview": true, "academy": true, "reader": true, "calculator": true,
 	"calculator-squadron": true, "colonization": true, "settings": true, "overview-900": true,
 	"construction": true, "form": true,
+	"readme-deals": true, "settings-details": true, "route-details": true,
 	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
 }
 

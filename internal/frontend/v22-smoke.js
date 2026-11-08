@@ -11,6 +11,8 @@ async function run(C,u){
  try{
   const windowState=await u.call('window',{action:'status'});check('Скриншоты README: окно развёрнуто на весь экран',windowState.displayMode==='fullscreen');
   await u.navigate('overview');await capture('readme-overview');
+  await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
+  await u.navigate('overview');
   check('Баланс командира без имени Status.json',!u.$('#page').textContent.includes('Status.json'));
   C.mode='Состояние';await u.loadView();check('Состояние командира оформлено карточками',!!u.$('.ov-facts')&&!u.$('#page table'));
   await u.navigate('carrier-trade');check('Демонстрационный рейс содержит рассчитанную прибыль',C.state.carrierTrade?.summary?.profit!=null&&Number.isFinite(Number(C.state.carrierTrade.summary.profit)));await capture('readme-carrier-trade');
@@ -24,6 +26,16 @@ async function run(C,u){
   await u.navigate('colonization',{mode:'Строительство'});await capture('readme-colonization');
   await u.navigate('learning');await capture('readme-academy');
   await u.navigate('route');check('Настройка автоматического копирования следующей системы',!!u.$('#route-auto-copy'));
+  const route=C.state.carrierRoute||{};
+  check('Скриншот маршрута содержит нормализованный расчёт',!route.running&&!route.error&&(route.route?.stops||[]).length>1&&Number(route.summary?.fuelTons)>0&&Number(route.summary?.totalMinutes)>0);
+  check('Скриншот маршрута показывает следующий прыжок и сводку',!!u.$('.route-workspace .rw-next h2')&&!!u.$('.rw-metrics'));
+  await capture('route-details');
+  await u.navigate('settings');const inspector=C.inspector;
+  try{
+   if(!C.inspector)await u.handleClick('inspector',u.$('#page-toolbar [data-click="inspector"]'));
+   check('Скриншот настроек содержит рабочую панель подробностей',!!u.$('.settings-help'));
+   await capture('settings-details');
+  }finally{if(C.inspector!==inspector)await u.handleClick('inspector',u.$('.settings-help [data-click="inspector"]'));}
  }finally{await u.call('window',{action:'windowed'});}
  return checks;
 }

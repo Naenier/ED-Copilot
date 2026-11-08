@@ -222,8 +222,8 @@ func TestSelectedMarketAgeDistanceAndCargoProjection(t *testing.T) {
 		t.Fatal("changed cargo not shown", second)
 	}
 	third := v.Obj(s.Snapshot(M{"commander": cmd, "marketOptions": M{"carrierMaxAgeHours": 8}, "now": v.ISO(now)})["destination"])
-	if v.Bool(third["expired"]) {
-		t.Fatal("selected freshness threshold ignored", third)
+	if !v.Bool(third["expired"]) {
+		t.Fatal("another search changed the saved destination freshness threshold", third)
 	}
 	for _, date := range []any{nil, "invalid", v.ISO(now.Add(time.Hour))} {
 		if !v.Bool(QuoteState(M{"updatedAt": date}, M{}, now)["expired"]) {

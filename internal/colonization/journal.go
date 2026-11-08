@@ -40,7 +40,7 @@ func (p *Planner) Apply(event, context M) {
 	if typ == "Docked" || typ == "Location" {
 		id := marketID(event["MarketID"])
 		if id != "" && station != "" {
-			p.stations[id] = M{"marketId": id, "name": station, "system": system, "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "services": stringsOf(event["StationServices"]), "timestamp": timestamp}
+			p.stations[id] = M{"marketId": id, "name": station, "system": system, "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "type": text(event["StationType"], 200), "services": stringsOf(event["StationServices"]), "hasColonisationContact": colonisationContact(event, event["StationServices"]), "timestamp": timestamp}
 		}
 		return
 	}

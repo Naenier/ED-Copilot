@@ -34,7 +34,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	defer e.domainMu.Unlock()
 	e.mu.RLock()
 	cmd, settings, game := v.Copy(e.commander), v.Copy(e.settings), v.Copy(e.game)
-	running, revision := e.gameRunning, e.revision
+	running, revision, statsSince := e.gameRunning, e.revision, e.statsSince
 	cmd["locationUpdatedAt"], cmd["cargoUpdatedAt"] = e.locationAt, e.cargoAt
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	activity, hud, syncOnly := v.Text(settings["activity"], "flight"), tab == "hud", tab == "sync"
@@ -75,6 +75,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	cmd["cargo"], cmd["cargoTons"] = cargo, tons
 	state["tradeLedger"], state["tradePlan"] = ledger, ledger["plan"]
+	if tab == "deals" {
+		state["savedTradeRoutes"] = e.Trading.SavedRoutesSnapshot()
+	}
 	resources, goods := trading.Resources(), v.Rows(ledger["goods"])
 	for _, rows := range [][]M{resources, goods} {
 		for _, row := range rows {
@@ -107,7 +110,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	if fullEngineering {
 		state["engineering"] = eng
 	}
-	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game}
+	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	wantCarrier := oneOf(tab, "overview", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)

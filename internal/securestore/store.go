@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -41,45 +42,79 @@ func (s *Store) Decrypt(blob []byte) ([]byte, error) {
 		if len(blob) < 3+12+16 {
 			return nil, errors.New("Повреждён защищённый файл.")
 		}
-		raw, err := os.ReadFile(filepath.Join(s.DataDir, "Local State"))
-		if err != nil {
-			return nil, errors.New("Не найден ключ прежнего профиля Windows.")
-		}
-		if len(raw) > 4*1024*1024 {
-			return nil, errors.New("Некорректный профиль Windows.")
-		}
-		var state struct {
-			Crypt struct {
-				Key string `json:"encrypted_key"`
-			} `json:"os_crypt"`
-		}
-		if json.Unmarshal(raw, &state) != nil {
-			return nil, errors.New("Некорректный профиль Windows.")
-		}
-		protected, err := base64.StdEncoding.DecodeString(state.Crypt.Key)
-		if err != nil || !bytes.HasPrefix(protected, []byte("DPAPI")) {
-			return nil, errors.New("Неподдерживаемый ключ прежнего профиля Windows.")
-		}
-		key, err := unprotect(protected[5:])
-		if err != nil {
-			return nil, err
-		}
-		defer clear(key)
-		block, err := aes.NewCipher(key)
-		if err != nil {
-			return nil, errors.New("Некорректный ключ прежнего профиля Windows.")
-		}
-		gcm, err := cipher.NewGCM(block)
-		if err != nil {
-			return nil, err
-		}
-		plain, err := gcm.Open(nil, blob[3:15], blob[15:], nil)
-		if err != nil {
-			return nil, errors.New("Не удалось открыть данные прежнего профиля Windows.")
-		}
-		return plain, nil
+		return s.decryptLegacy(blob)
 	}
 	return unprotect(blob)
+}
+
+func (s *Store) decryptLegacy(blob []byte) ([]byte, error) {
+	// The Electron application stored its userData below profile/electron.
+	// Older layouts used the profile root. OpenRoot confines both fixed paths
+	// to this profile, including when a directory or file is a symlink.
+	root, err := os.OpenRoot(s.DataDir)
+	if err != nil {
+		return nil, errors.New("Не найден ключ прежнего профиля Windows.")
+	}
+	defer root.Close()
+	lastError := errors.New("Не найден ключ прежнего профиля Windows.")
+	for _, name := range []string{filepath.Join("electron", "Local State"), "Local State"} {
+		file, err := root.Open(name)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			lastError = errors.New("Не удалось прочитать ключ прежнего профиля Windows.")
+			continue
+		}
+		raw, readErr := io.ReadAll(io.LimitReader(file, 4*1024*1024+1))
+		file.Close()
+		if readErr != nil || len(raw) > 4*1024*1024 {
+			clear(raw)
+			lastError = errors.New("Некорректный профиль Windows.")
+			continue
+		}
+		plain, openErr := openLegacyWithState(blob, raw)
+		clear(raw)
+		if openErr == nil {
+			return plain, nil
+		}
+		lastError = openErr
+	}
+	return nil, lastError
+}
+
+func openLegacyWithState(blob, raw []byte) ([]byte, error) {
+	var state struct {
+		Crypt struct {
+			Key string `json:"encrypted_key"`
+		} `json:"os_crypt"`
+	}
+	if json.Unmarshal(raw, &state) != nil {
+		return nil, errors.New("Некорректный профиль Windows.")
+	}
+	protected, err := base64.StdEncoding.DecodeString(state.Crypt.Key)
+	if err != nil || !bytes.HasPrefix(protected, []byte("DPAPI")) {
+		return nil, errors.New("Неподдерживаемый ключ прежнего профиля Windows.")
+	}
+	defer clear(protected)
+	key, err := unprotect(protected[5:])
+	if err != nil {
+		return nil, err
+	}
+	defer clear(key)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, errors.New("Некорректный ключ прежнего профиля Windows.")
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	plain, err := gcm.Open(nil, blob[3:15], blob[15:], nil)
+	if err != nil {
+		return nil, errors.New("Не удалось открыть данные прежнего профиля Windows.")
+	}
+	return plain, nil
 }
 func AtomicWrite(file string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {

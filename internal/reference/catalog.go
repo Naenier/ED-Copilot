@@ -237,6 +237,10 @@ func cloneEntry(in Entry) Entry {
 		for j, row := range section.Rows {
 			out.Sections[i].Rows[j] = append([]string{}, row...)
 		}
+		out.Sections[i].CellLinks = make([][]string, len(section.CellLinks))
+		for j, row := range section.CellLinks {
+			out.Sections[i].CellLinks[j] = append([]string{}, row...)
+		}
 		out.Sections[i].Grades = append([]Grade{}, section.Grades...)
 		for j, grade := range section.Grades {
 			out.Sections[i].Grades[j].Materials = append([]Ingredient{}, grade.Materials...)

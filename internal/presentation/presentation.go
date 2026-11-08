@@ -330,26 +330,7 @@ func Build(tab, mode, query string, s M) Page {
 			p.Rows = append(p.Rows, row(r, []string{v.Str(r["station"]), v.Str(r["system"]), pad, Number(r["distanceLy"]), Number(q["price"]), Number(q[availableKey]), observed}, marketDetails(r)))
 		}
 	case "deals":
-		p.Description = "Прибыльные перевозки с учётом спроса, запаса, грузоподъёмности и возраста котировки."
-		p.Columns = []string{"Откуда", "Куда", "Товар", "Груз, т", "Маржа, кр.", "На тонну, кр."}
-		for _, r := range rowsByPath(s, "tradeRoutes.results") {
-			legs := v.Rows(r["legs"])
-			if len(legs) == 0 {
-				legs = []M{r}
-			}
-			from, to, goods, tons, margins := []string{}, []string{}, []string{}, []string{}, []string{}
-			details := ""
-			for i, leg := range legs {
-				a := v.Text(leg["sourceStation"], v.At(leg, "source", "station"), v.At(leg, "buy", "station"))
-				b := v.Text(leg["destinationStation"], v.At(leg, "destination", "station"), v.At(leg, "sell", "station"))
-				from, to = append(from, a), append(to, b)
-				goods = append(goods, v.Text(leg["name"], leg["commodityName"]))
-				tons = append(tons, Number(v.First(leg["quantity"], leg["tons"])))
-				margins = append(margins, Number(v.First(leg["profitPerTonne"], leg["profitPerTon"], leg["marginPerTon"])))
-				details += fmt.Sprintf("Рейс %d: %s → %s\r\n", i+1, a, b) + fields(leg, "name", "Товар", "quantity", "Груз, т", "buyPrice", "Покупка, кр./т", "sellPrice", "Продажа, кр./т", "supply", "Запас, т", "demand", "Спрос, т", "distanceLy", "Дальность, св. л.", "netEstimate", "Оценка прибыли, кр.") + "\r\n\r\n"
-			}
-			p.Rows = append(p.Rows, row(r, []string{strings.Join(from, " / "), strings.Join(to, " / "), strings.Join(goods, " / "), strings.Join(tons, " / "), Number(v.First(r["grossMargin"], r["profit"])), strings.Join(margins, " / ")}, details))
-		}
+		return DealsPage(mode, query, s)
 	case "carrier":
 		p.Description = "Личный флотоносец: состояние, склад, приказы и журнал операций."
 		p.Modes = []string{"Состояние", "Склад", "Торговые приказы", "История", "Финансы", "Службы"}
@@ -451,11 +432,11 @@ func Build(tab, mode, query string, s M) Page {
 				}
 			}
 		default:
-			p.Columns = []string{"Система", "Дальность, св. л.", "Проверка", "Наблюдение"}
+			p.Columns = []string{"Система", "От исходной, св. л.", "Проверка", "Население", "Разрешение", "Уже заселена", "Идёт колонизация", "Станций", "Наблюдение"}
 			search := v.Obj(c["search"])
 			p.Summary = v.Text(search["error"], v.At(search, "completeness", "reason"), p.Summary)
 			for _, r := range v.Rows(search["results"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["system"], r["name"]), Number(r["distanceLy"]), Label(r["availability"]), Date(v.First(r["updatedAt"], r["checkedAt"]))}, joinStrings(r["reasons"])+"\r\nДоступность заявки окончательно подтверждается в игре."))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["system"], r["name"]), Number(r["distanceLy"]), Label(r["availability"]), Number(r["population"]), Format(r["permit"]), Format(r["isColonised"]), Format(r["isBeingColonised"]), Number(r["permanentStationCount"]), Date(v.First(r["updatedAt"], r["checkedAt"]))}, joinStrings(r["reasons"])+"\r\nДоступность заявки окончательно подтверждается в игре."))
 			}
 		}
 	case "engineering":

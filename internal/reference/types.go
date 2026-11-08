@@ -30,8 +30,9 @@ type Image struct {
 }
 
 type Property struct {
-	Label string `json:"label"`
-	Value string `json:"value"`
+	Label   string `json:"label"`
+	Value   string `json:"value"`
+	EntryID string `json:"entryId,omitempty"`
 }
 
 type Badge struct {
@@ -79,6 +80,7 @@ type Section struct {
 	Items      []Item     `json:"items,omitempty"`
 	Columns    []string   `json:"columns,omitempty"`
 	Rows       [][]string `json:"rows,omitempty"`
+	CellLinks  [][]string `json:"cellLinks,omitempty"`
 	Grades     []Grade    `json:"grades,omitempty"`
 }
 
@@ -87,6 +89,7 @@ type Action struct {
 	Label        string `json:"label"`
 	Mode         string `json:"mode,omitempty"`
 	CommodityKey string `json:"commodityKey,omitempty"`
+	System       string `json:"system,omitempty"`
 }
 
 type Entry struct {

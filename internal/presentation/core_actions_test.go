@@ -140,6 +140,7 @@ func TestCoreActionsEveryTabAndVisibleMode(t *testing.T) {
 
 func TestTradingNativeInputsAndSelectedQuoteDirections(t *testing.T) {
 	s := coreState()
+	s["pilot"] = M{"credits": 100000}
 	s["tradePlan"] = M{"key": "gold", "buyPrice": 100, "sellPrice": 200, "source": "Old source", "destination": "Old destination"}
 	selected := M{"id": "market:99", "system": "New system", "station": "New market", "quotes": []M{{"key": "gold", "quantity": 10, "price": 150}}}
 	for _, mode := range []string{"Продать", "Купить"} {

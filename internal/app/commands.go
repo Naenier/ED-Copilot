@@ -411,6 +411,25 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err := e.Route.SelectStop(v.Int(body["index"])); err != nil {
 			return nil, err
 		}
+	case "/api/trading/saved-routes":
+		e.domainMu.Lock()
+		result, err := e.Trading.SaveRoute(body)
+		e.domainMu.Unlock()
+		if err != nil {
+			return nil, err
+		}
+		if err := e.Save(); err != nil {
+			return nil, err
+		}
+		e.Notify()
+		return result, nil
+	case "/api/trading/plan/clear":
+		e.domainMu.Lock()
+		err := e.Trading.Update(M{"action": "clear-plan"})
+		e.domainMu.Unlock()
+		if err != nil {
+			return nil, err
+		}
 	case "/api/trading/plan", "/api/trading/destination":
 		action := "plan"
 		if strings.HasSuffix(path, "destination") {

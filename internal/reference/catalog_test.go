@@ -315,6 +315,54 @@ func TestNewShipDetailsAndModuleFamilies(t *testing.T) {
 	}
 }
 
+func TestEngineerCapabilityCellLinksAlignAndRemainIndependent(t *testing.T) {
+	s := Catalog()
+	for _, summary := range s.List(Query{Category: "engineers", Limit: 48}).Entries {
+		entry, _ := s.Entry(summary.ID)
+		if !strings.HasPrefix(summary.ID, "engineer/3") {
+			continue
+		}
+		for _, section := range entry.Sections {
+			if section.ID != "modifications" {
+				continue
+			}
+			if len(section.Rows) == 0 || len(section.CellLinks) != len(section.Rows) {
+				t.Fatalf("links lost for %s", entry.ID)
+			}
+			for index, row := range section.Rows {
+				links := section.CellLinks[index]
+				if len(links) != len(row) || len(links) != 3 {
+					t.Fatal("cell link alignment", entry.ID, index)
+				}
+				for column, category := range []string{"modules", "blueprints"} {
+					target, found := s.Entry(links[column])
+					if !found || target.Category != category {
+						t.Fatalf("invalid capability link %s", links[column])
+					}
+				}
+				if links[2] != "" {
+					t.Fatal("grade must not link to an unrelated page")
+				}
+			}
+		}
+		if entry.Actions[0].Type != "copy-system" || entry.Actions[0].System != entry.Properties[0].Value || entry.Properties[0].EntryID == "" {
+			t.Fatal("engineer lost system navigation/copy", entry.ID)
+		}
+	}
+	first, _ := s.Entry("engineer/300100")
+	again, _ := s.Entry(first.ID)
+	first.Sections[1].CellLinks[0][0] = "tampered"
+	unchanged, _ := s.Entry(first.ID)
+	if !reflect.DeepEqual(again, unchanged) {
+		t.Fatal("cell link DTO aliases catalogue")
+	}
+	system, _ := s.Entry("system/deciat")
+	destinations := system.Sections[0]
+	if len(destinations.CellLinks) != len(destinations.Rows) || destinations.CellLinks[0][1] != "engineer/300100" {
+		t.Fatal("system workshop engineer link lost")
+	}
+}
+
 func BenchmarkListShips(b *testing.B) {
 	s := Catalog()
 	s.List(Query{Category: "ships"})

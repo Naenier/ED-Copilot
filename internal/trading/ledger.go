@@ -131,10 +131,14 @@ type Service struct {
 	Recent, Transactions []M
 	Daily                map[string]M
 	Plan, Destination    M
+	SavedRoutes          []M
 }
 
 func New(saved M) *Service {
-	s := &Service{Plan: v.Copy(v.Obj(saved["tradePlan"])), Destination: v.Copy(v.Obj(saved["tradingDestination"]))}
+	s := &Service{Plan: v.Copy(v.Obj(saved["tradePlan"])), Destination: v.Copy(v.Obj(saved["tradingDestination"])), SavedRoutes: v.Rows(v.Clone(saved["savedTradeRoutes"]))}
+	if len(s.SavedRoutes) > 40 {
+		s.SavedRoutes = s.SavedRoutes[:40]
+	}
 	s.Reset()
 	return s
 }
@@ -470,7 +474,11 @@ func (s *Service) Snapshot(context M) M {
 		if now.IsZero() {
 			now = time.Now()
 		}
-		projected := QuoteState(s.Destination, v.Obj(context["marketOptions"]), now)
+		options := v.Obj(s.Destination["quoteOptions"])
+		if len(options) == 0 {
+			options = v.Obj(context["marketOptions"])
+		}
+		projected := QuoteState(s.Destination, options, now)
 		if d := Distance(cmd["coordinates"], projected["coordinates"]); !math.IsNaN(d) {
 			projected["distanceLy"] = d
 		}
@@ -497,5 +505,5 @@ func (s *Service) cargoManifest(vessel string) string {
 	return strings.Join(parts, "|")
 }
 func (s *Service) ExportSettings() M {
-	return M{"tradePlan": v.Copy(s.Plan), "tradingDestination": v.Copy(s.Destination)}
+	return M{"tradePlan": v.Copy(s.Plan), "tradingDestination": v.Copy(s.Destination), "savedTradeRoutes": v.Clone(s.SavedRoutes)}
 }

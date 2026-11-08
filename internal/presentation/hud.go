@@ -340,6 +340,7 @@ func hudDestination(doc *HUDDocument, s M, now time.Time) {
 		return
 	}
 	rows := []HUDLine{{v.Text(d["station"], "Станция неизвестна"), "text"}, {v.Text(d["system"], "Система неизвестна") + " · " + Number(d["distanceLy"]) + " св. л.", "muted"}}
+	buying := d["selectionMode"] == "buy"
 	quotes := v.Rows(d["quotes"])
 	if len(quotes) == 0 && d["price"] != nil {
 		quotes = []M{d}
@@ -348,13 +349,17 @@ func hudDestination(doc *HUDDocument, s M, now time.Time) {
 		if i == 2 {
 			break
 		}
-		rows = append(rows, HUDLine{v.Text(q["name"], hudGood(s, v.Str(q["key"]))) + ": " + Number(q["price"]) + " кр./т · спрос " + Number(q["demand"]) + " т", "text"})
+		availability, amount := "спрос", q["demand"]
+		if buying {
+			availability, amount = "запас", q["supply"]
+		}
+		rows = append(rows, HUDLine{v.Text(q["name"], hudGood(s, v.Str(q["key"]))) + ": " + Number(q["price"]) + " кр./т · " + availability + " " + Number(amount) + " т", "text"})
 	}
 	if at := v.First(d["updatedAt"], d["timestamp"]); at != nil {
 		rows = append(rows, HUDLine{"Котировка: " + Age(at, now), "muted"})
 	}
 	if v.Bool(d["expired"]) {
-		rows = append(rows, HUDLine{"Котировка устарела или её время неизвестно. Обновите поиск перед продажей.", "warn"})
+		rows = append(rows, HUDLine{"Котировка устарела или её время неизвестно. Обновите поиск перед сделкой.", "warn"})
 	}
 	if v.Bool(d["cargoChanged"]) {
 		rows = append(rows, HUDLine{"Состав груза изменился после выбора рынка. Повторите поиск.", "warn"})
@@ -362,5 +367,9 @@ func hudDestination(doc *HUDDocument, s M, now time.Time) {
 	if v.Bool(d["bulkTaxRisk"]) {
 		rows = append(rows, HUDLine{"Низкий спрос: фактическая цена может снизиться из-за объёма груза.", "warn"})
 	}
-	doc.Sections = append(doc.Sections, HUDSection{"ВЫБРАННЫЙ РЫНОК", rows})
+	title := "ВЫБРАННЫЙ РЫНОК"
+	if buying {
+		title = "МЕСТО ЗАКУПКИ"
+	}
+	doc.Sections = append(doc.Sections, HUDSection{title, rows})
 }

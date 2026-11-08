@@ -80,8 +80,8 @@ func presentationState(t *testing.T) M {
 		return M{"id": id, "marketId": id, "station": station, "system": "Synthetic A", "coordinates": M{"x": 0, "y": 0, "z": 0}, "distanceLy": 10, "updatedAt": at, "quotes": []M{{"key": "platinum", "name": "Платина", "price": price, "supply": 100, "demand": 1000}}}
 	}
 	buy, sell := market("1", "Порт закупки", 100), market("2", "Порт сбыта", 200)
-	deals := trading.BuildRoutes(map[string]M{"platinum": {"buy": []M{buy}, "sell": []M{sell}}}, trading.RouteOptions(M{"cargoCapacity": 100}, cmd))
-	return M{"commander": cmd, "pilot": p.Snapshot(), "mining": ms, "stats": ms["stats"], "engineering": eng.Snapshot(nil), "carrier": c.Snapshot(nil), "carrierRoute": route, "carrierTrade": carrier.NewTradePlanner(nil).Snapshot(), "colonization": colState, "tradeLedger": ls, "goods": ls["goods"], "trading": M{"results": []M{sell}}, "tradeRoutes": M{"results": deals}, "objectives": []M{{"id": "goal", "title": "Звёздный рейс", "kind": "trade", "priority": "high", "status": "active", "system": "Synthetic A", "notes": "Привезти сырьё"}}, "targets": []M{{"id": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "tier": "high", "confidence": "confirmed", "distanceLy": 5}}, "connection": M{"journalDir": "C:\\Synthetic\\Journals"}, "settings": M{"activity": "trade"}, "theme": M{"settings": M{"preset": "blue"}}, "app": M{"profileDir": "C:\\Synthetic\\Profile"}, "frontier": M{"connected": true, "summary": M{"profile": M{"commander": "Synthetic CMDR", "credits": 100000, "system": "Synthetic A", "ship": "Python Mk II", "shipName": "Звёздный странник"}}, "lastSync": at}, "integrations": M{"apiKeySet": true, "enabled": true, "queued": 1, "sent": 4, "lastSuccess": at}}
+	deals := trading.BuildRoutes(map[string]M{"platinum": {"buy": []M{buy}, "sell": []M{sell}}}, trading.RouteOptions(M{"cargoCapacity": 100, "credits": 100000}, cmd))
+	return M{"commander": cmd, "pilot": p.Snapshot(), "mining": ms, "stats": ms["stats"], "engineering": eng.Snapshot(nil), "carrier": c.Snapshot(nil), "carrierRoute": route, "carrierTrade": carrier.NewTradePlanner(nil).Snapshot(), "colonization": colState, "tradeLedger": ls, "goods": ls["goods"], "trading": M{"results": []M{sell}}, "tradeRoutes": M{"results": deals}, "savedTradeRoutes": deals, "objectives": []M{{"id": "goal", "title": "Звёздный рейс", "kind": "trade", "priority": "high", "status": "active", "system": "Synthetic A", "notes": "Привезти сырьё"}}, "targets": []M{{"id": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "tier": "high", "confidence": "confirmed", "distanceLy": 5}}, "connection": M{"journalDir": "C:\\Synthetic\\Journals"}, "settings": M{"activity": "trade"}, "theme": M{"settings": M{"preset": "blue"}}, "app": M{"profileDir": "C:\\Synthetic\\Profile"}, "frontier": M{"connected": true, "summary": M{"profile": M{"commander": "Synthetic CMDR", "credits": 100000, "system": "Synthetic A", "ship": "Python Mk II", "shipName": "Звёздный странник"}}, "lastSync": at}, "integrations": M{"apiKeySet": true, "enabled": true, "queued": 1, "sent": 4, "lastSuccess": at}}
 }
 
 func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
@@ -135,7 +135,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 func TestPresentationActualDomainContracts(t *testing.T) {
 	s := presentationState(t)
 	deals := Build("deals", "", "", s)
-	if len(deals.Rows) != 1 || !reflect.DeepEqual(deals.Rows[0].Cells, []string{"Порт закупки", "Порт сбыта", "Платина", "100", "10 000", "100"}) {
+	if len(deals.Rows) != 1 || !reflect.DeepEqual(deals.Rows[0].Cells, []string{"Synthetic A → Synthetic A", "Порт закупки → Порт сбыта", "Платина · 100 т", "10 000", "10 000", "40 000"}) || !strings.Contains(deals.Rows[0].Details, "Станция: Порт закупки") || !strings.Contains(deals.Rows[0].Details, "Спрос с запасом, т: 250") {
 		t.Fatalf("nested route legs lost: %+v", deals.Rows)
 	}
 	route := Build("route", "", "", s)

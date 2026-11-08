@@ -335,6 +335,60 @@ test('invalid commodity search stays local and active market polling stops when 
   assert.equal(f.calls.filter(call => call.op === 'reference.markets').length, count);
 });
 
+test('commodity market rows expose normalized landing pads and station distances without converting unknowns to zero', async () => {
+  const f = fixture({ autoInit: true });
+  // trading.NormalizeStation emits pad + distanceLs; distance_to_arrival belongs to its provider input.
+  const rows = [
+    { station: 'Large port', system: 'Alpha', pad: 'L', distanceLy: 12.5, distanceLs: 420 },
+    { station: 'Medium port', system: 'Beta', pad: 'M', distanceLy: 0, distanceLs: 0 },
+    { station: 'Small port', system: 'Gamma', pad: 'S', distanceLy: null, distanceLs: null },
+    { station: 'Unknown port', system: '', pad: '', distance_to_arrival: 9999 },
+  ].map(row => ({ ...row, quotes: [{ key: 'platinum', price: 250000, demand: 0 }] }));
+  f.setRPC(async op => op === 'reference.entry' ? { id: 'commodity/platinum', category: 'commodities', title: 'Платина', commodityKey: 'platinum', sections: [] } : { running: false, options: { resourceKey: 'platinum', mode: 'sell' }, results: rows });
+  await f.api.open('commodity/platinum', f.C, f.ui); await microtasks();
+  const html = f.api.render(f.C, f.ui), bodyRows = html.match(/<tbody>([\s\S]*?)<\/tbody>/)[1].match(/<tr>[\s\S]*?<\/tr>/g);
+  assert.match(html, /<th scope="col">Площадка<\/th>/);
+  assert.match(html, /<th scope="col">От звезды, св\. с\.<\/th>/);
+  assert.match(bodyRows[0], /ref-market-pad">L<\/span><\/td><td>12\.5<\/td><td>420<\/td>/);
+  assert.match(bodyRows[1], /ref-market-pad">M<\/span><\/td><td>0<\/td><td>0<\/td>/);
+  assert.match(bodyRows[2], /ref-market-pad">S<\/span><\/td><td><span class="ref-market-unknown">Неизвестно<\/span><\/td><td><span class="ref-market-unknown">Неизвестно/);
+  assert.match(bodyRows[3], /Система неизвестна/); assert.doesNotMatch(bodyRows[3], /9999|reference-market-copy-system/);
+  assert.equal((bodyRows[3].match(/Неизвестно<\/span>/g) || []).length, 3);
+  assert.match(html, /Все фильтры в торговле/);
+});
+
+test('commodity market system links open a full system page and copy uses the current matching result', async () => {
+  const f = fixture({ autoInit: true }), system = 'Synthetic Market Alpha';
+  f.setRPC(async (op, params) => op === 'reference.entry' ? params.id.startsWith('system/') ? { id: params.id, category: 'systems', title: system, sections: [] } : { id: 'commodity/platinum', category: 'commodities', title: 'Платина', commodityKey: 'platinum', sections: [] } : op === 'native' ? { ok: true } : { running: false, options: { resourceKey: 'platinum', mode: 'sell' }, results: [{ station: 'A port', system, quotes: [{ key: 'platinum', price: 1 }] }] });
+  await f.api.open('commodity/platinum', f.C, f.ui); await microtasks();
+  assert.match(f.api.render(f.C, f.ui), /data-id="system\/Synthetic%20Market%20Alpha"/);
+  assert.match(f.api.render(f.C, f.ui), /aria-label="Копировать систему Synthetic Market Alpha"/);
+  await f.api.handleClick('reference-market-copy-system', { dataset: { index: '0', system: 'Forged system' } }, f.C, f.ui);
+  assert.deepEqual(f.calls.at(-1), { op: 'native', params: { action: 'copy', text: system } });
+  f.C.reference.market.result.results[0].system = 'Updated system';
+  await f.api.handleClick('reference-market-copy-system', { dataset: { index: '0' } }, f.C, f.ui);
+  assert.equal(f.calls.at(-1).params.text, 'Updated system');
+  const copies = f.calls.filter(call => call.op === 'native').length;
+  for (const index of ['-1', '0.5', 'NaN', '', '99']) await f.api.handleClick('reference-market-copy-system', { dataset: { index } }, f.C, f.ui);
+  f.C.reference.market.result.options.resourceKey = 'gold';
+  await f.api.handleClick('reference-market-copy-system', { dataset: { index: '0' } }, f.C, f.ui);
+  assert.equal(f.calls.filter(call => call.op === 'native').length, copies);
+  await f.api.handleClick('reference-open', { dataset: { id: 'system/' + encodeURIComponent(system) } }, f.C, f.ui);
+  assert.equal(f.C.reference.entryId, 'system/' + encodeURIComponent(system));
+  assert.equal(f.C.reference.history.at(-1).id, 'commodity/platinum'); assert.equal(f.navigation.length, 0);
+});
+
+test('commodity market navigation escapes station and system labels and preserves safe attributes', async () => {
+  const f = fixture({ autoInit: true }), system = 'A" onclick="evil <system>';
+  f.setRPC(async op => op === 'reference.entry' ? { id: 'commodity/platinum', category: 'commodities', title: 'Платина', commodityKey: 'platinum', sections: [] } : { options: { resourceKey: 'platinum', mode: 'sell' }, results: [{ station: '<img src=x onerror=evil>', system, pad: '<L>', distanceLs: '420', quotes: [{ key: 'platinum', price: 1 }] }] });
+  await f.api.open('commodity/platinum', f.C, f.ui); await microtasks();
+  const html = f.api.render(f.C, f.ui);
+  assert.match(html, /&lt;img src=x onerror=evil&gt;/); assert.match(html, /&lt;system&gt;/);
+  assert.match(html, /data-id="system\/A%22%20onclick%3D%22evil%20%3Csystem%3E"/);
+  assert.doesNotMatch(html, /<img src=x|<system>|aria-label="[^"]*" onclick=/);
+  assert.doesNotMatch(html, /<td>420<\/td>|ref-market-pad/);
+});
+
 test('the all-category search is bounded and a selected group remains visible when a query has no matches', async () => {
   const f = fixture(); await f.api.init(f.C, f.ui);
   assert.match(f.api.render(f.C, f.ui), /data-id="all"/);
@@ -363,4 +417,80 @@ test('a hidden reference screen pauses local market polling until it is shown ag
   assert.equal(f.calls.length, calls); assert.equal(f.C.reference.market.needsRefresh, true);
   f.host.ownerDocument.hidden = false; await f.api.init(f.C, f.ui); await microtasks();
   assert.equal(f.calls.length, calls + 1);
+});
+
+test('a long running commodity search pauses bounded polling and can refresh status without restarting the search', async () => {
+  const f = fixture({ autoInit: true }); f.C.state.commander = { system: 'Sol' };
+  let running = true;
+  f.setRPC(async op => op === 'reference.entry' ? { id: 'commodity/platinum', category: 'commodities', title: 'Платина', commodityKey: 'platinum', sections: [] } : {
+    running, options: { resourceKey: 'platinum', mode: 'sell' }, results: [{ station: 'Частичный результат', quotes: [{ key: 'platinum', price: 250000 }] }],
+  });
+  await f.api.open('commodity/platinum', f.C, f.ui); await microtasks();
+  for (let index = 0; index < 64; index++) await f.flushTimers();
+  const market = f.C.reference.market;
+  assert.equal(market.polls, 65); assert.equal(market.searching, false); assert.equal(market.pollingPaused, true);
+  assert.equal(f.calls.filter(call => call.op === 'reference.markets').length, 65);
+  assert.equal(f.timers.size, 0);
+  let html = f.api.render(f.C, f.ui);
+  assert.match(html, /Поиск ещё идёт/); assert.match(html, /Частичный результат/);
+  assert.match(html, /data-click="reference-refresh-markets"[^>]*>Обновить статус/);
+  assert.doesNotMatch(html, /data-click="reference-refresh-markets"[^>]*disabled/);
+  f.api.init(f.C, f.ui); await f.flushTimers();
+  assert.equal(f.calls.filter(call => call.op === 'reference.markets').length, 65);
+  await f.api.handleClick('reference-refresh-markets', null, f.C, f.ui);
+  assert.equal(f.calls.filter(call => call.op === 'reference.markets').length, 66);
+  assert.equal(f.calls.filter(call => call.op === 'reference.market-search').length, 0);
+  assert.equal(f.timers.size, 0); assert.equal(market.pollingPaused, true);
+  running = false;
+  await f.api.handleClick('reference-refresh-markets', null, f.C, f.ui);
+  html = f.api.render(f.C, f.ui);
+  assert.equal(market.pollingPaused, false); assert.equal(market.searching, false);
+  assert.match(html, /data-click="reference-find-markets"[^>]*>Найти покупателей/);
+  assert.doesNotMatch(html, /Поиск ещё идёт|reference-refresh-markets/);
+});
+
+test('a failed status refresh keeps previous quotes and an enabled retry for an unfinished commodity search', async () => {
+  const f = fixture({ autoInit: true }); let fail = false;
+  f.setRPC(async op => {
+    if (op === 'reference.entry') return { id: 'commodity/platinum', category: 'commodities', title: 'Платина', commodityKey: 'platinum', sections: [] };
+    if (fail) throw new Error('Временная ошибка связи');
+    return { running: true, options: { resourceKey: 'platinum', mode: 'sell' }, results: [{ station: 'Сохранённая котировка', quotes: [{ key: 'platinum', price: 12 }] }] };
+  });
+  await f.api.open('commodity/platinum', f.C, f.ui); await microtasks();
+  fail = true; await f.flushTimers();
+  let html = f.api.render(f.C, f.ui);
+  assert.match(html, /Временная ошибка связи/); assert.match(html, /Сохранённая котировка/);
+  assert.match(html, /data-click="reference-refresh-markets"[^>]*>Обновить статус/);
+  assert.doesNotMatch(html, /data-click="reference-refresh-markets"[^>]*disabled/);
+  fail = false; await f.api.handleClick('reference-refresh-markets', null, f.C, f.ui);
+  html = f.api.render(f.C, f.ui); assert.doesNotMatch(html, /Временная ошибка связи/);
+  assert.equal(f.calls.filter(call => call.op === 'reference.market-search').length, 0);
+});
+
+test('engineer capability cell links stay aligned and open full pages through reference navigation', async () => {
+  const f = fixture();
+  const engineer = { id: 'engineer/300100', category: 'engineers', title: 'Фелисити', sections: [{ id: 'capabilities', type: 'table', columns: ['Модуль', 'Чертёж', 'Класс'], rows: [['Двигатель', 'Дальность', 'G5'], ['Щит', 'Защита', 'G2']], cellLinks: [['module/fsd', 'blueprint/increased-range', ''], ['', 'blueprint/heavy-duty', '']] }], related: [] };
+  f.setRPC(async (op, params) => ({ entry: params.id === engineer.id ? engineer : entry(params.id) }));
+  await f.api.open(engineer.id, f.C, f.ui);
+  const html = f.api.render(f.C, f.ui);
+  assert.match(html, /data-id="module\/fsd">Двигатель<svg/);
+  assert.match(html, /data-id="blueprint\/increased-range">Дальность<svg/);
+  assert.match(html, /<td>Щит<\/td>/); assert.match(html, /<td>G5<\/td>/);
+  assert.equal((html.match(/class="ref-inline-link/g) || []).length, 3);
+  await f.api.handleClick('reference-open', { dataset: { id: 'module/fsd' } }, f.C, f.ui);
+  assert.equal(f.calls.at(-1).op, 'reference.entry'); assert.equal(f.calls.at(-1).params.id, 'module/fsd');
+  assert.equal(f.C.reference.entryId, 'module/fsd'); assert.equal(f.C.reference.history.at(-1).id, engineer.id);
+  assert.equal(f.navigation.length, 0);
+});
+
+test('table cell links escape labels and attributes and tolerate missing alignment metadata', async () => {
+  const f = fixture();
+  const maliciousID = 'module/x" onclick="alert(1)';
+  f.setRPC(async () => ({ id: 'engineer/test', category: 'engineers', title: 'Тест', sections: [{ type: 'table', columns: ['Модуль', 'Значение'], rows: [['<img src=x onerror=alert(1)>', 0], ['Обычный текст', false]], cellLinks: [[maliciousID]] }] }));
+  await f.api.open('engineer/test', f.C, f.ui);
+  const html = f.api.render(f.C, f.ui);
+  assert.match(html, /data-id="module\/x&amp;quot;|data-id="module\/x&quot;/);
+  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.doesNotMatch(html, /<img src=x|data-id="module\/x" onclick=/);
+  assert.match(html, /<td>0<\/td>/); assert.match(html, /<td>Нет<\/td>/); assert.match(html, /<td>Обычный текст<\/td>/);
 });

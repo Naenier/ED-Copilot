@@ -67,10 +67,14 @@ func (s *Store) buildSystems() {
 		e.Group, e.Subtitle = "engineer-systems", "Система инженерной базы"
 		e.Description = "В системе " + name + " расположена инженерная мастерская. Доступ к системе и доступ к самому инженеру проверяются отдельно."
 		rows := [][]string{}
+		links := [][]string{}
 		for _, place := range places {
 			rows = append(rows, []string{place.base, s.records[place.engineer].entry.Title})
+			links = append(links, []string{"", place.engineer})
 		}
-		e.Sections = append([]Section{{ID: "destinations", Title: "Мастерские и точки назначения", Type: "table", Columns: []string{"База", "Инженер"}, Rows: rows}}, e.Sections...)
+		e.Properties = []Property{{Label: "Название", Value: name}}
+		e.Actions = []Action{{Type: "copy-system", Label: "Копировать систему", System: name}}
+		e.Sections = append([]Section{{ID: "destinations", Title: "Мастерские и точки назначения", Type: "table", Columns: []string{"База", "Инженер"}, Rows: rows, CellLinks: links}}, e.Sections...)
 		r := s.add(e, name)
 		for _, place := range places {
 			r.relatedIDs = append(r.relatedIDs, place.engineer)

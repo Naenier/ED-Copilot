@@ -114,7 +114,7 @@
   }
   function table(section, ui) {
     const columns = section.columns || [], rows = section.rows || [];
-    return `<div class="ref-table-wrap"><table class="ref-table"><thead><tr>${columns.map(column => `<th scope="col">${text(ui, typeof column === 'object' ? column.label || column.title : column)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${(Array.isArray(row) ? row : columns.map(column => row[column.key])).map(cell => `<td>${cell && typeof cell === 'object' && cell.entryId ? internalLink(cell, ui) : text(ui, valueText(cell, ui))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    return `<div class="ref-table-wrap"><table class="ref-table"><thead><tr>${columns.map(column => `<th scope="col">${text(ui, typeof column === 'object' ? column.label || column.title : column)}</th>`).join('')}</tr></thead><tbody>${rows.map((row, rowIndex) => `<tr>${(Array.isArray(row) ? row : columns.map(column => row[column.key])).map((cell, columnIndex) => { const linked = cell && typeof cell === 'object' && cell.entryId ? cell : section.cellLinks?.[rowIndex]?.[columnIndex] ? { entryId: section.cellLinks[rowIndex][columnIndex], title: valueText(cell, ui) } : null; return `<td>${linked ? internalLink(linked, ui) : text(ui, valueText(cell, ui))}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
   function grades(section, ui, r) {
     return `<div class="ref-grade-list">${(section.grades || []).map((grade, index) => `<details class="ref-grade" ${index === 0 ? 'open' : ''}><summary><span class="ref-grade-number">${Number(grade.grade) > 0 ? text(ui, grade.grade) : ui.icon('wrench')}</span><span><strong>${text(ui, grade.title || (Number(grade.grade) > 0 ? 'Улучшение уровня ' + grade.grade : 'Установка эффекта'))}</strong><small>${text(ui, (grade.materials || []).map(item => (item.name || item.title) + ' × ' + valueText(item.count, ui)).join(' · '))}</small></span>${ui.icon('chevron-down')}</summary><div class="ref-grade-body">${grade.effects?.length ? facts(grade.effects, ui, 'ref-grade-effects') : ''}<h3>Потребуется на одну попытку</h3><div class="ref-materials">${(grade.materials || []).map(material => {
@@ -147,13 +147,23 @@
     const raw = String(value || ''), match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
     return match ? `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]} UTC` : 'Время неизвестно';
   }
+  function marketSystem(row) { return typeof row?.system === 'string' ? row.system.trim() : ''; }
+  function marketDistance(value, ui) {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? text(ui, ui.fmt(value)) : '<span class="ref-market-unknown">Неизвестно</span>';
+  }
+  function marketRow(row, index, buying, ui) {
+    const system = marketSystem(row), pad = typeof row.pad === 'string' ? row.pad.trim().toUpperCase() : '';
+    const systemHTML = system ? `${internalLink({ id: 'system/' + encodeURIComponent(system), title: system }, ui, 'ref-market-system-link')}<button type="button" class="ref-market-copy" data-click="reference-market-copy-system" data-index="${index}" aria-label="${ui.esc('Копировать систему ' + system)}" title="Копировать систему">${ui.icon('copy')}<span>Копировать</span></button>` : '<span class="ref-market-unknown">Система неизвестна</span>';
+    return `<tr><td><strong>${text(ui, row.station || 'Рынок')}</strong><div class="ref-market-system">${systemHTML}</div></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${['S', 'M', 'L'].includes(pad) ? `<span class="ref-market-pad">${pad}</span>` : '<span class="ref-market-unknown">Неизвестно</span>'}</td><td>${marketDistance(row.distanceLy, ui)}</td><td>${marketDistance(row.distanceLs, ui)}</td><td>${row.expired ? '<span class="ref-market-stale">Устарела</span>' : ''}${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`;
+  }
   function trading(r, entry, ui) {
     const key = entry.commodityKey || entry.actions?.find(action => action.type === 'trade')?.commodityKey;
     if (!key || entry.category !== 'commodities') return '';
     const market = r.market || { key, mode: 'sell', system: '', quantity: '1', radius: '100' }, buying = market.mode === 'buy';
-    const rows = marketRows(r), running = market.searching || (currentMarket(r) && market.result?.running), status = market.error || (currentMarket(r) ? market.result?.error || market.result?.status : '');
-    const tableHTML = rows.length ? `<div class="ref-table-wrap"><table class="ref-table ref-market-table"><thead><tr><th>Станция и система</th><th>Цена, кр./т</th><th>${buying ? 'Запас, т' : 'Спрос, т'}</th><th>От вас, св. л.</th><th>Наблюдение</th></tr></thead><tbody>${rows.map(row => `<tr><td><strong>${text(ui, row.station || 'Рынок')}</strong><small>${text(ui, row.system)}</small></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${text(ui, valueText(row.distanceLy, ui))}</td><td>${row.expired ? '<span class="ref-market-stale">Устарела</span>' : ''}${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`).join('')}</tbody></table></div>` : `<div class="ref-market-empty">${ui.icon('compass')}<p>${running ? 'Ищем подходящие рынки. Справочник и остальные разделы остаются доступны.' : currentMarket(r) && market.result ? 'Подходящие предложения не найдены. Измените область поиска или откройте все фильтры.' : 'Укажите исходную систему и запросите предложения для этого товара.'}</p></div>`;
-    return `<section class="ref-entry-section ref-trade-section"><div class="ref-section-title"><div><span class="eyebrow">Перейти к делу</span><h2>Покупка и продажа</h2></div>${ui.icon('arrow-left-right')}</div><p>Сравните рынки по цене, доступному объёму и расстоянию. Дата наблюдения помогает оценить свежесть предложения.</p><div class="ref-market-modes segmented" aria-label="Операция с товаром">${[['buy', 'Купить'], ['sell', 'Продать']].map(([id, label]) => `<button type="button" data-click="reference-market-mode" data-id="${id}" class="${market.mode === id ? 'selected' : ''}" aria-pressed="${market.mode === id}">${label}</button>`).join('')}</div><div class="ref-market-controls"><label><span>Исходная система</span><input id="reference-market-system" value="${ui.esc(market.system)}" placeholder="Например, Sol" autocomplete="off"></label><label><span>Количество, т</span><input id="reference-market-quantity" value="${ui.esc(market.quantity)}" inputmode="numeric"></label><label><span>Радиус, св. л.</span><input id="reference-market-radius" value="${ui.esc(market.radius)}" inputmode="decimal"></label>${ui.btn(running ? 'Поиск…' : (buying ? 'Найти продавцов' : 'Найти покупателей'), 'reference-find-markets', 'search', 'primary', `type="button" ${running ? 'disabled' : ''}`)}</div>${status ? `<p class="ref-market-status ${market.error || (currentMarket(r) && market.result?.error) ? 'is-error' : ''}" role="status">${text(ui, status)}</p>` : ''}${tableHTML}<div class="ref-market-footer"><span>${rows.length ? text(ui, ui.fmt(rows.length) + ' предложений') : 'Цены меняются по мере торговли в игре'}</span>${ui.btn('Все фильтры в торговле', buying ? 'reference-trade-buy' : 'reference-trade-sell', 'arrow-right', 'quiet', `type="button" data-key="${ui.esc(key)}"`)}</div></section>`;
+    const remoteRunning = currentMarket(r) && !!market.result?.running, paused = !!market.pollingPaused && remoteRunning;
+    const rows = marketRows(r), running = !!market.starting || (paused && !!market.inFlightToken) || (!paused && (market.searching || remoteRunning)), status = market.error || (currentMarket(r) && market.result?.error) || (paused ? 'Поиск ещё идёт. Обновите статус, чтобы получить новые предложения.' : currentMarket(r) ? market.result?.status : '');
+    const tableHTML = rows.length ? `<div class="ref-table-wrap"><table class="ref-table ref-market-table"><thead><tr><th scope="col">Станция и система</th><th scope="col">Цена, кр./т</th><th scope="col">${buying ? 'Запас, т' : 'Спрос, т'}</th><th scope="col">Площадка</th><th scope="col">От вас, св. л.</th><th scope="col">От звезды, св. с.</th><th scope="col">Наблюдение</th></tr></thead><tbody>${rows.map((row, index) => marketRow(row, index, buying, ui)).join('')}</tbody></table></div>` : `<div class="ref-market-empty">${ui.icon('compass')}<p>${running || remoteRunning ? 'Ищем подходящие рынки. Справочник и остальные разделы остаются доступны.' : currentMarket(r) && market.result ? 'Подходящие предложения не найдены. Измените область поиска или откройте все фильтры.' : 'Укажите исходную систему и запросите предложения для этого товара.'}</p></div>`;
+    return `<section class="ref-entry-section ref-trade-section"><div class="ref-section-title"><div><span class="eyebrow">Перейти к делу</span><h2>Покупка и продажа</h2></div>${ui.icon('arrow-left-right')}</div><p>Сравните рынки по цене, доступному объёму и расстоянию. Дата наблюдения помогает оценить свежесть предложения.</p><div class="ref-market-modes segmented" aria-label="Операция с товаром">${[['buy', 'Купить'], ['sell', 'Продать']].map(([id, label]) => `<button type="button" data-click="reference-market-mode" data-id="${id}" class="${market.mode === id ? 'selected' : ''}" aria-pressed="${market.mode === id}">${label}</button>`).join('')}</div><div class="ref-market-controls"><label><span>Исходная система</span><input id="reference-market-system" value="${ui.esc(market.system)}" placeholder="Например, Sol" autocomplete="off"></label><label><span>Количество, т</span><input id="reference-market-quantity" value="${ui.esc(market.quantity)}" inputmode="numeric"></label><label><span>Радиус, св. л.</span><input id="reference-market-radius" value="${ui.esc(market.radius)}" inputmode="decimal"></label>${ui.btn(running ? (paused ? 'Обновляем…' : 'Поиск…') : paused ? 'Обновить статус' : (buying ? 'Найти продавцов' : 'Найти покупателей'), paused ? 'reference-refresh-markets' : 'reference-find-markets', paused ? 'refresh-cw' : 'search', 'primary', `type="button" ${running ? 'disabled' : ''}`)}</div>${status ? `<p class="ref-market-status ${market.error || (currentMarket(r) && market.result?.error) ? 'is-error' : ''}" role="status">${text(ui, status)}</p>` : ''}${tableHTML}<div class="ref-market-footer"><span>${rows.length ? text(ui, ui.fmt(rows.length) + ' предложений') : 'Цены меняются по мере торговли в игре'}</span>${ui.btn('Все фильтры в торговле', buying ? 'reference-trade-buy' : 'reference-trade-sell', 'arrow-right', 'quiet', `type="button" data-key="${ui.esc(key)}"`)}</div></section>`;
   }
   function entity(r, ui) {
     const actions = (r.entry?.actions || []).map((item, index) => item.type === 'copy-system' ? ui.btn(plain(item.label || 'Копировать систему'), 'reference-copy-system', 'copy', 'quiet', `type="button" data-index="${index}"`) : '').join('');
@@ -272,13 +282,25 @@
     }
     if (action === 'reference-section') { if (/^\d+$/.test(id || '')) ui.$('#reference-section-' + id)?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }); return true; }
     if (action === 'reference-market-mode') {
-      if (r.market && ['buy', 'sell'].includes(id)) { stopMarkets(r); r.market.mode = id; r.market.error = ''; r.market.searching = false; redraw(C, ui, r); await refreshMarkets(C, ui, r); }
+      if (r.market && ['buy', 'sell'].includes(id)) { stopMarkets(r); r.market.mode = id; r.market.error = ''; r.market.searching = false; r.market.pollingPaused = false; r.market.polls = 0; redraw(C, ui, r); await refreshMarkets(C, ui, r); }
       return true;
     }
     if (action === 'reference-find-markets') { await findMarkets(C, ui, r); return true; }
+    if (action === 'reference-refresh-markets') {
+      if (r.market && !r.market.inFlightToken) { r.market.error = ''; const request = refreshMarkets(C, ui, r); redraw(C, ui, r); await request; }
+      return true;
+    }
     if (action === 'reference-copy-system') {
       const item = r.entry?.actions?.[Number(button?.dataset?.index)];
       if (item?.type === 'copy-system' && typeof item.system === 'string') { await ui.call('native', { action: 'copy', text: item.system }); ui.toast('Система скопирована'); }
+      return true;
+    }
+    if (action === 'reference-market-copy-system') {
+      const index = button?.dataset?.index;
+      if (/^\d+$/.test(index || '')) {
+        const system = marketSystem(marketRows(r)[Number(index)]);
+        if (system) { await ui.call('native', { action: 'copy', text: system }); ui.toast('Система скопирована'); }
+      }
       return true;
     }
     if (action === 'reference-trade-buy' || action === 'reference-trade-sell') {
@@ -331,12 +353,15 @@
     try {
       const result = await ui.call('reference.markets', {});
       if (token !== market.token || r.entryId !== entryID) return;
-      market.inFlightToken = 0; market.result = result || {}; market.searching = currentMarket(r) && !!result?.running;
-      if (market.searching && ++market.polls < 65 && active(C) && state(C) === r) market.pollTimer = setTimeout(() => { market.pollTimer = null; refreshMarkets(C, ui, r); }, 1200);
+      market.inFlightToken = 0; market.result = result || {};
+      const ongoing = currentMarket(r) && !!result?.running;
+      market.pollingPaused = ongoing && (market.pollingPaused || ++market.polls >= 65);
+      market.searching = ongoing && !market.pollingPaused;
+      if (market.searching && active(C) && state(C) === r) market.pollTimer = setTimeout(() => { market.pollTimer = null; refreshMarkets(C, ui, r); }, 1200);
       if (active(C) && state(C) === r) redraw(C, ui, r);
     } catch (error) {
       if (token !== market.token || r.entryId !== entryID) return;
-      market.inFlightToken = 0; market.searching = false; market.error = error?.message || 'Не удалось обновить рынки.'; redraw(C, ui, r);
+      market.inFlightToken = 0; market.searching = false; market.pollingPaused = currentMarket(r) && !!market.result?.running; market.error = error?.message || 'Не удалось обновить рынки.'; redraw(C, ui, r);
     }
   }
   async function findMarkets(C, ui, r) {
@@ -350,7 +375,7 @@
     else market.error = '';
     if (market.error) { redraw(C, ui, r); return; }
     stopMarkets(r); const entryID = r.entryId, token = market.token;
-    market.searching = true; market.starting = true; market.polls = 0; redraw(C, ui, r);
+    market.searching = true; market.starting = true; market.polls = 0; market.pollingPaused = false; redraw(C, ui, r);
     try {
       await ui.call('reference.market-search', { values: { mode: market.mode, resourceKey: market.key, system, quantity, radiusLy: radius, useCargo: false, includeCarriers: true, maxAgeHours: 24, carrierMaxAgeHours: 6, maxArrivalLs: 10000, minPad: 'L', minDemand: 1, minSupply: 1, demandRatio: 4 } });
       if (r.entryId !== entryID || market.token !== token) return;

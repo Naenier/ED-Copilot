@@ -29,6 +29,10 @@ func (p *Planner) Search(ctx context.Context, input M) (M, error) {
 	}
 	origin := text(originValue, 200)
 	faction := text(factionValue, 200)
+	if placeholderFaction(faction) {
+		p.mu.Unlock()
+		return nil, errors.New("Выберите малую фракцию исходной станции, а не служебный тип флотоносца или стройплощадки.")
+	}
 	if origin == "" {
 		p.mu.Unlock()
 		return nil, errors.New("Введите систему происхождения.")
@@ -160,43 +164,49 @@ func (p *Planner) runSearch(ctx context.Context, origin, faction string, serial 
 	factions := []M{}
 	for _, r := range rows(record["minor_faction_presences"]) {
 		name := text(r["name"], 200)
-		if name != "" {
+		if name != "" && !placeholderFaction(name) {
 			influence, ok := value.Number(r["influence"])
 			factions = append(factions, M{"name": name, "influence": value.Nullable(influence, ok), "government": text(r["government"], 200), "allegiance": text(r["allegiance"], 200)})
 		}
 	}
 	stations := []M{}
 	for _, r := range rows(record["stations"]) {
-		typ := strings.ToLower(str(r["type"]))
-		if strings.Contains(typ, "carrier") || strings.Contains(typ, "megaship") {
-			continue
-		}
-		var contact any
-		for _, service := range stringsOf(r["services"]) {
-			if colonisationService(service) {
-				contact = true
-			}
-		}
+		contact := colonisationContact(r, r["services"])
 		distance, known := value.Number(r["distance_to_arrival"])
-		stations = append(stations, M{"marketId": marketID(r["market_id"]), "name": text(r["name"], 200), "system": record["name"], "type": text(r["type"], 200), "faction": factionName(r["controlling_minor_faction"]), "hasColonisationContact": contact, "distanceLs": value.Nullable(distance, known), "updatedAt": text(record["updated_at"], 200), "source": "spansh"})
+		rawFaction := firstText(value.Obj(r["controlling_minor_faction"])["name"], value.Obj(r["controlling_minor_faction"])["Name"], r["controlling_minor_faction"])
+		stations = append(stations, M{"marketId": marketID(r["market_id"]), "name": text(r["name"], 200), "system": record["name"], "type": text(r["type"], 200), "faction": factionName(r["controlling_minor_faction"]), "hasColonisationContact": contact, "distanceLs": value.Nullable(distance, known), "updatedAt": text(record["updated_at"], 200), "source": "spansh", "isCarrier": value.Bool(r["is_fleet_carrier"]) || strings.Contains(value.Key(rawFaction), "carrier") && placeholderFaction(rawFaction), "invalidClaimFaction": placeholderFaction(rawFaction)})
 	}
 	p.mu.RLock()
 	observed := []M{}
+	activeDepots := map[string]bool{}
 	for _, r := range p.stations {
 		observed = append(observed, copyM(r))
+	}
+	for id, depot := range p.depots {
+		if !value.Bool(depot["complete"]) && !value.Bool(depot["failed"]) {
+			activeDepots[id] = true
+		}
 	}
 	p.mu.RUnlock()
 	for _, r := range observed {
 		if !equal(r["system"], record["name"]) {
 			continue
 		}
-		var contact any
-		for _, s := range stringsOf(r["services"]) {
-			if colonisationService(s) {
-				contact = true
-			}
+		contact := colonisationContact(r, r["services"])
+		overlay := M{"marketId": r["marketId"], "name": r["name"], "system": r["system"], "updatedAt": r["timestamp"], "source": "journal"}
+		if name := factionName(r["faction"]); name != "" {
+			overlay["faction"] = name
 		}
-		overlay := M{"marketId": r["marketId"], "name": r["name"], "system": r["system"], "faction": r["faction"], "hasColonisationContact": contact, "updatedAt": r["timestamp"], "source": "journal"}
+		if typ := text(r["type"], 200); typ != "" {
+			overlay["type"] = typ
+		}
+		if placeholderFaction(str(r["faction"])) {
+			overlay["invalidClaimFaction"] = true
+			overlay["faction"] = ""
+		}
+		if contact != nil {
+			overlay["hasColonisationContact"] = contact
+		}
 		known := false
 		for _, station := range stations {
 			if str(station["marketId"]) != "" && str(station["marketId"]) == str(r["marketId"]) {
@@ -212,11 +222,15 @@ func (p *Planner) runSearch(ctx context.Context, origin, faction string, serial 
 	claimStations := []M{}
 	hasContact := false
 	for _, station := range stations {
-		if faction == "" || equal(station["faction"], faction) {
+		if activeDepots[str(station["marketId"])] {
+			station["constructionDepot"] = true
+		}
+		station["claimSourceEligible"] = claimSourceEligible(station)
+		if value.Bool(station["claimSourceEligible"]) && (faction == "" || equal(station["faction"], faction)) {
 			claimStations = append(claimStations, station)
 			hasContact = hasContact || value.Bool(station["hasColonisationContact"])
 		}
-		if name := str(station["faction"]); name != "" {
+		if name := factionName(station["faction"]); name != "" {
 			known := false
 			for _, f := range factions {
 				if equal(f["name"], name) {
@@ -230,7 +244,7 @@ func (p *Planner) runSearch(ctx context.Context, origin, faction string, serial 
 	}
 	warnings := []string{}
 	if faction != "" && len(claimStations) == 0 {
-		warnings = append(warnings, "У выбранной фракции не найдено станции в системе происхождения. Одного присутствия фракции в системе недостаточно.")
+		warnings = append(warnings, "У выбранной фракции не найдено подходящей исходной станции в системе происхождения. Одного присутствия фракции в системе недостаточно.")
 	}
 	if !hasContact {
 		warnings = append(warnings, "Наличие контакта колонизации не подтверждено. Проверьте службу и контролирующую фракцию станции в игре.")
@@ -240,7 +254,7 @@ func (p *Planner) runSearch(ctx context.Context, origin, faction string, serial 
 	}
 	warnings = append(warnings, "База сообщества не гарантирует отсутствие свежей заявки. Окончательную доступность показывает контакт колонизации в игре.")
 	if e = p.searchUpdate(serial, func(search M) {
-		originData := M{"name": record["name"], "id64": str(record["id64"]), "coordinates": coords, "population": natural(record["population"], 1e12), "updatedAt": text(record["updated_at"], 200), "source": "spansh"}
+		originData := M{"name": record["name"], "id64": str(record["id64"]), "coordinates": coords, "population": natural(record["population"], 1e12), "updatedAt": text(record["updated_at"], 200), "source": "spansh", "stations": stations}
 		search["origin"], search["origins"], search["factions"], search["claimStations"], search["warnings"], search["status"] = originData, []M{originData}, factions, claimStations, warnings, "searching"
 	}); e != nil {
 		return e
@@ -347,10 +361,16 @@ func (p *Planner) runSearch(ctx context.Context, origin, faction string, serial 
 	})
 }
 func factionName(v any) string {
+	name := ""
 	if m, ok := v.(M); ok {
-		return text(firstText(m["name"], m["Name"]), 200)
+		name = text(firstText(m["name"], m["Name"]), 200)
+	} else {
+		name = text(v, 200)
 	}
-	return text(v, 200)
+	if placeholderFaction(name) {
+		return ""
+	}
+	return name
 }
 func colonisationService(v any) bool {
 	return has([]string{"systemcolonisation", "systemcolonization", "colonisation", "colonization"}, value.Key(v))

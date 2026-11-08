@@ -1,0 +1,33 @@
+.settings-workspace{display:flex;align-items:flex-start;gap:20px;min-width:0}
+.settings-main{flex:1;min-width:0}
+.settings-workspace.has-help .settings-grid{grid-template-columns:1fr}
+.settings-help.inspector{display:block;position:sticky;top:0;width:310px;max-height:calc(100vh - 166px);padding:18px}
+.settings-help .inspector-title>span{display:flex;align-items:center;gap:8px}
+.settings-help .inspector-title>span>.icon{height:16px;width:16px;color:var(--muted)}
+.settings-help .settings-help-close{padding:5px;width:28px;height:28px;justify-content:center}
+.settings-help-intro{font-size:11px;line-height:1.65;color:var(--muted);margin:-3px 0 14px}
+.settings-help-topics{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:21px}
+.settings-help-topics button{display:flex;align-items:center;gap:6px;text-align:left;border:1px solid transparent;border-radius:7px;padding:8px 6px;min-width:0;font-size:10px;color:var(--muted);line-height:1.4}
+.settings-help-topics button .icon{width:13px;height:13px;flex-shrink:0}
+.settings-help-topics button:hover{background:var(--hover);color:var(--text)}
+.settings-help-topics button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);border-color:var(--line)}
+.settings-help h3{font-size:14px;line-height:1.5;margin:0 0 12px;font-weight:550}
+.settings-help [data-settings-help-content]>p{font-size:12px;line-height:1.8;color:var(--muted);margin:0 0 12px;overflow-wrap:anywhere}
+.settings-help-facts{margin:17px 0 0;border-top:1px solid var(--line);font-size:11px}
+.settings-help-facts>div{padding:10px 0;border-bottom:1px solid var(--line)}
+.settings-help-facts dt{color:var(--muted);margin-bottom:5px}
+.settings-help-facts dd{margin:0;line-height:1.6;color:var(--text);overflow-wrap:anywhere;white-space:pre-wrap}
+.settings-help-colors{display:flex;flex-direction:column;gap:10px;margin-top:17px;font-size:11px}
+.settings-help-colors>span{display:flex;align-items:center;gap:8px}
+.settings-help-colors i{width:14px;height:14px;border:1px solid #ffffff30;border-radius:4px}
+.settings-help-colors code{margin-left:auto;color:var(--muted);font-size:10px}
+.settings-help [data-settings-help-content]>.settings-help-warning{padding:10px 12px;border:1px solid var(--danger);border-radius:8px;color:var(--danger)}
+@media(min-width:1500px){.settings-workspace.has-help .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1240px){.settings-help.inspector{width:280px}}
+/* A visible inspector must remain reachable on narrow windows, where the base
+   table stylesheet used to hide it despite the persisted open flag. */
+@media(max-width:1020px){
+ .settings-workspace.has-help .settings-grid{grid-template-columns:1fr}
+ .settings-help.inspector,.data-split>.inspector{display:block;position:fixed;z-index:10;top:112px;right:18px;bottom:22px;width:min(330px,calc(100vw - 36px));max-height:none;box-shadow:0 18px 65px #0008;overflow:auto}
+ .settings-workspace.has-help .settings-main{width:100%}
+}

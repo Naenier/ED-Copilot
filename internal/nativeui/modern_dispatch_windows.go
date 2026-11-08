@@ -31,6 +31,18 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "deals-search":
+		return backend.Do("/api/trading/routes", v.Obj(input["values"]))
+	case "deals-cancel":
+		return backend.Do("/api/trading/cancel", M{})
+	case "deals-plan":
+		return backend.Do("/api/trading/plan", v.Obj(input["values"]))
+	case "deals-plan-clear":
+		return backend.Do("/api/trading/plan/clear", M{})
+	case "deals-destination":
+		return backend.Do("/api/trading/destination", v.Obj(input["values"]))
+	case "deals-saved-route":
+		return backend.Do("/api/trading/saved-routes", v.Obj(input["values"]))
 	case "carrier-trade":
 		return backend.Do("/api/carrier/trade", v.Obj(input["values"]))
 	case "carrier-trade-markets", "reference.market-search":
@@ -46,6 +58,9 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		id := v.Str(input["id"])
 		entry, found := reference.Catalog().Entry(id)
 		result := v.Obj(v.Clone(entry))
+		if found && entry.Category == "systems" {
+			result = mergeReferenceSystem(backend, result)
+		}
 		if !found && strings.HasPrefix(id, "system/") {
 			if provider, ok := backend.(interface{ ReferenceSystem(string) M }); ok {
 				name, _ := url.PathUnescape(strings.TrimPrefix(id, "system/"))
@@ -213,7 +228,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
 		out[key] = state[key]
 	}
 	return redactWebSecrets(out)

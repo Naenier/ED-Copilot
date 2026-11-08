@@ -420,7 +420,14 @@ func (s *Service) observedSnapshot(context M) M {
 	}
 	sort.Slice(daily, func(i, j int) bool { return v.Str(daily[i]["date"]) > v.Str(daily[j]["date"]) })
 	intervals := [][2]time.Time{}
+	var firstInterval time.Time
 	for _, r := range s.intervals {
+		if r[0].IsZero() || r[1].IsZero() || r[1].Before(r[0]) {
+			continue
+		}
+		if firstInterval.IsZero() || r[0].Before(firstInterval) {
+			firstInterval = r[0]
+		}
 		if r[1].After(r[0]) {
 			intervals = append(intervals, r)
 		}
@@ -444,7 +451,15 @@ func (s *Service) observedSnapshot(context M) M {
 	if elapsed >= 60 {
 		rate = v.Num(s.StatsTotal["miningRevenue"]) * 3600 / elapsed
 	}
-	out := M{"prospect": prospect, "surface": v.Copy(s.Surface), "stats": M{"since": v.First(context["statsSince"], s.FirstStatsEvent, nowISO()), "total": v.Copy(s.StatsTotal), "byResource": statsRows, "sessions": daily, "recent": v.Clone(s.Recent), "elapsedSeconds": math.Max(0, elapsed), "timeBasis": "journal-sessions", "revenuePerHour": rate}}
+	var since any
+	if !v.Time(context["statsSince"]).IsZero() {
+		since = v.Str(context["statsSince"])
+	} else if !firstInterval.IsZero() {
+		since = v.ISO(firstInterval)
+	} else if !v.Time(s.FirstStatsEvent).IsZero() {
+		since = s.FirstStatsEvent
+	}
+	out := M{"prospect": prospect, "surface": v.Copy(s.Surface), "stats": M{"since": since, "total": v.Copy(s.StatsTotal), "byResource": statsRows, "sessions": daily, "recent": v.Clone(s.Recent), "elapsedSeconds": math.Max(0, elapsed), "timeBasis": "journal-sessions", "revenuePerHour": rate}}
 	if includeTargets {
 		out["targets"] = BuildTargets(world, s.Signals, resources, v.Obj(context["commander"]), v.Obj(context["settings"]))
 	}

@@ -440,7 +440,20 @@ func (s *Service) Update(body M) error {
 		if g == nil || !qok || !bok || !sok || quantity <= 0 || quantity > 25000 || buy < 0 || sell < 0 || buy > 1e9 || sell > 1e9 {
 			return errors.New("Проверьте товар, тоннаж и цены в плане.")
 		}
+		for _, side := range []string{"buy", "sell"} {
+			if body[side] != nil {
+				market := v.Obj(body[side])
+				if v.Str(market["system"]) == "" || v.Str(market["station"]) == "" {
+					return errors.New("Проверьте систему и станцию выбранного плеча")
+				}
+			}
+		}
 		s.Plan = M{"key": g["key"], "name": g["name"], "quantity": quantity, "buyPrice": buy, "sellPrice": sell, "purchaseCost": quantity * buy, "revenue": quantity * sell, "grossMargin": quantity * (sell - buy), "source": v.Str(body["source"]), "destination": v.Str(body["destination"]), "updatedAt": v.ISO(time.Now())}
+		for _, side := range []string{"buy", "sell"} {
+			if body[side] != nil {
+				s.Plan[side] = v.Copy(v.Obj(body[side]))
+			}
+		}
 	case "destination", "set-destination":
 		if body["destination"] == nil {
 			s.Destination = M{}
@@ -454,6 +467,13 @@ func (s *Service) Update(body M) error {
 			return errors.New("Название системы или станции слишком длинное.")
 		}
 		d["selectedAt"] = v.ISO(time.Now())
+		d["selectionMode"] = v.Text(d["selectionMode"], body["mode"], "sell")
+		if d["selectionMode"] != "buy" {
+			d["selectionMode"] = "sell"
+		}
+		options := NormalizeOptions(v.Obj(d["quoteOptions"]))
+		options["mode"] = d["selectionMode"]
+		d["quoteOptions"] = options
 		vessel := v.Text(v.At(body, "commander", "vehicle"), s.ActiveVessel)
 		d["cargoManifest"] = s.cargoManifest(vessel)
 		s.Destination = d

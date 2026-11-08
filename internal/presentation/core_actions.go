@@ -120,6 +120,21 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 		}
 		fields := []Field{textField("system", "От какой системы искать", inputs["system"]), selectField("resourceKey", "Товар", inputs["resourceKey"], marketGoods), numberField("quantity", "Количество, т (если выбран товар)", inputs["quantity"], 1, 25000), boolField("useCargo", "Использовать груз текущего корабля / ТРП", inputs["useCargo"]), boolField("useCarrierCargo", "Использовать известный склад личного флотоносца", inputs["useCarrierCargo"]), numberField("radiusLy", "Радиус, св. л.", inputs["radiusLy"], 5, 5000), selectField("minPad", "Посадочная площадка", inputs["minPad"], ChoicePairs("L", "Большая", "M", "Средняя или большая", "S", "Любая корабельная", "any", "Без ограничения")), numberField("maxAgeHours", "Возраст цен станций, ч", inputs["maxAgeHours"], 1, 720), numberField("carrierMaxAgeHours", "Возраст цен флотоносцев, ч", inputs["carrierMaxAgeHours"], 0.25, 168), boolField("includeCarriers", "Включать чужие флотоносцы", inputs["includeCarriers"]), numberField("maxArrivalLs", "Максимум от звезды, св. с.", inputs["maxArrivalLs"], 0, 1e7), numberField("minDemand", "Минимальный спрос, т", inputs["minDemand"], 0, 1e9), numberField("minSupply", "Минимальный запас, т", inputs["minSupply"], 0, 1e9), numberField("demandRatio", "Запас спроса к вашему грузу", inputs["demandRatio"], 1, 20)}
 		search := newAction("market.search", title, "/api/trading/search", M{"mode": tradeMode}, fields...)
+		visible := []Field{}
+		for _, field := range search.Fields {
+			if buying && (field.Key == "useCargo" || field.Key == "useCarrierCargo" || field.Key == "minDemand" || field.Key == "demandRatio") || !buying && field.Key == "minSupply" {
+				continue
+			}
+			visible = append(visible, field)
+		}
+		search.Fields = visible
+		selectedMarket := v.Copy(selected)
+		selectedMarket["selectionMode"] = tradeMode
+		selectedMarket["quoteOptions"] = v.Copy(v.Obj(v.At(state, "trading", "options")))
+		destinationLabel := "Везти сюда"
+		if buying {
+			destinationLabel = "Назначить закупку"
+		}
 		plan := v.Obj(state["tradePlan"])
 		quote := M{}
 		if q := v.Rows(selected["quotes"]); len(q) > 0 {
@@ -135,37 +150,9 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 			source, destination = v.First(selected["system"], plan["source"], cmd["system"]), plan["destination"]
 		}
 		planFields := []Field{selectField("key", "Товар", v.First(quote["key"], plan["key"], "gold"), goodsChoices(state)), numberField("quantity", "Объём, т", v.First(quote["quantity"], plan["quantity"], 1), 1, 25000), numberField("buyPrice", "Закупочная цена, кр./т", buyPrice, 0, 1e9), numberField("sellPrice", "Продажная цена, кр./т", sellPrice, 0, 1e9), textField("source", "Откуда", source), textField("destination", "Куда", destination)}
-		return []Action{search, {ID: "market.destination", Title: "Везти сюда", Path: "/api/trading/destination", Payload: M{"destination": selected}, Disabled: len(v.Rows(selected["quotes"])) == 0}, newAction("trade.plan", "План перевозки", "/api/trading/plan", nil, planFields...), newAction("market.cancel", "Остановить поиск", "/api/trading/cancel", nil), newAction("market.clear", "Убрать выбранный рынок", "/api/trading/destination", M{"destination": nil}), copySystem(selected["system"]), export("trade.export", "Экспорт сделок CSV", "/api/trading/export.csv")}
+		return []Action{search, {ID: "market.destination", Title: destinationLabel, Path: "/api/trading/destination", Payload: M{"destination": selectedMarket}, Disabled: len(v.Rows(selected["quotes"])) == 0}, newAction("trade.plan", "План перевозки", "/api/trading/plan", nil, planFields...), newAction("market.cancel", "Остановить поиск", "/api/trading/cancel", nil), newAction("market.clear", "Убрать выбранный рынок", "/api/trading/destination", M{"destination": nil}), copySystem(selected["system"]), export("trade.export", "Экспорт сделок CSV", "/api/trading/export.csv")}
 	case "deals":
-		fields := []Field{textField("system", "Исходная система", cmd["system"]), numberField("cargoCapacity", "Грузоподъёмность, т", v.First(cmd["cargoCapacity"], 128), 1, 25000), numberField("credits", "Средства на закупку, кр.", v.First(v.At(state, "pilot", "credits"), 1e7), 0, 1e15), numberField("radiusLy", "Область поиска, св. л.", 100, 5, 5000), numberField("maxLegLy", "Максимальная длина плеча, св. л.", 100, 1, 5000), numberField("minutesPerLeg", "Время одного плеча, мин", 15, 1, 1440), numberField("operatingCostPerLeg", "Расходы на плечо, кр.", 0, 0, 1e12), numberField("maxAgeHours", "Возраст цен станций, ч", 24, 1, 720), numberField("carrierMaxAgeHours", "Возраст цен флотоносцев, ч", 6, 0.25, 168), numberField("maxArrivalLs", "Максимум от звезды, св. с.", 10000, 0, 1e7), selectField("minPad", "Площадка", "L", ChoicePairs("L", "Большая", "M", "Средняя или большая", "S", "Любая")), boolField("includeCarriers", "Включать чужие флотоносцы", false), boolField("includePlanetary", "Включать планетарные порты", true), boolField("roundTrip", "Искать обратный груз", false)}
-		defaults := []string{"gold", "silver", "agronomictreatment", "bertrandite", "indite", "bauxite"}
-		for i, key := range defaults {
-			fields = append(fields, selectField(fmt.Sprint("resource", i+1), fmt.Sprint("Товар ", i+1), key, append([]Choice{{"", "Не искать"}}, goodsChoices(state)...)))
-		}
-		a := newAction("deals.search", "Найти выгодные рейсы", "/api/trading/routes", nil, fields...)
-		a.Transform = func(body M) (M, error) {
-			keys := []string{}
-			for i := 1; i <= 6; i++ {
-				key := fmt.Sprint("resource", i)
-				if s := v.Str(body[key]); s != "" {
-					keys = append(keys, s)
-				}
-				delete(body, key)
-			}
-			body["resourceKeys"] = keys
-			return body, nil
-		}
-		actions := []Action{a, newAction("deals.stop", "Остановить поиск", "/api/trading/cancel", nil)}
-		for i, leg := range v.Rows(selected["legs"]) {
-			buy, sell := v.Obj(leg["buy"]), v.Obj(leg["sell"])
-			suffix := fmt.Sprintf("%d", i)
-			legLabel := fmt.Sprintf("Плечо %d: ", i+1)
-			buyCopy, sellCopy := copySystem(buy["system"]), copySystem(sell["system"])
-			buyCopy.ID, buyCopy.Title = "deals.copy-buy."+suffix, legLabel+"копировать систему закупки"
-			sellCopy.ID, sellCopy.Title = "deals.copy-sell."+suffix, legLabel+"копировать систему продажи"
-			actions = append(actions, buyCopy, sellCopy, Action{ID: "deals.destination." + suffix, Title: legLabel + "везти груз покупателю", Path: "/api/trading/destination", Payload: M{"destination": sell}, Disabled: len(v.Rows(sell["quotes"])) == 0}, Action{ID: "deals.purchase." + suffix, Title: legLabel + "найти закупку товара", Kind: "purchase", Path: "sale", Payload: M{"resourceKey": leg["key"], "quantity": leg["quantity"], "system": buy["system"]}, Fields: []Field{numberField("quantity", "Закупить, т", leg["quantity"], 1, 25000), textField("system", "Искать рядом с системой", buy["system"])}})
-		}
-		return actions
+		return DealsActions(state, selected)
 	case "carrier":
 		c := v.Obj(state["carrier"])
 		planning := v.Obj(c["planning"])
@@ -178,12 +165,21 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 			o = M{}
 		}
 		usedCapacity := 0.0
+		minimumFuel := o["calculateStartingFuel"]
+		if minimumFuel == nil {
+			minimumFuel = v.At(c, "fuel", "tankTons") == nil && v.At(c, "fuel", "reserveTons") == nil
+		}
 		if capacity, ok := v.Number(v.At(c, "space", "capacityTons")); ok {
 			if free, known := v.Number(v.At(c, "space", "freeTons")); known {
 				usedCapacity = capacity - free
 			}
 		}
-		fields := []Field{textField("sourceSystem", "Откуда", v.First(o["sourceSystem"], v.At(c, "location", "system"), cmd["system"])), {Key: "destinationSystem", Label: "Куда", Kind: "text", Required: true, Default: o["destinationSystem"]}, {Key: "waypoints", Label: "Промежуточные системы — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["waypoints"]), "\r\n")}, {Key: "refuelSystems", Label: "Системы дозаправки — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["refuelSystems"]), "\r\n")}, boolField("calculateStartingFuel", "Рассчитать минимальный стартовый запас трития", v.First(o["calculateStartingFuel"], true)), numberField("usedCapacityTons", "Занято вместимости флотоносца, т", v.First(o["usedCapacityTons"], usedCapacity), 0, 25000), numberField("tankTons", "Тритий в баке, т", v.First(o["tankTons"], v.At(c, "fuel", "tankTons"), 1000), 0, 1000), numberField("cargoTritiumTons", "Тритий на складе, т", v.First(o["cargoTritiumTons"], v.At(c, "fuel", "reserveTons"), 0), 0, 25000), numberField("reserveTritiumTons", "Оставить трития по прибытии, т", v.First(o["reserveTritiumTons"], v.At(c, "planning", "reserveTritium"), 0), 0, 26000), {Key: "departureTime", Label: "Начало маршрута", Kind: "datetime", Default: o["departureTime"], Help: "Пусто — начинать сейчас. Время в вашем часовом поясе."}, numberField("jumpMinutes", "Подготовка прыжка, мин", v.First(o["jumpMinutes"], 15), 1, 240), numberField("cooldownMinutes", "Восстановление, мин", v.First(o["cooldownMinutes"], 5), 0, 120), numberField("overheadMinutes", "Операции между прыжками, мин", v.First(o["overheadMinutes"], 1), 0, 240), numberField("maxQueueMinutes", "Возможная дополнительная очередь, мин", v.First(o["maxQueueMinutes"], 0), 0, 240), selectField("refuelMethod", "Пополнение трития", v.First(o["refuelMethod"], "mine"), ChoicePairs("mine", "Добывать", "buy", "Покупать", "manual", "Перегружать")), numberField("miningTonsPerHour", "Темп добычи трития, т/ч", v.First(o["miningTonsPerHour"], 150), 1, 10000), numberField("refuelMinutes", "Время получения и доставки трития на остановке, мин", v.First(o["refuelMinutes"], 0), 0, 10080), numberField("tritiumPrice", "Цена трития, кр./т", v.First(o["tritiumPrice"], 0), 0, 1e8)}
+		fields := []Field{textField("sourceSystem", "Откуда", v.First(o["sourceSystem"], v.At(c, "location", "system"), cmd["system"])), {Key: "destinationSystem", Label: "Куда", Kind: "text", Required: true, Default: o["destinationSystem"]}, {Key: "waypoints", Label: "Промежуточные системы — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["waypoints"]), "\r\n")}, {Key: "refuelSystems", Label: "Системы дозаправки — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["refuelSystems"]), "\r\n")}, boolField("calculateStartingFuel", "Рассчитать минимальный стартовый запас трития", minimumFuel), numberField("usedCapacityTons", "Занято вместимости флотоносца, т", v.First(o["usedCapacityTons"], usedCapacity), 0, 25000), numberField("tankTons", "Тритий в баке, т", v.First(o["tankTons"], v.At(c, "fuel", "tankTons"), 1000), 0, 1000), numberField("cargoTritiumTons", "Тритий на складе, т", v.First(o["cargoTritiumTons"], v.At(c, "fuel", "reserveTons"), 0), 0, 25000), numberField("reserveTritiumTons", "Оставить трития по прибытии, т", v.First(o["reserveTritiumTons"], v.At(c, "planning", "reserveTritium"), 0), 0, 26000), {Key: "departureTime", Label: "Начало маршрута", Kind: "datetime", Default: o["departureTime"], Help: "Пусто — начинать сейчас. Время в вашем часовом поясе."}, numberField("jumpMinutes", "Подготовка прыжка, мин", v.First(o["jumpMinutes"], 15), 1, 240), numberField("cooldownMinutes", "Восстановление, мин", v.First(o["cooldownMinutes"], 5), 0, 120), numberField("overheadMinutes", "Операции между прыжками, мин", v.First(o["overheadMinutes"], 1), 0, 240), numberField("maxQueueMinutes", "Возможная дополнительная очередь, мин", v.First(o["maxQueueMinutes"], 0), 0, 240), selectField("refuelMethod", "Пополнение трития", v.First(o["refuelMethod"], "mine"), ChoicePairs("mine", "Добывать", "buy", "Покупать", "manual", "Перегружать")), numberField("miningTonsPerHour", "Темп добычи трития, т/ч", v.First(o["miningTonsPerHour"], 150), 1, 10000), numberField("refuelMinutes", "Время получения и доставки трития на остановке, мин", v.First(o["refuelMinutes"], 0), 0, 10080), numberField("tritiumPrice", "Цена трития, кр./т", v.First(o["tritiumPrice"], 0), 0, 1e8)}
+		for i := range fields {
+			if fields[i].Key == "calculateStartingFuel" {
+				fields[i].Help = "Выключено — учитывать указанные фактические запасы. Включено — рассчитать гипотетический минимальный запас с соответствующей массой флотоносца."
+			}
+		}
 		return []Action{newAction("route.calculate", "Рассчитать маршрут", "/api/carrier/route", nil, fields...), {ID: "route.visited", Title: "Пройдено до этой остановки", Path: "/api/carrier/route/visited", Payload: M{"index": selected["index"]}, Disabled: selected["index"] == nil, Confirm: "Отметить этот этап маршрута пройденным в личном плане?"}, export("route.export", "Экспорт маршрута CSV", "/api/carrier/route.csv"), newAction("route.cancel", "Остановить расчёт", "/api/carrier/route/cancel", nil), copySystem(v.First(selected["name"], selected["system"]))}
 	case "engineering":
 		e := v.Obj(state["engineering"])
