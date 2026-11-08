@@ -48,7 +48,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		goals, bookmarks, notices = v.Clone(e.objectives), v.Clone(e.bookmarks), v.Clone(e.notices)
 		manual, prices = v.Copy(e.manualPrices), v.Copy(e.prices)
 		for key, value := range e.network {
-			if key == "trading" && (oneOf(tab, "sale", "deals", "statistics") || hud && oneOf(activity, "trade", "asteroid")) || key == "tradeRoutes" && tab == "deals" || key == "search" && tab == "targets" {
+			if key == "trading" && (oneOf(tab, "sale", "deals", "statistics", "carrier-trade", "encyclopedia", "reference") || hud && oneOf(activity, "trade", "asteroid")) || key == "tradeRoutes" && tab == "deals" || key == "search" && tab == "targets" {
 				network[key] = v.Copy(value)
 			}
 		}
@@ -108,7 +108,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		state["engineering"] = eng
 	}
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game}
-	wantCarrier := oneOf(tab, "overview", "carrier", "route", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
+	wantCarrier := oneOf(tab, "overview", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)
 		ctx["carrier"] = state["carrier"]
@@ -133,6 +133,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	if tab == "carrier-calculator" {
 		state["carrierCalculator"] = e.Calculator.Snapshot()
+	}
+	if tab == "carrier-trade" {
+		state["carrierTrade"] = e.carrierTradeSnapshot(v.Obj(state["carrier"]))
 	}
 	if tab == "learning" {
 		state["learning"] = e.Learning.Snapshot()

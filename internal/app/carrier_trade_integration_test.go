@@ -1,0 +1,133 @@
+package app
+
+import (
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/Naenier/ED-Copilot/internal/carrier"
+	v "github.com/Naenier/ED-Copilot/internal/value"
+)
+
+func tradeIntegrationRoute(t *testing.T) M {
+	t.Helper()
+	options, err := carrier.NormalizeRouteOptions(M{"sourceSystem": "Synthetic A", "destinationSystem": "Synthetic B", "tankTons": 500, "calculateStartingFuel": false, "departureTime": "2026-11-08T12:00:00Z"}, M{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := M{"status": "ok", "job": "11111111-2222-3333-4444-555555555555", "result": M{"capacity_used": 0, "fuel_loaded": 500, "tritium_stored": 0, "jumps": []M{
+		{"name": "Synthetic A", "id64": "111", "x": 0, "y": 0, "z": 0, "distance": 0, "fuel_used": 0, "fuel_in_tank": 500, "tritium_in_market": 0, "restock_amount": 0},
+		{"name": "Synthetic B", "id64": "222", "x": 400, "y": 0, "z": 0, "distance": 400, "fuel_used": 100, "fuel_in_tank": 400, "tritium_in_market": 0, "restock_amount": 0},
+	}}}
+	result, err := carrier.NormalizeProviderRoute(provider, options, M{"createdAt": "2026-11-08T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result["options"] = options
+	return result
+}
+
+func TestCarrierTradeAPIImportsPersonalRouteAndRejectsSquadronAtomically(t *testing.T) {
+	engine, _, _ := fixtureEngine(t, M{"carrierRouteGo": M{"state": tradeIntegrationRoute(t)}})
+	doOK(t, engine, "/api/carrier/trade", M{"action": "import-route", "leg": "outbound"})
+	plan := engine.CarrierTrade.ExportSettings()
+	leg := v.Obj(v.At(plan, "legs", "outbound"))
+	if leg["sourceSystem"] != "Synthetic A" || leg["destinationSystem"] != "Synthetic B" || v.At(leg, "route", "carrierType") != "fleet" || !strings.HasPrefix(v.Str(v.At(leg, "route", "sourceUrl")), "https://spansh.co.uk/fleet-carrier/results/") {
+		t.Fatal("route identity or provenance was not imported", leg)
+	}
+	expectNumber(t, leg["jumps"], 1)
+	expectNumber(t, leg["tritiumTons"], 100)
+	expectNumber(t, leg["travelHours"], 16.0/60)
+	if v.At(plan, "legs", "return", "tritiumTons") != nil {
+		t.Fatal("outbound import also replaced the return leg")
+	}
+	doOK(t, engine, "/api/carrier/trade", M{"options": M{"carrierType": "squadron"}})
+	before := engine.CarrierTrade.ExportSettings()
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "import-route", "leg": "return"}); err == nil || !strings.Contains(err.Error(), "другого типа") {
+		t.Fatal("personal route accepted for squadron carrier", err)
+	}
+	if !reflect.DeepEqual(before, engine.CarrierTrade.ExportSettings()) {
+		t.Fatal("failed squadron route import changed the trade plan")
+	}
+}
+
+func TestCarrierTradeAPIRefusesMissingAndMismatchedRoutesWithoutChangingPlan(t *testing.T) {
+	engine, _, _ := fixtureEngine(t, nil)
+	before := engine.CarrierTrade.ExportSettings()
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "import-route", "leg": "outbound"}); err == nil {
+		t.Fatal("missing route was silently converted to zero fuel")
+	}
+	if !reflect.DeepEqual(before, engine.CarrierTrade.ExportSettings()) {
+		t.Fatal("missing route changed the plan")
+	}
+	engine.Route = carrier.NewRoutePlanner(M{"state": tradeIntegrationRoute(t)})
+	doOK(t, engine, "/api/carrier/trade", M{"legs": M{"return": M{"sourceSystem": "Synthetic B", "destinationSystem": "Synthetic A"}}})
+	before = engine.CarrierTrade.ExportSettings()
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "import-route", "leg": "return"}); err == nil {
+		t.Fatal("outbound route was accepted as a reversed trip")
+	}
+	if !reflect.DeepEqual(before, engine.CarrierTrade.ExportSettings()) {
+		t.Fatal("mismatched route import was not atomic")
+	}
+}
+
+func TestCarrierTradeAPIImportsSelectedCarrierCostsAndKeepsSquadronFuelIndependent(t *testing.T) {
+	engine, journalFile, dataDir := fixtureEngine(t, nil)
+	engine.Apply(testEvent("CarrierStats", M{"CarrierID": "42", "Name": "Synthetic Personal Carrier", "FuelLevel": 800}), M{})
+	engine.domainMu.Lock()
+	err := engine.Carrier.SetStockBaseline(M{"carrierId": "42", "items": []M{{"key": "tritium", "count": 130}}, "timestamp": "2026-11-08T12:00:00Z", "complete": true})
+	engine.domainMu.Unlock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	doOK(t, engine, "/api/carrier/calculator", M{"carrierType": "fleet", "jumpsPerWeek": 10, "services": M{"repair": "active", "refuel": "suspended"}})
+	doOK(t, engine, "/api/carrier/trade", M{"action": "import-carrier"})
+	options := v.Obj(engine.CarrierTrade.ExportSettings()["options"])
+	if options["carrierType"] != "fleet" {
+		t.Fatal("import ignored the calculator's selected type", options)
+	}
+	expectNumber(t, options["weeklyUpkeep"], 7250000) // excludes ten jump fees: those belong to the trade's route.
+	expectNumber(t, options["servicesTons"], 680)
+	expectNumber(t, options["carrierInvestment"], 5090000000)
+	expectNumber(t, options["tankTons"], 800)
+	expectNumber(t, options["cargoTritiumTons"], 130)
+
+	doOK(t, engine, "/api/carrier/trade", M{"options": M{"carrierType": "squadron", "tankTons": 321, "cargoTritiumTons": 55, "otherCargoTons": 222}, "legs": M{"return": M{"commodityKey": "wine", "quantity": 900}}})
+	doOK(t, engine, "/api/carrier/calculator", M{"carrierType": "squadron", "jumpsPerWeek": 15, "services": M{"repair": "active"}})
+	doOK(t, engine, "/api/carrier/trade", M{"action": "import-carrier"})
+	options = v.Obj(engine.CarrierTrade.ExportSettings()["options"])
+	expectNumber(t, options["weeklyUpkeep"], 11500000)
+	expectNumber(t, options["servicesTons"], 3180)
+	expectNumber(t, options["carrierInvestment"], 25050000000)
+	expectNumber(t, options["tankTons"], 321)
+	expectNumber(t, options["cargoTritiumTons"], 55)
+	expectNumber(t, options["otherCargoTons"], 222)
+	if options["carrierType"] != "squadron" || v.At(engine.CarrierTrade.ExportSettings(), "legs", "return", "commodityKey") != "wine" {
+		t.Fatal("type or independent trade parameters lost during configuration import")
+	}
+	snapshot := engine.SnapshotForUI("carrier-trade")
+	if v.At(snapshot, "carrierTrade", "context", "calculator", "selectedType") != "squadron" || snapshot["trading"] == nil || v.At(snapshot, "carrierTrade", "context", "route") == nil {
+		t.Fatal("scoped trade screen lost integration context")
+	}
+	before := engine.CarrierTrade.ExportSettings()
+	calculatorBefore := engine.Calculator.ExportSettings()
+	engine.Close()
+	restored, err := New(Options{DataDir: dataDir, JournalDir: filepath.Dir(journalFile), DisableNetwork: true, ManualPolling: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer restored.Close()
+	if !reflect.DeepEqual(before, restored.CarrierTrade.ExportSettings()) || !reflect.DeepEqual(calculatorBefore, restored.Calculator.ExportSettings()) {
+		t.Fatal("selected calculator and trade plans did not survive API save/restart")
+	}
+}
+
+func TestSeedDemoShowcaseRefusesNetworkEnabledEngine(t *testing.T) {
+	// No clients or real profile exist here. The guard must run before touching
+	// any domain, otherwise this call panics instead of refusing demo data.
+	engine := &Engine{opts: Options{DisableNetwork: false}}
+	if err := engine.SeedDemoShowcase(); err == nil {
+		t.Fatal("demo data may be inserted into a network-enabled user profile")
+	}
+}

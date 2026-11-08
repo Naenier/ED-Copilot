@@ -124,7 +124,7 @@ func TestMarketWarningsAndExpiredQuoteRemainVisible(t *testing.T) {
 	market["expired"] = true
 	market["warnings"] = []any{"Спрос ниже объёма груза", M{"text": "Флотоносец мог переместиться"}}
 	page := Build("sale", "Продать", "", s)
-	if !strings.HasPrefix(page.Rows[0].Cells[5], "Устарела") || !strings.Contains(page.Rows[0].Details, "Спрос ниже объёма груза") || !strings.Contains(page.Rows[0].Details, "Флотоносец мог переместиться") || !strings.Contains(page.Rows[0].Details, "повторите поиск") {
+	if !strings.HasPrefix(page.Rows[0].Cells[6], "Устарела") || !strings.Contains(page.Rows[0].Details, "Спрос ниже объёма груза") || !strings.Contains(page.Rows[0].Details, "Флотоносец мог переместиться") || !strings.Contains(page.Rows[0].Details, "повторите поиск") {
 		t.Fatal("market risk suppressed", page.Rows[0])
 	}
 }

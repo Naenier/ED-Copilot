@@ -18,7 +18,7 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
 var DefaultTabs = []string{"overview", "targets", "sale", "mining", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
@@ -214,6 +214,8 @@ func Build(tab, mode, query string, s M) Page {
 		return LearningPage(mode, query, s)
 	case "carrier-calculator":
 		return CarrierCalculatorPage(mode, query, s)
+	case "carrier-trade":
+		return CarrierTradePage(mode, query, s)
 	case "overview":
 		p.Description = "Положение, корабль и следующие действия для ваших занятий."
 		p.Modes = []string{"Планы", "Состояние", "Корабль и груз", "Миссии", "Журнал"}
@@ -307,7 +309,7 @@ func Build(tab, mode, query string, s M) Page {
 		if mode == "Купить" {
 			availableKey, availableTitle = "supply", "Запас, т"
 		}
-		p.Columns = []string{"Станция", "Система", "Дальность, св. л.", "Цена, кр./т", availableTitle, "Наблюдение"}
+		p.Columns = []string{"Станция", "Система", "Площадка", "Дальность, св. л.", "Цена, кр./т", availableTitle, "Наблюдение"}
 		for _, r := range v.Rows(trade["results"]) {
 			if !contains(query, r["station"], r["system"]) {
 				continue
@@ -321,7 +323,11 @@ func Build(tab, mode, query string, s M) Page {
 			if v.Bool(r["expired"]) {
 				observed = "Устарела · " + observed
 			}
-			p.Rows = append(p.Rows, row(r, []string{v.Str(r["station"]), v.Str(r["system"]), Number(r["distanceLy"]), Number(q["price"]), Number(q[availableKey]), observed}, marketDetails(r)))
+			pad := map[string]string{"L": "L · Большая", "M": "M · Средняя", "S": "S · Малая"}[v.Str(r["pad"])]
+			if pad == "" {
+				pad = "Неизвестна"
+			}
+			p.Rows = append(p.Rows, row(r, []string{v.Str(r["station"]), v.Str(r["system"]), pad, Number(r["distanceLy"]), Number(q["price"]), Number(q[availableKey]), observed}, marketDetails(r)))
 		}
 	case "deals":
 		p.Description = "Прибыльные перевозки с учётом спроса, запаса, грузоподъёмности и возраста котировки."

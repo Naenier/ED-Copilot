@@ -32,7 +32,7 @@ import (
 
 type M = v.M
 
-const Version = "2.1.2"
+const Version = "2.2.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -54,8 +54,11 @@ type Engine struct {
 	Trading                                        *trading.Service
 	Carrier                                        *carrier.Tracker
 	Calculator                                     *carrier.Calculator
+	CarrierTrade                                   *carrier.TradePlanner
 	Learning                                       *learning.Library
 	Route                                          *carrier.RoutePlanner
+	clipboardCommand                               M
+	clipboardSequence                              uint64
 	Mining                                         *mining.Service
 	Frontier                                       *frontier.Client
 	Inara                                          *inara.Manager
@@ -101,6 +104,9 @@ func New(o Options) (*Engine, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
 	v.Merge(x.settings, v.Obj(saved["settings"]))
+	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
+		x.settings["routeAutoCopyNext"] = true
+	}
 	delete(x.settings, "hideUnfocused")
 	x.appearance, _ = theme.Normalize(v.Obj(saved["appearance"]))
 	if x.appearance == nil {
@@ -122,6 +128,7 @@ func New(o Options) (*Engine, error) {
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"]})
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
 	x.Calculator = carrier.NewCalculator(v.Obj(saved["carrierCalculator"]))
+	x.CarrierTrade = carrier.NewTradePlanner(v.Obj(saved["carrierTrade"]))
 	x.Learning = learning.New(v.Obj(saved["learning"]))
 	routeSaved := v.Obj(saved["carrierRouteGo"])
 	if len(routeSaved) == 0 {
@@ -191,6 +198,7 @@ func (e *Engine) resetObserved() {
 	e.mu.Lock()
 	e.commander = M{"name": "", "fid": "", "system": "", "vehicle": "unknown", "docked": false}
 	e.game = M{"live": false, "isBeta": false}
+	e.clipboardCommand = nil
 	e.prices = M{}
 	e.cargoSync = M{}
 	e.gameRunning = nil
@@ -322,7 +330,10 @@ func (e *Engine) Apply(event, meta M) {
 	e.Engineering.Apply(event, ctx)
 	e.Pilot.Apply(event, ctx)
 	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
-	e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
+	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
+	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
+		e.queueNextRouteClipboard()
+	}
 	if kind == "Market" && event["Items"] != nil {
 		e.market(event, cmdCopy)
 	}
@@ -426,6 +437,7 @@ func (e *Engine) Snapshot() M {
 	connection["gameRunning"] = running
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["carrierCalculator"] = e.Calculator.Snapshot()
+	state["carrierTrade"] = e.carrierTradeSnapshot(c)
 	state["learning"] = e.Learning.Snapshot()
 	if len(v.Obj(state["trading"])) == 0 {
 		state["trading"] = M{"results": []M{}}
@@ -455,6 +467,7 @@ func (e *Engine) Save() error {
 	saved["carrierCalculator"] = e.Calculator.ExportSettings()
 	saved["learning"] = e.Learning.ExportSettings()
 	saved["carrierRouteGo"] = e.Route.ExportSettings()
+	saved["carrierTrade"] = e.CarrierTrade.ExportSettings()
 	saved["colonization"] = e.Colonies.ExportSettings()
 	saved["engineering"] = e.Engineering.ExportSettings()
 	saved["mining"] = e.Mining.ExportSettings()

@@ -70,6 +70,8 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 		return LearningActions(mode, state, selected)
 	case "carrier-calculator":
 		return CarrierCalculatorActions(mode, state, selected)
+	case "carrier-trade":
+		return CarrierTradeActions(mode, state, selected)
 	case "colonization":
 		return ColonyActions(mode, state, selected)
 	case "overview", "targets":

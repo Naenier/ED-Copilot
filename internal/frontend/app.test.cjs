@@ -18,9 +18,10 @@ function fixture() {
     getElementById: id => nodes.get(id), addEventListener: (event, handler) => listeners.set(event, handler), createElement: () => ({ style: {}, remove() { selectors.delete('.menu'); } }),
   };
   const window = { addEventListener() {}, COPILOT_SMOKE: false };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'overview.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,connectionStatus,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
@@ -37,6 +38,19 @@ test('reading actions target the active lesson instead of a table row', () => {
   assert.equal(api.context().selected, 'trade-alerts.practice');
   api.C.tab = 'targets';
   assert.equal(api.context().selected, 'trade-alerts.basics');
+});
+
+test('entity links open the matching reference without replacing row selection actions', () => {
+  const { api } = fixture();
+  const data={moduleKey:'am',blueprintKey:'AFM_Shielded',experimentalKey:'test',key:'carbon',system:'Test / Система'};
+  for(const [column,id] of [['Модуль','module/am'],['Чертёж','blueprint/AFM_Shielded'],['Материал','material/carbon'],['Экспериментальный эффект','experimental/test'],['Товар','commodity/carbon']]){
+    const html=api.referenceCell({Data:data},column,'<Название>');
+    assert.ok(html.includes('data-reference-id="'+id+'"'));
+    assert.ok(html.includes('&lt;Название&gt;'));
+  }
+  assert.ok(api.referenceCell({Data:data},'Система','Test').includes('system/Test%20%2F%20%D0%A1'));
+  assert.equal(api.referenceCell({Data:data},'Количество','5'),'5');
+  assert.equal(api.referenceCell({Data:{}},'Модуль','Неизвестно'),'Неизвестно');
 });
 
 test('module UI contract supplies query-all and never inserts an overlay strip into reading mode', () => {
@@ -165,13 +179,14 @@ test('dashboard uses the Go pilot credit observation, including zero and unknown
   api.C.page = { Modes: ['Планы'] }; api.C.actions = [];
   for (const balance of [1234567890, 0, null]) {
     // Commander intentionally carries a different value to expose the former wrong lookup.
-    api.C.state = { commander: { credits: 999 }, pilot: { credits: balance, creditsSource: 'Журнал: начало сеанса' } };
+    api.C.state = { commander: { credits: 999 }, pilot: { credits: balance, creditsSource: 'Status.json' } };
     const html = api.renderOverview();
     const card = html.match(/Баланс командира<\/div><div class="metric-value">([^<]*)<\/div><div class="metric-foot">([^<]*)/);
     assert.ok(card);
     const expected = balance === null ? '—' : new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 }).format(balance) + ' кр.';
     assert.equal(card[1], expected);
-    assert.equal(card[2], 'Журнал: начало сеанса');
+    assert.equal(card[2], 'Средства командира');
+    assert.doesNotMatch(html,/Status\.json/);
   }
 });
 

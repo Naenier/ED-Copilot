@@ -81,7 +81,7 @@ func presentationState(t *testing.T) M {
 	}
 	buy, sell := market("1", "Порт закупки", 100), market("2", "Порт сбыта", 200)
 	deals := trading.BuildRoutes(map[string]M{"platinum": {"buy": []M{buy}, "sell": []M{sell}}}, trading.RouteOptions(M{"cargoCapacity": 100}, cmd))
-	return M{"commander": cmd, "pilot": p.Snapshot(), "mining": ms, "stats": ms["stats"], "engineering": eng.Snapshot(nil), "carrier": c.Snapshot(nil), "carrierRoute": route, "colonization": colState, "tradeLedger": ls, "goods": ls["goods"], "trading": M{"results": []M{sell}}, "tradeRoutes": M{"results": deals}, "objectives": []M{{"id": "goal", "title": "Звёздный рейс", "kind": "trade", "priority": "high", "status": "active", "system": "Synthetic A", "notes": "Привезти сырьё"}}, "targets": []M{{"id": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "tier": "high", "confidence": "confirmed", "distanceLy": 5}}, "connection": M{"journalDir": "C:\\Synthetic\\Journals"}, "settings": M{"activity": "trade"}, "theme": M{"settings": M{"preset": "blue"}}, "app": M{"profileDir": "C:\\Synthetic\\Profile"}, "frontier": M{"connected": true, "summary": M{"profile": M{"commander": "Synthetic CMDR", "credits": 100000, "system": "Synthetic A", "ship": "Python Mk II", "shipName": "Звёздный странник"}}, "lastSync": at}, "integrations": M{"apiKeySet": true, "enabled": true, "queued": 1, "sent": 4, "lastSuccess": at}}
+	return M{"commander": cmd, "pilot": p.Snapshot(), "mining": ms, "stats": ms["stats"], "engineering": eng.Snapshot(nil), "carrier": c.Snapshot(nil), "carrierRoute": route, "carrierTrade": carrier.NewTradePlanner(nil).Snapshot(), "colonization": colState, "tradeLedger": ls, "goods": ls["goods"], "trading": M{"results": []M{sell}}, "tradeRoutes": M{"results": deals}, "objectives": []M{{"id": "goal", "title": "Звёздный рейс", "kind": "trade", "priority": "high", "status": "active", "system": "Synthetic A", "notes": "Привезти сырьё"}}, "targets": []M{{"id": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "tier": "high", "confidence": "confirmed", "distanceLy": 5}}, "connection": M{"journalDir": "C:\\Synthetic\\Journals"}, "settings": M{"activity": "trade"}, "theme": M{"settings": M{"preset": "blue"}}, "app": M{"profileDir": "C:\\Synthetic\\Profile"}, "frontier": M{"connected": true, "summary": M{"profile": M{"commander": "Synthetic CMDR", "credits": 100000, "system": "Synthetic A", "ship": "Python Mk II", "shipName": "Звёздный странник"}}, "lastSync": at}, "integrations": M{"apiKeySet": true, "enabled": true, "queued": 1, "sent": 4, "lastSuccess": at}}
 }
 
 func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
@@ -96,7 +96,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	s["learning"] = lib.Snapshot()
 	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
-	if len(Tabs) != 17 {
+	if len(Tabs) != 18 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {
@@ -146,10 +146,10 @@ func TestPresentationActualDomainContracts(t *testing.T) {
 	if orders.Rows[0].Cells[1] != "Покупка" {
 		t.Fatal(orders.Rows)
 	}
-	if got := Build("sale", "Купить", "", s); got.Rows[0].Cells[4] != "100" || got.Columns[4] != "Запас, т" {
+	if got := Build("sale", "Купить", "", s); got.Rows[0].Cells[5] != "100" || got.Columns[5] != "Запас, т" || got.Columns[2] != "Площадка" {
 		t.Fatal("purchase displayed demand rather than supply", got.Rows)
 	}
-	if got := Build("sale", "Продать", "", s); got.Rows[0].Cells[4] != "1 000" || got.Columns[4] != "Спрос, т" {
+	if got := Build("sale", "Продать", "", s); got.Rows[0].Cells[5] != "1 000" || got.Columns[5] != "Спрос, т" {
 		t.Fatal("sale displayed supply rather than demand", got.Rows)
 	}
 	warehouse := Build("carrier", "Склад", "", s)

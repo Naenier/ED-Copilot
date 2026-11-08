@@ -5,10 +5,12 @@ package nativeui
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"reflect"
 	"strings"
 
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
+	"github.com/Naenier/ED-Copilot/internal/reference"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -29,6 +31,33 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "carrier-trade":
+		return backend.Do("/api/carrier/trade", v.Obj(input["values"]))
+	case "carrier-trade-markets", "reference.market-search":
+		return backend.Do("/api/trading/search", v.Obj(input["values"]))
+	case "reference.markets":
+		return v.Obj(snapshotForWeb(backend, "reference")["trading"]), nil
+	case "reference.list":
+		result := reference.Catalog().List(reference.Query{Category: v.Text(input["category"], "articles"), Query: v.Str(input["query"]), Group: v.Str(input["group"]), Offset: v.Int(input["offset"]), Limit: v.Int(input["limit"])})
+		output := v.Obj(v.Clone(result))
+		output["personal"] = snapshotForWeb(backend, "sync")["engineering"]
+		return output, nil
+	case "reference.entry":
+		id := v.Str(input["id"])
+		entry, found := reference.Catalog().Entry(id)
+		result := v.Obj(v.Clone(entry))
+		if !found && strings.HasPrefix(id, "system/") {
+			if provider, ok := backend.(interface{ ReferenceSystem(string) M }); ok {
+				name, _ := url.PathUnescape(strings.TrimPrefix(id, "system/"))
+				result = provider.ReferenceSystem(name)
+				found = len(result) > 0
+			}
+		}
+		if !found {
+			return nil, errors.New("Материал не найден в справочнике")
+		}
+		result["personal"] = snapshotForWeb(backend, "sync")["engineering"]
+		return result, nil
 	case "navigation":
 		return backend.Do("/api/navigation", M{"tabs": input["tabs"]})
 	case "settings":
@@ -50,6 +79,20 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return M{"engineering": v.At(state, "engineering", "catalog")}, nil
 	default:
 		return nil, errors.New("Неизвестный запрос интерфейса")
+	}
+	if op == "view" && (tab == "encyclopedia" || (tab == "engineering" || tab == "targets") && mode == "Инженеры") {
+		state := snapshotForWeb(backend, "reference")
+		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты"}
+		if tab == "engineering" {
+			modes = []string{"План", "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана", "Обмен", "Инженеры"}
+		}
+		if tab == "targets" {
+			modes = []string{"Личные цели", "Места добычи", "Сохранённые места", "Навигация", "Инженеры"}
+		}
+		if mode == "" {
+			mode = "Статьи"
+		}
+		return M{"page": p.Page{Title: p.Title(tab), Description: "Справочник командира", Modes: modes, Columns: []string{}, Rows: []p.Row{}}, "actions": []M{}, "state": webState(state), "help": p.HelpFor(tab), "context": M{"mode": mode, "selected": ""}}, nil
 	}
 	state := snapshotForWeb(backend, tab)
 	if op == "boot" {
@@ -170,7 +213,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "tradePlan", "carrier", "carrierRoute", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
 		out[key] = state[key]
 	}
 	return redactWebSecrets(out)

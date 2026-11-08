@@ -84,6 +84,10 @@ func main() {
 			fail(err, *dataDir)
 			return
 		}
+		if err = engine.SeedDemoShowcase(); err != nil {
+			fail(err, *dataDir)
+			return
+		}
 		if *headless {
 			state := engine.Snapshot()
 			result := v.M{"ok": len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true}

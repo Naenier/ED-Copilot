@@ -40,6 +40,8 @@ type Options struct {
 }
 type Window struct {
 	modern                                                 *modernShell
+	lastRouteClipboardID                                   string
+	routeClipboardWriter                                   func(string) error
 	header, identity, toolbar, actionbar                   *walk.Composite
 	brand                                                  *walk.Label
 	main                                                   *walk.MainWindow
@@ -419,6 +421,7 @@ func NewWindow(backend Controller, options Options) (*Window, error) {
 	})
 	_ = u.tray.SetVisible(true)
 	u.state = u.backend.Snapshot()
+	u.syncRouteClipboard(attachRouteClipboard(u.state, u.backend))
 	u.tabs = p.NormalizeTabs(v.At(u.state, "navigation", "tabs"))
 	u.applyTheme()
 	u.refresh()

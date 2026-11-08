@@ -333,7 +333,7 @@ func (m *modernShell) watch() {
 				return
 			}
 			if gate.due(now) {
-				state := nativeHUDSnapshot(u.backend)
+				state := attachRouteClipboard(nativeHUDSnapshot(u.backend), u.backend)
 				if u.disposed.Load() {
 					return
 				}
@@ -497,6 +497,7 @@ func (m *modernShell) postSnapshot(state M) {
 
 func (u *Window) applyModernSnapshot(state M) {
 	u.state = state
+	u.syncRouteClipboard(state)
 	if u.dialogOpen {
 		if u.hud != nil {
 			u.hud.refresh()

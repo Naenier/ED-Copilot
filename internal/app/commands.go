@@ -79,6 +79,10 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		body = M{}
 	}
 	switch path {
+	case "/api/carrier/trade":
+		if err := e.updateCarrierTrade(body); err != nil {
+			return nil, err
+		}
 	case "/api/carrier/calculator":
 		if err := e.Calculator.Update(body); err != nil {
 			return nil, err
@@ -118,7 +122,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 				next[r.k] = v.Clamp(n, r.min, r.max)
 			}
 		}
-		for _, k := range []string{"hideDepleted", "overlayEnabled"} {
+		for _, k := range []string{"hideDepleted", "overlayEnabled", "routeAutoCopyNext"} {
 			if raw, ok := body[k]; ok {
 				b, valid := raw.(bool)
 				if !valid {
@@ -129,6 +133,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			}
 		}
 		e.settings = next
+		if disabled, exists := next["routeAutoCopyNext"]; exists && !v.Bool(disabled) {
+			e.clipboardCommand = nil
+		}
 		e.mu.Unlock()
 	case "/api/navigation":
 		tabs := presentation.NormalizeTabs(body["tabs"])
@@ -388,13 +395,15 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err := e.networkAllowed(); err != nil {
 			return nil, err
 		}
-		snapshot := e.Snapshot()
+		snapshot := e.SnapshotForUI("carrier")
+		e.clearRouteClipboard()
 		return e.start("carrierRoute", body, func(ctx context.Context, id uint64) (M, error) { return e.Route.Search(ctx, body, snapshot) }), nil
 	case "/api/carrier/route/cancel":
 		e.Route.Cancel()
 		e.cancelJob("carrierRoute")
 		return M{"ok": true}, nil
 	case "/api/carrier/route/visited":
+		e.clearRouteClipboard()
 		if err := e.Route.MarkVisited(v.Int(body["index"]), "manual", v.ISO(time.Now())); err != nil {
 			return nil, err
 		}
@@ -417,7 +426,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err := e.networkAllowed(); err != nil {
 			return nil, err
 		}
-		snapshot := e.Snapshot()
+		snapshot := e.SnapshotForUI("carrier")
 		client := e.opts.HTTPClient
 		if client == nil {
 			client = &http.Client{Timeout: 30 * time.Second}

@@ -53,7 +53,8 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 				t.Fatalf("%s/%s: %v", tab.ID, mode, err)
 			}
 			page := result["page"].(p.Page)
-			if page.Title == "" || len(page.Columns) == 0 {
+			referencePage := tab.ID == "encyclopedia" || (tab.ID == "engineering" || tab.ID == "targets") && mode == "Инженеры"
+			if page.Title == "" || len(page.Columns) == 0 && !referencePage {
 				t.Fatalf("empty %s/%s", tab.ID, mode)
 			}
 			if _, err := json.Marshal(result); err != nil {

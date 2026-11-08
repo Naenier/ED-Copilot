@@ -47,6 +47,7 @@ var modernPreviewNames = map[string]bool{
 	"overview": true, "academy": true, "reader": true, "calculator": true,
 	"calculator-squadron": true, "colonization": true, "settings": true, "overview-900": true,
 	"construction": true, "form": true,
+	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
 }
 
 type modernPreviewCapture struct {
@@ -66,7 +67,7 @@ func (m *modernShell) capturePreview(id, name string) error {
 	if !m.owner.options.Smoke || !modernPreviewNames[name] {
 		return errors.New("Снимки интерфейса доступны только в изолированной проверке")
 	}
-	if m.closed || m.core == nil || !m.ready || len(m.captures) >= 12 {
+	if m.closed || m.core == nil || !m.ready || len(m.captures) >= 24 {
 		return errors.New("Интерфейс не готов к снимку")
 	}
 	if source, err := m.core.GetSource(); err != nil || !trustedWebSource(source) {
