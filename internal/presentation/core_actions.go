@@ -54,7 +54,7 @@ func resourceChoices(s M, includeRaw bool) []Choice {
 	sort.Slice(out, func(i, j int) bool { return out[i].Label < out[j].Label })
 	return out
 }
-func CoreActions(tab, mode string, state, selected, prefill M) []Action {
+func coreActions(tab, mode string, state, selected, prefill M) []Action {
 	cmd := v.Obj(state["commander"])
 	settings := v.Obj(state["settings"])
 	hasRow := len(selected) > 0
@@ -66,6 +66,8 @@ func CoreActions(tab, mode string, state, selected, prefill M) []Action {
 		return Action{ID: "copy.system", Title: "Копировать систему", Kind: "copy", Path: v.Str(system), Disabled: v.Str(system) == ""}
 	}
 	switch tab {
+	case "exobiology":
+		return ExobiologyActions(mode, state, selected)
 	case "learning":
 		return LearningActions(mode, state, selected)
 	case "carrier-calculator":

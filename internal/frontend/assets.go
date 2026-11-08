@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Naenier/ED-Copilot/internal/data"
+	"github.com/Naenier/ED-Copilot/internal/localization"
 )
 
 //go:embed *.html *.css *.js
@@ -25,5 +26,6 @@ func HTML(nonce string, smoke bool) string {
 	}
 	brand, _ := data.Files.ReadFile("copilot.png")
 	brandScript := "window.CopilotBrand='data:image/png;base64," + base64.StdEncoding.EncodeToString(brand) + "';\n"
-	return strings.NewReplacer("{{NONCE}}", nonce, "{{CSS}}", read("app.css")+"\n"+read("academy.css")+"\n"+read("calculator.css")+"\n"+read("overview.css")+"\n"+read("reference.css")+"\n"+read("carrier-trade.css")+"\n"+read("settings-pane.css")+"\n"+read("deals.css")+"\n"+read("route-workspace.css")+"\n"+read("colonization-workspace.css")+"\n"+read("workspace-fixes.css"), "{{JS}}", brandScript+read("icons.js")+"\n"+read("academy.js")+"\n"+read("calculator.js")+"\n"+read("overview.js")+"\n"+read("reference.js")+"\n"+read("carrier-trade.js")+"\n"+read("settings-pane.js")+"\n"+read("deals.js")+"\n"+read("route-workspace.js")+"\n"+read("colonization-workspace.js")+"\n"+read("v23-smoke.js")+"\n"+read("v22-smoke.js")+"\n"+read("app.js"), "{{SMOKE}}", flag).Replace(read("index.html"))
+	brandScript += "window.CopilotTranslations=" + strings.ReplaceAll(localization.CatalogJSON(), "<", "\\u003c") + ";\n" + read("i18n.js") + "\n"
+	return strings.NewReplacer("{{NONCE}}", nonce, "{{CSS}}", read("app.css")+"\n"+read("academy.css")+"\n"+read("calculator.css")+"\n"+read("overview.css")+"\n"+read("reference.css")+"\n"+read("carrier-trade.css")+"\n"+read("settings-pane.css")+"\n"+read("deals.css")+"\n"+read("route-workspace.css")+"\n"+read("colonization-workspace.css")+"\n"+read("workspace-fixes.css")+"\n"+read("system-search.css")+"\n"+read("exobiology.css"), "{{JS}}", brandScript+read("icons.js")+"\n"+read("academy.js")+"\n"+read("calculator.js")+"\n"+read("overview.js")+"\n"+read("reference.js")+"\n"+read("carrier-trade.js")+"\n"+read("settings-pane.js")+"\n"+read("deals.js")+"\n"+read("route-workspace.js")+"\n"+read("colonization-workspace.js")+"\n"+read("v24-smoke.js")+"\n"+read("v23-smoke.js")+"\n"+read("v22-smoke.js")+"\n"+read("exobiology.js")+"\n"+read("system-search.js")+"\n"+read("app.js"), "{{SMOKE}}", flag).Replace(read("index.html"))
 }

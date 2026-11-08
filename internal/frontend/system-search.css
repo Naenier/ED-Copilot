@@ -1,0 +1,18 @@
+.system-search-popup{position:fixed;z-index:12000;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border,#3c3d40);border-radius:12px;background:var(--raised,#272729);color:var(--text,#ececee);box-shadow:0 18px 54px #0008,0 2px 8px #0005;backdrop-filter:blur(18px);font-size:13px;line-height:1.45}
+.system-search-popup[hidden]{display:none}
+.system-search-status{padding:11px 13px 9px;color:var(--muted,#b0b0b6);font-size:12px;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.system-search-status.is-error{color:var(--warn,#e3b36b)}
+.system-search-status button{border:1px solid var(--border,#444);border-radius:7px;background:transparent;color:var(--text,#eee);padding:4px 9px;flex:none;font:inherit;cursor:pointer}
+.system-search-status button:hover{background:var(--hover,#343437)}
+.system-search-list{overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff36 transparent;max-height:260px;padding:0 5px 5px;min-height:0}
+.system-search-list:empty{display:none}
+.system-search-list::-webkit-scrollbar{width:6px}
+.system-search-list::-webkit-scrollbar-track{background:transparent}
+.system-search-list::-webkit-scrollbar-thumb{border-radius:6px;background:#ffffff36}
+.system-search-option{display:flex;flex-direction:column;gap:2px;padding:9px 9px;border-radius:7px;cursor:pointer;overflow-wrap:anywhere}
+.system-search-option strong{font-weight:500;color:var(--text,#ececee)}
+.system-search-option span{font-size:11px;color:var(--muted,#b1b1b6)}
+.system-search-option:hover,.system-search-option.is-selected{background:var(--hover,#3b3b3e);outline:1px solid var(--border,#555);outline-offset:-1px}
+.system-search-option.is-selected strong{color:var(--accent,#6bc5ee)}
+.system-search-footer{display:flex;gap:14px;justify-content:space-between;padding:8px 13px;border-top:1px solid var(--border,#414144);color:var(--muted,#aaaab2);font-size:10px}
+.system-search-footer span:last-child{flex:none;opacity:.7}

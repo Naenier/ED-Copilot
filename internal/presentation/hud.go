@@ -39,7 +39,7 @@ func HUDVisible(enabled bool, running any, foregroundProcess string) bool {
 	return false
 }
 
-func BuildHUD(s M, now time.Time) HUDDocument { return buildHUDContent(s, now) }
+func BuildHUD(s M, now time.Time) HUDDocument { return LocalizeHUD(buildHUDContent(s, now), s) }
 
 func hudActivity(id string) string {
 	for _, a := range Activities {

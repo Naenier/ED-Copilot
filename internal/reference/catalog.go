@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/Naenier/ED-Copilot/internal/data"
+	"github.com/Naenier/ED-Copilot/internal/localization"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -130,7 +131,7 @@ func (s *Store) add(e Entry, keywords ...string) *record {
 	if e.Related == nil {
 		e.Related = []Summary{}
 	}
-	r := &record{entry: e, search: normalize(strings.Join(append([]string{e.ID, e.Title, e.Subtitle, e.Description}, keywords...), " "))}
+	r := &record{entry: e, search: normalize(strings.Join(append([]string{e.ID, e.Title, e.Subtitle, e.Description, localization.Text("en", e.Title), localization.Text("en", e.Subtitle)}, keywords...), " "))}
 	s.records[e.ID] = r
 	return r
 }

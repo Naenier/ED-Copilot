@@ -18,9 +18,9 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
-var DefaultTabs = []string{"overview", "targets", "sale", "mining", "learning", "encyclopedia", "statistics", "settings"}
-var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var DefaultTabs = []string{"overview", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
 type Choice struct{ Value, Label string }
 type Row struct {
@@ -206,10 +206,12 @@ func contains(query string, values ...any) bool {
 	}
 	return false
 }
-func Build(tab, mode, query string, s M) Page {
+func buildPage(tab, mode, query string, s M) Page {
 	p := Page{Title: Title(tab), Columns: []string{"Параметр", "Значение"}}
 	cmd := v.Obj(s["commander"])
 	switch tab {
+	case "exobiology":
+		return ExobiologyPage(mode, query, s)
 	case "learning":
 		return LearningPage(mode, query, s)
 	case "carrier-calculator":

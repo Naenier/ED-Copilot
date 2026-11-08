@@ -8,15 +8,18 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
+	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	"github.com/Naenier/ED-Copilot/internal/frontier"
 	"github.com/Naenier/ED-Copilot/internal/inara"
 	"github.com/Naenier/ED-Copilot/internal/journal"
 	"github.com/Naenier/ED-Copilot/internal/learning"
+	"github.com/Naenier/ED-Copilot/internal/localization"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
 	"github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/profile"
 	"github.com/Naenier/ED-Copilot/internal/ships"
+	"github.com/Naenier/ED-Copilot/internal/systems"
 	"github.com/Naenier/ED-Copilot/internal/theme"
 	"github.com/Naenier/ED-Copilot/internal/trading"
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -32,7 +35,7 @@ import (
 
 type M = v.M
 
-const Version = "2.3.1"
+const Version = "2.4.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -50,6 +53,7 @@ type Engine struct {
 	Reader                                         *journal.Reader
 	Colonies                                       *colonization.Planner
 	Engineering                                    *engineering.Planner
+	Exobiology                                     *exobiology.Service
 	Pilot                                          *pilot.Tracker
 	Trading                                        *trading.Service
 	Carrier                                        *carrier.Tracker
@@ -60,6 +64,7 @@ type Engine struct {
 	clipboardCommand                               M
 	clipboardSequence                              uint64
 	Mining                                         *mining.Service
+	Systems                                        *systems.Client
 	Frontier                                       *frontier.Client
 	Inara                                          *inara.Manager
 	commander, game, settings, appearance, desktop M
@@ -104,6 +109,7 @@ func New(o Options) (*Engine, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
 	v.Merge(x.settings, v.Obj(saved["settings"]))
+	x.settings["language"] = localization.Normalize(v.Str(x.settings["language"]))
 	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
 		x.settings["routeAutoCopyNext"] = true
 	}
@@ -124,6 +130,7 @@ func New(o Options) (*Engine, error) {
 	x.bookmarks = v.Rows(v.Clone(v.Rows(saved["bookmarks"])))
 	x.Colonies = colonization.New(v.Obj(saved["colonization"]))
 	x.Engineering = engineering.New(v.Obj(saved["engineering"]))
+	x.Exobiology = exobiology.New(v.Obj(saved["exobiology"]))
 	x.Pilot = pilot.New()
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
@@ -142,6 +149,7 @@ func New(o Options) (*Engine, error) {
 	}
 	x.Route.OnUpdate = func(M) { x.Notify() }
 	x.Mining = mining.New(v.Obj(saved["mining"]))
+	x.Systems = systems.NewClient(systems.Options{HTTPClient: o.HTTPClient})
 	var cacheErr error
 	x.onlineCache, cacheErr = openOnlineCache(o.DataDir)
 	if cacheErr != nil {
@@ -209,6 +217,7 @@ func (e *Engine) resetObserved() {
 	e.Trading.Reset()
 	e.Mining.Reset()
 	e.Engineering.Reset()
+	e.Exobiology.Reset()
 	e.Pilot.Reset()
 	e.Colonies.Reset()
 	e.Notify()
@@ -328,6 +337,7 @@ func (e *Engine) Apply(event, meta M) {
 	ctx["tradeResult"] = tradeResult
 	e.Mining.Apply(event, ctx)
 	e.Engineering.Apply(event, ctx)
+	e.Exobiology.Apply(event, v.Merge(v.Copy(meta), ctx))
 	e.Pilot.Apply(event, ctx)
 	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
 	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
@@ -435,7 +445,7 @@ func (e *Engine) Snapshot() M {
 		connection = e.Reader.State()
 	}
 	connection["gameRunning"] = running
-	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "savedTradeRoutes": e.Trading.SavedRoutesSnapshot(), "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
+	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "savedTradeRoutes": e.Trading.SavedRoutesSnapshot(), "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(c)
 	state["learning"] = e.Learning.Snapshot()
@@ -470,6 +480,7 @@ func (e *Engine) Save() error {
 	saved["carrierTrade"] = e.CarrierTrade.ExportSettings()
 	saved["colonization"] = e.Colonies.ExportSettings()
 	saved["engineering"] = e.Engineering.ExportSettings()
+	saved["exobiology"] = e.Exobiology.ExportSettings()
 	saved["mining"] = e.Mining.ExportSettings()
 	v.Merge(saved, e.Trading.ExportSettings())
 	e.domainMu.Unlock()
@@ -519,6 +530,9 @@ func (e *Engine) Close() {
 	}
 	e.mu.Unlock()
 	e.cancel()
+	if e.Systems != nil {
+		e.Systems.Close()
+	}
 	e.Colonies.CancelSearch()
 	e.Route.Cancel()
 	if e.Inara != nil {

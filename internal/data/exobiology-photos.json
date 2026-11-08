@@ -1,0 +1,507 @@
+{
+  "aleoida_aleoida_arcus": {
+    "file": "exobiology-photos/aleoida_aleoida_arcus.webp",
+    "alt": "Aleoida arcus",
+    "variant": "Aleoida-arcus-Emerald"
+  },
+  "aleoida_aleoida_coronamus": {
+    "file": "exobiology-photos/aleoida_aleoida_coronamus.webp",
+    "alt": "Aleoida coronamus",
+    "variant": "Aleoida-coronamus-Emerald"
+  },
+  "aleoida_aleoida_gravis": {
+    "file": "exobiology-photos/aleoida_aleoida_gravis.webp",
+    "alt": "Aleoida gravis",
+    "variant": "Aleoida-gravis-Green"
+  },
+  "aleoida_aleoida_laminiae": {
+    "file": "exobiology-photos/aleoida_aleoida_laminiae.webp",
+    "alt": "Aleoida laminiae",
+    "variant": "Aleoida-laminiae-Emerald"
+  },
+  "aleoida_aleoida_spica": {
+    "file": "exobiology-photos/aleoida_aleoida_spica.webp",
+    "alt": "Aleoida spica",
+    "variant": "Aleoida-spica-Emerald"
+  },
+  "amphora_amphora_plant": {
+    "file": "exobiology-photos/amphora_amphora_plant.webp",
+    "alt": "Amphora plant",
+    "variant": "Amphora-plant"
+  },
+  "anemone_luteolum": {
+    "file": "exobiology-photos/anemone_luteolum.webp",
+    "alt": "Luteolum Anemone",
+    "variant": "Luteolum-Anemone"
+  },
+  "anemone_rubeum_bioluminescent": {
+    "file": "exobiology-photos/anemone_rubeum_bioluminescent.webp",
+    "alt": "Rubeum Bioluminescent Anemone",
+    "variant": "Rubeum-Bioluminescent-Anemone"
+  },
+  "anemone_roseum_bioluminescent": {
+    "file": "exobiology-photos/anemone_roseum_bioluminescent.webp",
+    "alt": "Roseum Bioluminescent Anemone",
+    "variant": "Roseum-Bioluminescent-Anemone-2"
+  },
+  "bacterium_bacterium_acies": {
+    "file": "exobiology-photos/bacterium_bacterium_acies.webp",
+    "alt": "Bacterium acies",
+    "variant": "Bacterium-acies-Aquamarine"
+  },
+  "bacterium_bacterium_alcyoneum": {
+    "file": "exobiology-photos/bacterium_bacterium_alcyoneum.webp",
+    "alt": "Bacterium alcyoneum",
+    "variant": "Bacterium-alcyoneum-Green"
+  },
+  "bacterium_bacterium_bullaris": {
+    "file": "exobiology-photos/bacterium_bacterium_bullaris.webp",
+    "alt": "Bacterium bullaris",
+    "variant": "Bacterium-bullaris-Aquamarine"
+  },
+  "bacterium_bacterium_cerbrus": {
+    "file": "exobiology-photos/bacterium_bacterium_cerbrus.webp",
+    "alt": "Bacterium cerbrus",
+    "variant": "Bacterium-cerbrus-Green"
+  },
+  "bacterium_bacterium_informem": {
+    "file": "exobiology-photos/bacterium_bacterium_informem.webp",
+    "alt": "Bacterium informem",
+    "variant": "Bacterium-informem-Aquamarine"
+  },
+  "bacterium_bacterium_nebulus": {
+    "file": "exobiology-photos/bacterium_bacterium_nebulus.webp",
+    "alt": "Bacterium nebulus",
+    "variant": "Bacterium-nebulus-Cobalt"
+  },
+  "bacterium_bacterium_omentum": {
+    "file": "exobiology-photos/bacterium_bacterium_omentum.webp",
+    "alt": "Bacterium omentum",
+    "variant": "Bacterium-omentum-Aquamarine"
+  },
+  "bacterium_bacterium_scopulum": {
+    "file": "exobiology-photos/bacterium_bacterium_scopulum.webp",
+    "alt": "Bacterium scopulum",
+    "variant": "Bacterium-scopulum-Mulberry"
+  },
+  "bacterium_bacterium_tela": {
+    "file": "exobiology-photos/bacterium_bacterium_tela.webp",
+    "alt": "Bacterium tela",
+    "variant": "Bacterium-tela-Gold"
+  },
+  "bacterium_bacterium_verrata": {
+    "file": "exobiology-photos/bacterium_bacterium_verrata.webp",
+    "alt": "Bacterium verrata",
+    "variant": "Bacterium-verrata-Lime"
+  },
+  "bacterium_bacterium_vesicula": {
+    "file": "exobiology-photos/bacterium_bacterium_vesicula.webp",
+    "alt": "Bacterium vesicula",
+    "variant": "Bacterium-vesicula-Cyan"
+  },
+  "bacterium_bacterium_aurasus": {
+    "file": "exobiology-photos/bacterium_bacterium_aurasus.webp",
+    "alt": "Bacterium aurasus",
+    "variant": "Bacterium-aurasus-Emerald"
+  },
+  "bacterium_bacterium_volu": {
+    "file": "exobiology-photos/bacterium_bacterium_volu.webp",
+    "alt": "Bacterium volu",
+    "variant": "Bacterium-volu-Cobalt"
+  },
+  "bark_mounds_bark_mounds": {
+    "file": "exobiology-photos/bark_mounds_bark_mounds.webp",
+    "alt": "Bark Mounds",
+    "variant": "Bark-Mounds-2"
+  },
+  "brain_trees_brain_tree_gypseeum": {
+    "file": "exobiology-photos/brain_trees_brain_tree_gypseeum.webp",
+    "alt": "Brain Tree Gypseeum",
+    "variant": "Brain-Tree-Gypseeum"
+  },
+  "cactoida_cactoida_cortexum": {
+    "file": "exobiology-photos/cactoida_cactoida_cortexum.webp",
+    "alt": "Cactoida cortexum",
+    "variant": "Cactoida-cortexum-Yellow"
+  },
+  "cactoida_cactoida_pullulanta": {
+    "file": "exobiology-photos/cactoida_cactoida_pullulanta.webp",
+    "alt": "Cactoida pullulanta",
+    "variant": "Cactoida-Pullulanta"
+  },
+  "cactoida_cactoida_lapis": {
+    "file": "exobiology-photos/cactoida_cactoida_lapis.webp",
+    "alt": "Cactoida lapis",
+    "variant": "Cactoida-lapis-Amethyst"
+  },
+  "cactoida_cactoida_peperatis": {
+    "file": "exobiology-photos/cactoida_cactoida_peperatis.webp",
+    "alt": "Cactoida peperatis",
+    "variant": "Cactoida-peperatis-Amethyst"
+  },
+  "cactoida_cactoida_vermis": {
+    "file": "exobiology-photos/cactoida_cactoida_vermis.webp",
+    "alt": "Cactoida vermis",
+    "variant": "Cactoida-vermis-Yellow"
+  },
+  "clypeus_clypeus_lacrimam": {
+    "file": "exobiology-photos/clypeus_clypeus_lacrimam.webp",
+    "alt": "Clypeus lacrimam",
+    "variant": "Clypeus-lacrimam-Mauve"
+  },
+  "clypeus_clypeus_margaritus": {
+    "file": "exobiology-photos/clypeus_clypeus_margaritus.webp",
+    "alt": "Clypeus margaritus",
+    "variant": "Clypeus-margaritus-Amethyst"
+  },
+  "clypeus_clypeus_speculumi": {
+    "file": "exobiology-photos/clypeus_clypeus_speculumi.webp",
+    "alt": "Clypeus speculumi",
+    "variant": "Clypeus-speculumi-Amethyst"
+  },
+  "concha_concha_aureolas": {
+    "file": "exobiology-photos/concha_concha_aureolas.webp",
+    "alt": "Concha aureolas",
+    "variant": "Concha-aureolas-Grey"
+  },
+  "concha_concha_biconcavis": {
+    "file": "exobiology-photos/concha_concha_biconcavis.webp",
+    "alt": "Concha biconcavis",
+    "variant": "Concha-biconcavis"
+  },
+  "concha_concha_labiata": {
+    "file": "exobiology-photos/concha_concha_labiata.webp",
+    "alt": "Concha labiata",
+    "variant": "Concha-labiata-Grey"
+  },
+  "concha_concha_renibus": {
+    "file": "exobiology-photos/concha_concha_renibus.webp",
+    "alt": "Concha renibus",
+    "variant": "Concha-renibus-Aquamarine"
+  },
+  "crystalline_shards_crystalline_shards": {
+    "file": "exobiology-photos/crystalline_shards_crystalline_shards.webp",
+    "alt": "Crystalline Shards",
+    "variant": "Crystalline-shards-1024x576"
+  },
+  "electricae_electricae_pluma": {
+    "file": "exobiology-photos/electricae_electricae_pluma.webp",
+    "alt": "Electricae pluma",
+    "variant": "Electricae-pluma"
+  },
+  "electricae_electricae_radialem": {
+    "file": "exobiology-photos/electricae_electricae_radialem.webp",
+    "alt": "Electricae radialem",
+    "variant": "Electricae-radialem-Blue"
+  },
+  "fonticulua_fonticulua_campestris": {
+    "file": "exobiology-photos/fonticulua_fonticulua_campestris.webp",
+    "alt": "Fonticulua campestris",
+    "variant": "Fonticulua-campestris-Amethyst"
+  },
+  "fonticulua_fonticulua_digitos": {
+    "file": "exobiology-photos/fonticulua_fonticulua_digitos.webp",
+    "alt": "Fonticulua digitos",
+    "variant": "Fonticulua-digitos-Amethyst"
+  },
+  "fonticulua_fonticulua_fluctus": {
+    "file": "exobiology-photos/fonticulua_fonticulua_fluctus.webp",
+    "alt": "Fonticulua fluctus",
+    "variant": "Fonticulua-Fluctus"
+  },
+  "fonticulua_fonticulua_lapida": {
+    "file": "exobiology-photos/fonticulua_fonticulua_lapida.webp",
+    "alt": "Fonticulua lapida",
+    "variant": "Fonticulua-lapida-Amethyst"
+  },
+  "fonticulua_fonticulua_segmentatus": {
+    "file": "exobiology-photos/fonticulua_fonticulua_segmentatus.webp",
+    "alt": "Fonticulua segmentatus",
+    "variant": "Fonticulua-segmentatus"
+  },
+  "fonticulua_fonticulua_upupam": {
+    "file": "exobiology-photos/fonticulua_fonticulua_upupam.webp",
+    "alt": "Fonticulua upupam",
+    "variant": "Fonticulua-upupam-Amethyst"
+  },
+  "frutexa_frutexa_flabellum": {
+    "file": "exobiology-photos/frutexa_frutexa_flabellum.webp",
+    "alt": "Frutexa flabellum",
+    "variant": "Frutexa-flabellum-Emerald"
+  },
+  "frutexa_frutexa_flammasis": {
+    "file": "exobiology-photos/frutexa_frutexa_flammasis.webp",
+    "alt": "Frutexa flammasis",
+    "variant": "Frutexa-flammasis-Emerald"
+  },
+  "frutexa_frutexa_metallicum": {
+    "file": "exobiology-photos/frutexa_frutexa_metallicum.webp",
+    "alt": "Frutexa metallicum",
+    "variant": "Frutexa-metallicum-Emerald"
+  },
+  "frutexa_frutexa_acus": {
+    "file": "exobiology-photos/frutexa_frutexa_acus.webp",
+    "alt": "Frutexa acus",
+    "variant": "Frutexa-acus-Green"
+  },
+  "frutexa_frutexa_fera": {
+    "file": "exobiology-photos/frutexa_frutexa_fera.webp",
+    "alt": "Frutexa fera",
+    "variant": "Frutexa-fera-Green"
+  },
+  "frutexa_frutexa_collum": {
+    "file": "exobiology-photos/frutexa_frutexa_collum.webp",
+    "alt": "Frutexa collum",
+    "variant": "Frutexa-collum-Green"
+  },
+  "frutexa_frutexa_sponsae": {
+    "file": "exobiology-photos/frutexa_frutexa_sponsae.webp",
+    "alt": "Frutexa sponsae",
+    "variant": "Frutexa-sponsae-Green"
+  },
+  "fumerola_fumerola_aquatis": {
+    "file": "exobiology-photos/fumerola_fumerola_aquatis.webp",
+    "alt": "Fumerola aquatis",
+    "variant": "Fumerola-aquatis"
+  },
+  "fumerola_fumerola_carbosis": {
+    "file": "exobiology-photos/fumerola_fumerola_carbosis.webp",
+    "alt": "Fumerola carbosis",
+    "variant": "Fumerola-carbosis-Cobalt"
+  },
+  "fumerola_fumerola_extremus": {
+    "file": "exobiology-photos/fumerola_fumerola_extremus.webp",
+    "alt": "Fumerola extremus",
+    "variant": "Fumerola-extremus"
+  },
+  "fumerola_fumerola_nitris": {
+    "file": "exobiology-photos/fumerola_fumerola_nitris.webp",
+    "alt": "Fumerola nitris",
+    "variant": "Fumerola-nitris-Lime"
+  },
+  "fungoida_fungoida_bullarum": {
+    "file": "exobiology-photos/fungoida_fungoida_bullarum.webp",
+    "alt": "Fungoida bullarum",
+    "variant": "Fungoida-bullarum-Gold-2"
+  },
+  "fungoida_fungoida_gelata": {
+    "file": "exobiology-photos/fungoida_fungoida_gelata.webp",
+    "alt": "Fungoida gelata",
+    "variant": "Fungoida-gelata-Green"
+  },
+  "fungoida_fungoida_setisis": {
+    "file": "exobiology-photos/fungoida_fungoida_setisis.webp",
+    "alt": "Fungoida setisis",
+    "variant": "Fungoida-setisis-Orange"
+  },
+  "fungoida_fungoida_stabitis": {
+    "file": "exobiology-photos/fungoida_fungoida_stabitis.webp",
+    "alt": "Fungoida stabitis",
+    "variant": "Fungoida-stabitis-Blue"
+  },
+  "osseus_osseus_cornibus": {
+    "file": "exobiology-photos/osseus_osseus_cornibus.webp",
+    "alt": "Osseus cornibus",
+    "variant": "Osseus-cornibus"
+  },
+  "osseus_osseus_discus": {
+    "file": "exobiology-photos/osseus_osseus_discus.webp",
+    "alt": "Osseus discus",
+    "variant": "Osseus-discus-Lime"
+  },
+  "osseus_osseus_fractus": {
+    "file": "exobiology-photos/osseus_osseus_fractus.webp",
+    "alt": "Osseus fractus",
+    "variant": "Osseus-fractus-Indigo"
+  },
+  "osseus_osseus_pellebantus": {
+    "file": "exobiology-photos/osseus_osseus_pellebantus.webp",
+    "alt": "Osseus pellebantus",
+    "variant": "Osseus-pellebantus-Grey"
+  },
+  "osseus_osseus_pumice": {
+    "file": "exobiology-photos/osseus_osseus_pumice.webp",
+    "alt": "Osseus pumice",
+    "variant": "Osseus-pumice-Gold"
+  },
+  "osseus_osseus_spiralis": {
+    "file": "exobiology-photos/osseus_osseus_spiralis.webp",
+    "alt": "Osseus spiralis",
+    "variant": "Osseus-spiralis-Emerald"
+  },
+  "recepta_recepta_conditivus": {
+    "file": "exobiology-photos/recepta_recepta_conditivus.webp",
+    "alt": "Recepta conditivus",
+    "variant": "Recepta-conditivus-Aquamarine"
+  },
+  "recepta_recepta_deltahedronix": {
+    "file": "exobiology-photos/recepta_recepta_deltahedronix.webp",
+    "alt": "Recepta deltahedronix",
+    "variant": "Recepta-deltahedronix-Mulberry"
+  },
+  "recepta_recepta_umbrux": {
+    "file": "exobiology-photos/recepta_recepta_umbrux.webp",
+    "alt": "Recepta umbrux",
+    "variant": "Recepta-umbrux-Maroon"
+  },
+  "sinuous_tuber_sinuous_tubers_blatteum": {
+    "file": "exobiology-photos/sinuous_tuber_sinuous_tubers_blatteum.webp",
+    "alt": "Sinuous Tubers Blatteum",
+    "variant": "Blatteum-Sinuous"
+  },
+  "sinuous_tuber_sinuous_tubers_caeruleum": {
+    "file": "exobiology-photos/sinuous_tuber_sinuous_tubers_caeruleum.webp",
+    "alt": "Sinuous Tubers Caeruleum",
+    "variant": "Sinuous-Tubers-Caeruleum"
+  },
+  "sinuous_tuber_sinuous_tubers_prasinum": {
+    "file": "exobiology-photos/sinuous_tuber_sinuous_tubers_prasinum.webp",
+    "alt": "Sinuous Tubers Prasinum",
+    "variant": "Sinuous-Tubers-Prasinum"
+  },
+  "sinuous_tuber_sinuous_tubers_roseum": {
+    "file": "exobiology-photos/sinuous_tuber_sinuous_tubers_roseum.webp",
+    "alt": "Sinuous Tubers Roseum",
+    "variant": "Sinuous-Tubers-Roseum"
+  },
+  "stratum_stratum_araneamus": {
+    "file": "exobiology-photos/stratum_stratum_araneamus.webp",
+    "alt": "Stratum araneamus",
+    "variant": "Stratum-araneamus-Emerald"
+  },
+  "stratum_stratum_cucumisis": {
+    "file": "exobiology-photos/stratum_stratum_cucumisis.webp",
+    "alt": "Stratum cucumisis",
+    "variant": "Stratum-cucumisis"
+  },
+  "stratum_stratum_excutitus": {
+    "file": "exobiology-photos/stratum_stratum_excutitus.webp",
+    "alt": "Stratum excutitus",
+    "variant": "Stratum-excutitus-Emerald"
+  },
+  "stratum_stratum_frigus": {
+    "file": "exobiology-photos/stratum_stratum_frigus.webp",
+    "alt": "Stratum frigus",
+    "variant": "Stratum-frigus"
+  },
+  "stratum_stratum_laminamus": {
+    "file": "exobiology-photos/stratum_stratum_laminamus.webp",
+    "alt": "Stratum laminamus",
+    "variant": "Stratum-laminamus"
+  },
+  "stratum_stratum_limaxus": {
+    "file": "exobiology-photos/stratum_stratum_limaxus.webp",
+    "alt": "Stratum limaxus",
+    "variant": "Stratum-limaxus-Green"
+  },
+  "stratum_stratum_paleas": {
+    "file": "exobiology-photos/stratum_stratum_paleas.webp",
+    "alt": "Stratum paleas",
+    "variant": "Stratum-paleas-Emerald"
+  },
+  "stratum_stratum_tectonicas": {
+    "file": "exobiology-photos/stratum_stratum_tectonicas.webp",
+    "alt": "Stratum tectonicas",
+    "variant": "Stratum-tectonicas-Emerald"
+  },
+  "tubus_tubus_sororibus": {
+    "file": "exobiology-photos/tubus_tubus_sororibus.webp",
+    "alt": "Tubus sororibus",
+    "variant": "Tubus-sororibus-Maroon"
+  },
+  "tubus_tubus_rosarium": {
+    "file": "exobiology-photos/tubus_tubus_rosarium.webp",
+    "alt": "Tubus rosarium",
+    "variant": "Tubus-rosarium-Grey"
+  },
+  "tubus_tubus_cavas": {
+    "file": "exobiology-photos/tubus_tubus_cavas.webp",
+    "alt": "Tubus cavas",
+    "variant": "Tubus-cavas-Grey"
+  },
+  "tubus_tubus_compagibus": {
+    "file": "exobiology-photos/tubus_tubus_compagibus.webp",
+    "alt": "Tubus compagibus",
+    "variant": "Tubus-compagibus-Grey"
+  },
+  "tubus_tubus_conifer": {
+    "file": "exobiology-photos/tubus_tubus_conifer.webp",
+    "alt": "Tubus conifer",
+    "variant": "Tubus-conifer"
+  },
+  "tussock_tussock_albata": {
+    "file": "exobiology-photos/tussock_tussock_albata.webp",
+    "alt": "Tussock albata",
+    "variant": "Tussock-albata-Emerald"
+  },
+  "tussock_tussock_capillum": {
+    "file": "exobiology-photos/tussock_tussock_capillum.webp",
+    "alt": "Tussock capillum",
+    "variant": "Tussock-capillum-Green"
+  },
+  "tussock_tussock_caputus": {
+    "file": "exobiology-photos/tussock_tussock_caputus.webp",
+    "alt": "Tussock caputus",
+    "variant": "Tussock-caputus-Yellow"
+  },
+  "tussock_tussock_catena": {
+    "file": "exobiology-photos/tussock_tussock_catena.webp",
+    "alt": "Tussock catena",
+    "variant": "Tussock-catena-Yellow"
+  },
+  "tussock_tussock_cultro": {
+    "file": "exobiology-photos/tussock_tussock_cultro.webp",
+    "alt": "Tussock cultro",
+    "variant": "Tussock-cultro-Emerald"
+  },
+  "tussock_tussock_divisa": {
+    "file": "exobiology-photos/tussock_tussock_divisa.webp",
+    "alt": "Tussock divisa",
+    "variant": "Tussock-divisa"
+  },
+  "tussock_tussock_ignis": {
+    "file": "exobiology-photos/tussock_tussock_ignis.webp",
+    "alt": "Tussock ignis",
+    "variant": "Tussock-ignis-Yellow"
+  },
+  "tussock_tussock_pennata": {
+    "file": "exobiology-photos/tussock_tussock_pennata.webp",
+    "alt": "Tussock pennata",
+    "variant": "Tussock-pennata"
+  },
+  "tussock_tussock_pennatis": {
+    "file": "exobiology-photos/tussock_tussock_pennatis.webp",
+    "alt": "Tussock pennatis",
+    "variant": "Tussock-pennatis-Emerald"
+  },
+  "tussock_tussock_propagito": {
+    "file": "exobiology-photos/tussock_tussock_propagito.webp",
+    "alt": "Tussock propagito",
+    "variant": "Tussock-propagito-Green"
+  },
+  "tussock_tussock_serrati": {
+    "file": "exobiology-photos/tussock_tussock_serrati.webp",
+    "alt": "Tussock serrati",
+    "variant": "Tussock-serrati-Green"
+  },
+  "tussock_tussock_stigmasis": {
+    "file": "exobiology-photos/tussock_tussock_stigmasis.webp",
+    "alt": "Tussock stigmasis",
+    "variant": "Tussock-stigmasis-Lime"
+  },
+  "tussock_tussock_triticum": {
+    "file": "exobiology-photos/tussock_tussock_triticum.webp",
+    "alt": "Tussock triticum",
+    "variant": "Tussock-triticum-Lime"
+  },
+  "tussock_tussock_ventusa": {
+    "file": "exobiology-photos/tussock_tussock_ventusa.webp",
+    "alt": "Tussock ventusa",
+    "variant": "Tussock-ventusa-Lime"
+  },
+  "tussock_tussock_virgam": {
+    "file": "exobiology-photos/tussock_tussock_virgam.webp",
+    "alt": "Tussock virgam",
+    "variant": "Tussock-virgam-Yellow"
+  }
+}

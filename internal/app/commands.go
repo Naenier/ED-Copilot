@@ -79,6 +79,10 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		body = M{}
 	}
 	switch path {
+	case "/api/exobiology":
+		if err := e.Exobiology.Update(body); err != nil {
+			return nil, err
+		}
 	case "/api/carrier/trade":
 		if err := e.updateCarrierTrade(body); err != nil {
 			return nil, err
@@ -94,7 +98,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 	case "/api/settings":
 		e.mu.Lock()
 		next := v.Copy(e.settings)
-		for k, allowed := range map[string][]string{"minTier": {"low", "medium", "high"}, "method": {"all", "laser", "core", "subsurface", "surface", "surface-planet", "raw"}, "activity": {"flight", "asteroid", "surface", "raw", "trade", "carrier", "engineering", "colonization"}} {
+		for k, allowed := range map[string][]string{"language": {"ru", "en"}, "minTier": {"low", "medium", "high"}, "method": {"all", "laser", "core", "subsurface", "surface", "surface-planet", "raw"}, "activity": {"flight", "asteroid", "surface", "raw", "trade", "carrier", "engineering", "colonization", "exobiology"}} {
 			if raw, ok := body[k]; ok {
 				valid := false
 				for _, x := range allowed {

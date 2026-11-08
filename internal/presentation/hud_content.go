@@ -60,6 +60,8 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	}
 	hudAdd(&doc, "ED COPILOT · "+hudActivity(activity), hudMuted(place))
 	switch activity {
+	case "exobiology":
+		hudExobiology(&doc, s)
 	case "asteroid":
 		hudAsteroid(&doc, s, now)
 	case "surface":

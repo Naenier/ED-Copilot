@@ -1,20 +1,23 @@
 /* Offline reference library. The Go catalogue owns entities, grouping and search. */
 (() => {
   'use strict';
+const t=(value,vars)=>window.CopilotI18n?.t(value,vars)??String(value??'');
+const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const categories = [
     ['articles', 'Статьи', 'book-open'], ['ships', 'Корабли', 'ship'],
     ['engineers', 'Инженеры', 'users'], ['commodities', 'Товары', 'package'],
     ['modules', 'Модули', 'wrench'], ['materials', 'Материалы', 'layers'],
-    ['blueprints', 'Чертежи', 'target'], ['experimentals', 'Эффекты', 'compass'], ['systems', 'Системы', 'compass'],
+    ['blueprints', 'Чертежи', 'target'], ['experimentals', 'Эффекты', 'compass'], ['systems', 'Системы', 'compass'], ['exobiology', 'Экзобиология', 'orbit'],
   ];
-  const modeCategory = { 'Статьи': 'articles', 'Корабли': 'ships', 'Инженеры': 'engineers', 'Товары': 'commodities', 'Модули': 'modules', 'Материалы': 'materials', 'Чертежи': 'blueprints', 'Эффекты': 'experimentals' };
+  const modeCategory = { 'Статьи': 'articles', 'Корабли': 'ships', 'Инженеры': 'engineers', 'Товары': 'commodities', 'Модули': 'modules', 'Материалы': 'materials', 'Чертежи': 'blueprints', 'Эффекты': 'experimentals', 'Экзобиология':'exobiology' };
   const bindings = new WeakSet();
   const active = C => C.tab === 'encyclopedia' || (['engineering', 'targets'].includes(C.tab) && C.mode === 'Инженеры');
   const scope = C => ['engineering', 'targets'].includes(C.tab) ? 'engineers' : 'library';
   const plain = value => String(value ?? '').replace(/\bhttps?:\/\/[^\s<>"']+/gi, '').trim();
   const text = (ui, value) => ui.esc(plain(value));
-  const valueText = (value, ui) => value === null || value === undefined || value === '' ? '—' : typeof value === 'boolean' ? (value ? 'Да' : 'Нет') : typeof value === 'number' ? ui.fmt(value) : Array.isArray(value) ? value.map(item => plain(item)).filter(Boolean).join(', ') : typeof value === 'object' ? '—' : plain(value);
+  const valueText = (value, ui) => value === null || value === undefined || value === '' ? '—' : typeof value === 'boolean' ? (value ? t("Да") : t("Нет")) : typeof value === 'number' ? ui.fmt(value) : Array.isArray(value) ? value.map(item => plain(item)).filter(Boolean).join(', ') : typeof value === 'object' ? '—' : plain(value);
   const listKey = r => JSON.stringify([r.category, r.query.trim(), r.group, r.offset, r.limit]);
+  const pageSize = r => Number.isInteger(Number(r.list?.limit)) && Number(r.list.limit) > 0 && Number(r.list.limit) <= r.limit ? Number(r.list.limit) : r.limit;
   const validID = id => typeof id === 'string' && id.length > 0 && id.length <= 512;
 
   function state(C) {
@@ -32,7 +35,7 @@
   }
 
   function categoryTitle(r, id) {
-    return (r.list?.categories || []).find(item => item.id === id)?.title || categories.find(item => item[0] === id)?.[1] || (id === 'all' ? 'Все разделы' : 'Справочник');
+    return t((r.list?.categories || []).find(item => item.id === id)?.title || categories.find(item => item[0] === id)?.[1] || (id === 'all' ? "Все разделы" : "Справочник"));
   }
   function categoryIcon(id) { return categories.find(item => item[0] === id)?.[2] || 'compass'; }
   function groupTitle(r, entry) { return entry.groupTitle || r.list?.groups?.find(group => group.id === entry.group)?.title || categoryTitle(r, entry.category || r.category); }
@@ -41,16 +44,16 @@
     return (r.personal?.[collection] || []).find(item => String(item.key) === key);
   }
   function engineerStatus(row) {
-    return ({ unlocked: 'Доступен', locked: 'Не открыт', invited: 'Есть приглашение', known: 'Есть сведения', unknown: 'Нет сведений' })[String(row?.status || '').toLowerCase()] || 'Нет сведений';
+    return ({ unlocked: t("Доступен"), locked: t("Не открыт"), invited: t("Есть приглашение"), known: t("Есть сведения"), unknown: t("Нет сведений") })[String(row?.status || '').toLowerCase()] || t("Нет сведений");
   }
   function personalBanner(r, entry, ui) {
     if (entry.category === 'engineers') {
       const row = entry.personalStatus || personalItem(r, entry, 'engineers'), known = row && row.status !== 'unknown';
-      return `<section class="ref-personal-banner ${row?.status === 'unlocked' ? 'is-unlocked' : ''}">${ui.icon(row?.status === 'unlocked' ? 'circle-check' : 'circle')}<div><strong>${text(ui, known ? engineerStatus(row) : 'Открытие пока не подтверждено')}</strong><p>${text(ui, known ? 'Ваш статус у инженера' + (row.rank === null || row.rank === undefined ? '' : ' · ранг ' + valueText(row.rank, ui)) : 'Условия знакомства приведены ниже. Личный статус появится после получения данных игры.')}</p></div></section>`;
+      return `<section class="ref-personal-banner ${row?.status === 'unlocked' ? 'is-unlocked' : ''}">${ui.icon(row?.status === 'unlocked' ? 'circle-check' : 'circle')}<div><strong>${text(ui, known ? engineerStatus(row) : t("Открытие пока не подтверждено"))}</strong><p>${text(ui, known ? t("Ваш статус у инженера") + (row.rank === null || row.rank === undefined ? '' : t(" · ранг ") + valueText(row.rank, ui)) : t("Условия знакомства приведены ниже. Личный статус появится после получения данных игры."))}</p></div></section>`;
     }
     if (entry.category === 'materials') {
       const row = personalItem(r, entry, 'materials'), known = row?.owned !== null && row?.owned !== undefined;
-      return `<section class="ref-personal-banner">${ui.icon('layers')}<div><strong>${known ? 'В вашем запасе: ' + text(ui, ui.fmt(row.owned)) : 'Личный запас пока неизвестен'}</strong><p>${known ? 'Последнее известное количество материала.' : 'Неизвестный запас не считается нулевым.'}</p></div></section>`;
+      return `<section class="ref-personal-banner">${ui.icon('layers')}<div><strong>${known ? t("В вашем запасе: ") + text(ui, ui.fmt(row.owned)) : t("Личный запас пока неизвестен")}</strong><p>${known ? t("Последнее известное количество материала.") : t("Неизвестный запас не считается нулевым.")}</p></div></section>`;
     }
     return '';
   }
@@ -63,43 +66,43 @@
     return `<div class="ref-art ${hero ? 'ref-art-hero' : ''} ref-art-${ui.esc(entry.category || 'entity')} ${src ? 'has-image' : 'no-image'}"><span class="ref-image-placeholder" ${src ? 'hidden' : ''}>${ui.icon(categoryIcon(entry.category))}</span>${src ? `<img data-reference-image src="${ui.esc(src)}" alt="${text(ui, entry.image?.alt || entry.title)}" class="ref-image-${fit}" loading="${hero ? 'eager' : 'lazy'}" decoding="async">` : ''}</div>`;
   }
   function internalLink(item, ui, className = '') {
-    const id = item.entryId || item.id, label = item.title || item.name || item.label || 'Открыть';
+    const id = item.entryId || item.id, label = item.title || item.name || item.label || t("Открыть");
     return validID(id) ? `<button type="button" class="ref-inline-link ${className}" data-click="reference-open" data-id="${ui.esc(id)}">${text(ui, label)}${ui.icon('arrow-up-right')}</button>` : text(ui, label);
   }
   function facts(items, ui, className = '') {
     return `<dl class="ref-properties ${className}">${(items || []).filter(item => item?.label || item?.title).map(item => `<div><dt>${text(ui, item.label || item.title)}</dt><dd>${item.entryId ? internalLink({ ...item, title: valueText(item.value ?? item.text, ui) }, ui) : text(ui, valueText(item.value ?? item.text, ui))}</dd></div>`).join('')}</dl>`;
   }
   function card(entry, r, ui) {
-    const visual = entry.category === 'ships' || entry.category === 'engineers';
+    const visual = ['ships','engineers','exobiology'].includes(entry.category);
     const meta = (entry.meta || entry.properties || []).slice(0, 3), status = entry.personalStatus || personalItem(r, entry, 'engineers');
-    return `<button type="button" class="ref-card ${visual ? 'ref-visual-card' : 'ref-text-card'} ref-card-${ui.esc(entry.category || r.category)}" data-click="reference-open" data-id="${ui.esc(entry.id)}">${visual ? imageHTML(entry, ui) : `<span class="ref-card-symbol">${ui.icon(categoryIcon(entry.category || r.category))}</span>`}<span class="ref-card-copy"><span class="ref-card-kicker">${text(ui, groupTitle(r, entry))}</span><strong>${text(ui, entry.title)}</strong>${entry.subtitle ? `<span class="ref-card-subtitle">${text(ui, entry.subtitle)}</span>` : ''}${entry.summary || entry.description ? `<span class="ref-card-summary">${text(ui, entry.summary || entry.description)}</span>` : ''}${meta.length ? `<span class="ref-card-meta">${meta.map(item => `<span><small>${text(ui, item.label)}</small>${text(ui, valueText(item.value, ui))}</span>`).join('')}</span>` : ''}${entry.badges?.length || (entry.category === 'engineers' && status && status.status !== 'unknown') ? `<span class="ref-card-badges">${entry.category === 'engineers' && status && status.status !== 'unknown' ? `<span class="ref-tag ${status.status === 'unlocked' ? 'is-unlocked' : ''}">${text(ui, engineerStatus(status))}</span>` : ''}${(entry.badges || []).slice(0, 3).map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</span>` : ''}<span class="ref-card-open">Открыть страницу ${ui.icon('arrow-right')}</span></span></button>`;
+    return `<button type="button" class="ref-card ${visual ? 'ref-visual-card' : 'ref-text-card'} ref-card-${ui.esc(entry.category || r.category)}" data-click="reference-open" data-id="${ui.esc(entry.id)}">${visual ? imageHTML(entry, ui) : `<span class="ref-card-symbol">${ui.icon(categoryIcon(entry.category || r.category))}</span>`}<span class="ref-card-copy"><span class="ref-card-kicker">${text(ui, groupTitle(r, entry))}</span><strong>${text(ui, entry.title)}</strong>${entry.subtitle ? `<span class="ref-card-subtitle">${text(ui, entry.subtitle)}</span>` : ''}${entry.summary || entry.description ? `<span class="ref-card-summary">${text(ui, entry.summary || entry.description)}</span>` : ''}${meta.length ? `<span class="ref-card-meta">${meta.map(item => `<span><small>${text(ui, item.label)}</small>${text(ui, valueText(item.value, ui))}</span>`).join('')}</span>` : ''}${entry.badges?.length || (entry.category === 'engineers' && status && status.status !== 'unknown') ? `<span class="ref-card-badges">${entry.category === 'engineers' && status && status.status !== 'unknown' ? `<span class="ref-tag ${status.status === 'unlocked' ? 'is-unlocked' : ''}">${text(ui, engineerStatus(status))}</span>` : ''}${(entry.badges || []).slice(0, 3).map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</span>` : ''}<span class="ref-card-open">${th("Открыть страницу ")}${ui.icon('arrow-right')}</span></span></button>`;
   }
   function categoryNavigation(r, ui) {
     if (r.scope === 'engineers') return '';
     const catalogueCategories = r.list?.categories?.length ? r.list.categories : categories.map(([id, title]) => ({ id, title }));
-    const available = catalogueCategories.some(item => item.id === 'all') ? catalogueCategories : [{ id: 'all', title: 'Всё' }, ...catalogueCategories];
-    return `<nav class="ref-category-nav" aria-label="Разделы энциклопедии">${available.map(item => `<button type="button" data-click="reference-category" data-id="${ui.esc(item.id)}" class="${r.category === item.id ? 'selected' : ''}" aria-pressed="${r.category === item.id}">${ui.icon(categoryIcon(item.id))}<span>${text(ui, item.title)}</span>${Number.isFinite(Number(item.count)) ? `<small>${text(ui, ui.fmt(item.count))}</small>` : ''}</button>`).join('')}</nav>`;
+    const available = catalogueCategories.some(item => item.id === 'all') ? catalogueCategories : [{ id: 'all', title: t("Всё") }, ...catalogueCategories];
+    return `<nav class="ref-category-nav" aria-label="${th("Разделы энциклопедии")}">${available.map(item => `<button type="button" data-click="reference-category" data-id="${ui.esc(item.id)}" class="${r.category === item.id ? 'selected' : ''}" aria-pressed="${r.category === item.id}">${ui.icon(categoryIcon(item.id))}<span>${text(ui, t(item.title))}</span>${Number.isFinite(Number(item.count)) ? `<small>${text(ui, ui.fmt(item.count))}</small>` : ''}</button>`).join('')}</nav>`;
   }
   function skeleton(ui, reader = false) {
-    if (reader) return `<div class="ref-reader-loading" role="status"><div class="ref-skeleton ref-skeleton-title"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-picture"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-line short"></div><span class="muted">Открываем страницу…</span></div>`;
-    return `<div class="ref-grid ref-loading-grid" role="status" aria-label="Загрузка справочника">${Array.from({ length: 6 }, () => '<div class="ref-skeleton-card"><div class="ref-skeleton ref-skeleton-picture"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-line short"></div></div>').join('')}</div>`;
+    if (reader) return `<div class="ref-reader-loading" role="status"><div class="ref-skeleton ref-skeleton-title"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-picture"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-line short"></div><span class="muted">${th("Открываем страницу…")}</span></div>`;
+    return `<div class="ref-grid ref-loading-grid" role="status" aria-label="${th("Загрузка справочника")}">${Array.from({ length: 6 }, () => '<div class="ref-skeleton-card"><div class="ref-skeleton ref-skeleton-picture"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-line short"></div></div>').join('')}</div>`;
   }
   function errorPanel(message, ui, entry = false) {
-    return `<section class="ref-message ref-error" role="alert">${ui.icon('circle-help')}<div><h2>${entry ? 'Не удалось открыть страницу' : 'Не удалось загрузить справочник'}</h2><p>${text(ui, message || 'Попробуйте ещё раз.')}</p>${ui.btn('Повторить', entry ? 'reference-retry-entry' : 'reference-retry', 'refresh-cw', 'primary')}</div></section>`;
+    return `<section class="ref-message ref-error" role="alert">${ui.icon('circle-help')}<div><h2>${entry ? t("Не удалось открыть страницу") : t("Не удалось загрузить справочник")}</h2><p>${text(ui, message || t("Попробуйте ещё раз."))}</p>${ui.btn(t("Повторить"), entry ? 'reference-retry-entry' : 'reference-retry', 'refresh-cw', 'primary')}</div></section>`;
   }
   function catalogue(r, ui) {
     const list = r.list || {}, entries = list.entries || [], total = Math.max(0, Number(list.total) || 0);
-    const title = r.scope === 'engineers' ? 'Инженеры' : 'Энциклопедия';
-    const intro = r.scope === 'engineers' ? 'Условия знакомства, доступные улучшения и всё необходимое для следующего визита.' : 'Знакомьтесь с кораблями, находите нужные материалы и разбирайтесь в устройстве галактики.';
+    const title = r.scope === 'engineers' ? t("Инженеры") : t("Энциклопедия");
+    const intro = r.scope === 'engineers' ? t("Условия знакомства, доступные улучшения и всё необходимое для следующего визита.") : t("Знакомьтесь с кораблями, находите нужные материалы и разбирайтесь в устройстве галактики.");
     const groups = [...(list.groups || [])];
-    if (r.group && !groups.some(group => group.id === r.group)) groups.unshift({ id: r.group, title: r.groupName || 'Выбранная группа' });
-    const toolbar = `<div class="ref-catalog-toolbar"><label class="ref-search" for="reference-query">${ui.icon('search')}<input id="reference-query" type="search" placeholder="${r.scope === 'engineers' ? 'Найти инженера, систему или улучшение' : 'Поиск в выбранном разделе'}" value="${ui.esc(r.query)}" autocomplete="off"><span class="ref-search-key">${text(ui, categoryTitle(r, r.category))}</span></label>${groups.length ? `<label class="ref-group-label"><span>Группа</span><select id="reference-group" aria-label="Группа справочника"><option value="">Все группы</option>${groups.filter(group => group.id).map(group => `<option value="${ui.esc(group.id)}" ${r.group === group.id ? 'selected' : ''}>${text(ui, group.title)}${group.count === undefined ? '' : ' · ' + text(ui, ui.fmt(group.count))}</option>`).join('')}</select></label>` : ''}</div>`;
+    if (r.group && !groups.some(group => group.id === r.group)) groups.unshift({ id: r.group, title: r.groupName || t("Выбранная группа") });
+    const toolbar = `<div class="ref-catalog-toolbar"><label class="ref-search" for="reference-query">${ui.icon('search')}<input id="reference-query" type="search" placeholder="${r.scope === 'engineers' ? t("Найти инженера, систему или улучшение") : t("Поиск в выбранном разделе")}" value="${ui.esc(r.query)}" autocomplete="off"><span class="ref-search-key">${text(ui, categoryTitle(r, r.category))}</span></label>${groups.length ? `<label class="ref-group-label"><span>${th("Группа")}</span><select id="reference-group" aria-label="${th("Группа справочника")}"><option value="">${th("Все группы")}</option>${groups.filter(group => group.id).map(group => `<option value="${ui.esc(group.id)}" ${r.group === group.id ? 'selected' : ''}>${text(ui, group.title)}${group.count === undefined ? '' : ' · ' + text(ui, ui.fmt(group.count))}</option>`).join('')}</select></label>` : ''}</div>`;
     let body;
     if (r.error) body = errorPanel(r.error, ui);
     else if (r.loading && !r.list) body = skeleton(ui);
-    else if (!entries.length) body = `<section class="ref-message ref-empty">${ui.icon('search')}<div><h2>${r.query || r.group ? 'Ничего не найдено' : 'Здесь пока нет записей'}</h2><p>${r.query || r.group ? 'Попробуйте другой запрос или вернитесь ко всему разделу.' : 'Выберите соседний раздел или обновите справочник.'}</p>${ui.btn(r.query || r.group ? 'Сбросить поиск и фильтры' : 'Обновить', r.query || r.group ? 'reference-clear' : 'reference-retry', r.query || r.group ? 'x' : 'refresh-cw', 'quiet')}</div></section>`;
-    else body = `<div class="ref-results-heading"><h2>${text(ui, categoryTitle(r, r.category))}</h2><span>${r.loading ? '<span class="ref-inline-loading">Обновляем список…</span>' : text(ui, ui.fmt(total) + ' записей')}</span></div><div class="ref-grid ref-grid-${ui.esc(r.category)} ${r.loading ? 'is-updating' : ''}" aria-busy="${r.loading}">${entries.map(entry => card(entry, r, ui)).join('')}</div>${total > r.limit ? `<nav class="ref-pagination" aria-label="Страницы справочника">${ui.btn('Назад', 'reference-prev', 'arrow-left', 'quiet', `type="button" ${r.offset <= 0 || r.loading ? 'disabled' : ''}`)}<span>${text(ui, ui.fmt(r.offset + 1))}–${text(ui, ui.fmt(Math.min(r.offset + entries.length, total)))} <span class="muted">из ${text(ui, ui.fmt(total))}</span></span>${ui.btn('Далее', 'reference-next', 'arrow-right', 'quiet', `type="button" ${r.offset + r.limit >= total || r.loading ? 'disabled' : ''}`)}</nav>` : ''}`;
-    return `<section class="reference-root ref-library" data-reference="catalog"><header class="ref-library-heading"><div class="eyebrow">${r.scope === 'engineers' ? 'Мастерские галактики' : 'Бортовая библиотека'}</div><h1>${title}</h1><p>${intro}</p></header>${r.scope === 'engineers' && ui.renderModes ? ui.renderModes(true) : ''}${categoryNavigation(r, ui)}${toolbar}<div class="ref-results" aria-live="polite">${body}</div></section>`;
+    else if (!entries.length) body = `<section class="ref-message ref-empty">${ui.icon('search')}<div><h2>${r.query || r.group ? t("Ничего не найдено") : t("Здесь пока нет записей")}</h2><p>${r.query || r.group ? t("Попробуйте другой запрос или вернитесь ко всему разделу.") : t("Выберите соседний раздел или обновите справочник.")}</p>${ui.btn(r.query || r.group ? t("Сбросить поиск и фильтры") : t("Обновить"), r.query || r.group ? 'reference-clear' : 'reference-retry', r.query || r.group ? 'x' : 'refresh-cw', 'quiet')}</div></section>`;
+    else body = `<div class="ref-results-heading"><h2>${text(ui, categoryTitle(r, r.category))}</h2><span>${r.loading ? `<span class="ref-inline-loading">${th("Обновляем список…")}</span>` : text(ui, ui.fmt(total) + t(" записей"))}</span></div><div class="ref-grid ref-grid-${ui.esc(r.category)} ${r.loading ? 'is-updating' : ''}" aria-busy="${r.loading}">${entries.map(entry => card(entry, r, ui)).join('')}</div>${total > pageSize(r) ? `<nav class="ref-pagination" aria-label="${th("Страницы справочника")}">${ui.btn(t("Назад"), 'reference-prev', 'arrow-left', 'quiet', `type="button" ${r.offset <= 0 || r.loading ? 'disabled' : ''}`)}<span>${text(ui, ui.fmt(r.offset + 1))}–${text(ui, ui.fmt(Math.min(r.offset + entries.length, total)))} <span class="muted">${th("из ")}${text(ui, ui.fmt(total))}</span></span>${ui.btn(t("Далее"), 'reference-next', 'arrow-right', 'quiet', `type="button" ${r.offset + pageSize(r) >= total || r.loading ? 'disabled' : ''}`)}</nav>` : ''}`;
+    return `<section class="reference-root ref-library" data-reference="catalog"><header class="ref-library-heading"><div class="eyebrow">${r.scope === 'engineers' ? t("Мастерские галактики") : t("Бортовая библиотека")}</div><h1>${title}</h1><p>${intro}</p></header>${r.scope === 'engineers' && ui.renderModes ? ui.renderModes(true) : ''}${categoryNavigation(r, ui)}${toolbar}<div class="ref-results" aria-live="polite">${body}</div></section>`;
   }
 
   function sectionIsVisible(section) {
@@ -117,9 +120,9 @@
     return `<div class="ref-table-wrap"><table class="ref-table"><thead><tr>${columns.map(column => `<th scope="col">${text(ui, typeof column === 'object' ? column.label || column.title : column)}</th>`).join('')}</tr></thead><tbody>${rows.map((row, rowIndex) => `<tr>${(Array.isArray(row) ? row : columns.map(column => row[column.key])).map((cell, columnIndex) => { const linked = cell && typeof cell === 'object' && cell.entryId ? cell : section.cellLinks?.[rowIndex]?.[columnIndex] ? { entryId: section.cellLinks[rowIndex][columnIndex], title: valueText(cell, ui) } : null; return `<td>${linked ? internalLink(linked, ui) : text(ui, valueText(cell, ui))}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
   function grades(section, ui, r) {
-    return `<div class="ref-grade-list">${(section.grades || []).map((grade, index) => `<details class="ref-grade" ${index === 0 ? 'open' : ''}><summary><span class="ref-grade-number">${Number(grade.grade) > 0 ? text(ui, grade.grade) : ui.icon('wrench')}</span><span><strong>${text(ui, grade.title || (Number(grade.grade) > 0 ? 'Улучшение уровня ' + grade.grade : 'Установка эффекта'))}</strong><small>${text(ui, (grade.materials || []).map(item => (item.name || item.title) + ' × ' + valueText(item.count, ui)).join(' · '))}</small></span>${ui.icon('chevron-down')}</summary><div class="ref-grade-body">${grade.effects?.length ? facts(grade.effects, ui, 'ref-grade-effects') : ''}<h3>Потребуется на одну попытку</h3><div class="ref-materials">${(grade.materials || []).map(material => {
+    return `<div class="ref-grade-list">${(section.grades || []).map((grade, index) => `<details class="ref-grade" ${index === 0 ? 'open' : ''}><summary><span class="ref-grade-number">${Number(grade.grade) > 0 ? text(ui, grade.grade) : ui.icon('wrench')}</span><span><strong>${text(ui, grade.title || (Number(grade.grade) > 0 ? t("Улучшение уровня ") + grade.grade : t("Установка эффекта")))}</strong><small>${text(ui, (grade.materials || []).map(item => (item.name || item.title) + ' × ' + valueText(item.count, ui)).join(' · '))}</small></span>${ui.icon('chevron-down')}</summary><div class="ref-grade-body">${grade.effects?.length ? facts(grade.effects, ui, 'ref-grade-effects') : ''}<h3>${th("Потребуется на одну попытку")}</h3><div class="ref-materials">${(grade.materials || []).map(material => {
       const stock = personalItem(r, { id: material.entryId, key: material.key }, 'materials'), known = stock?.owned !== undefined && stock?.owned !== null;
-      return `<div class="ref-material ${known && Number(stock.owned) >= Number(material.count) ? 'is-enough' : ''}">${ui.icon('layers')}<span>${material.entryId ? internalLink({ ...material, title: material.name || material.title }, ui) : text(ui, material.name || material.title)}${known ? `<small>Есть ${text(ui, ui.fmt(stock.owned))}</small>` : ''}</span><strong>× ${text(ui, valueText(material.count, ui))}</strong></div>`;
+      return `<div class="ref-material ${known && Number(stock.owned) >= Number(material.count) ? 'is-enough' : ''}">${ui.icon('layers')}<span>${material.entryId ? internalLink({ ...material, title: material.name || material.title }, ui) : text(ui, material.name || material.title)}${known ? `<small>${th("Есть ")}${text(ui, ui.fmt(stock.owned))}</small>` : ''}</span><strong>× ${text(ui, valueText(material.count, ui))}</strong></div>`;
     }).join('')}</div></div></details>`).join('')}</div>`;
   }
   function renderSection(section, index, ui, r) {
@@ -145,36 +148,36 @@
   }
   function marketDate(value) {
     const raw = String(value || ''), match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-    return match ? `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]} UTC` : 'Время неизвестно';
+    return match ? `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]} UTC` : t("Время неизвестно");
   }
   function marketSystem(row) { return typeof row?.system === 'string' ? row.system.trim() : ''; }
   function marketDistance(value, ui) {
-    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? text(ui, ui.fmt(value)) : '<span class="ref-market-unknown">Неизвестно</span>';
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? text(ui, ui.fmt(value)) : `<span class="ref-market-unknown">${th("Неизвестно")}</span>`;
   }
   function marketRow(row, index, buying, ui) {
     const system = marketSystem(row), pad = typeof row.pad === 'string' ? row.pad.trim().toUpperCase() : '';
-    const systemHTML = system ? `${internalLink({ id: 'system/' + encodeURIComponent(system), title: system }, ui, 'ref-market-system-link')}<button type="button" class="ref-market-copy" data-click="reference-market-copy-system" data-index="${index}" aria-label="${ui.esc('Копировать систему ' + system)}" title="Копировать систему">${ui.icon('copy')}<span>Копировать</span></button>` : '<span class="ref-market-unknown">Система неизвестна</span>';
-    return `<tr><td><strong>${text(ui, row.station || 'Рынок')}</strong><div class="ref-market-system">${systemHTML}</div></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${['S', 'M', 'L'].includes(pad) ? `<span class="ref-market-pad">${pad}</span>` : '<span class="ref-market-unknown">Неизвестно</span>'}</td><td>${marketDistance(row.distanceLy, ui)}</td><td>${marketDistance(row.distanceLs, ui)}</td><td>${row.expired ? '<span class="ref-market-stale">Устарела</span>' : ''}${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`;
+    const systemHTML = system ? `${internalLink({ id: 'system/' + encodeURIComponent(system), title: system }, ui, 'ref-market-system-link')}<button type="button" class="ref-market-copy" data-click="reference-market-copy-system" data-index="${index}" aria-label="${ui.esc(t("Копировать систему ") + system)}" title="${th("Копировать систему")}">${ui.icon('copy')}<span>${th("Копировать")}</span></button>` : `<span class="ref-market-unknown">${th("Система неизвестна")}</span>`;
+    return `<tr><td><strong>${text(ui, row.station || t("Рынок"))}</strong><div class="ref-market-system">${systemHTML}</div></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${['S', 'M', 'L'].includes(pad) ? `<span class="ref-market-pad">${pad}</span>` : `<span class="ref-market-unknown">${th("Неизвестно")}</span>`}</td><td>${marketDistance(row.distanceLy, ui)}</td><td>${marketDistance(row.distanceLs, ui)}</td><td>${row.expired ? `<span class="ref-market-stale">${th("Устарела")}</span>` : ''}${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`;
   }
   function trading(r, entry, ui) {
     const key = entry.commodityKey || entry.actions?.find(action => action.type === 'trade')?.commodityKey;
     if (!key || entry.category !== 'commodities') return '';
     const market = r.market || { key, mode: 'sell', system: '', quantity: '1', radius: '100' }, buying = market.mode === 'buy';
     const remoteRunning = currentMarket(r) && !!market.result?.running, paused = !!market.pollingPaused && remoteRunning;
-    const rows = marketRows(r), running = !!market.starting || (paused && !!market.inFlightToken) || (!paused && (market.searching || remoteRunning)), status = market.error || (currentMarket(r) && market.result?.error) || (paused ? 'Поиск ещё идёт. Обновите статус, чтобы получить новые предложения.' : currentMarket(r) ? market.result?.status : '');
-    const tableHTML = rows.length ? `<div class="ref-table-wrap"><table class="ref-table ref-market-table"><thead><tr><th scope="col">Станция и система</th><th scope="col">Цена, кр./т</th><th scope="col">${buying ? 'Запас, т' : 'Спрос, т'}</th><th scope="col">Площадка</th><th scope="col">От вас, св. л.</th><th scope="col">От звезды, св. с.</th><th scope="col">Наблюдение</th></tr></thead><tbody>${rows.map((row, index) => marketRow(row, index, buying, ui)).join('')}</tbody></table></div>` : `<div class="ref-market-empty">${ui.icon('compass')}<p>${running || remoteRunning ? 'Ищем подходящие рынки. Справочник и остальные разделы остаются доступны.' : currentMarket(r) && market.result ? 'Подходящие предложения не найдены. Измените область поиска или откройте все фильтры.' : 'Укажите исходную систему и запросите предложения для этого товара.'}</p></div>`;
-    return `<section class="ref-entry-section ref-trade-section"><div class="ref-section-title"><div><span class="eyebrow">Перейти к делу</span><h2>Покупка и продажа</h2></div>${ui.icon('arrow-left-right')}</div><p>Сравните рынки по цене, доступному объёму и расстоянию. Дата наблюдения помогает оценить свежесть предложения.</p><div class="ref-market-modes segmented" aria-label="Операция с товаром">${[['buy', 'Купить'], ['sell', 'Продать']].map(([id, label]) => `<button type="button" data-click="reference-market-mode" data-id="${id}" class="${market.mode === id ? 'selected' : ''}" aria-pressed="${market.mode === id}">${label}</button>`).join('')}</div><div class="ref-market-controls"><label><span>Исходная система</span><input id="reference-market-system" value="${ui.esc(market.system)}" placeholder="Например, Sol" autocomplete="off"></label><label><span>Количество, т</span><input id="reference-market-quantity" value="${ui.esc(market.quantity)}" inputmode="numeric"></label><label><span>Радиус, св. л.</span><input id="reference-market-radius" value="${ui.esc(market.radius)}" inputmode="decimal"></label>${ui.btn(running ? (paused ? 'Обновляем…' : 'Поиск…') : paused ? 'Обновить статус' : (buying ? 'Найти продавцов' : 'Найти покупателей'), paused ? 'reference-refresh-markets' : 'reference-find-markets', paused ? 'refresh-cw' : 'search', 'primary', `type="button" ${running ? 'disabled' : ''}`)}</div>${status ? `<p class="ref-market-status ${market.error || (currentMarket(r) && market.result?.error) ? 'is-error' : ''}" role="status">${text(ui, status)}</p>` : ''}${tableHTML}<div class="ref-market-footer"><span>${rows.length ? text(ui, ui.fmt(rows.length) + ' предложений') : 'Цены меняются по мере торговли в игре'}</span>${ui.btn('Все фильтры в торговле', buying ? 'reference-trade-buy' : 'reference-trade-sell', 'arrow-right', 'quiet', `type="button" data-key="${ui.esc(key)}"`)}</div></section>`;
+    const rows = marketRows(r), running = !!market.starting || (paused && !!market.inFlightToken) || (!paused && (market.searching || remoteRunning)), status = market.error || (currentMarket(r) && market.result?.error) || (paused ? t("Поиск ещё идёт. Обновите статус, чтобы получить новые предложения.") : currentMarket(r) ? market.result?.status : '');
+    const tableHTML = rows.length ? `<div class="ref-table-wrap"><table class="ref-table ref-market-table"><thead><tr><th scope="col">${th("Станция и система")}</th><th scope="col">${th("Цена, кр./т")}</th><th scope="col">${buying ? t("Запас, т") : t("Спрос, т")}</th><th scope="col">${th("Площадка")}</th><th scope="col">${th("От вас, св. л.")}</th><th scope="col">${th("От звезды, св. с.")}</th><th scope="col">${th("Наблюдение")}</th></tr></thead><tbody>${rows.map((row, index) => marketRow(row, index, buying, ui)).join('')}</tbody></table></div>` : `<div class="ref-market-empty">${ui.icon('compass')}<p>${running || remoteRunning ? t("Ищем подходящие рынки. Справочник и остальные разделы остаются доступны.") : currentMarket(r) && market.result ? t("Подходящие предложения не найдены. Измените область поиска или откройте все фильтры.") : t("Укажите исходную систему и запросите предложения для этого товара.")}</p></div>`;
+    return `<section class="ref-entry-section ref-trade-section"><div class="ref-section-title"><div><span class="eyebrow">${th("Перейти к делу")}</span><h2>${th("Покупка и продажа")}</h2></div>${ui.icon('arrow-left-right')}</div><p>${th("Сравните рынки по цене, доступному объёму и расстоянию. Дата наблюдения помогает оценить свежесть предложения.")}</p><div class="ref-market-modes segmented" aria-label="${th("Операция с товаром")}">${[['buy', t("Купить")], ['sell', t("Продать")]].map(([id, label]) => `<button type="button" data-click="reference-market-mode" data-id="${id}" class="${market.mode === id ? 'selected' : ''}" aria-pressed="${market.mode === id}">${label}</button>`).join('')}</div><div class="ref-market-controls"><label><span>${th("Исходная система")}</span><input id="reference-market-system" value="${ui.esc(market.system)}" placeholder="${th("Например, Sol")}" autocomplete="off"></label><label><span>${th("Количество, т")}</span><input id="reference-market-quantity" value="${ui.esc(market.quantity)}" inputmode="numeric"></label><label><span>${th("Радиус, св. л.")}</span><input id="reference-market-radius" value="${ui.esc(market.radius)}" inputmode="decimal"></label>${ui.btn(running ? (paused ? t("Обновляем…") : t("Поиск…")) : paused ? t("Обновить статус") : (buying ? t("Найти продавцов") : t("Найти покупателей")), paused ? 'reference-refresh-markets' : 'reference-find-markets', paused ? 'refresh-cw' : 'search', 'primary', `type="button" ${running ? 'disabled' : ''}`)}</div>${status ? `<p class="ref-market-status ${market.error || (currentMarket(r) && market.result?.error) ? 'is-error' : ''}" role="status">${text(ui, status)}</p>` : ''}${tableHTML}<div class="ref-market-footer"><span>${rows.length ? text(ui, ui.fmt(rows.length) + t(" предложений")) : t("Цены меняются по мере торговли в игре")}</span>${ui.btn(t("Все фильтры в торговле"), buying ? 'reference-trade-buy' : 'reference-trade-sell', 'arrow-right', 'quiet', `type="button" data-key="${ui.esc(key)}"`)}</div></section>`;
   }
   function entity(r, ui) {
-    const actions = (r.entry?.actions || []).map((item, index) => item.type === 'copy-system' ? ui.btn(plain(item.label || 'Копировать систему'), 'reference-copy-system', 'copy', 'quiet', `type="button" data-index="${index}"`) : '').join('');
-    const back = `<div class="ref-entry-nav">${ui.btn(r.history.length ? 'Назад' : (r.scope === 'engineers' ? 'Все инженеры' : 'К списку'), 'reference-back', 'arrow-left', 'quiet', 'type="button"')}${r.history.length ? ui.btn(r.scope === 'engineers' ? 'Все инженеры' : 'Каталог', 'reference-library', 'layout-grid', 'quiet', 'type="button"') : ''}<span class="spacer"></span>${actions}<span class="ref-entry-context">${text(ui, categoryTitle(r, r.entry?.category || r.category))}</span></div>`;
+    const actions = (r.entry?.actions || []).map((item, index) => item.type === 'copy-system' ? ui.btn(plain(item.label || t("Копировать систему")), 'reference-copy-system', 'copy', 'quiet', `type="button" data-index="${index}"`) : '').join('');
+    const back = `<div class="ref-entry-nav">${ui.btn(r.history.length ? t("Назад") : (r.scope === 'engineers' ? t("Все инженеры") : t("К списку")), 'reference-back', 'arrow-left', 'quiet', 'type="button"')}${r.history.length ? ui.btn(r.scope === 'engineers' ? t("Все инженеры") : t("Каталог"), 'reference-library', 'layout-grid', 'quiet', 'type="button"') : ''}<span class="spacer"></span>${actions}<span class="ref-entry-context">${text(ui, categoryTitle(r, r.entry?.category || r.category))}</span></div>`;
     if (r.entryError) return `<section class="reference-root ref-reader">${back}${errorPanel(r.entryError, ui, true)}</section>`;
     if (r.entryLoading || !r.entry) return `<section class="reference-root ref-reader" aria-busy="true">${back}${skeleton(ui, true)}</section>`;
     const entry = r.entry, article = entry.category === 'articles';
     const sections = (entry.sections || []).filter(sectionIsVisible);
     const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${imageSource(entry.image) ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${entry.description || entry.summary ? `<p class="ref-entry-lead">${text(ui, entry.description || entry.summary)}</p>` : ''}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${imageSource(entry.image) ? imageHTML(entry, ui, true) : ''}</header>`;
     const related = (entry.related || []).filter(item => validID(item.id || item.entryId));
-    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${entry.properties?.length ? facts(entry.properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>Связанные записи</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="На этой странице"><strong>На этой странице</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div></section>`;
+    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${entry.properties?.length ? facts(entry.properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div></section>`;
   }
 
   function render(C, ui) { const r = state(C); return r.entryId ? entity(r, ui) : catalogue(r, ui); }
@@ -183,6 +186,10 @@
     const input = ui.$('#reference-query'), focused = input?.matches?.(':focus');
     const selection = focused ? [input.selectionStart, input.selectionEnd] : null;
     ui.renderPage();
+    if (typeof r.localeScroll === 'number' && !r.loading && !r.entryLoading) {
+      const host = ui.$('#page-scroll'); if (host) host.scrollTop = r.localeScroll;
+      delete r.localeScroll;
+    }
     if (focused) {
       const next = ui.$('#reference-query');
       next?.focus?.({ preventScroll: true });
@@ -208,7 +215,7 @@
       return result;
     } catch (error) {
       if (token !== r.listToken || key !== listKey(r)) return null;
-      r.loading = false; r.listPromise = null; r.error = error?.message || 'Не удалось прочитать справочник.';
+      r.loading = false; r.listPromise = null; r.error = error?.message || t("Не удалось прочитать справочник.");
       if (!r.entryId) redraw(C, ui, r);
       return null;
     }
@@ -224,7 +231,7 @@
       const result = await request;
       if (token !== r.entryToken || id !== r.entryId) return null;
       const entry = result?.entry || result;
-      if (!entry || !validID(entry.id)) throw new Error('Запись не найдена. Вернитесь к списку и выберите другую.');
+      if (!entry || !validID(entry.id)) throw new Error(t("Запись не найдена. Вернитесь к списку и выберите другую."));
       r.entry = entry; r.personal = result?.personal || {}; r.entryLoading = false; r.entryPromise = null;
       if (entry.category === 'commodities' && commodityKey(entry)) {
         const key = commodityKey(entry);
@@ -235,7 +242,7 @@
       return entry;
     } catch (error) {
       if (token !== r.entryToken || id !== r.entryId) return null;
-      r.entryLoading = false; r.entryPromise = null; r.entryError = error?.message || 'Не удалось прочитать запись.';
+      r.entryLoading = false; r.entryPromise = null; r.entryError = error?.message || t("Не удалось прочитать запись.");
       redraw(C, ui, r); return null;
     }
   }
@@ -276,7 +283,7 @@
     if (action === 'reference-clear') { clearTimeout(r.searchTimer); r.query = ''; r.group = ''; r.offset = 0; await loadList(C, ui, true); return true; }
     if (action === 'reference-prev' || action === 'reference-next') {
       if (r.loading) return true;
-      const next = r.offset + (action === 'reference-next' ? r.limit : -r.limit), total = Number(r.list?.total) || 0;
+      const next = r.offset + (action === 'reference-next' ? pageSize(r) : -pageSize(r)), total = Number(r.list?.total) || 0;
       if (next >= 0 && next < total) { r.offset = next; r.restoreScroll = 0; await loadList(C, ui); }
       return true;
     }
@@ -292,14 +299,14 @@
     }
     if (action === 'reference-copy-system') {
       const item = r.entry?.actions?.[Number(button?.dataset?.index)];
-      if (item?.type === 'copy-system' && typeof item.system === 'string') { await ui.call('native', { action: 'copy', text: item.system }); ui.toast('Система скопирована'); }
+      if (item?.type === 'copy-system' && typeof item.system === 'string') { await ui.call('native', { action: 'copy', text: item.system }); ui.toast(t("Система скопирована")); }
       return true;
     }
     if (action === 'reference-market-copy-system') {
       const index = button?.dataset?.index;
       if (/^\d+$/.test(index || '')) {
         const system = marketSystem(marketRows(r)[Number(index)]);
-        if (system) { await ui.call('native', { action: 'copy', text: system }); ui.toast('Система скопирована'); }
+        if (system) { await ui.call('native', { action: 'copy', text: system }); ui.toast(t("Система скопирована")); }
       }
       return true;
     }
@@ -361,7 +368,7 @@
       if (active(C) && state(C) === r) redraw(C, ui, r);
     } catch (error) {
       if (token !== market.token || r.entryId !== entryID) return;
-      market.inFlightToken = 0; market.searching = false; market.pollingPaused = currentMarket(r) && !!market.result?.running; market.error = error?.message || 'Не удалось обновить рынки.'; redraw(C, ui, r);
+      market.inFlightToken = 0; market.searching = false; market.pollingPaused = currentMarket(r) && !!market.result?.running; market.error = error?.message || t("Не удалось обновить рынки."); redraw(C, ui, r);
     }
   }
   async function findMarkets(C, ui, r) {
@@ -369,9 +376,9 @@
     if (!market || market.searching) return;
     const number = value => Number(String(value || '').trim().replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
     const quantity = number(market.quantity), radius = number(market.radius), system = market.system.trim();
-    if (!system) market.error = 'Укажите исходную систему для поиска.';
-    else if (!Number.isInteger(quantity) || quantity < 1 || quantity > 25000) market.error = 'Укажите целое количество от 1 до 25 000 т.';
-    else if (!Number.isFinite(radius) || radius < 5 || radius > 5000) market.error = 'Укажите радиус от 5 до 5 000 св. л.';
+    if (!system) market.error = t("Укажите исходную систему для поиска.");
+    else if (!Number.isInteger(quantity) || quantity < 1 || quantity > 25000) market.error = t("Укажите целое количество от 1 до 25 000 т.");
+    else if (!Number.isFinite(radius) || radius < 5 || radius > 5000) market.error = t("Укажите радиус от 5 до 5 000 св. л.");
     else market.error = '';
     if (market.error) { redraw(C, ui, r); return; }
     stopMarkets(r); const entryID = r.entryId, token = market.token;
@@ -381,7 +388,7 @@
       if (r.entryId !== entryID || market.token !== token) return;
       market.starting = false;
       await refreshMarkets(C, ui, r);
-    } catch (error) { if (r.entryId !== entryID || market.token !== token) return; market.starting = false; market.searching = false; market.error = error?.message || 'Не удалось начать поиск рынков.'; redraw(C, ui, r); }
+    } catch (error) { if (r.entryId !== entryID || market.token !== token) return; market.starting = false; market.searching = false; market.error = error?.message || t("Не удалось начать поиск рынков."); redraw(C, ui, r); }
   }
   function navigate(id, opts, C) {
     for (const r of Object.values(C.referenceSessions || {})) { clearTimeout(r.searchTimer); stopMarkets(r); }

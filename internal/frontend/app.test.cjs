@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function fixture() {
-  const nodes = new Map(), selectors = new Map(), styles = new Map(), classes = new Set(), messages = [], dialogs = [], listeners = new Map();
+  const nodes = new Map(), selectors = new Map(), styles = new Map(), classes = new Set(), messages = [], dialogs = [], listeners = new Map(), timers = [];
   const host = { scrollTop: 0, contains: element => !!element?.inPage };
   nodes.set('page-scroll', host);
   nodes.set('layers', { append: node => selectors.set('.menu', node) });
@@ -22,16 +22,35 @@ function fixture() {
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,referenceCell,context,uiContext,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
- setCall(value){call=value;},setRender(value){renderPage=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
+window.TestUI={C,referenceCell,context,uiContext,currentLanguage,applyLanguage,captureInputs,restoreInputs,closeLayer,dialog,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+ setCall(value){call=value;},setRender(value){renderPage=value;},setShell(value){shell=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
-  vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout() {}, clearTimeout() {}, setInterval() {} });
+  vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout(fn,delay) { timers.push({fn,delay});return timers.length; }, clearTimeout() {}, setInterval() {} });
   const api = window.TestUI;
   api.setToast((message, error) => messages.push({ message, error }));
   api.setDialog((title, body, footer) => dialogs.push({ title, body, footer }));
   api.setClose(() => { api.C.layer = false; api.C.themePreview = null; });
-  return { api, window, document, nodes, selectors, styles, classes, messages, dialogs, host, listeners };
+  return { api, window, document, nodes, selectors, styles, classes, messages, dialogs, host, listeners, timers };
 }
+
+test('dialog autofocus prefers a body field and preserves a user-selected field before the delayed focus',()=>{
+ for(const alreadyFocused of [false,true]){
+  const f=fixture(),focused=[],field={focus(){focused.push('field')}},chosen={inDialog:true},close={focus(){focused.push('close')}};
+  const panel={contains:node=>node===chosen,querySelector(selector){if(selector.startsWith('.dialog-body input'))return field;if(selector==='.dialog-head button')return close;return null;}};
+  f.selectors.set('#layers .dialog',panel);f.document.activeElement=alreadyFocused?chosen:null;f.api.dialog('Route','<input name="sourceSystem">');
+  assert.equal(f.timers.at(-1).delay,30);f.timers.at(-1).fn();assert.deepEqual(focused,alreadyFocused?[]:['field']);
+ }
+});
+test('an older dialog focus timer cannot steal focus in a replacement dialog or after closing',()=>{
+ for(const replacement of [null,{}]){
+  const f=fixture();let focused=0;const old={contains:()=>false,querySelector:()=>({focus(){focused++}})};f.selectors.set('#layers .dialog',old);f.api.dialog('Old','');
+  f.selectors.set('#layers .dialog',replacement);f.api.C.layer=!!replacement;f.timers.at(-1).fn();assert.equal(focused,0);
+ }
+});
+test('a dialog without text fields focuses its footer action before its close button',()=>{
+ const f=fixture(),focused=[];const panel={contains:()=>false,querySelector(selector){if(selector==='.dialog-foot button:not([disabled])')return {focus(){focused.push('action')}};if(selector==='.dialog-head button')return {focus(){focused.push('close')}};return null;}};
+ f.selectors.set('#layers .dialog',panel);f.api.dialog('Confirm','<p>Confirm?</p>','<button>Confirm</button>');f.timers.at(-1).fn();assert.deepEqual(focused,['action']);
+});
 
 test('reading actions target the active lesson instead of a table row', () => {
   const { api } = fixture();

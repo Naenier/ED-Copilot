@@ -86,6 +86,7 @@ func presentationState(t *testing.T) M {
 
 func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	s := presentationState(t)
+	s["exobiology"] = exobiologyPresentationFixture()
 	lib := learning.New(nil)
 	lessons := v.Rows(lib.Snapshot()["lessons"])
 	for _, body := range []M{{"action": "select", "lessonId": lessons[0]["id"]}, {"action": "complete", "lessonId": lessons[0]["id"], "completed": true}, {"action": "bookmark", "lessonId": lessons[0]["id"], "bookmarked": true}, {"action": "select", "lessonId": lessons[1]["id"]}} {
@@ -96,7 +97,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	s["learning"] = lib.Snapshot()
 	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
-	if len(Tabs) != 18 {
+	if len(Tabs) != 19 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {
@@ -134,6 +135,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 
 func TestPresentationActualDomainContracts(t *testing.T) {
 	s := presentationState(t)
+	s["exobiology"] = exobiologyPresentationFixture()
 	deals := Build("deals", "", "", s)
 	if len(deals.Rows) != 1 || !reflect.DeepEqual(deals.Rows[0].Cells, []string{"Synthetic A → Synthetic A", "Порт закупки → Порт сбыта", "Платина · 100 т", "10 000", "10 000", "40 000"}) || !strings.Contains(deals.Rows[0].Details, "Станция: Порт закупки") || !strings.Contains(deals.Rows[0].Details, "Спрос с запасом, т: 250") {
 		t.Fatalf("nested route legs lost: %+v", deals.Rows)
@@ -197,6 +199,7 @@ func TestUnknownFormattingAndCyrillicSearch(t *testing.T) {
 		t.Fatal("Cyrillic search folding")
 	}
 	s := presentationState(t)
+	s["exobiology"] = exobiologyPresentationFixture()
 	for _, q := range []string{"ЗВЕЗДНЫЙ", "звёздный", "СЫРЬЕ", "сырьё"} {
 		if len(Build("targets", "Личные цели", q, s).Rows) != 1 {
 			t.Fatalf("missing search %q", q)
@@ -237,6 +240,7 @@ func TestNativeRowIdentityPreservesSelectionAcrossRefresh(t *testing.T) {
 
 func TestEncyclopediaAllCatalogsAndSourceDetails(t *testing.T) {
 	s := presentationState(t)
+	s["exobiology"] = exobiologyPresentationFixture()
 	catalog := data.Object("engineering-data.json")
 	want := map[string]int{"Статьи": len(v.Rows(data.Object("encyclopedia.json")["articles"])), "Корабли": len(data.Array("encyclopedia-ships.json")), "Товары": len(v.Rows(s["goods"]))}
 	for mode, key := range map[string]string{"Материалы": "materials", "Инженеры": "engineers", "Чертежи": "blueprints", "Модули": "modules", "Эффекты": "experimentals"} {

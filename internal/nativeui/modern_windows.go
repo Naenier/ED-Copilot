@@ -17,6 +17,7 @@ import (
 	"unsafe"
 
 	"github.com/Naenier/ED-Copilot/internal/frontend"
+	"github.com/Naenier/ED-Copilot/internal/localization"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"github.com/lxn/walk"
@@ -50,6 +51,7 @@ type modernShell struct {
 	desiredMode      string
 	smokeOnce        sync.Once
 	lastSummary      string
+	language         string
 	diagnostics      int
 	captures         []*modernPreviewCapture
 }
@@ -130,6 +132,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		}
 	})
 	_ = u.tray.SetVisible(true)
+	u.applyNativeLanguage()
 	browser := edge.NewChromium()
 	u.modern.view = browser
 	browser.DataPath = filepath.Join(backend.DataDir(), "WebView2")
@@ -497,6 +500,7 @@ func (m *modernShell) postSnapshot(state M) {
 
 func (u *Window) applyModernSnapshot(state M) {
 	u.state = state
+	u.applyNativeLanguage()
 	u.syncRouteClipboard(state)
 	if u.dialogOpen {
 		if u.hud != nil {
@@ -524,6 +528,29 @@ func (u *Window) applyModernSnapshot(state M) {
 			update["overlayColonies"] = overlayColonyUpdate(u.state)
 		}
 		u.modern.send("update", update)
+	}
+}
+
+func (u *Window) applyNativeLanguage() {
+	if u.modern == nil {
+		return
+	}
+	language := p.Language(u.state)
+	if u.modern.language == language {
+		return
+	}
+	u.modern.language = language
+	if u.tray != nil {
+		_ = u.tray.SetToolTip(localization.T(language, "ED Copilot · помощник командира"))
+		actions := u.tray.ContextMenu().Actions()
+		for i, text := range []string{"Открыть ED Copilot", "Показать / скрыть оверлей", "Выход"} {
+			if i < actions.Len() {
+				_ = actions.At(i).SetText(localization.T(language, text))
+			}
+		}
+	}
+	if u.options.Demo || u.options.Smoke {
+		_ = u.main.SetTitle(localization.T(language, "ED Copilot · Демонстрация"))
 	}
 }
 
@@ -632,12 +659,31 @@ func (m *modernShell) handleRequest(req webRequest) {
 		m.reply(req.ID, result, e)
 		return
 	}
-	m.runAsyncResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) })
+	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "exo.sites" {
+		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
+		return
+	}
+	m.runAsyncResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 }
 
-func (m *modernShell) runAsyncResponse(id string, work func() (M, error)) {
+func (m *modernShell) runAsyncResponse(id string, work func() (M, error), identities ...string) {
+	m.runResponse(id, work, true, identities...)
+}
+
+func (m *modernShell) runReadOnlyResponse(id string, work func() (M, error), identities ...string) {
+	m.runResponse(id, work, false, identities...)
+}
+
+func (m *modernShell) runResponse(id string, work func() (M, error), refresh bool, identities ...string) {
+	language := "ru"
+	if provider, ok := m.owner.backend.(interface{ Language() string }); ok {
+		language = provider.Language()
+	}
 	go func() {
 		result, e := work()
+		if e != nil {
+			e = errors.New(localization.TextProtected(language, e.Error(), identities))
+		}
 		packet := webResponse(id, result, e)
 		wire, marshalErr := encodeWebEvent("response", packet)
 		if marshalErr != nil {
@@ -648,7 +694,7 @@ func (m *modernShell) runAsyncResponse(id string, work func() (M, error)) {
 		}
 		m.postUI(func() {
 			m.sendEncoded(wire)
-			if e == nil {
+			if e == nil && refresh {
 				m.owner.refreshModern()
 			}
 		})
@@ -820,7 +866,7 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 	case "copy":
 		return M{"ok": true}, walk.Clipboard().SetText(v.Str(params["text"]))
 	case "folder":
-		d := walk.FileDialog{Title: "Папка игровых журналов", FilePath: v.Str(v.At(u.state, "connection", "journalDir"))}
+		d := walk.FileDialog{Title: localization.T(p.Language(u.state), "Папка игровых журналов"), FilePath: v.Str(v.At(u.state, "connection", "journalDir"))}
 		ok, e := d.ShowBrowseFolder(u.main)
 		if e != nil {
 			return nil, e
@@ -830,7 +876,7 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 		}
 		return func() (M, error) { return u.backend.Do("/api/journal-dir", M{"path": d.FilePath}) }, nil
 	case "import-plan":
-		d := walk.FileDialog{Title: "План инженерных улучшений", Filter: "JSON (*.json)|*.json"}
+		d := walk.FileDialog{Title: localization.T(p.Language(u.state), "План инженерных улучшений"), Filter: "JSON (*.json)|*.json"}
 		ok, e := d.ShowOpen(u.main)
 		if e != nil {
 			return nil, e
@@ -857,7 +903,7 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 		if asJSON {
 			extension = "json"
 		}
-		d := walk.FileDialog{Title: "Сохранить план или таблицу", FilePath: "ED Copilot." + extension, Filter: strings.ToUpper(extension) + " (*." + extension + ")|*." + extension}
+		d := walk.FileDialog{Title: localization.T(p.Language(u.state), "Сохранить план или таблицу"), FilePath: "ED Copilot." + extension, Filter: strings.ToUpper(extension) + " (*." + extension + ")|*." + extension}
 		ok, e := d.ShowSave(u.main)
 		if e != nil {
 			return nil, e

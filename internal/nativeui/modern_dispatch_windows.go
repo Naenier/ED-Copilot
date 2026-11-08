@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/reference"
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -31,6 +32,23 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "exo.sites":
+		if provider, ok := backend.(interface{ ExobiologySites(M) (M, error) }); ok {
+			return provider.ExobiologySites(input)
+		}
+		return M{"entries": []M{}, "total": 0, "limit": 12}, nil
+	case "exobiology":
+		return backend.Do("/api/exobiology", v.Obj(input["values"]))
+	case "system-search":
+		if provider, ok := backend.(interface{ QuerySystems(M) (M, error) }); ok {
+			return provider.QuerySystems(input)
+		}
+		return M{"status": "disabled", "suggestions": []M{}, "minChars": 3}, nil
+	case "system-search-cancel":
+		if provider, ok := backend.(interface{ CancelSystems(M) (M, error) }); ok {
+			return provider.CancelSystems(input)
+		}
+		return M{"ok": true}, nil
 	case "deals-search":
 		return backend.Do("/api/trading/routes", v.Obj(input["values"]))
 	case "deals-cancel":
@@ -50,12 +68,29 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	case "reference.markets":
 		return v.Obj(snapshotForWeb(backend, "reference")["trading"]), nil
 	case "reference.list":
+		if input["category"] == "exobiology" {
+			limit := v.Int(input["limit"])
+			if limit <= 0 || limit > 12 {
+				limit = 12
+			}
+			output := exobiology.Catalog().List(exobiology.Query{Category: "exobiology", Query: v.Str(input["query"]), Group: v.Str(input["group"]), Offset: v.Int(input["offset"]), Limit: limit})
+			for _, entry := range v.Rows(output["entries"]) {
+				entry["image"] = exobiology.SpeciesImage(strings.TrimPrefix(v.Str(entry["id"]), "exo/"))
+			}
+			return p.LocalizeReference(webLanguage(backend), output), nil
+		}
 		result := reference.Catalog().List(reference.Query{Category: v.Text(input["category"], "articles"), Query: v.Str(input["query"]), Group: v.Str(input["group"]), Offset: v.Int(input["offset"]), Limit: v.Int(input["limit"])})
 		output := v.Obj(v.Clone(result))
 		output["personal"] = snapshotForWeb(backend, "sync")["engineering"]
-		return output, nil
+		return p.LocalizeReference(webLanguage(backend), output), nil
 	case "reference.entry":
 		id := v.Str(input["id"])
+		if strings.HasPrefix(id, "exo/") {
+			if entry, found := exobiology.Catalog().Entry(id); found {
+				return p.LocalizeReference(webLanguage(backend), entry), nil
+			}
+			return nil, errors.New("Материал не найден в справочнике")
+		}
 		entry, found := reference.Catalog().Entry(id)
 		result := v.Obj(v.Clone(entry))
 		if found && entry.Category == "systems" {
@@ -72,7 +107,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			return nil, errors.New("Материал не найден в справочнике")
 		}
 		result["personal"] = snapshotForWeb(backend, "sync")["engineering"]
-		return result, nil
+		return p.LocalizeReference(webLanguage(backend), result), nil
 	case "navigation":
 		return backend.Do("/api/navigation", M{"tabs": input["tabs"]})
 	case "settings":
@@ -97,7 +132,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	}
 	if op == "view" && (tab == "encyclopedia" || (tab == "engineering" || tab == "targets") && mode == "Инженеры") {
 		state := snapshotForWeb(backend, "reference")
-		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты"}
+		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты", "Экзобиология"}
 		if tab == "engineering" {
 			modes = []string{"План", "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана", "Обмен", "Инженеры"}
 		}
@@ -107,7 +142,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		if mode == "" {
 			mode = "Статьи"
 		}
-		return M{"page": p.Page{Title: p.Title(tab), Description: "Справочник командира", Modes: modes, Columns: []string{}, Rows: []p.Row{}}, "actions": []M{}, "state": webState(state), "help": p.HelpFor(tab), "context": M{"mode": mode, "selected": ""}}, nil
+		page := p.LocalizePage(tab, p.Page{Title: p.Title(tab), Description: "Справочник командира", Modes: modes, Columns: []string{}, Rows: []p.Row{}}, state)
+		return M{"page": page, "actions": []M{}, "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
 	}
 	state := snapshotForWeb(backend, tab)
 	if op == "boot" {
@@ -154,7 +190,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	actions := p.CoreActions(tab, mode, state, selected, v.Obj(input["prefill"]))
 	switch op {
 	case "view":
-		return M{"page": page, "actions": webActions(actions), "state": webState(state), "help": p.HelpFor(tab), "context": M{"mode": mode, "selected": selectedID}}, nil
+		return M{"page": page, "actions": webActions(actions), "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}, nil
 	case "action":
 		for _, a := range actions {
 			if a.ID != v.Str(input["actionId"]) {
@@ -186,7 +222,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			case "navigate":
 				return M{"navigate": a.Path, "mode": v.Str(a.Payload["mode"])}, nil
 			case "help":
-				return M{"help": p.HelpFor(tab)}, nil
+				return M{"help": p.HelpForLanguage(tab, p.Language(state))}, nil
 			case "details":
 				return M{"details": selectedDetails, "title": selectedTitle}, nil
 			case "copy":
@@ -219,6 +255,13 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	return nil, errors.New("Неизвестный запрос интерфейса")
 }
 
+func webLanguage(backend Controller) string {
+	if provider, ok := backend.(interface{ Language() string }); ok {
+		return provider.Language()
+	}
+	return "ru"
+}
+
 func snapshotForWeb(backend Controller, tab string) M {
 	if scoped, ok := backend.(interface{ SnapshotForUI(string) M }); ok {
 		return scoped.SnapshotForUI(tab)
@@ -228,10 +271,10 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives"} {
 		out[key] = state[key]
 	}
-	return redactWebSecrets(out)
+	return p.LocalizeWebState(redactWebSecrets(out))
 }
 
 // A Replacer is immutable and safe for concurrent use after construction. A

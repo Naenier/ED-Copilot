@@ -60,7 +60,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	connection["gameRunning"] = running
 	cmd["cargoForSync"], cmd["cargoForSyncAt"], cmd["cargoVessel"] = cargoSync["inventory"], cargoSync["timestamp"], cmd["vehicle"]
-	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "connection": connection, "pilot": e.Pilot.Snapshot()}
+	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "connection": connection, "pilot": e.Pilot.Snapshot()}
 	if syncOnly {
 		state["engineering"] = e.Engineering.InventorySnapshot()
 		return state
@@ -112,6 +112,13 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	ctx["engineering"] = eng
+	if tab == "exobiology" || tab == "statistics" {
+		state["exobiology"] = e.Exobiology.Snapshot()
+	} else if hud && activity == "exobiology" {
+		state["exobiology"] = e.Exobiology.SnapshotForHUD()
+	} else if tab == "overview" {
+		state["exobiology"] = e.Exobiology.SelectorSnapshot()
+	}
 	wantCarrier := oneOf(tab, "overview", "carrier", "route", "carrier-trade", "colonization", "statistics") || hud && oneOf(activity, "carrier", "colonization")
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)
