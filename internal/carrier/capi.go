@@ -97,17 +97,22 @@ func (t *Tracker) ApplyCAPI(result, commander M) bool {
 	// A later HTTP response can still contain the provider's pre-transfer
 	// cargo. Compare commodities changed after the known baseline before
 	// replacing it; adding their deltas to the response could double count.
-	// This protection expires with the original 15-minute observation window:
-	// external trades can legitimately change the absolute stock after that.
-	lease := v.Time(t.StockBaseline["timestamp"]).Add(15 * time.Minute)
-	if at.Before(lease) && v.Str(t.StockBaseline["carrierId"]) == id && t.StockBaseline["complete"] != false {
+	// Protect each recent movement for at most 15 minutes after the latest
+	// movement, so an ordinary poll near an old baseline's expiry cannot erase
+	// a transfer made moments ago. This does not refresh the baseline itself.
+	if v.Str(t.StockBaseline["carrierId"]) == id && t.StockBaseline["complete"] != false {
 		pending := map[string]bool{}
+		baselineAt := v.Time(t.StockBaseline["timestamp"])
+		latestPending := baselineAt
 		for _, move := range v.Rows(c["movements"]) {
-			if v.Time(move["timestamp"]).After(v.Time(t.StockBaseline["timestamp"])) {
+			if moved := v.Time(move["timestamp"]); moved.After(baselineAt) {
 				pending[v.Str(move["key"])] = true
+				if moved.After(latestPending) {
+					latestPending = moved
+				}
 			}
 		}
-		if len(pending) > 0 {
+		if len(pending) > 0 && at.Before(latestPending.Add(15*time.Minute)) {
 			for _, row := range v.Rows(t.warehouse(c)["items"]) {
 				key := v.Str(row["key"])
 				if pending[key] && v.Num(row["count"]) != v.Num(groups[key]["count"]) {

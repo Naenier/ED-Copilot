@@ -124,7 +124,7 @@ func TestCarrierPendingLeaseExpiresAndAcceptsExternalAbsoluteStock(t *testing.T)
 	p.now = func() time.Time { return moved }
 	p.Apply(M{"event": "CargoTransfer", "timestamp": value.ISO(moved), "CarrierID": "42", "Transfers": []M{{"Type": "steel", "Count": 70, "Direction": "tocarrier"}}}, ctx)
 	// A different commander may have delivered ten more tonnes. Defend the
-	// local projection only within its original observation lease.
+	// local projection only within the bounded lease after the last movement.
 	beforeExpiry := testNow.Add(14 * time.Minute)
 	p.now = func() time.Time { return beforeExpiry }
 	p.ApplyCAPI(stockResult(capiStock("42", 110), nil, beforeExpiry), value.Obj(ctx["commander"]))
@@ -145,5 +145,45 @@ func TestCarrierPendingLeaseExpiresAndAcceptsExternalAbsoluteStock(t *testing.T)
 	}
 	if len(value.Obj(value.At(p.ExportSettings(), "carrierInventoryCache", "warehouses", "fleet", "pendingMovements"))) != 0 {
 		t.Fatal("old pending movements survived fresh absolute observation")
+	}
+}
+
+func TestCarrierLateTransferLeaseProtectsPollBoundaryWithoutRefreshingBaseline(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		confirmAt time.Duration
+		amount    float64
+	}{{"matching observation confirms before guard expiry", 16 * time.Minute, 100}, {"external absolute observation recovers at guard expiry", 29 * time.Minute, 110}} {
+		t.Run(test.name, func(t *testing.T) {
+			p, _, ctx := stockFixture(t)
+			p.ApplyCAPI(stockResult(capiStock("42", 30), nil, testNow), value.Obj(ctx["commander"]))
+			moved := testNow.Add(14 * time.Minute)
+			p.now = func() time.Time { return moved }
+			p.Apply(M{"event": "CargoTransfer", "timestamp": value.ISO(moved), "CarrierID": "42", "Transfers": []M{{"Type": "steel", "Count": 70, "Direction": "tocarrier"}}}, ctx)
+			for _, age := range []time.Duration{15 * time.Minute, 16 * time.Minute} {
+				at := testNow.Add(age)
+				p.now = func() time.Time { return at }
+				stale := stockResult(capiStock("42", 30), nil, at)
+				value.Obj(stale["metadata"])["requestStartedAt"] = M{"carrier": value.ISO(at.Add(-time.Second))}
+				p.ApplyCAPI(stale, value.Obj(ctx["commander"]))
+				cached := value.Obj(value.At(p.ExportSettings(), "carrierInventoryCache", "warehouses", "fleet"))
+				if num(value.At(cached, "items", "steel")) != 100 || !value.Time(cached["receivedAt"]).Equal(testNow) {
+					t.Fatal("poll near original expiry erased recent transfer or refreshed old baseline", cached)
+				}
+			}
+			warehouse := rows(p.Snapshot(ctx)["carrierWarehouses"])[0]
+			if value.Bool(warehouse["known"]) || steelSupply(t, p, ctx)["carrierAvailable"] != nil {
+				t.Fatal("guard extended warehouse freshness", warehouse)
+			}
+			at := testNow.Add(test.confirmAt)
+			p.now = func() time.Time { return at }
+			fresh := stockResult(capiStock("42", test.amount), nil, at)
+			value.Obj(fresh["metadata"])["requestStartedAt"] = M{"carrier": value.ISO(at.Add(-time.Second))}
+			p.ApplyCAPI(fresh, value.Obj(ctx["commander"]))
+			warehouse = rows(p.Snapshot(ctx)["carrierWarehouses"])[0]
+			if !value.Bool(warehouse["known"]) || value.Bool(warehouse["awaitingConfirmation"]) || num(steelSupply(t, p, ctx)["carrierAvailable"]) != test.amount || !value.Time(warehouse["receivedAt"]).Equal(at) {
+				t.Fatal("absolute confirmation did not recover cleanly", warehouse)
+			}
+		})
 	}
 }

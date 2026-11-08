@@ -77,7 +77,7 @@ func TestCarrierPendingLeaseAcceptsChangedExternalStockAfterExpiry(t *testing.T)
 		age  time.Duration
 		want bool
 		tons float64
-	}{{14 * time.Minute, false, 20}, {15 * time.Minute, true, 25}} {
+	}{{14 * time.Minute, false, 20}, {16 * time.Minute, true, 25}} {
 		v.Obj(late["metadata"])["observedAt"] = M{"carrier": v.ISO(at.Add(test.age))}
 		v.Obj(late["metadata"])["requestStartedAt"] = M{"carrier": v.ISO(at.Add(test.age - time.Second))}
 		if tr.ApplyCAPI(late, cmd) != test.want || v.Num(v.At(tr.Snapshot(nil), "warehouse", "knownTons")) != test.tons {
@@ -123,5 +123,38 @@ func TestCarrierWholeSecondOrderCannotOverlayNewerFractionalSnapshot(t *testing.
 	}
 	if got := v.Num(v.At(tr.Snapshot(nil), "warehouse", "knownTons")); got != 27 {
 		t.Fatal("older order overlaid newer absolute hold", got)
+	}
+}
+
+func TestCarrierRecentTransferSurvivesOriginalBaselineExpiry(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		confirmAt time.Duration
+		amount    float64
+	}{{"matching API confirms early", 16 * time.Minute, 27}, {"external absolute API accepted at latest movement deadline", 29 * time.Minute, 35}} {
+		t.Run(test.name, func(t *testing.T) {
+			tr, initial, cmd := capiStockFixture()
+			v.Obj(v.At(initial, "data", "carrier"))["cargo"] = []M{{"commodity": "gold", "qty": 20}}
+			if !tr.ApplyCAPI(initial, cmd) {
+				t.Fatal("fixture rejected")
+			}
+			at := v.Time(v.At(initial, "metadata", "observedAt", "carrier"))
+			tr.moveStock(tr.Current(), "gold", "Gold", 7, v.ISO(at.Add(14*time.Minute)), "transfer")
+			for _, age := range []time.Duration{15 * time.Minute, 16 * time.Minute} {
+				stale := v.Copy(initial)
+				v.Obj(stale["metadata"])["requestStartedAt"] = M{"carrier": v.ISO(at.Add(age - time.Second))}
+				v.Obj(stale["metadata"])["observedAt"] = M{"carrier": v.ISO(at.Add(age))}
+				if tr.ApplyCAPI(stale, cmd) || v.Num(v.At(tr.Snapshot(nil), "warehouse", "knownTons")) != 27 || !v.Time(tr.StockBaseline["timestamp"]).Equal(at) {
+					t.Fatal("old poll erased a recent transfer or refreshed original baseline", tr.StockBaseline)
+				}
+			}
+			fresh := v.Copy(initial)
+			v.Obj(v.At(fresh, "data", "carrier"))["cargo"] = []M{{"commodity": "gold", "qty": test.amount}}
+			v.Obj(fresh["metadata"])["requestStartedAt"] = M{"carrier": v.ISO(at.Add(test.confirmAt - time.Second))}
+			v.Obj(fresh["metadata"])["observedAt"] = M{"carrier": v.ISO(at.Add(test.confirmAt))}
+			if !tr.ApplyCAPI(fresh, cmd) || v.Num(v.At(tr.Snapshot(nil), "warehouse", "knownTons")) != test.amount {
+				t.Fatal("absolute recovery re-added the old transfer or stayed blocked", tr.StockBaseline)
+			}
+		})
 	}
 }

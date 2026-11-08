@@ -121,12 +121,20 @@ func (p *Planner) ApplyCAPI(result, commander M) {
 		// /fleetcarrier can return an older server-side hold even when the HTTP
 		// request itself starts after a local transfer. Receipt time does not
 		// prove that the payload already includes that transfer. Retain our
-		// baseline + observed deltas for at most one freshness window. After
-		// that window an absolute verified observation can include legitimate
-		// transactions by other commanders and must be allowed to replace it.
+		// baseline + observed deltas for at most 15 minutes after the latest
+		// pending movement. The original receipt still controls stock freshness;
+		// protecting a recent movement must not make the older baseline fresh.
+		// After the bounded guard, an absolute verified observation can include
+		// legitimate transactions by other commanders and may replace it.
 		// In particular, never add those deltas to the incoming payload: it may
 		// already include some or all of them.
-		lease := value.Time(previous["receivedAt"]).Add(carrierStockMaxAge)
+		latestPending := value.Time(previous["receivedAt"])
+		for _, rawTime := range value.Obj(previous["pendingMovements"]) {
+			if moved := value.Time(rawTime); moved.After(latestPending) {
+				latestPending = moved
+			}
+		}
+		lease := latestPending.Add(carrierStockMaxAge)
 		if str(previous["id"]) == str(stock["id"]) && value.Time(stock["receivedAt"]).Before(lease) && pendingCarrierStockDiffers(previous, stock) {
 			previous["awaitingConfirmation"] = true
 			continue

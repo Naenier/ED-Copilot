@@ -42,6 +42,7 @@ type hudWindow struct {
 	leftVisible                   bool
 	modeApplied, restoreMaximized bool
 	document                      p.HUDDocument
+	renderSections                []p.HUDSection
 	colors                        M
 	dpi                           int
 	regular, bold                 win.HFONT
@@ -352,17 +353,21 @@ func (h *hudWindow) paintWindow(hwnd win.HWND) {
 	if hwnd == h.leftHwnd {
 		column, bounds = 1, h.leftBounds
 	}
+	sections := h.renderSections
+	if sections == nil {
+		sections = h.document.Sections
+	}
 	for _, panel := range h.plan.Panels {
-		if panel.Column != column || panel.Index >= len(h.document.Sections) {
+		if panel.Column != column || panel.Index >= len(sections) {
 			continue
 		}
 		var metrics hudSectionMetrics
 		if panel.Index < len(h.metrics) {
 			metrics = h.metrics[panel.Index]
 		} else {
-			metrics = h.measureSection(hdc, int(width), h.document.Sections[panel.Index])
+			metrics = h.measureSection(hdc, int(width), sections[panel.Index])
 		}
-		h.drawSection(hdc, int(width), panel.Bounds.Y-bounds.Y, panel.Bounds.Height, h.document.Sections[panel.Index], metrics, panel.Clipped)
+		h.drawSection(hdc, int(width), panel.Bounds.Y-bounds.Y, panel.Bounds.Height, sections[panel.Index], metrics, panel.Clipped)
 	}
 	if column == 1 && h.plan.Hidden > 0 && h.plan.Overflow.Height > 0 {
 		r := h.plan.Overflow

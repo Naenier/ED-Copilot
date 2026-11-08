@@ -13,6 +13,10 @@ import (
 type HUDDocument struct {
 	Activity string
 	Sections []HUDSection
+	// Native rendering may rebalance these bounded colony actions between
+	// safe side bands using actual font metrics. The source document is stable.
+	ColonySupplyActions int `json:",omitempty"`
+	ColonySupplyContext int `json:",omitempty"`
 }
 type HUDSection struct {
 	Title string

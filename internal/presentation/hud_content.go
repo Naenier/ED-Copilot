@@ -107,7 +107,16 @@ func hudCompactContext(doc *HUDDocument, cmd M) {
 		}
 	}
 	if len(missing) > 0 {
-		doc.Sections[0].Lines = append(doc.Sections[0].Lines, hudMuted(strings.Join(missing, " · ")))
+		line := hudMuted(strings.Join(missing, " · "))
+		if doc.ColonySupplyActions > 0 && doc.ColonySupplyContext > 0 && doc.ColonySupplyContext <= len(doc.Sections[0].Lines) {
+			index := doc.ColonySupplyContext
+			lines := append([]HUDLine(nil), doc.Sections[0].Lines[:index]...)
+			lines = append(lines, line)
+			doc.Sections[0].Lines = append(lines, doc.Sections[0].Lines[index:]...)
+			doc.ColonySupplyContext++
+		} else {
+			doc.Sections[0].Lines = append(doc.Sections[0].Lines, line)
+		}
 	}
 }
 
@@ -733,6 +742,8 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 		}
 	}
 	lines := hudColonySupplyLines(colony, p, supplies)
+	doc.ColonySupplyActions = min(len(pending), 10)
+	doc.ColonySupplyContext = len(rows)
 	// Five actions per section can flow into the left safe band without an
 	// oversized ten-row panel covering cockpit instruments. Context shares
 	// the first panel instead of consuming an independent header window.
