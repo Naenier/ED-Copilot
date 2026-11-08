@@ -41,10 +41,10 @@ func (p *Planner) updateLocked(body M) error {
 						id = str(p.config["squadronWarehouseAccessCarrierID"])
 					}
 					if scope := str(body["squadronWarehouseAccessScope"]); scope != "" && scope != p.carrierOwner+"|"+id {
-						return errors.New("Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.")
+						return errors.New("После входа в Frontier данные флотоносца эскадры обновляются автоматически.")
 					}
 					if p.carrierOwner == "" || id == "" || p.commander != "" && p.commander != p.carrierOwner {
-						return errors.New("Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.")
+						return errors.New("После входа в Frontier данные флотоносца эскадры обновляются автоматически.")
 					}
 					p.config["squadronWarehouseAccessFID"], p.config["squadronWarehouseAccessCarrierID"] = p.carrierOwner, id
 				}

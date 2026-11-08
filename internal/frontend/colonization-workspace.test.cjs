@@ -173,7 +173,7 @@ test('unknown contact remains selectable with an explicit game check and stale i
 
 test('carrier warehouse controls distinguish unknown and zero with separate squadron availability',()=>{
  const f=fixture();f.C.mode='Снабжение';
- f.C.state.colonization.carrierWarehouses=[{kind:'fleet',known:false,included:true,knownTons:null,receivedAt:'2031-01-01T12:00:00Z',reason:'Склад не прочитан или требует обновления Frontier.'},{kind:'squadron',known:true,included:false,knownTons:0,callsign:'<SYN-001>'}];
+ f.C.state.colonization.carrierWarehouses=[{kind:'fleet',known:false,included:true,knownTons:null,receivedAt:'2031-01-01T12:00:00Z',reason:'Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически.'},{kind:'squadron',known:true,included:false,knownTons:0,callsign:'<SYN-001>'}];
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/Учитывать склад флотоносца/);assert.doesNotMatch(html,/id="colony-squadron-stock-access"/);
  assert.match(html,/Личный флотоносец<\/strong> · Неизвестно/);
@@ -235,7 +235,7 @@ test('shared stock confirmation is disabled without identity and submits the dis
  const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/id="colony-squadron-stock-access"[^>]*disabled/);
- assert.match(html,/Сначала обновите Frontier, чтобы прочитать флотоносец эскадры/);
+ assert.match(html,/После входа в Frontier данные флотоносца эскадры обновляются автоматически/);
  f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);assert.equal(f.calls.length,0);
  f.C.state.commander.fid='F1';f.C.state.colonization.carrierWarehouses=[{kind:'squadron',id:'43',known:true,callsign:'SYN-043',knownTons:10}];
  html=f.api.render(f.C,f.ui);assert.doesNotMatch(html,/id="colony-squadron-stock-access"[^>]*disabled/);assert.doesNotMatch(html,/<select/);

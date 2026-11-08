@@ -8,6 +8,7 @@ async function run(C,u){
  const check=(name,ok)=>{scenarios.push({name,ok:!!ok});if(!ok)problems.push(name);};
  const ready=async()=>{const until=Date.now()+20000;while(Date.now()<until){const r=C.reference;if(r?.error||r?.entryError)throw Error(r.error||r.entryError);if(r&&!r.loading&&!r.entryLoading&&(r.entryId?r.entry:r.list))return;await new Promise(resolve=>setTimeout(resolve,30));}throw Error('Reference page timed out');};
  const capture=async name=>{
+  window.TooltipUI?.hide?.();
   if(C.tab==='ranks'||C.tab==='commander'&&C.mode==='Сводка')await window.RankInsignia?.load?.(C.state.ranks?.disciplines||[],u,C);
   u.$('#toasts')?.replaceChildren();u.$('#page-scroll').scrollTop=0;
   const visibleImages=[...document.images||[]].filter(img=>{const r=img.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;});

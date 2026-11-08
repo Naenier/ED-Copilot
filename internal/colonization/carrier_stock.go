@@ -236,7 +236,7 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 		age := p.now().Sub(value.Time(s["receivedAt"]))
 		known := fid != "" && fid == p.carrierOwner && value.Bool(s["complete"]) && age >= 0 && age <= carrierStockMaxAge
 		included := enabled && (kind == "fleet" || squadronAccess)
-		reason := "Склад не прочитан или требует обновления Frontier."
+		reason := "Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически."
 		if known {
 			reason = "Снимок Frontier CAPI; изменения других игроков могут запаздывать."
 			if value.Bool(s["absent"]) {
@@ -263,7 +263,8 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 		if known {
 			knownTons = total
 		}
-		result = append(result, M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "knownTons": knownTons, "items": list, "reason": reason})
+		accessible := fid != "" && fid == p.carrierOwner && (kind == "fleet" || squadronAccess)
+		result = append(result, M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "knownTons": knownTons, "items": list, "reason": reason})
 		if !included {
 			continue
 		}

@@ -97,7 +97,7 @@ Manage multiple colonies independently. Choose a system using your preferred sta
 
 Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
 
-Carrier stock is optional. Enable **Use fleet carrier stock** to include known personal-carrier cargo; enable **Squadron cargo is available** as well when you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. Refresh them through Frontier. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
+Carrier stock is optional. Enable **Use fleet carrier stock** to include known personal-carrier cargo; enable **Squadron cargo is available** as well when you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
 
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
@@ -141,7 +141,7 @@ This README is also available [in Russian](README.ru.md).
 
 ## Connections and updates
 
-Sign in with Frontier to retrieve account information. To send supported events to Inara, add your personal API key and enable sending in Synchronization.
+Sign in with Frontier once to retrieve supported account information and keep it refreshed automatically in the background. To send supported events to Inara, add your personal API key and enable sending in Synchronization.
 
 Automatic updates are enabled by default and can be switched off in Settings. Stable GitHub releases download quietly and are checked against published SHA256 digests. Installation waits until you fully exit Copilot; the next launch shows the changes. Setup provides separate Start Menu and desktop shortcut choices and preserves them during updates.
 
@@ -149,4 +149,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.7.0](docs/RELEASE-2.7.0.md) · [Building and testing (RU)](docs/TESTING.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.7.1](docs/RELEASE-2.7.1.md) · [Building and testing (RU)](docs/TESTING.md)

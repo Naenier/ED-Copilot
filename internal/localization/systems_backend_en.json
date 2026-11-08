@@ -618,7 +618,6 @@
   "Неизвестное действие периода": "Unknown tracking-period action",
   "Откройте управление личным флотоносцем в игре": "Open your personal carrier management in the game",
   "Проверьте товар и количество": "Check the commodity and quantity",
-  "Обновите Frontier: нужен подтверждённый снимок вашего флотоносца с совпадающим позывным": "Refresh Frontier: a confirmed snapshot of your carrier with a matching callsign is required",
   "Вход Frontier недоступен": "Frontier sign-in is unavailable",
   "Защищённая синхронизация недоступна в этом профиле": "Protected synchronisation is unavailable in this profile",
   "Синхронизация недоступна": "Synchronisation unavailable",
@@ -661,5 +660,10 @@
   "Возможно, вы имели в виду": "Did you mean",
   "Выдача API ограничена. Уточните название.": "The API result list is limited. Refine the name.",
   "Выбор заменит только текущую строку.": "Selection replaces only the current line.",
-  "Enter — выбрать · Esc — закрыть": "Enter to select · Esc to close"
+  "Enter — выбрать · Esc — закрыть": "Enter to select · Esc to close",
+  "Ожидается подтверждённый снимок личного флотоносца из Frontier с совпадающим позывным": "Waiting for a confirmed personal carrier snapshot from Frontier with a matching callsign",
+  "Снимок Frontier CAPI и последующие записанные операции": "Frontier CAPI snapshot and subsequent recorded operations",
+  "Снимок Frontier CAPI": "Frontier CAPI snapshot",
+  "После снимка Frontier CAPI": "After the Frontier CAPI snapshot",
+  "Выполняется вход Frontier.": "Frontier sign-in is in progress."
 }

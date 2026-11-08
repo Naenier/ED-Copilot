@@ -138,6 +138,14 @@ func (c *Client) notify() {
 		go c.opts.OnUpdate()
 	}
 }
+
+// SessionRevision fences automatic work across logout/reauthorization, even
+// when the same commander signs back in before a canceled request finishes.
+func (c *Client) SessionRevision() uint64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.epoch
+}
 func (c *Client) Status(commanders ...v.M) v.M {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -428,7 +436,14 @@ func (c *Client) capi(ctx context.Context, endpoint string) (v.M, error) {
 func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 	c.syncMu.Lock()
 	defer c.syncMu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
+	if c.pending != nil && c.opts.Now().Before(c.pending.Expires) {
+		c.mu.Unlock()
+		return nil, fail("Выполняется вход Frontier.", "LOGIN_PENDING", 409)
+	}
 	if c.tokens == nil {
 		c.mu.Unlock()
 		return nil, fail("Сначала войдите в Frontier.", "LOGIN_REQUIRED", 401)

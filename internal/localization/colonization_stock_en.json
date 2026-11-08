@@ -12,11 +12,11 @@
   "Учтён в плане": "Included in the plan",
   "Не учтён в плане": "Not included in the plan",
   "Получено ": "Received ",
-  "Склад не прочитан или требует обновления Frontier.": "Warehouse not read or Frontier refresh required.",
   "Снимок Frontier CAPI; изменения других игроков могут запаздывать.": "Frontier CAPI snapshot; changes by other players may be delayed.",
   "Общий склад не учтён: подтвердите право вывоза груза.": "Shared warehouse excluded: confirm cargo withdrawal rights.",
   "Frontier подтвердил отсутствие личного флотоносца.": "Frontier confirmed there is no personal carrier.",
   "Не удалось сохранить учёт склада. Повторите действие.": "Could not save warehouse accounting. Try again.",
   "Параметр учёта склада должен быть включён или выключен.": "The warehouse accounting option must be on or off.",
-  "Сначала обновите Frontier, чтобы прочитать флотоносец эскадры.": "Refresh Frontier first to read the squadron carrier."
+  "После входа в Frontier данные флотоносца эскадры обновляются автоматически.": "Squadron carrier data refreshes automatically after signing in with Frontier.",
+  "Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически.": "Waiting for a fresh Frontier warehouse snapshot. Data refreshes automatically after sign-in."
 }

@@ -30,3 +30,29 @@ func TestHelpMatchesSidebarReaderAndModernScreenNavigation(t *testing.T) {
 		}
 	}
 }
+
+func TestFrontierHelpDescribesAutomaticRefreshWithoutRemovedButtons(t *testing.T) {
+	for _, topic := range data.Array("help.json") {
+		id := v.Str(topic["id"])
+		if id != "frontier" && id != "carrier" {
+			continue
+		}
+		body := v.Str(topic["body"])
+		if !strings.Contains(body, "автоматически") {
+			t.Fatalf("%s does not explain automatic observations", id)
+		}
+		for _, field := range []string{"body", "search"} {
+			text := strings.ToLower(v.Str(topic[field]))
+			for _, removed := range []string{"«обновить данные»", "«склад из frontier»"} {
+				if strings.Contains(text, removed) {
+					t.Fatalf("%s.%s still instructs the user to click a removed button", id, field)
+				}
+			}
+		}
+	}
+	for _, tab := range []string{"account", "carrier"} {
+		if !strings.Contains(HelpForLanguage(tab, "en"), "automatically") {
+			t.Fatalf("%s English help does not explain automatic observations", tab)
+		}
+	}
+}

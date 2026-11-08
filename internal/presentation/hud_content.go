@@ -716,22 +716,15 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 		hudAdd(doc, "КОЛОНИЯ", rows...)
 		return
 	}
-	supplies := []M{}
-	for _, r := range v.Rows(p["operationalSupplies"]) {
-		if v.Num(r["missing"]) > 0 {
-			supplies = append(supplies, r)
-		}
-	}
-	sort.SliceStable(supplies, func(i, j int) bool {
-		a, b := v.Num(supplies[i]["cargoAvailable"]) > 0, v.Num(supplies[j]["cargoAvailable"]) > 0
-		if a != b {
-			return a
-		}
-		return false
-	})
-	if len(supplies) > 0 && v.Num(supplies[0]["cargoAvailable"]) > 0 {
-		r := supplies[0]
+	colony := v.Obj(s["colonization"])
+	supplies := hudColonySupplies(colony, p)
+	if len(supplies) > 0 && v.Num(supplies[0].row["cargoAvailable"]) > 0 {
+		r := supplies[0].row
 		rows = append(rows, HUDLine{"Готово к доставке: " + v.Text(r["name"], r["commodity"]) + " · " + Number(min(v.Num(r["cargoAvailable"]), v.Num(r["missing"]))) + " т", "good"})
+	} else if len(supplies) > 0 && v.Num(supplies[0].carrier) > 0 {
+		item := supplies[0]
+		amount := min(v.Num(item.carrier), v.Num(item.row["missing"]))
+		rows = append(rows, HUDLine{"Загрузить с ФН: " + v.Text(item.row["name"], item.row["commodity"]) + " · " + Number(amount) + " т", "good"})
 	} else if text := v.Str(v.At(p, "nextTask", "text")); text != "" {
 		rows = append(rows, hudText(text))
 	}
@@ -743,24 +736,6 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 		}
 	}
 	hudAdd(doc, "ВЫБРАННАЯ КОЛОНИЯ", rows...)
-	rows = nil
-	for i, r := range supplies {
-		if i == 3 {
-			break
-		}
-		text := v.Text(r["name"], r["commodity"]) + ": осталось " + Number(r["missing"]) + " т"
-		if hudKnown(r["cargoAvailable"]) && v.Num(r["cargoAvailable"]) > 0 {
-			text += " · на борту " + Number(r["cargoAvailable"]) + " т"
-		}
-		role := "text"
-		if !v.Bool(r["authoritative"]) && strings.Contains(v.Str(r["source"]), "manual") {
-			text += " (оценка)"
-			role = "warn"
-		}
-		rows = append(rows, HUDLine{text, role})
-	}
-	if n := v.Int(p["unknownBills"]); n > 0 {
-		rows = append(rows, hudWarn("Сметы неизвестны: "+Number(n)))
-	}
+	rows = hudColonySupplyLines(colony, p, supplies)
 	hudAdd(doc, "СНАБЖЕНИЕ КОЛОНИИ", rows...)
 }

@@ -57,6 +57,8 @@ func (f *accountFixtureTransport) RoundTrip(r *http.Request) (*http.Response, er
 			data = v.M{"id": 100}
 		case "/fleetcarrier":
 			return &http.Response{StatusCode: 204, Header: make(http.Header), Body: io.NopCloser(strings.NewReader("")), Request: r}, nil
+		case "/squadron":
+			data = v.M{}
 		default:
 			return nil, fmt.Errorf("unexpected CAPI path")
 		}

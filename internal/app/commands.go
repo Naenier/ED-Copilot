@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Naenier/ED-Copilot/internal/frontier"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
 	"github.com/Naenier/ED-Copilot/internal/presentation"
@@ -410,7 +409,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		account, own := v.Obj(state["frontier"]), v.Obj(state["carrier"])
 		actual := v.Obj(v.At(account, "summary", "carrier"))
 		if !v.Bool(account["connected"]) || !v.Bool(own["owned"]) || !v.Bool(actual["owned"]) || v.Str(actual["callsign"]) == "" || v.Str(actual["callsign"]) != v.Str(own["callsign"]) || v.Str(account["lastCarrierSync"]) == "" {
-			return nil, errors.New("Обновите Frontier: нужен подтверждённый снимок вашего флотоносца с совпадающим позывным")
+			return nil, errors.New("Ожидается подтверждённый снимок личного флотоносца из Frontier с совпадающим позывным")
 		}
 		items := []M{}
 		observedCargo := []M{}
@@ -529,7 +528,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if e.Frontier == nil {
 			return nil, errors.New("Вход Frontier недоступен")
 		}
+		e.cancelFrontierRequest()
 		url, err := e.Frontier.LoginURL()
+		e.wakeFrontier()
 		return M{"ok": err == nil, "url": url}, err
 	case "/api/frontier/sync":
 		if err := e.networkAllowed(); err != nil {
@@ -538,32 +539,18 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if e.Frontier == nil {
 			return nil, errors.New("Вход Frontier недоступен")
 		}
-		result, err := e.Frontier.Sync(e.ctx, body["carrier"] != false)
-		if err != nil {
-			return nil, err
-		}
-		e.applyVerifiedProfileCAPI(result)
-		market := frontier.MarketSnapshot(result)
-		if market != nil {
-			cmd := e.Commander()
-			if v.Bool(cmd["docked"]) && v.Str(cmd["marketId"]) == v.Str(market["MarketID"]) {
-				e.Apply(market, M{"side": true})
-			}
-		}
-		if e.Inara != nil {
-			e.Inara.ObserveCAPI(result)
-		}
-		if err := e.Save(); err != nil {
-			return nil, err
-		}
-		e.Notify()
-		return M{"ok": true}, nil
+		ctx, cancel := context.WithTimeout(e.ctx, frontierRequestTimeout)
+		defer cancel()
+		_, err := e.syncFrontier(ctx, body["carrier"] != false)
+		return M{"ok": err == nil}, err
 	case "/api/frontier/logout":
+		e.cancelFrontierRequest()
 		if e.Frontier != nil {
 			if err := e.Frontier.Logout(); err != nil {
 				return nil, err
 			}
 		}
+		e.wakeFrontier()
 		e.Notify()
 		return M{"ok": true}, nil
 	case "/api/integrations/configure":

@@ -42,6 +42,12 @@ test('rank and politics readers do not expose a nonfunctional generic details to
   assert.equal(f.window.SettingsPaneUI.canToggle(a.rendererKind()),false);
  }
 });
+test('unchanged background chrome refresh preserves focused tooltip triggers and updates changed controls',()=>{
+ const f=fixture(),a=f.api;let writes=0,markup='';const toolbar={};Object.defineProperty(toolbar,'innerHTML',{get:()=>markup,set:value=>{writes++;markup=value;}});
+ f.nodes.set('page-toolbar',toolbar);f.nodes.set('sidebar-ship',{});f.nodes.set('sidebar-system',{});a.C.tab='overview';a.C.group='work';a.C.tabs=[{ID:'overview',Title:'Обзор'}];a.C.page={Rows:[]};a.C.state={commander:{name:'Pilot'},settings:{overlayEnabled:false}};
+ a.renderChrome();assert.equal(writes,1);a.renderChrome();assert.equal(writes,1);
+ a.C.state.settings.overlayEnabled=true;a.renderChrome();assert.equal(writes,2);assert.ok(markup.includes('Оверлей включён'));
+});
 
 test('commander pages render against the actual shared UI contract',()=>{
  const f=fixture(),a=f.api;a.C.state={commander:{name:'Synthetic Pilot'},settings:{language:'en'}};

@@ -198,8 +198,7 @@ func TestNativeFormsDriveSettingsPaletteAndCarrierStock(t *testing.T) {
 		t.Fatal("stock-row upsert dropped known item", warehouse)
 	}
 	expectNumber(t, v.At(e.Snapshot(), "carrier", "fuel", "reserveTons"), 100)
-	a := nativeAction(t, e, "carrier", "Склад", "carrier.stock.frontier", nil)
-	if _, err := e.Do(a.Path, nativeBody(t, a, nil)); err == nil {
+	if _, err := e.Do("/api/frontier/carrier-stock", M{}); err == nil {
 		t.Fatal("unconfirmed Frontier warehouse snapshot accepted")
 	}
 	runNative(t, e, "settings", "", "settings.rescan", nil, nil)

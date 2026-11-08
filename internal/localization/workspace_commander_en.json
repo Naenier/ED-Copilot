@@ -40,7 +40,6 @@
   "Поиск в инвентаре": "Search inventory",
   "Ваш флот": "Your fleet",
   "Опись флота пока неизвестна": "Fleet inventory not observed yet",
-  "Откройте список кораблей на станции или обновите данные Frontier.": "Open your stored ships at a station or refresh Frontier data.",
   "Корабль на хранении": "Stored ship",
   "Данные пока не получены": "Data not received yet",
   "Проекты появятся из журнала или после добавления плана.": "Projects will appear from journals or after adding a plan.",
@@ -107,7 +106,6 @@
   "Обменяно пеших материалов": "Odyssey materials traded",
   "Обменяно данных": "Data traded",
   "Обменяно материалов": "Materials traded",
-  "Опись изменилась. Откройте список кораблей в игре или обновите Frontier.": "The fleet inventory has changed. Open stored ships in the game or refresh Frontier data.",
   "Купить, т": "To buy, t",
   "Показана известная часть запаса. Откройте инвентарь в игре для полного снимка.": "Only observed inventory is shown. Open the inventory in the game to obtain a complete snapshot.",
   "ч": "h",
@@ -153,5 +151,7 @@
   "Федерация": "Federation",
   "Штрафы": "Fines",
   "Экипаж": "Crew",
-  "Галактика": "Galaxy"
+  "Галактика": "Galaxy",
+  "Откройте список кораблей на станции. После входа сведения Frontier обновляются автоматически.": "Open your stored ships at a station. Frontier observations refresh automatically after sign-in.",
+  "Опись изменилась. Откройте список кораблей в игре; сведения Frontier обновляются автоматически после входа.": "The fleet inventory has changed. Open stored ships in the game; Frontier observations refresh automatically after sign-in."
 }

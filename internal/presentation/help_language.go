@@ -60,7 +60,7 @@ Each result shows the purchase and sale stations, their systems, quote times, av
 Saved quotes are snapshots. Refresh the search before flying. Time estimates use the entered assumptions and exclude the approach to the first station.`,
 	"carrier": `Personal carrier
 
-Open carrier management in the game or refresh Frontier data to populate observed ownership, finances, services and inventory. Check each snapshot's time. An incomplete inventory does not establish zero stock for missing commodities.
+Open carrier management in the game to record observations. After you sign in with Frontier, supported ownership, finances, services and inventory are refreshed automatically in the background. Check each snapshot's time. An incomplete inventory does not establish zero stock for missing commodities.
 
 Use planning settings to record your weekly upkeep and desired reserves. Warehouse corrections are personal records; they do not place market orders or move cargo in the game. Only mark an inventory complete if it really contains every commodity.
 
@@ -146,7 +146,7 @@ Reference commodity prices are optional personal planning inputs. They help valu
 
 Select Sign in with Frontier to open the official sign-in page in your browser. Your password stays on the Frontier website. ED Copilot stores the resulting connection securely in your Windows profile.
 
-Refresh data to obtain supported commander, ship, current station and personal carrier information. Companion API snapshots may lag behind journal events, so check their time before using inventory or finances for a plan.
+After sign-in, ED Copilot automatically refreshes supported commander, ship, current station and carrier information in the background. Companion API snapshots may lag behind journal events, so check their time before using inventory or finances for a plan. If the connection fails, saved observations remain dated and unknown information stays unknown.
 
 Sign out when you want to remove the saved connection. You can still use local journal observations and offline tools without being signed in.`,
 	"integrations": `Inara synchronisation

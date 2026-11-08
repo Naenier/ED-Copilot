@@ -7,6 +7,10 @@ import v "github.com/Naenier/ED-Copilot/internal/value"
 func (e *Engine) applyVerifiedProfileCAPI(result M) bool {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
+	return e.applyVerifiedProfileCAPILocked(result)
+}
+
+func (e *Engine) applyVerifiedProfileCAPILocked(result M) bool {
 	cmd := e.Commander()
 	status := v.Obj(result["status"])
 	if !v.Bool(status["connected"]) || v.Bool(status["commanderMismatch"]) || v.Str(cmd["fid"]) == "" || v.Str(status["fid"]) != v.Str(cmd["fid"]) {

@@ -8,6 +8,17 @@ async function run(C,u){
  try{
   for(const language of ['en','ru']){
    await u.call('settings',{values:{language}});await u.navigate('overview');
+   check(language+': titlebar follows language changes arriving during navigation',u.$('.titlebar [data-click="file-menu"]')?.textContent===u.t('Файл'));
+   const tipAnchor=u.$('.rail [data-group="trade"]');
+   tipAnchor.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));
+   await wait(()=>!!u.$('#copilot-tooltip')&&!u.$('#copilot-tooltip').hidden);
+   const tooltip=u.$('#copilot-tooltip'),tipBox=tooltip.getBoundingClientRect(),tipStyle=getComputedStyle(tooltip);
+   check(language+': custom tooltip replaces the native title',!tipAnchor.hasAttribute('title')&&tooltip.textContent===u.t('Торговля'));
+   check(language+': tooltip is a rounded body portal above navigation',tooltip.parentElement===document.body&&tipStyle.position==='fixed'&&parseFloat(tipStyle.borderRadius)===8&&tipStyle.backgroundColor==='rgb(48, 48, 48)');
+   check(language+': tooltip remains inside the viewport',tipBox.left>=8&&tipBox.top>=8&&tipBox.right<=innerWidth-7&&tipBox.bottom<=innerHeight-7);
+   await new Promise(resolve=>setTimeout(resolve,150));await u.smokeCapture('tooltip-'+language);
+   document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+   check(language+': Escape dismisses the tooltip',tooltip.hidden&&!tipAnchor.getAttribute('aria-describedby')?.includes('copilot-tooltip'));
    check(language+': settings appears once in navigation',u.$$('.rail [data-click="settings-nav"]').length===1&&u.$$('.sidebar [data-nav="settings"]').length===0);
    for(const group of window.NavigationUI.groups.filter(x=>x.id!=='commander')){
     const button=u.$('.rail [data-group="'+group.id+'"]');check(language+': group rail button '+group.id,!!button);button.click();

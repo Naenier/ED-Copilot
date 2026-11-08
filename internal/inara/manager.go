@@ -536,6 +536,9 @@ func (m *Manager) ApplyCAPI(result v.M) {
 	}
 	profile := v.Obj(v.At(result, "data", "profile"))
 	current := identity(v.Obj(m.current["commander"]))
+	if status, present := result["status"].(v.M); present && (!v.Bool(status["connected"]) || v.Bool(status["commanderMismatch"]) || v.Str(status["fid"]) != current.FID) {
+		return
+	}
 	if v.Str(v.At(profile, "commander", "name")) != current.Name || !same(current, m.config.Bound) {
 		return
 	}

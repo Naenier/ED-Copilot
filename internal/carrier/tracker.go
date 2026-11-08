@@ -428,8 +428,12 @@ func (t *Tracker) warehouse(c M) M {
 	complete := hasBaseline && baseline["complete"] != false
 	if hasBaseline {
 		items = map[string]M{}
+		basis, after := "Ручной снимок склада", "После ручного снимка"
+		if baseline["source"] == "Frontier CAPI" {
+			basis, after = "Снимок Frontier CAPI", "После снимка Frontier CAPI"
+		}
 		for _, row := range v.Rows(baseline["items"]) {
-			items[v.Str(row["key"])] = v.Merge(v.Copy(row), M{"netTransferred": 0, "basis": "Ручной снимок склада", "snapshotAt": baseline["timestamp"], "updatedAt": baseline["timestamp"]})
+			items[v.Str(row["key"])] = v.Merge(v.Copy(row), M{"netTransferred": 0, "basis": basis, "snapshotAt": baseline["timestamp"], "updatedAt": baseline["timestamp"]})
 		}
 		for _, move := range v.Rows(c["movements"]) {
 			if v.Str(move["timestamp"]) <= v.Str(baseline["timestamp"]) {
@@ -438,7 +442,7 @@ func (t *Tracker) warehouse(c M) M {
 			key := v.Str(move["key"])
 			row := items[key]
 			if row == nil {
-				row = M{"key": key, "name": move["name"], "count": 0, "netTransferred": 0, "basis": "После ручного снимка", "snapshotAt": baseline["timestamp"]}
+				row = M{"key": key, "name": move["name"], "count": 0, "netTransferred": 0, "basis": after, "snapshotAt": baseline["timestamp"]}
 			}
 			row["count"] = math.Max(0, v.Num(row["count"])+v.Num(move["delta"]))
 			row["netTransferred"] = v.Num(row["netTransferred"]) + v.Num(move["delta"])
@@ -468,6 +472,9 @@ func (t *Tracker) warehouse(c M) M {
 	label := "Заявки продажи и записанные перемещения"
 	if complete {
 		label = "Ручной снимок и последующие записанные операции"
+		if baseline["source"] == "Frontier CAPI" {
+			label = "Снимок Frontier CAPI и последующие записанные операции"
+		}
 	} else if hasBaseline {
 		label = "Неполный ручной снимок известных остатков и последующие операции"
 	}

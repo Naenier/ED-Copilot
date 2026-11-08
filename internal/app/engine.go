@@ -39,7 +39,7 @@ import (
 
 type M = v.M
 
-const Version = "2.7.0"
+const Version = "2.7.1"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -95,6 +95,7 @@ type Engine struct {
 	updateNotice                                   M
 	updateError                                    string
 	updateDone                                     chan struct{}
+	frontierAuto                                   *frontierAutomatic
 }
 
 func New(o Options) (*Engine, error) {
@@ -119,6 +120,7 @@ func New(o Options) (*Engine, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
+	x.frontierAuto = newFrontierAutomatic()
 	v.Merge(x.settings, v.Obj(saved["settings"]))
 	x.settings["language"] = localization.Normalize(v.Text(x.settings["language"], "en"))
 	if _, exists := x.settings["routeAutoCopyNext"]; !exists {
@@ -208,6 +210,7 @@ func New(o Options) (*Engine, error) {
 		go x.Reader.Run(ctx)
 	}
 	x.initializeUpdates()
+	x.startAutomaticFrontier()
 	return x, nil
 }
 func (e *Engine) Notify() {
@@ -219,6 +222,7 @@ func (e *Engine) Notify() {
 func (e *Engine) Updates() <-chan struct{} { return e.updates }
 func (e *Engine) Commander() M             { e.mu.RLock(); defer e.mu.RUnlock(); return v.Copy(e.commander) }
 func (e *Engine) resetObserved() {
+	e.cancelFrontierRequest()
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
 	e.mu.Lock()
@@ -246,6 +250,9 @@ func (e *Engine) resetObserved() {
 func (e *Engine) Apply(event, meta M) {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
+	e.applyLocked(event, meta)
+}
+func (e *Engine) applyLocked(event, meta M) {
 	kind, at := v.Str(event["event"]), v.Str(event["timestamp"])
 	side := v.Bool(meta["side"])
 	e.mu.Lock()
@@ -347,6 +354,9 @@ func (e *Engine) Apply(event, meta M) {
 	running := e.gameRunning
 	e.revision++
 	e.mu.Unlock()
+	if (kind == "Commander" || kind == "LoadGame") && previousFID != v.Str(cmdCopy["fid"]) {
+		e.cancelFrontierRequest()
+	}
 	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "side": meta["side"]}
 	if previousFID != "" && v.Str(cmdCopy["fid"]) != previousFID && (kind == "Commander" || kind == "LoadGame") {
 		// Reader normally resets all observations before changing FID. Keep
@@ -556,6 +566,7 @@ func (e *Engine) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "Вход Frontier завершён. Можно вернуться в ED Copilot.")
+	e.wakeFrontier()
 	e.Notify()
 }
 func (e *Engine) Close() {
@@ -570,6 +581,9 @@ func (e *Engine) Close() {
 	}
 	e.mu.Unlock()
 	e.cancel()
+	if e.frontierAuto != nil && e.frontierAuto.done != nil {
+		<-e.frontierAuto.done
+	}
 	if e.updateDone != nil {
 		<-e.updateDone
 	}

@@ -138,6 +138,29 @@ func TestCoreActionsEveryTabAndVisibleMode(t *testing.T) {
 	}
 }
 
+func TestFrontierActionsKeepAuthenticationAndHideManualRefreshAndImport(t *testing.T) {
+	s := coreState()
+	account := CoreActions("account", "", s, nil, nil)
+	login, logout := false, false
+	for _, a := range account {
+		login = login || a.ID == "frontier.login" && a.Path == "/api/frontier/login"
+		logout = logout || a.ID == "frontier.logout" && a.Path == "/api/frontier/logout"
+		if a.Path == "/api/frontier/sync" || a.ID == "frontier.sync" {
+			t.Fatal("manual Frontier refresh remains in the user interface")
+		}
+	}
+	if !login || !logout {
+		t.Fatal("automatic refresh removed account connection controls")
+	}
+	for _, mode := range Build("carrier", "", "", s).Modes {
+		for _, a := range CoreActions("carrier", mode, s, nil, nil) {
+			if a.ID == "carrier.stock.frontier" || a.Path == "/api/frontier/carrier-stock" {
+				t.Fatal("automatic carrier stock still requires a manual import action")
+			}
+		}
+	}
+}
+
 func TestTradingNativeInputsAndSelectedQuoteDirections(t *testing.T) {
 	s := coreState()
 	s["pilot"] = M{"credits": 100000}
