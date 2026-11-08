@@ -60,7 +60,7 @@ func TestModernPreviewRejectsBlankCorruptAndMissingImages(t *testing.T) {
 }
 
 func TestModernPreviewIsRestrictedAndMissingCapturesFailSmoke(t *testing.T) {
-	for _, options := range []Options{{}, {Smoke: true}} {
+	for _, options := range []Options{{}, {Smoke: true}, {Smoke: true, ReadmeScreenshots: true}} {
 		m := &modernShell{owner: &Window{options: options}}
 		for _, name := range []string{"../arbitrary", `C:\outside`, "", "overview"} {
 			// A shell with no initialized WebView must never create a file.

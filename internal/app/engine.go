@@ -35,7 +35,7 @@ import (
 
 type M = v.M
 
-const Version = "2.4.1"
+const Version = "2.5.0"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -448,7 +448,7 @@ func (e *Engine) Snapshot() M {
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "savedTradeRoutes": e.Trading.SavedRoutesSnapshot(), "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(c)
-	state["learning"] = e.Learning.Snapshot()
+	state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
 	if len(v.Obj(state["trading"])) == 0 {
 		state["trading"] = M{"results": []M{}}
 	}

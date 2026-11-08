@@ -47,7 +47,7 @@ var modernPreviewNames = map[string]bool{
 	"overview": true, "academy": true, "reader": true, "calculator": true,
 	"calculator-squadron": true, "colonization": true, "settings": true, "overview-900": true,
 	"construction": true, "form": true,
-	"exobiology": true,
+	"exobiology":   true,
 	"readme-deals": true, "settings-details": true, "route-details": true,
 	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
 }
@@ -192,11 +192,15 @@ func (m *modernShell) smokeVisualState(report M) {
 		completed[capture.name] = completed[capture.name] || ok
 	}
 	complete := true
-	for _, name := range []string{"overview", "academy", "reader", "calculator", "calculator-squadron", "colonization", "settings"} {
+	required := []string{"overview", "academy", "reader", "calculator", "calculator-squadron", "colonization", "settings"}
+	if m.owner != nil && m.owner.options.ReadmeScreenshots {
+		required = []string{"readme-overview", "readme-deals", "readme-carrier-trade", "route-details", "readme-ships", "readme-ship", "readme-engineer", "readme-article", "readme-colonization", "readme-academy", "exobiology"}
+	}
+	for _, name := range required {
 		complete = complete && completed[name]
 	}
 	report["screenshots"] = captures
-	for _, check := range []M{{"name": "WebView расположен в видимой клиентской панели и имеет размер", "ok": geometry["ok"]}, {"name": "Все семь экранов подтверждены непустыми PNG WebView", "ok": complete}} {
+	for _, check := range []M{{"name": "WebView расположен в видимой клиентской панели и имеет размер", "ok": geometry["ok"]}, {"name": "Required screens have nonempty WebView PNG files", "ok": complete}} {
 		report["scenarios"] = append(v.Arr(report["scenarios"]), check)
 		if !v.Bool(check["ok"]) {
 			report["ok"] = false

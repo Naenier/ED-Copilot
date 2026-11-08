@@ -302,11 +302,18 @@ func (l *Library) ExportSettings() M {
 }
 
 func (l *Library) Snapshot() M {
+	return l.SnapshotForLanguage("ru")
+}
+
+// SnapshotForLanguage applies the requested catalogue only to this read. It
+// never changes persisted search text, lesson IDs or personal study progress.
+func (l *Library) SnapshotForLanguage(language string) M {
+	c := catalogForLanguage(language)
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	courses, lessons, recent := []M{}, []M{}, []M{}
-	for _, course := range catalog().Courses {
-		row := mapValue(course)
+	for index, course := range c.Courses {
+		row := copyCatalogRow(c.courseRows[index])
 		completed := 0
 		for _, id := range course.LessonIDs {
 			if l.completed[id] != nil {
@@ -327,9 +334,8 @@ func (l *Library) Snapshot() M {
 		courses = append(courses, row)
 	}
 	active := M{}
-	for index, lesson := range catalog().Lessons {
-		row := mapValue(lesson)
-		row["courseTitle"], row["category"] = l.courses[lesson.CourseID].Title, l.courses[lesson.CourseID].Category
+	for index, lesson := range c.Lessons {
+		row := copyCatalogRow(c.lessonRows[index])
 		row["completed"], row["completedAt"], row["bookmarked"], row["openedAt"] = l.completed[lesson.ID] != nil, l.completed[lesson.ID], v.Bool(l.bookmarks[lesson.ID]), l.opened[lesson.ID]
 		row["position"] = v.Copy(v.Obj(l.positions[lesson.ID]))
 		row["checklistState"] = v.Copy(v.Obj(l.checklists[lesson.ID]))
@@ -342,11 +348,11 @@ func (l *Library) Snapshot() M {
 		}
 		row["status"] = status
 		row["previousLessonId"], row["nextLessonId"] = "", ""
-		if index > 0 && catalog().Lessons[index-1].CourseID == lesson.CourseID {
-			row["previousLessonId"] = catalog().Lessons[index-1].ID
+		if index > 0 && c.Lessons[index-1].CourseID == lesson.CourseID {
+			row["previousLessonId"] = c.Lessons[index-1].ID
 		}
-		if index+1 < len(catalog().Lessons) && catalog().Lessons[index+1].CourseID == lesson.CourseID {
-			row["nextLessonId"] = catalog().Lessons[index+1].ID
+		if index+1 < len(c.Lessons) && c.Lessons[index+1].CourseID == lesson.CourseID {
+			row["nextLessonId"] = c.Lessons[index+1].ID
 		}
 		answers, correct := v.Copy(v.Obj(l.answers[lesson.ID])), 0
 		for _, question := range lesson.Quiz {
@@ -357,10 +363,10 @@ func (l *Library) Snapshot() M {
 		row["quizResult"] = M{"answers": answers, "answered": len(answers), "total": len(lesson.Quiz), "correct": correct, "passed": len(lesson.Quiz) > 0 && correct == len(lesson.Quiz)}
 		lessons = append(lessons, row)
 		if l.opened[lesson.ID] != nil {
-			recent = append(recent, v.Copy(row))
+			recent = append(recent, copyCatalogRow(row))
 		}
 		if lesson.ID == l.selected {
-			active = v.Copy(row)
+			active = copyCatalogRow(row)
 		}
 	}
 	sort.SliceStable(recent, func(i, j int) bool { return v.Str(recent[i]["openedAt"]) > v.Str(recent[j]["openedAt"]) })
@@ -376,8 +382,8 @@ func (l *Library) Snapshot() M {
 		if filter == "bookmarked" && !v.Bool(lesson["bookmarked"]) || filter == "completed" && !v.Bool(lesson["completed"]) || filter == "in-progress" && lesson["status"] != "in-progress" {
 			continue
 		}
-		if Matches(lesson, v.Str(l.options["query"])) {
-			filtered = append(filtered, v.Copy(lesson))
+		if matchesSearchText(c.searchText[v.Str(lesson["id"])], v.Str(l.options["query"])) {
+			filtered = append(filtered, copyCatalogRow(lesson))
 		}
 	}
 	completed, started, inProgress := len(l.completed), 0, 0
@@ -393,5 +399,5 @@ func (l *Library) Snapshot() M {
 	if len(lessons) > 0 {
 		percent = int(math.Round(float64(completed) * 100 / float64(len(lessons))))
 	}
-	return M{"courses": courses, "lessons": lessons, "filteredLessons": filtered, "selectedLessonId": l.selected, "activeLesson": active, "recent": recent, "progress": M{"completed": completed, "total": len(lessons), "percent": percent, "started": started, "inProgress": inProgress, "bookmarked": len(l.bookmarks)}, "options": v.Copy(l.options), "reviewedAt": catalog().ReviewedAt}
+	return M{"courses": courses, "lessons": lessons, "filteredLessons": filtered, "selectedLessonId": l.selected, "activeLesson": active, "recent": recent, "progress": M{"completed": completed, "total": len(lessons), "percent": percent, "started": started, "inProgress": inProgress, "bookmarked": len(l.bookmarks)}, "options": v.Copy(l.options), "reviewedAt": c.ReviewedAt, "language": c.Language}
 }

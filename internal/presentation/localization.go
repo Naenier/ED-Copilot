@@ -243,6 +243,19 @@ func LocalizeWebState(state M) M {
 			}
 		}
 	}
+	if route := v.Obj(state["carrierRoute"]); len(route) > 0 {
+		for _, field := range []string{"assumptions", "warnings"} {
+			items := v.Arr(route[field])
+			for i, item := range items {
+				if text, ok := item.(string); ok {
+					items[i] = localization.TextProtected("en", text, stateIdentities(state))
+				}
+			}
+			if route[field] != nil {
+				route[field] = items
+			}
+		}
+	}
 	for _, project := range v.Rows(v.At(state, "colonization", "projects")) {
 		localizeColonyPresentation(project)
 	}
@@ -264,6 +277,20 @@ func localizeColonyPresentation(project M) {
 	}
 	if next := v.Obj(project["nextTask"]); len(next) > 0 {
 		next["text"] = localization.TextProtected("en", v.Str(next["text"]), ids)
+	}
+	for _, advice := range v.Rows(project["buildAdvice"]) {
+		for _, field := range []string{"title", "text"} {
+			if text := v.Str(advice[field]); text != "" {
+				advice[field] = localization.TextProtected("en", text, ids)
+			}
+		}
+	}
+	if plan := v.Obj(project["economyPlan"]); len(plan) > 0 {
+		for _, field := range []string{"name", "description"} {
+			if text := v.Str(plan[field]); text != "" {
+				plan[field] = localization.T("en", text)
+			}
+		}
 	}
 	for _, field := range []string{"warnings", "buildAdvice"} {
 		switch values := project[field].(type) {

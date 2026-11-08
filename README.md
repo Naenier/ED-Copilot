@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/assets/copilot-mark.png" width="76" alt="ED Copilot logo"></p>
 
-# ED Copilot 2.4.1
+# ED Copilot 2.5.0
 
 **English** · [Русский](README.ru.md)
 
@@ -8,13 +8,13 @@ A desktop companion for Elite Dangerous: trading, mining, exobiology, fleet carr
 
 **[Download for Windows](https://github.com/Naenier/ED-Copilot/releases/latest)** · [User guide (RU)](docs/USER-GUIDE.md) · [Installation and updates (RU)](docs/INSTALLATION.md)
 
-![Commander overview in ED Copilot](docs/screenshots/overview.png)
+![Commander overview in ED Copilot](docs/screenshots/en/overview.png)
 
 *All screenshots in this README use a demonstration profile with fictional data. Balances and market quotes illustrate the interface.*
 
 ## Getting started
 
-1. Install **ED-Copilot-2.4.1-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
+1. Install **ED-Copilot-2.5.0-Setup.exe**, or extract the portable archive and run `ED Copilot.exe`.
 2. Start Elite Dangerous. Copilot reads the game journals; choose their folder in Settings if it is not detected automatically.
 3. Use **…** in the sidebar to add the activities you need. Fleet carrier, colonisation and other optional tools can be hidden.
 4. Select an activity for the overlay and start working through your plan.
@@ -28,6 +28,8 @@ Spansh suggestions are available in star system fields throughout the applicatio
 ## Exobiology
 
 Choose planets by their biological signals, environmental conditions and the value of potential species. Track three genetic samples, the required separation and your distance from recorded points when live coordinates are available. A dedicated overlay activity supports surface exploration, while sample and sales screens distinguish data on board from confirmed Vista Genomics sales.
+
+![Exobiology workspace](docs/screenshots/en/exobiology.png)
 
 The reference catalogue includes 126 species across 25 genera, habitat conditions, variants and 101 photographs. Planet bookmarks, surface waypoints, a public observation index and expedition statistics help organise your research. First footfall status, estimated payouts and unknown coordinates are identified separately. [Exobiology guide (RU)](docs/EXOBIOLOGY.md).
 
@@ -43,7 +45,7 @@ The route screen presents both stations on a wide card, including their systems,
 
 Search takes available cargo space, your known credit balance, market volume, costs and personal limits into account. Profit per hour uses the leg duration you enter; travel to the first station is excluded. Unknown cargo capacity and budgets are requested explicitly, while a known zero remains zero.
 
-![A two-leg trade route](docs/screenshots/deals.png)
+![A two-leg trade route](docs/screenshots/en/deals.png)
 
 Select a route, set its buyer as the overlay destination or save a plan for a particular leg. Keep up to 40 complete routes, including both market quotes, in Saved. These are observation snapshots: run a new search before repeating a route to check current prices and available volume.
 
@@ -51,7 +53,7 @@ Select a route, set its buyer as the overlay destination or save a plan for a pa
 
 Plan loading, selling and the return journey, with either a return load or an empty repositioning flight. Account for tritium, jump maintenance, upkeep, loading and selling time, hauler payments and other expenses. Results include the owner's profit, profit per hour, capital required, return on investment, break-even figures and payback.
 
-![Fleet carrier trading plan](docs/screenshots/carrier-trade.png)
+![Fleet carrier trading plan](docs/screenshots/en/carrier-trade.png)
 
 The **Booze Cruise** preset helps plan a journey to Rackham’s Peak. The station's largest landing pad is **M**, so selling requires a small or medium ship. Holiday wine prices come only from a selected market quote or your own input; confirm Public Holiday in the game.
 
@@ -61,7 +63,7 @@ A separate calculator compares the purchase and running costs of personal and sq
 
 Calculate jumps, fuel consumption, refuelling, the reserve on arrival and journey time. When your fuel stock is known, the form starts with that amount. Minimum starting fuel is a separate option for planning the required stock. Fuel cost remains unknown until you provide a tritium price.
 
-![Personal fleet carrier route](docs/screenshots/route.png)
+![Personal fleet carrier route](docs/screenshots/en/route.png)
 
 After a confirmed arrival, the next system can be copied to the clipboard automatically: press **Ctrl+V** in the galaxy map to paste it. Schedule jumps in the game.
 
@@ -69,17 +71,17 @@ After a confirmed arrival, the next system can be copied to the clipboard automa
 
 Browse by category, search by name and narrow results by group. Ships and engineers have illustrated catalogue cards; each entry opens a full page with properties, requirements and related entries.
 
-![Ship catalogue](docs/screenshots/ships.png)
+![Ship catalogue](docs/screenshots/en/ships.png)
 
-![Complete ship page](docs/screenshots/ship.png)
+![Complete ship page](docs/screenshots/en/ship.png)
 
 Engineers are also accessible from engineering plans. Their pages show introduction requirements and supported upgrades. Material pages include your known inventory, while blueprint families bring together grade recipes and experimental effects.
 
-![Engineer page](docs/screenshots/engineer.png)
+![Engineer page](docs/screenshots/en/engineer.png)
 
 Read articles in a spacious layout with a table of contents. Commodity pages offer buy and sell views, show market offers and open trading with the commodity already selected.
 
-![Reference article](docs/screenshots/article.png)
+![Reference article](docs/screenshots/en/article.png)
 
 ## Colonies, engineering and personal plans
 
@@ -87,15 +89,15 @@ Manage multiple colonies independently. Choose a system using your preferred sta
 
 Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
 
-![Colonisation plan](docs/screenshots/colonization.png)
+![Colonisation plan](docs/screenshots/en/colonization.png)
 
 Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
 
 ## Academy
 
-Nine courses and 27 Russian-language lessons cover trading, group operations, getting started with Odyssey, fleet carriers and more. Short explanations lead into Copilot exercises, checklists and self-tests. Favourites, answers and reading position are saved.
+Nine courses and 27 lessons cover trading, group operations, getting started with Odyssey, fleet carriers and passenger runs. Follow practical Copilot workflows, worked fictional examples, decision checklists and recovery steps. All lessons are available in English and Russian, with saved answers, favourites and reading positions.
 
-![ED Copilot Academy](docs/screenshots/academy.png)
+![ED Copilot Academy](docs/screenshots/en/academy.png)
 
 ## In-game guidance and controls
 
@@ -113,7 +115,7 @@ Customise the section order, window mode and colours. Import the overlay palette
 
 ## Interface language
 
-The application starts in **English** on first launch. Choose English or Russian in Settings; your choice is retained between sessions. System names, station names and personal notes are preserved. Academy lessons are currently available in Russian.
+The application starts in **English** on first launch. Choose English or Russian in Settings; your choice is retained between sessions. System names, station names and personal notes are preserved. Academy lessons are available in both languages.
 
 This README is also available [in Russian](README.ru.md).
 
@@ -125,4 +127,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.4.1 (RU)](docs/RELEASE-2.4.1.md) · [Building and testing (RU)](docs/TESTING.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.5.0](docs/RELEASE-2.5.0.md) · [Building and testing (RU)](docs/TESTING.md)

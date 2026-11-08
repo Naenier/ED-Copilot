@@ -24,6 +24,7 @@ func main() {
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
 	demo := flag.Bool("demo", false, "Открыть демонстрацию с новым временным профилем и без сети")
+	readmeScreens := flag.Bool("readme-screenshots", false, "Capture English README pages in an isolated offline profile")
 	stress := flag.Bool("stress", false, "Большая синтетическая история для --demo или --smoke")
 	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
 	flag.Parse()
@@ -31,7 +32,7 @@ func main() {
 		fmt.Printf("ED Copilot %s · %s · native Windows\n", app.Version, runtime.Version())
 		return
 	}
-	isolated := *smoke || *headless || *demo
+	isolated := *smoke || *headless || *demo || *readmeScreens
 	if *stress && !isolated {
 		fail(fmt.Errorf("--stress используется только с --demo или --smoke"), "")
 		return
@@ -115,7 +116,15 @@ func main() {
 			return
 		}
 	}
-	err = nativeui.Run(engine, nativeui.Options{Smoke: *smoke, Demo: *demo, SmokeReport: *report})
+	var controller nativeui.Controller = engine
+	if *readmeScreens {
+		controller, err = newReadmeController(engine)
+		if err != nil {
+			fail(err, *dataDir)
+			return
+		}
+	}
+	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens})
 	if err != nil {
 		fail(err, *dataDir)
 	}

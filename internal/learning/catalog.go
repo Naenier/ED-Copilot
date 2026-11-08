@@ -1,9 +1,9 @@
-// Package learning provides an offline Russian learning library and personal
+// Package learning provides an offline bilingual learning library and personal
 // study progress. Opening a guide never performs a network request.
 package learning
 
 import (
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -13,8 +13,11 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
-//go:embed content.json
-var contentJSON []byte
+//go:embed content*.json
+var contentFiles embed.FS
+
+var contentJSON, _ = contentFiles.ReadFile("content.json")
+var englishContentJSON, englishContentErr = contentFiles.ReadFile("content_en.json")
 
 type Course struct {
 	ID         string   `json:"id"`
@@ -67,53 +70,145 @@ type courseSeed struct {
 	BasicsTitle, PracticeTitle, Exercise, Solution, Reflection            string
 	Mechanics, Practice, Checklist                                        []string
 	Quiz                                                                  []Question
+	BasicsSections, PracticeSections, CheckpointSections                  []Section
+	BasicsMinutes, PracticeMinutes, CheckpointMinutes                     int
 }
 type catalogData struct {
 	Courses    []Course
 	Lessons    []Lesson
 	ReviewedAt string
+	Language   string
+	courseRows []M
+	lessonRows []M
+	searchText map[string]string
+	courseByID map[string]Course
 }
 
-var catalogOnce sync.Once
-var catalogValue catalogData
+var catalogOnce [2]sync.Once
+var catalogValue [2]catalogData
 
 func catalog() catalogData {
-	catalogOnce.Do(func() {
-		var source struct {
-			ReviewedAt string       `json:"reviewedAt"`
-			Courses    []courseSeed `json:"courses"`
+	return catalogForLanguage("ru")
+}
+
+func catalogForLanguage(language string) catalogData {
+	index, raw := 0, contentJSON
+	if strings.EqualFold(strings.TrimSpace(language), "en") {
+		if englishContentErr != nil {
+			// During content authoring the English seed can be absent. The
+			// release contract test requires both complete paired catalogues.
+			return catalog()
 		}
-		if err := json.Unmarshal(contentJSON, &source); err != nil {
-			panic(fmt.Errorf("learning content: %w", err))
+		index, raw = 1, englishContentJSON
+	}
+	catalogOnce[index].Do(func() {
+		lang := []string{"ru", "en"}[index]
+		value, err := buildCatalog(raw, lang)
+		if err != nil {
+			panic(fmt.Errorf("learning content (%s): %w", lang, err))
 		}
-		catalogValue.ReviewedAt = source.ReviewedAt
-		for _, seed := range source.Courses {
-			ids := []string{seed.ID + ".basics", seed.ID + ".practice", seed.ID + ".checkpoint"}
-			base := Lesson{CourseID: seed.ID, Difficulty: seed.Difficulty, Tags: seed.Tags, SourceURLs: []string{seed.SourceURL}}
-			basics := base
-			basics.ID, basics.Title, basics.Summary, basics.Kind, basics.Minutes, basics.Order = ids[0], seed.BasicsTitle, seed.Summary, "reading", 5, 1
-			basics.Sections = []Section{{ID: "mechanics", Title: "Как устроено занятие", Paragraphs: seed.Mechanics}, {ID: "outcome", Title: "Результат урока", Paragraphs: []string{"Объясните своими словами, какие исходные условия нужно проверить до начала. Затем переходите к практикуму: там вы превратите решение в собственный план ED Copilot."}}}
-			practice := base
-			practice.ID, practice.Title, practice.Summary, practice.Kind, practice.Minutes, practice.Order = ids[1], seed.PracticeTitle, "Практика в ED Copilot: свой план, контрольные точки и разбор результата.", "practice", 8, 2
-			practice.Sections = []Section{{ID: "workflow", Title: "Рабочий порядок", Paragraphs: seed.Practice, AppSection: seed.AppSection, AppAction: "Открыть нужный раздел"}, {ID: "checklist", Title: "Проверьте перед выполнением", Checklist: seed.Checklist}}
-			checkpoint := base
-			checkpoint.ID, checkpoint.Title, checkpoint.Summary, checkpoint.Kind, checkpoint.Minutes, checkpoint.Order = ids[2], "Самопроверка: "+seed.Title, "Учебный пример, объяснение расчёта и короткие вопросы.", "checkpoint", 5, 3
-			checkpoint.Sections = []Section{{ID: "exercise", Title: "Решите самостоятельно", Paragraphs: []string{seed.Exercise}}, {ID: "solution", Title: "Разбор учебного примера", Paragraphs: []string{seed.Solution}}, {ID: "reflection", Title: "Примените к своей игре", Paragraphs: []string{seed.Reflection}}}
-			checkpoint.Quiz = seed.Quiz
-			catalogValue.Courses = append(catalogValue.Courses, Course{ID: seed.ID, Title: seed.Title, Summary: seed.Summary, Category: seed.Category, Icon: seed.Icon, Difficulty: seed.Difficulty, Minutes: basics.Minutes + practice.Minutes + checkpoint.Minutes, Tags: seed.Tags, LessonIDs: ids, SourceURLs: []string{seed.SourceURL}})
-			catalogValue.Lessons = append(catalogValue.Lessons, basics, practice, checkpoint)
+		if index == 1 {
+			if err := validateCatalogParity(catalog(), value); err != nil {
+				panic(err)
+			}
 		}
-		if err := validateCatalog(catalogValue); err != nil {
-			panic(err)
-		}
+		catalogValue[index] = value
 	})
-	return catalogValue
+	return catalogValue[index]
+}
+
+func buildCatalog(raw []byte, language string) (catalogData, error) {
+	var source struct {
+		ReviewedAt string       `json:"reviewedAt"`
+		Courses    []courseSeed `json:"courses"`
+	}
+	if err := json.Unmarshal(raw, &source); err != nil {
+		return catalogData{}, err
+	}
+	value := catalogData{ReviewedAt: source.ReviewedAt, Language: language, searchText: map[string]string{}, courseByID: map[string]Course{}}
+	text := func(ru, en string) string {
+		if language == "en" {
+			return en
+		}
+		return ru
+	}
+	minutes := func(chosen, fallback int) int {
+		if chosen > 0 {
+			return chosen
+		}
+		return fallback
+	}
+	for _, seed := range source.Courses {
+		if seed.BasicsMinutes < 0 || seed.PracticeMinutes < 0 || seed.CheckpointMinutes < 0 {
+			return catalogData{}, fmt.Errorf("invalid lesson duration in course %q", seed.ID)
+		}
+		ids := []string{seed.ID + ".basics", seed.ID + ".practice", seed.ID + ".checkpoint"}
+		base := Lesson{CourseID: seed.ID, Difficulty: seed.Difficulty, Tags: seed.Tags, SourceURLs: []string{seed.SourceURL}}
+		basics := base
+		basics.ID, basics.Title, basics.Summary, basics.Kind, basics.Minutes, basics.Order = ids[0], seed.BasicsTitle, seed.Summary, "reading", minutes(seed.BasicsMinutes, 5), 1
+		basics.Sections = append([]Section{{ID: "mechanics", Title: text("Как устроено занятие", "How the activity works"), Paragraphs: seed.Mechanics}, {ID: "outcome", Title: text("Результат урока", "Learning outcome"), Paragraphs: []string{text("Объясните своими словами, какие исходные условия нужно проверить до начала. Затем переходите к практикуму: там вы превратите решение в собственный план ED Copilot.", "Explain which starting conditions you need to check before proceeding. Then move on to the practical lesson and turn your decision into a personal ED Copilot plan.")}}}, seed.BasicsSections...)
+		practice := base
+		practice.ID, practice.Title, practice.Summary, practice.Kind, practice.Minutes, practice.Order = ids[1], seed.PracticeTitle, text("Практика в ED Copilot: свой план, контрольные точки и разбор результата.", "Practice in ED Copilot: build a plan, define checkpoints and review the result."), "practice", minutes(seed.PracticeMinutes, 8), 2
+		practice.Sections = append([]Section{{ID: "workflow", Title: text("Рабочий порядок", "Workflow"), Paragraphs: seed.Practice, AppSection: seed.AppSection, AppAction: text("Открыть нужный раздел", "Open the relevant section")}, {ID: "checklist", Title: text("Проверьте перед выполнением", "Before you begin"), Checklist: seed.Checklist}}, seed.PracticeSections...)
+		checkpoint := base
+		checkpoint.ID, checkpoint.Title, checkpoint.Summary, checkpoint.Kind, checkpoint.Minutes, checkpoint.Order = ids[2], text("Самопроверка: ", "Self-check: ")+seed.Title, text("Учебный пример, объяснение расчёта и короткие вопросы.", "A worked scenario, calculation walkthrough and short questions."), "checkpoint", minutes(seed.CheckpointMinutes, 5), 3
+		checkpoint.Sections = append([]Section{{ID: "exercise", Title: text("Решите самостоятельно", "Try it yourself"), Paragraphs: []string{seed.Exercise}}, {ID: "solution", Title: text("Разбор учебного примера", "Worked example"), Paragraphs: []string{seed.Solution}}, {ID: "reflection", Title: text("Примените к своей игре", "Apply it to your own game"), Paragraphs: []string{seed.Reflection}}}, seed.CheckpointSections...)
+		checkpoint.Quiz = seed.Quiz
+		course := Course{ID: seed.ID, Title: seed.Title, Summary: seed.Summary, Category: seed.Category, Icon: seed.Icon, Difficulty: seed.Difficulty, Minutes: basics.Minutes + practice.Minutes + checkpoint.Minutes, Tags: seed.Tags, LessonIDs: ids, SourceURLs: []string{seed.SourceURL}}
+		value.Courses = append(value.Courses, course)
+		value.courseByID[course.ID] = course
+		value.Lessons = append(value.Lessons, basics, practice, checkpoint)
+	}
+	if err := validateCatalog(value); err != nil {
+		return catalogData{}, err
+	}
+	for _, course := range value.Courses {
+		value.courseRows = append(value.courseRows, mapValue(course))
+	}
+	for _, lesson := range value.Lessons {
+		row := mapValue(lesson)
+		row["courseTitle"], row["category"] = value.courseByID[lesson.CourseID].Title, value.courseByID[lesson.CourseID].Category
+		value.lessonRows = append(value.lessonRows, row)
+		value.searchText[lesson.ID] = lessonSearchText(row)
+	}
+	return value, nil
+}
+
+func validateCatalogParity(primary, translated catalogData) error {
+	if len(primary.Courses) != len(translated.Courses) || len(primary.Lessons) != len(translated.Lessons) {
+		return fmt.Errorf("learning languages have different course or lesson counts")
+	}
+	for i, course := range primary.Courses {
+		other := translated.Courses[i]
+		if course.ID != other.ID || strings.Join(course.LessonIDs, "\x00") != strings.Join(other.LessonIDs, "\x00") {
+			return fmt.Errorf("learning languages disagree on course %q", course.ID)
+		}
+	}
+	for i, lesson := range primary.Lessons {
+		other := translated.Lessons[i]
+		if lesson.ID != other.ID || lesson.CourseID != other.CourseID || len(lesson.Sections) != len(other.Sections) || len(lesson.Quiz) != len(other.Quiz) {
+			return fmt.Errorf("learning languages disagree on lesson %q", lesson.ID)
+		}
+		for n, section := range lesson.Sections {
+			peer := other.Sections[n]
+			if section.ID != peer.ID || len(section.Checklist) != len(peer.Checklist) || section.AppSection != peer.AppSection {
+				return fmt.Errorf("learning languages disagree on reader position or checklist %q/%q", lesson.ID, section.ID)
+			}
+		}
+		for n, question := range lesson.Quiz {
+			peer := other.Quiz[n]
+			if question.ID != peer.ID || question.CorrectIndex != peer.CorrectIndex || len(question.Choices) != len(peer.Choices) {
+				return fmt.Errorf("learning languages disagree on answer %q/%q", lesson.ID, question.ID)
+			}
+		}
+	}
+	return nil
 }
 
 func validateCatalog(c catalogData) error {
 	seen := map[string]bool{}
 	for _, course := range c.Courses {
-		if course.ID == "" || seen[course.ID] || course.Title == "" || len(course.LessonIDs) == 0 {
+		if course.ID == "" || seen[course.ID] || course.Title == "" || course.Summary == "" || len(course.LessonIDs) == 0 || course.Minutes <= 0 {
 			return fmt.Errorf("invalid learning course %q", course.ID)
 		}
 		seen[course.ID] = true
@@ -126,7 +221,7 @@ func validateCatalog(c catalogData) error {
 	}
 	lessons := map[string]Lesson{}
 	for _, lesson := range c.Lessons {
-		if lesson.ID == "" || lessons[lesson.ID].ID != "" || !seen[lesson.CourseID] || len(lesson.Sections) == 0 {
+		if lesson.ID == "" || lessons[lesson.ID].ID != "" || lesson.Title == "" || lesson.Summary == "" || lesson.Minutes <= 0 || !seen[lesson.CourseID] || len(lesson.Sections) == 0 {
 			return fmt.Errorf("invalid learning lesson %q", lesson.ID)
 		}
 		sections := map[string]bool{}
@@ -164,19 +259,50 @@ func mapValue(value any) v.M {
 	return out
 }
 
+// Catalogue templates contain only decoded JSON values and are private and
+// immutable. Copy their containers without repeatedly encoding the same text.
+func copyCatalogValue(value any) any {
+	switch row := value.(type) {
+	case M:
+		out := make(M, len(row))
+		for key, child := range row {
+			out[key] = copyCatalogValue(child)
+		}
+		return out
+	case []any:
+		out := make([]any, len(row))
+		for index, child := range row {
+			out[index] = copyCatalogValue(child)
+		}
+		return out
+	default:
+		return value
+	}
+}
+
+func copyCatalogRow(row M) M { return copyCatalogValue(row).(M) }
+
 // Catalog returns independent JSON-shaped copies for UI consumers.
 func Catalog() []v.M {
+	return CatalogForLanguage("ru")
+}
+
+func CatalogForLanguage(language string) []v.M {
 	rows := []v.M{}
-	for _, lesson := range catalog().Lessons {
-		rows = append(rows, mapValue(lesson))
+	for _, lesson := range catalogForLanguage(language).lessonRows {
+		rows = append(rows, copyCatalogRow(lesson))
 	}
 	return rows
 }
 
 func CourseCatalog() []v.M {
+	return CourseCatalogForLanguage("ru")
+}
+
+func CourseCatalogForLanguage(language string) []v.M {
 	rows := []v.M{}
-	for _, course := range catalog().Courses {
-		rows = append(rows, mapValue(course))
+	for _, course := range catalogForLanguage(language).courseRows {
+		rows = append(rows, copyCatalogRow(course))
 	}
 	return rows
 }
@@ -190,6 +316,10 @@ func Matches(lesson v.M, query string) bool {
 	if strings.TrimSpace(query) == "" {
 		return true
 	}
+	return matchesSearchText(lessonSearchText(lesson), query)
+}
+
+func lessonSearchText(lesson M) string {
 	parts := []string{v.Str(lesson["title"]), v.Str(lesson["summary"]), v.Str(lesson["courseTitle"]), v.Str(lesson["category"])}
 	for _, tag := range v.Arr(lesson["tags"]) {
 		parts = append(parts, v.Str(tag))
@@ -204,8 +334,14 @@ func Matches(lesson v.M, query string) bool {
 	}
 	for _, question := range v.Rows(lesson["quiz"]) {
 		parts = append(parts, v.Str(question["prompt"]), v.Str(question["explanation"]))
+		for _, choice := range v.Arr(question["choices"]) {
+			parts = append(parts, v.Str(choice))
+		}
 	}
-	haystack := fold(strings.Join(parts, " "))
+	return fold(strings.Join(parts, " "))
+}
+
+func matchesSearchText(haystack, query string) bool {
 	for _, word := range strings.Fields(fold(query)) {
 		if !strings.Contains(haystack, word) {
 			return false

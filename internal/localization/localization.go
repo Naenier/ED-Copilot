@@ -36,7 +36,7 @@ type formatPattern struct {
 }
 
 var templates []formatPattern
-var printfDirective = regexp.MustCompile(`%(?:\[[0-9]+\])?[+#0 -]*[0-9]*(?:\.[0-9]+)?[sdvfw]`)
+var printfDirective = regexp.MustCompile(`%(?:\[[0-9]+\])?[+#0 -]*[0-9]*(?:\.[0-9]+)?[sdvfwg]`)
 
 func Normalize(language string) string {
 	if strings.EqualFold(strings.TrimSpace(language), "en") {

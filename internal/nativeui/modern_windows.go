@@ -180,7 +180,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		u.dispose()
 		return nil, err
 	}
-	u.modern.document = frontend.HTML(hex.EncodeToString(nonce[:]), options.Smoke)
+	u.modern.document = frontend.HTMLMode(hex.EncodeToString(nonce[:]), options.Smoke, options.ReadmeScreenshots)
 	browser.NavigateToString(u.modern.document)
 	browser.Resize()
 	if err := browser.Show(); err != nil {

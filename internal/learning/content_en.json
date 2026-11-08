@@ -1,0 +1,999 @@
+{
+  "reviewedAt": "2026-11-08",
+  "courses": [
+    {
+      "id": "trade-alerts",
+      "title": "Trade alerts: verify, haul, review",
+      "summary": "Turn a hauling advert into a checked trip with a clear direction, buyer, budget, result and stopping rule.",
+      "category": "Trading",
+      "icon": "arrows",
+      "difficulty": "Beginner",
+      "tags": [
+        "PTN",
+        "trade alerts",
+        "hauling",
+        "margin",
+        "fleet carrier"
+      ],
+      "appSection": "sale",
+      "sourceURL": "https://pilotstradenetwork.com/guides/ptn-trade-alerts/",
+      "basicsTitle": "Identify the seller and buyer",
+      "mechanics": [
+        "Loading means buying at a station and selling to a carrier. Unloading reverses that direction. These are commodity-market trades, rather than mission-board assignments.",
+        "Read the system, station and pad size, commodity, carrier callsign, direction, quantity and price difference. An order can finish while you travel; check the advert and actual market before buying."
+      ],
+      "practiceTitle": "Prepare and review one trading cycle",
+      "practice": [
+        "1. Create a personal objective in Overview for one trip. Put the commodity in its title, fill in the system and station, and record the carrier callsign and direction in Notes. Write two separate lines: “I buy from…” and “I sell to…”. If both name the same market, reread the advert.",
+        "2. In Trading, search for sellers of that commodity. Set your search area, ship pad size, quantity and acceptable quote age. Check the buyer separately in selling mode. Include other carriers when searching for one. An empty result means there may be missing data; it does not prove an order is unavailable.",
+        "3. Select the selling market as the destination used by the trading overlay. Open the transport plan and enter the commodity, quantity, purchase price, sale price, origin and destination. Review prefilled values. Selecting a supplier should not leave you relying on that supplier as your intended buyer.",
+        "4. Verify both sides in the game and buy your chosen batch. After selling, compare recorded trades with the plan. Measure the time from being ready to buy until being ready to repeat, including the return journey, menus and waiting. Check the remaining order before every repeat."
+      ],
+      "checklist": [
+        "The purchase and sale locations are written separately.",
+        "The callsign matches the current advert.",
+        "Price, remaining order, demand and supply are checked.",
+        "The correct buyer is selected for the trading overlay.",
+        "The plan is compared with the actual sale and elapsed time.",
+        "The purchase leaves the chosen cash reserve intact.",
+        "A change that stops further purchases has been defined."
+      ],
+      "exercise": "Fictional exercise: buy at 12,400 cr/t and sell at 17,900 cr/t. Option A carries 180 t in a complete 12-minute cycle; option B carries 120 t in 9 minutes. You have a 2.5 million credit purchasing budget. Calculate purchase cost, revenue and gross margin. Then separately deduct assumed operating costs of 24,000 and 18,000 credits respectively. Which option fits the budget and has the higher calculated rate?",
+      "solution": "The price difference is 5,500 cr/t. A costs 2,232,000, returns revenue of 3,222,000 and earns a gross margin of 990,000 credits. B costs 1,488,000, returns 2,148,000 and earns 660,000. Both fit the budget. Before costs, their rates are 4.95 and 4.4 million cr/h. After the stated costs, results are 966,000 and 642,000, or 4.83 and 4.28 million cr/h. A wins under these assumptions. Those rates assume identical repeated cycles and exclude the initial journey to the work area.",
+      "reflection": "Choose an advert and prepare a personal objective without buying cargo. Identify the weakest evidence: price, observation time, carrier access or available quantity. Write one action that resolves that uncertainty before deciding whether to travel.",
+      "quiz": [
+        {
+          "id": "direction",
+          "prompt": "For a loading advert, how does the hauler finish the chain?",
+          "choices": [
+            "Sell the commodity to the carrier",
+            "Buy the commodity from the carrier",
+            "Sell exploration data"
+          ],
+          "correctIndex": 0,
+          "explanation": "Loading ends with a sale to the carrier."
+        },
+        {
+          "id": "margin",
+          "prompt": "What is the fictional 180 t batch’s gross margin before costs?",
+          "choices": [
+            "990,000 credits",
+            "5,500 credits",
+            "3,222,000 credits"
+          ],
+          "correctIndex": 0,
+          "explanation": "(17,900 − 12,400) × 180 = 990,000 credits."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "readiness",
+          "title": "Prepare before the first trip",
+          "paragraphs": [
+            "You need a cargo ship compatible with both landing locations and enough credits to purchase the goods. Use the free hold of the current fit: cargo already aboard and other equipment affect the batch you can take. Keep a separate reserve for ship replacement and routine expenses, outside the purchasing budget.",
+            "Start with one commodity and one complete cycle. This makes a discrepancy easier to explain than changing the ship, commodity and station at once. The app keeps the plan and displays information; you perform docking, trading and transaction confirmation in the game."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "trip-costs",
+          "title": "Batch size and the cost of waiting",
+          "paragraphs": [
+            "Four limits apply: free hold, affordable tonnes, supplier stock and the buyer’s remaining order. First exclude your cash reserve from purchasing funds, then divide spendable credits by the price per tonne and round down. All four limits are now in tonnes: use the smallest confirmed value. With a 180 t hold and a verified 95 t buying order, plan no more than 95 t even if you can afford a full hold. Do not round the order upwards to make the trip count look tidier.",
+            "A credits-per-hour comparison needs the same timing boundary. If one option includes returning and another only measures the laden journey, they describe different tasks. Record the start and end of each cycle in Notes. After two or three observations, replace your estimate with measurements; a short sample still does not promise the same pace all evening."
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "When the trip no longer works",
+          "paragraphs": [
+            "If you cannot find the carrier, check the system and callsign, then the advert’s freshness and docking access. A price change before purchase calls for a revised plan or a skipped batch. With cargo already bought, stop additional purchases, find an alternative buyer and compare selling now with making another journey. Retain the original cost of the cargo you already own.",
+            "Keep partial batches visible in your review: selling 95 t out of 180 does not demonstrate the result of a full trip. Reconcile the remaining hold with completed trades. If a record has not updated, allow journal processing and check the game before repeating an action. Stop when the order is exhausted, the margin becomes unacceptable or your time limit arrives."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "decision",
+          "title": "Decide before repeating",
+          "paragraphs": [
+            "Additional fictional check: after the first trip, the buyer has 95 t remaining while your hold carries 180 t. Make a new plan for the confirmed remainder. At the same 5,500 cr/t spread, its gross margin is 522,500 credits; travel costs need not fall proportionally. Compare the remaining trip with another activity over the same time window. If you stop, record the first trip’s result and complete the objective after checking remaining cargo."
+          ]
+        }
+      ],
+      "basicsMinutes": 10,
+      "practiceMinutes": 12,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "wmm",
+      "title": "Wing mining missions: plan supplies and sharing",
+      "summary": "Build a manageable mission set, separate purchases from deliveries and prepare an orderly sharing session.",
+      "category": "Trading",
+      "icon": "package",
+      "difficulty": "Intermediate",
+      "tags": [
+        "PTN",
+        "WMM",
+        "wing mining missions",
+        "ore",
+        "supply",
+        "team"
+      ],
+      "appSection": "overview",
+      "sourceURL": "https://pilotstradenetwork.com/guides/wing-mining-missions",
+      "basicsTitle": "Check mission type and commitments",
+      "mechanics": [
+        "WMMs use team mining missions that can be supplied by buying and delivering eligible commodities. PTN uses Gold, Silver, Bertrandite and Indite; personal mining is unnecessary. Source and Return is a different mission type.",
+        "Check the team icon, commodity, quantity, deadline and reward in the game. Deliver into the mission depot. For sharing, teammates accept the shared mission before its owner selects a reward. Confirm current PTN supply systems and participation rules with the organisers."
+      ],
+      "practiceTitle": "Build a supply ledger and delivery plan",
+      "practice": [
+        "1. Open Missions in Overview and compare the records with the game’s ship panel. Create a personal objective with the delivery system and station. Give each mission its own Notes line: issuing faction, commodity, quantity, deadline, reward and status. Keep missions with different deadlines separate even when their commodity matches.",
+        "2. For each commodity, maintain three totals: required, purchased and delivered. Remaining purchases equal requirements minus purchases; remaining deliveries equal requirements minus actual deposits. Cargo in your hold is not delivered cargo. Keep these counters in objective Notes; the mission list does not replace your purchasing ledger.",
+        "3. In Trading, search separately for sellers of each commodity. Enter the planned quantity and ship pad size, then check quote age and supply. Multiply each price by its entire outstanding quantity. Record the combined purchasing budget and reserve. Start with a batch you can fund without relying on rewards that have not arrived.",
+        "4. After each trip, verify the mission-depot deposit in the game before updating the ledger. When all supplies are delivered, change the objective’s Notes status to “ready to share”. Keep the objective active until the agreed sharing session is complete and the resulting rewards have been checked."
+      ],
+      "checklist": [
+        "The game’s mission card and team icon confirm the type.",
+        "Commodities, quantities and deadlines are recorded per mission.",
+        "Purchases and mission-depot deposits are tracked separately.",
+        "The team agreed a sharing order and meeting time.",
+        "The personal objective is completed after checking rewards.",
+        "Available funds cover the supply budget.",
+        "A cutoff for accepting additional missions is defined."
+      ],
+      "exercise": "Fictional preparation: supply 640 t of A at 8,200 cr/t and 310 t of B at 12,600 cr/t with a 250 t hold. Plan four loads and calculate purchase costs and cash remaining from an initial 12 million credits. Assume, separately, 14 million in confirmed own-mission rewards and 350,000 in operating costs. Calculate this part’s result without teammates’ missions. If 750 t have been bought and 600 t deposited after trip three, how much is still in transit?",
+      "solution": "A costs 5,248,000 and B costs 3,906,000, totalling 9,154,000 credits. Purchasing leaves 2,846,000 from the initial 12 million. Valid loads are 250 A; 250 A; 140 A plus 110 B; and 200 B. The 950 t total needs at least four trips when mixed loads are allowed. The assumed own-mission result is 14,000,000 − 9,154,000 − 350,000 = 4,496,000 credits. It does not depend on future shared rewards. Bought minus deposited leaves 150 t in transit; another 200 t remains to buy. Reconcile each mission depot as well as the total.",
+      "reflection": "Build a ledger for two real missions or two invented practice cards. How will you distinguish fully purchased, delivered and reward received? Choose one checkpoint where prematurely completing the objective would hide an unfinished action.",
+      "quiz": [
+        {
+          "id": "share",
+          "prompt": "When must a teammate accept the shared mission?",
+          "choices": [
+            "After the owner selects a reward",
+            "Before the owner selects a reward",
+            "Only after logging out"
+          ],
+          "correctIndex": 1,
+          "explanation": "Confirm acceptance before the owner selects the reward."
+        },
+        {
+          "id": "budget",
+          "prompt": "What is the exercise’s combined purchasing cost?",
+          "choices": [
+            "9,154,000 credits",
+            "950,000 credits",
+            "13,000,000 credits"
+          ],
+          "correctIndex": 0,
+          "explanation": "640 × 8,200 + 310 × 12,600 = 9,154,000 credits."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "readiness",
+          "title": "Assess the commitment",
+          "paragraphs": [
+            "Prepare a cargo ship, working capital and time for both hauling and completion. Without experience, two clear mission cards are more useful than a large stack with uncertain logistics. First show that you can explain where every tonne goes and where each expected payment comes from.",
+            "Set a personal limit: for example, do not accept a mission whose earliest deadline leaves less than your chosen buffer. Estimate outstanding trips and the time for a complete cycle. The limit should work without perfect hauling speed or assuming other players are immediately available."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "sharing-plan",
+          "title": "Prepare an orderly sharing session",
+          "paragraphs": [
+            "Separate your own list from missions received from teammates in objective Notes. Before meeting, agree who starts, how each person confirms readiness and what happens after a disconnect. This is your organisational protocol: the app does not accept missions for teammates or message the community.",
+            "A useful line is “owner — station — mission — participants accepted — reward checked”. If the meeting stops, preserve the last unambiguously completed line and a separate outstanding list. Resuming from that record is easier than reconstructing the sequence from memory. Check credits and materials against the reward actually chosen, rather than the card’s largest possible option."
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "Supply errors and stopping rules",
+          "paragraphs": [
+            "If you bought the wrong commodity, do not allocate it to missions because its name looks similar. Check the exact item, put surplus cargo on a separate line and find a sale without purchasing more. If the app and game disagree on quantities, pause the next trip and reconstruct recent purchases and deposits.",
+            "Do not enlarge the mission set merely because money is already committed. Compare each additional requirement with remaining time, uncommitted cash and available suppliers. Stop accepting missions when any of those resources runs out. If a deadline becomes a problem, first recalculate only outstanding obligations and discuss the actual remainder with the team."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "decision",
+          "title": "Check feasibility before expanding",
+          "paragraphs": [
+            "Return to the fictional ledger and remove enough available time for one complete trip. Can the existing commitments still be finished? If not, decide before another purchase: revise supply logistics, find more usable time or decline additional commitments. An agreement for a future meeting is not a reward already received. In the final note, separately record delivered quantity, outstanding actions and the next review time. This lets you resume after a break without ordering goods you have already bought."
+          ]
+        }
+      ],
+      "basicsMinutes": 10,
+      "practiceMinutes": 12,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "booze-cruise",
+      "title": "Booze Cruise: plan the expedition and return",
+      "summary": "Assess a Rackham’s Peak expedition using your available time, a compatible ship, confirmed transport and a measured trading cycle.",
+      "category": "Expeditions",
+      "icon": "compass",
+      "difficulty": "Intermediate",
+      "tags": [
+        "PTN",
+        "Booze Cruise",
+        "Rackham’s Peak",
+        "HIP 58832",
+        "wine",
+        "expedition"
+      ],
+      "appSection": "route",
+      "sourceURL": "https://pilotstradenetwork.com/guides/booze-cruise",
+      "basicsTitle": "Check expedition conditions",
+      "mechanics": [
+        "Booze Cruise involves wine trading at Rackham’s Peak in HIP 58832 during Public Holiday. Reaching this remote system requires a fleet carrier. The station has small and medium pads, with no large pad: the final cargo ship must fit.",
+        "A forecast does not guarantee Public Holiday. Current PTN announcements govern the organised trip and available carrier transport. Confirm participation, an outbound ride and a return method before departing; a saved guide is not an event timetable."
+      ],
+      "practiceTitle": "Build an expedition plan in ED Copilot",
+      "practice": [
+        "1. Create an expedition objective in Overview with HIP 58832 and Rackham’s Peak. In Notes, list the ship, free cargo capacity, departure carrier callsign, boarding location, confirmed time and your latest acceptable return. Record when you last checked the announcement. Do not treat your own estimate as a confirmed departure.",
+        "2. As a passenger, verify the carrier and ride arrangement in the game and with the organisers before boarding. As a personal carrier owner, open Carrier Route and enter the origin, destination, occupied capacity, tank fuel, cargo tritium and arrival reserve. Check the return route separately. The planner calculates a route; you perform jumps and refuelling in the game.",
+        "3. For your own carrier operation, open Carrier Trading. Use the Booze Cruise preset as a starting point, then replace assumptions with your prices, quantity, timing, loading and unloading arrangements. Mark Public Holiday confirmed only after checking in the game. Importing a calculated route helps transfer estimates; it does not confirm the event or reserve a parking slot.",
+        "4. At the destination, check your ship’s supplier and final buyer in Trading, select the buyer for the overlay and fill in the transport plan. Complete one cycle and compare it with the estimate. When changing carriers, update the supplier, price and remaining quantity. After trading, check your descent plan before logging out."
+      ],
+      "checklist": [
+        "The final cargo ship fits the station’s pad.",
+        "Current announcements and station state have been checked.",
+        "The departure carrier and confirmed return plan are recorded.",
+        "An owner’s return fuel is budgeted separately.",
+        "The margin uses checked prices without promising income.",
+        "Waiting time and a personal trip-duration limit are allowed.",
+        "A trial cycle informs the number of trips you can finish."
+      ],
+      "exercise": "Entirely fictional, not Rackham’s Peak quotes: a 2,700 t batch is available, the ship carries 225 t, and a complete cycle takes 11 minutes. Add one hour of waiting. The practice purchase price is 19,600 cr/t and sale price 107,600 cr/t. Find the trip count, working window, one hold’s purchase cost and the full batch’s gross margin. What happens if each cycle takes 16 minutes? Keep the expedition’s outbound and return travel outside this working window.",
+      "solution": "2,700 / 225 = 12 trips. At 11 minutes each, cycles take 132 minutes; with the hour buffer, that is 192 minutes or 3 h 12 min. One hold costs 4,410,000 credits. The 88,000 cr/t spread gives 19,800,000 per hold and 237,600,000 for the batch. Total purchasing turnover is 52,920,000; sequential sales can recycle cash between trips, so that is not necessarily the upfront capital required. At 16 minutes per cycle, the buffered window becomes 252 minutes, or 4 h 12 min. Fuel, other costs and expedition travel time are excluded from the exercise’s margin.",
+      "reflection": "Add two lines to the objective: “I will go if…” and “I will begin returning when…”. Use observable conditions and your time zone. Then remove one hour from available trading time: does the expedition still appeal once travel and waiting are included?",
+      "quiz": [
+        {
+          "id": "pad",
+          "prompt": "Why check the final ship’s size first?",
+          "choices": [
+            "Rackham’s Peak has no large pad",
+            "The goods must always fill the entire hold",
+            "Ship size does not affect docking"
+          ],
+          "correctIndex": 0,
+          "explanation": "The ship must fit the station’s pad."
+        },
+        {
+          "id": "schedule",
+          "prompt": "What is the practice window with 11-minute cycles and a one-hour buffer?",
+          "choices": [
+            "1 h 12 min",
+            "3 h 12 min",
+            "12 hours"
+          ],
+          "correctIndex": 1,
+          "explanation": "12 × 11 + 60 = 192 minutes."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "readiness",
+          "title": "Choose a role and time allowance",
+          "paragraphs": [
+            "Choose your role first: a hauler using your own ship or a carrier owner managing a separate logistics task. Do not treat a hauler’s earnings as the owner’s economics. In Notes, separate personal purchasing funds, carrier costs and the ship replacement reserve. Every amount should have a clear purpose and payer.",
+            "Before a distant expedition, check the final ship’s actual fit and practise with that hold on an accessible local route. Measure a complete cycle including menus and docking. The test provides a baseline for your plan, without predicting the queue at the remote station."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "time-budget",
+          "title": "Budget usable time as well as cargo",
+          "paragraphs": [
+            "Split the itinerary into outbound travel, waiting, trading and return travel. From the hours before your personal deadline, subtract the return and your buffer first. Only the remainder is available for trading. If that leaves room for three trips, calculating a larger batch does not create time for another nine.",
+            "For a carrier route, enter realistic jump preparation, cooldown, between-jump operations and possible additional queue time. Include the time needed to obtain and deliver tritium at a stop. These values describe a scenario; adding a buffer does not confirm an arrival time. A passenger benefits more from a verified announcement for a specific ride than a calculation for somebody else’s carrier with unknown inputs."
+          ],
+          "appSection": "route"
+        },
+        {
+          "id": "errors",
+          "title": "Respond to changes and recover the plan",
+          "paragraphs": [
+            "If an announcement changes, update the objective and recheck the return arrangement. If the station state is unconfirmed, do not enter an expected high price as a known fact. Keep a conservative scenario and decide how much waiting you would accept for the expedition itself.",
+            "After a docking delay, recalculate remaining cycles from your first measurement. With a closed order, stop purchases until you verify another supplier and buyer. If the return falls through, first find confirmed transport and update your recorded location. Another profitable batch does not solve a missing return ride."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "decision",
+          "title": "Test your personal trip limit",
+          "paragraphs": [
+            "Add another fictional 45-minute delay to the 3 h 12 min window. It becomes 3 h 57 min, excluding expedition travel. With only 3 h 30 min available, the entire original batch no longer fits. Choose a smaller quantity and retain a return within your deadline. Explain the revision in one sentence: how many cycles remain feasible, and what event ends your trading? This is more useful than “finish everything”, which has no measurable boundary."
+          ]
+        }
+      ],
+      "basicsMinutes": 10,
+      "practiceMinutes": 12,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "afk-combat",
+      "title": "Pirate missions: from a build to a measured session",
+      "summary": "Prepare mission records, an engineering plan and a short observed trial with explicit loss limits. Assess the entire session, including collecting missions and returning.",
+      "category": "Combat",
+      "icon": "target",
+      "difficulty": "Advanced",
+      "tags": [
+        "PTN",
+        "AFK",
+        "Type-10",
+        "massacre",
+        "pirates",
+        "rebuy reserve",
+        "combat session"
+      ],
+      "appSection": "engineering",
+      "sourceURL": "https://pilotstradenetwork.com/guides/afk-laser-disco",
+      "basicsTitle": "What to establish before a combat trial",
+      "mechanics": [
+        "The PTN AFK approach uses a Type-10, laser turrets and an NPC-flown fighter for pirate massacre missions. Missions must match the target faction; distributing requirements among issuing factions matters. An assignment to kill a named individual is a different mission type.",
+        "Turrets guarantee neither autonomy, survival nor payment. Engineered ships can still be lost. Check each mission’s type, deadline, qualifying conditions and sharing requirements in the game, and verify current PTN participation rules before joining a shared session.",
+        "In a compatible stack, a kill advances one mission per issuing faction. Multiple missions from the same issuer do not multiply that kill’s contribution; distribute requirements and check actual progress."
+      ],
+      "practiceTitle": "Build a plan and run an observed trial",
+      "practice": [
+        "Open Objectives and add a task with the Combat activity. Make the title describe a trial rather than promised profit. Enter the system, return station and a note with four parts: mission list, starting build, spending limit and stopping condition. Choose a realistic period for the first observation. Keep different ships in separate records. When the build changes, start a new version of the note so the comparison remains meaningful.",
+        "In Overview, open Missions and compare the displayed entries with the game. Record the issuing faction, target, required count and deadline. Add any missing detail to the objective note as “verified in game”. Then open Engineering and add the modules, blueprints, effects and planned attempts. Compare the requirement with observed material stocks. This records intended changes; verify the finished loadout, power supply and behaviour aboard the ship.",
+        "Record the starting time and baseline before departure. Run a short observed trial and compare the same indicators at the beginning and end. After returning, verify missions, actual rewards and expenditure in the game, then use Overview → Journal to reconstruct the sequence. Separate observation from interpretation in the note: “defences declined” is an observation; “the distributor caused it” is a hypothesis for the next check."
+      ],
+      "checklist": [
+        "The target faction and every accepted mission type match the plan.",
+        "The actually installed loadout has been checked in the game.",
+        "Rebuy money is held as a separate reserve.",
+        "The first trial has a time limit and remains under observation.",
+        "Actual results are recorded without assuming guaranteed income.",
+        "Mission deadlines allow time to return and collect rewards.",
+        "The stopping rule and next check are defined before starting."
+      ],
+      "exercise": "A fictional plan assumes 240 million credits in rewards over three hours. Each rebuy costs an assumed 32 million. Calculate the result with no losses and with two losses, using only those figures. Then distinguish this calculation from the decision to launch again: what information is still missing? As an extension, assume mission collection and hand-in took another 45 minutes and the three hours cover combat only. Calculate the rate over the entire elapsed time. All figures are invented for this exercise.",
+      "solution": "With no losses the result is 240 million credits, or 80 million per hour. Two rebuys cost 64 million, leaving 176 million; 176 / 3 is approximately 58.7 million per hour. The complete session lasts 3.75 hours: the rates become 64 million without losses and approximately 46.9 million after two losses. Label the denominator used for each figure. Before another departure, establish the actual reserve remaining, current loadout, unfinished missions and cause of the losses. A positive arithmetic result does not demonstrate a reliable setup. If the agreed loss limit has been reached, reconsider another attempt using the original stopping rule.",
+      "reflection": "Write one observable signal that would stop the trial and the action to take afterwards. Now imagine the reward is higher than expected but that signal occurs: would your decision change? Save two sentences in the objective. On the next trial, change one significant setting and compare equivalent intervals. If the starting conditions cannot be reconstructed, describe the new session as another attempt rather than a demonstrated improvement.",
+      "quiz": [
+        {
+          "id": "autonomy",
+          "prompt": "What does turret operation alone establish?",
+          "choices": [
+            "The ship cannot be lost",
+            "Invulnerability has not been established",
+            "Hourly income is fixed in advance"
+          ],
+          "correctIndex": 1,
+          "explanation": "Automated fire does not remove the possibility of losing the ship."
+        },
+        {
+          "id": "loss",
+          "prompt": "What remains from 240 million after two assumed 32-million rebuys?",
+          "choices": [
+            "240 million credits",
+            "208 million credits",
+            "176 million credits"
+          ],
+          "correctIndex": 2,
+          "explanation": "240 − 32 − 32 = 176 million; other costs are outside this question."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "combat-prerequisites",
+          "title": "Prerequisites and unknowns",
+          "paragraphs": [
+            "This course assumes you can control the ship, understand your own rebuy requirement and watch the first attempt carefully. Read the accepted mission descriptions first. If returning to a station or checking an installed module is still unfamiliar, practise that separately. The aim is to organise a test of your own decision; possessing a link to another commander’s build does not complete the preparation.",
+            "Group unknowns into ship parameters, mission conditions and session organisation. Assign a verification method to each. Inspect ship parameters in the game, personal material stocks in the engineering plan with attention to observation time, and organisational decisions in your note. Leave an unknown number unknown. Zero expenditure and an unobserved expense are different states and support different decisions."
+          ]
+        },
+        {
+          "id": "combat-record",
+          "title": "A mission-stack record",
+          "paragraphs": [
+            "A useful note row is “issuing faction / target / requirement / deadline / hand-in location / checked at”. Complete it for one assignment before adding the others. Mark confirmed compatibility separately from unresolved questions. This exposes inconsistencies before departure, when correcting the list is usually easier than after a long fight. An application row number does not replace the mission name and conditions shown in the game."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "combat-test-plan",
+          "title": "Comparing two loadout versions",
+          "paragraphs": [
+            "Save the baseline engineering plan with a recognisable name, such as “trial A — date”. For version B, record one significant change and its purpose. Compare available materials, planned attempts and observed behaviour; do not choose a winner simply by counting upgraded modules. If the location or duration also changed, record that beside the result. This helps distinguish a useful development direction from one fortunate session."
+          ],
+          "appSection": "engineering"
+        },
+        {
+          "id": "combat-recovery",
+          "title": "Recovering from a mismatch",
+          "paragraphs": [
+            "If a mission entry is missing, first check the game and journal freshness; do not invent a second mission to make the list look complete. When a material stock is unknown, keep it unknown rather than assuming zero or planning a blind exchange. After a loss, record when it occurred, what remains unfinished and the amount deducted. Return to the budget limit and choose investigation, a build change or ending the session. Repeating without changing the suspected cause usually adds little useful evidence."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "combat-decision",
+          "title": "Making the next decision",
+          "paragraphs": [
+            "Suppose your hypothetical training limit is one rebuy. The exercise remains financially positive after two losses, but it exceeds that limit. The useful conclusion is that the financial result has been calculated and the trial failed the selected criterion. Keep both conclusions in the objective. This is more informative than “it worked”: it explains why the next step is a change followed by another check rather than simply running longer."
+          ]
+        }
+      ],
+      "basicsMinutes": 12,
+      "practiceMinutes": 15,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "odyssey",
+      "title": "Odyssey: a first on-foot outing with a clear goal",
+      "summary": "Choose a manageable activity, prepare equipment and a way back, then turn the first outing into a concrete next step.",
+      "category": "Getting started",
+      "icon": "person",
+      "difficulty": "Beginner",
+      "tags": [
+        "PTN",
+        "Odyssey",
+        "on foot",
+        "Maverick",
+        "Dominator",
+        "Artemis",
+        "training",
+        "objectives"
+      ],
+      "appSection": "targets",
+      "sourceURL": "https://pilotstradenetwork.com/guides/odyssey-beginners",
+      "basicsTitle": "Choose an activity and establish readiness",
+      "mechanics": [
+        "Suits provide different tools: Maverick carries an arc cutter, Artemis a genetic sampler, and Dominator supports combat and an additional primary weapon. Monitor energy and consumables. Weapons, illegal items and cloned access can affect security responses.",
+        "The tutorial introduces on-foot controls. Read mission conditions and verify the loadout in the game before departure. Suit and weapon development differs from ship-module engineering.",
+        "After docking, choose Disembark; at a station, use the lift to reach the concourse. Pioneer Supplies sells on-foot equipment, terminals offer assignments, and Apex provides passenger transport to available destinations."
+      ],
+      "practiceTitle": "Prepare, complete and review one outing",
+      "practice": [
+        "Open Objectives → Personal objectives and add a task with the On-foot activity. Use a verifiable title such as “complete one delivery and return” or “practise one tool in training”. Enter the system, station and body when relevant. Note the chosen loadout, unfamiliar actions, way back and time limit. High priority can identify the current outing; keep other ideas in separate objectives so the next action stays visible.",
+        "Open Encyclopedia, choose the relevant category and search for the tool or activity. If an article leaves a specific question unanswered, mark it as open and verify it in the game before accepting a demanding assignment. Return to the loadout screen and check the actual selection: suitable suit, required tools and familiar controls. Avoid buying a long upgrade list merely to resolve uncertainty that a short practice session could address.",
+        "Before disembarking, read the accepted mission conditions in the game and compare the available entry in Overview → Missions. Record the attempt’s starting time. After returning, first confirm completion and hand-in in the game, then update the personal objective. Add three short lines: achieved, obstacle, next step. For a learning goal, evaluate the action learned. Payment may be an additional result, but need not define success on the first outing."
+      ],
+      "checklist": [
+        "One activity with a verifiable outcome has been selected.",
+        "Suit and tools have been checked against the assignment.",
+        "Energy and required consumables have been checked in the game.",
+        "The return point and an available evacuation method are known.",
+        "A specific need for the next outing is recorded afterwards.",
+        "Required controls have been checked on your own device.",
+        "A time margin is allocated before departure."
+      ],
+      "exercise": "A fictional outing needs 15 minutes of preparation, 12 of travel, 18 of activity and 10 to return. You have one hour. Calculate the margin. Then propose two versions with at least a ten-minute margin without shortening the return: reduce the training scope or move part of preparation to a separate session. Choose the version that preserves the main learning goal. These figures do not describe a particular game mission.",
+      "solution": "The plan totals 55 minutes, leaving five. A ten-minute margin requires freeing another five minutes. Reducing the training block from 18 to 13 minutes produces a 50-minute plan. Alternatively, completing five minutes of preparation earlier reduces its current block from 15 to 10 while preserving the outing itself. The first option works if one action is enough to test the skill; the second requires preparation that can actually be completed separately. Lowering a number in the note does not make an unfamiliar action faster. Check that the revised plan fits the real mission conditions before accepting it.",
+      "reflection": "Finish the sentence “After this outing I can independently…”. Support it with one observable action, then record the smallest useful next step. If the attempt failed, retain the location, circumstances and missing knowledge instead of writing a broad conclusion that on-foot activity is impossible. A useful review lets the next session begin with a specific check instead of rebuilding the whole story from memory.",
+      "quiz": [
+        {
+          "id": "suit",
+          "prompt": "Which suit fits a task requiring an arc cutter?",
+          "choices": [
+            "Maverick",
+            "Dominator",
+            "Flight Suit"
+          ],
+          "correctIndex": 0,
+          "explanation": "Maverick provides the cutter; verify the selected loadout before leaving."
+        },
+        {
+          "id": "time",
+          "prompt": "How much of the hour remains after the four example blocks?",
+          "choices": [
+            "5 minutes",
+            "15 minutes",
+            "55 minutes"
+          ],
+          "correctIndex": 0,
+          "explanation": "15 + 12 + 18 + 10 = 55; 60 − 55 = 5 minutes."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "odyssey-starting-point",
+          "title": "Preparation before the outing",
+          "paragraphs": [
+            "Begin with training and a controls check on your own device. Compare your bindings before copying keys from someone else’s list. Make a small reference: open the relevant menu, select a tool, stow it, use a consumable and find mission details. Mark the actions you already perform confidently. This reduces the number of unknowns during the first outing; perfect speed is unnecessary.",
+            "Choose an activity that fits your interest and available time. Settlements, exploration and combat can lead to different plans. One direction and one loadout are sufficient for this course. If no suitable assignment is available, retain the preparation objective and practise the interface. You need not accept an inconvenient mission simply because it appeared first."
+          ]
+        },
+        {
+          "id": "odyssey-plan-boundary",
+          "title": "Choosing the right record",
+          "paragraphs": [
+            "A personal objective holds your intention and notes; the mission entry in Overview reflects available game observations. Preserve that distinction in your wording. You complete “learn the tool” using your chosen evidence, while the game confirms the accepted assignment. Use Engineering for the ship and a separate preparation note for suit and weapons. This keeps the phrase “improve the loadout” from mixing different development systems and material requirements."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "odyssey-run-card",
+          "title": "A compact outing card",
+          "paragraphs": [
+            "Arrange the note in execution order: “before leaving / on site / return / afterwards”. Keep one or two actions in each part. Label an unverified requirement “check” instead of marking it ready. Split an oversized part into separate sessions. Read the card before starting: if the next action requires searching several records to explain it, simplify the card. Add actual elapsed time afterwards to improve the next plan."
+          ],
+          "appSection": "targets"
+        },
+        {
+          "id": "odyssey-recovery",
+          "title": "Handling an incomplete preparation",
+          "paragraphs": [
+            "If the required tool is missing on arrival, return to the loadout and assignment conditions and correct the specific preparation item. If time runs short, follow the return plan chosen earlier; avoid adding side tasks to justify the journey already made. If Copilot does not display an expected change, inspect the actual game state and record the confirmed fact manually. Completing a personal objective does not resolve an unsubmitted mission or perform game actions."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "odyssey-ready-next",
+          "title": "Evidence for the next step",
+          "paragraphs": [
+            "Training is useful when you can repeat one action without a prompt and explain how to verify its result. Introduce just one new difficulty next time: another tool, a longer task or a revised preparation sequence. Keep the rest familiar. This reveals which knowledge already works and which needs separate practice. Build a shopping list after the review, linking each purchase to an observed need."
+          ]
+        }
+      ],
+      "basicsMinutes": 12,
+      "practiceMinutes": 15,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "operations",
+      "title": "Odyssey Operations: team preparation and attempt review",
+      "summary": "Turn the selected Operation’s requirements into roles, equipment checks, communication and a realistic schedule. Preserve useful evidence for the next attempt.",
+      "category": "Combat",
+      "icon": "users",
+      "difficulty": "Advanced",
+      "tags": [
+        "PTN",
+        "Operations",
+        "Odyssey",
+        "Merc Coin",
+        "team",
+        "roles",
+        "preparation"
+      ],
+      "appSection": "targets",
+      "sourceURL": "https://pilotstradenetwork.com/guides/operations-guide/",
+      "basicsTitle": "From scenario requirements to team readiness",
+      "mechanics": [
+        "Operations require Odyssey and can include ship, on-foot and combined stages. Rewards include Merc Coin; verify current payments and weekly conditions in the game. The easy label does not remove preparation requirements.",
+        "Equipment and tools depend on the scenario. PTN’s published Found Adrift example requires a Maverick to cut access passages. Check the selected Operation’s current description before starting; one scenario’s requirements cannot be assumed for another.",
+        "Found Adrift’s recovered material is a physical item that a participant must carry to a ship. If its carrier dies, retrieve it again; opening the vault alone does not complete extraction."
+      ],
+      "practiceTitle": "Complete a team card and review the attempt",
+      "practice": [
+        "In Objectives, create a personal record with the Operation name and selected difficulty. Add the meeting location, date and available session length. In the note, list requirements from the game first, then assign them: participant, main stage, ship loadout, on-foot loadout, mandatory tool and backup role. Each mandatory item needs a named person responsible for checking it. “Someone will bring it” means preparation is incomplete.",
+        "Open Engineering for ship changes: add modules, blueprints and planned attempts, then inspect missing materials. Keep suit and weapon preparation in a separate list within the Operation note. Before starting, participants confirm their actually selected loadouts in the game. Copilot stores your personal plan, so agree communication and readiness directly with the team; writing in your objective does not notify other players.",
+        "During the attempt, record stage transition times and significant deviations. Short notes are enough if they later reveal what caused a delay. Afterwards, confirm the Operation state and rewards in the game. Record what worked, where the first substantial problem occurred and one change to test next time. Completing preparation and successfully completing the Operation are different outcomes; label both explicitly."
+      ],
+      "checklist": [
+        "Each mandatory role is assigned to a specific participant.",
+        "Unknown requirements are verified in the game before launch.",
+        "Ship equipment and on-foot loadouts are recorded separately.",
+        "Communication, stopping and regrouping arrangements are agreed.",
+        "One concrete change is selected after the attempt.",
+        "The schedule includes assembly, completion and a margin.",
+        "Rewards and Operation status are confirmed in the game."
+      ],
+      "exercise": "A fictional team has 50 minutes. Assembly takes eight, stage one fourteen, stage two eleven and completion seven. What margin remains, and does it cover a complete repeat of stage two? Now allow an assumed three minutes to regroup before repeating. What total time budget covers that repeat? This does not establish that a particular Operation permits such a retry: solve the planning problem, then verify actual restart rules in the game.",
+      "solution": "The baseline is 8 + 14 + 11 + 7 = 40 minutes. A 50-minute session leaves ten, less than the eleven-minute second stage. With three minutes of regrouping, the repeat needs fourteen additional minutes, making the total 54. The team can extend the session beforehand or agree to finish after the primary attempt. These inputs cannot support both a 50-minute finish and a full repeat. If the first stage already took longer than planned, recalculate from the present time. Agree the next attempt before restarting while retaining time for required completion and return.",
+      "reflection": "Describe each participant’s role in one sentence with an action and verifiable outcome. Then remove one person from the plan mentally: which mandatory item loses its owner? Record a replacement or a reason to cancel the start. After a real attempt, compare the first broken assumption with the last visible consequence. Improve a cause that can be tested instead of changing every team setting at once.",
+      "quiz": [
+        {
+          "id": "requirements",
+          "prompt": "What determines mandatory tools and roles?",
+          "choices": [
+            "The selected Operation’s requirements",
+            "Any previous combat loadout",
+            "Cargo capacity alone"
+          ],
+          "correctIndex": 0,
+          "explanation": "Check the actual scenario; a generic list does not establish readiness."
+        },
+        {
+          "id": "retry",
+          "prompt": "Does the original 50-minute budget allow a complete repeat of stage two?",
+          "choices": [
+            "Yes, the margin is eleven minutes",
+            "No, only ten minutes remain",
+            "Yes, stage duration is irrelevant"
+          ],
+          "correctIndex": 1,
+          "explanation": "50 − (8 + 14 + 11 + 7) = 10 minutes; the repeat needs eleven."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "operations-prerequisites",
+          "title": "Assessing readiness without guessing",
+          "paragraphs": [
+            "This course assumes familiar controls for the selected activities and a chance to agree arrangements before starting. Read the Operation description in the game. List access conditions, mandatory tools and anything the team has not tried. If there are too many unknowns for one session, schedule preparatory practice. Finishing that practice with clear answers is more useful than treating missing information as readiness.",
+            "Choose the team’s purpose: first introduction, consistent completion or testing a specific change. An introductory attempt can include explanation stops; comparing versions needs similar conditions. Avoid merging these purposes into one speed figure. Agree what would count as enough today, especially when participants have different amounts of time."
+          ]
+        },
+        {
+          "id": "operations-role-matrix",
+          "title": "Role, confirmation and backup",
+          "paragraphs": [
+            "Use three labels for each row: “check needed”, “confirmed” and “backup available”. Confirmation must describe a fact, such as the participant checking the selected loadout or agreeing an action. An expensive ship does not confirm the entire list. A backup matters most where one absence would block the plan. If no replacement exists, record it as a reason to postpone rather than improvising under time pressure."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "operations-briefing",
+          "title": "A short pre-start briefing",
+          "paragraphs": [
+            "Review the card in one order: selected scenario, roles, mandatory equipment, communication, finish time and regrouping. Have each person confirm their own part and the next handover. A long retelling of the route can hide a small omission; checking concrete responsibilities makes it visible. Record the agreement in your personal note rather than transcribing the conversation. If the scenario or difficulty changes, review requirements again before starting."
+          ],
+          "appSection": "targets"
+        },
+        {
+          "id": "operations-recovery",
+          "title": "Restoring the plan after a failure",
+          "paragraphs": [
+            "After a failure, first establish the actual game state and available team. Compare remaining time with a revised schedule; the original margin may already be spent. If Copilot has no stage entry, add a timed manual note and identify how it was verified. When payment differs from expectation, retain the observed amount and conditions while leaving the cause unresolved. Another start should not depend on an unverified assumption about rewards."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "operations-one-change",
+          "title": "One change for the next attempt",
+          "paragraphs": [
+            "A useful conclusion connects a problem to a test: “role assignment cost time; confirm an owner for every stage before starting”. “We need a better team” cannot be tested precisely. Select one change, define what to observe and retain the original card. Compare the relevant stage after the next attempt, keeping overall success as another measure. Even an unfinished Operation can then provide specific preparation evidence."
+          ]
+        }
+      ],
+      "basicsMinutes": 12,
+      "practiceMinutes": 15,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "carrier-basics",
+      "title": "Carrier ownership: configuration, upkeep and travel reserves",
+      "summary": "Compare configurations against a purpose, separate purchase cost from running expenses, and check financial and fuel reserves before committing.",
+      "category": "Fleet carriers",
+      "icon": "carrier",
+      "difficulty": "Intermediate",
+      "tags": [
+        "PTN",
+        "Fleet Carrier",
+        "Squadron Carrier",
+        "services",
+        "upkeep",
+        "tritium",
+        "budget"
+      ],
+      "appSection": "carrier-calculator",
+      "sourceURL": "https://pilotstradenetwork.com/guides/fleet-carrier-owner/",
+      "basicsTitle": "Define the purpose and full ownership budget",
+      "mechanics": [
+        "A personal carrier’s purchase, optional services, running costs, warehouse cargo and fuel are separate considerations. Services occupy capacity and can increase expenses. A suspended service remains installed; removing it is necessary to release its occupied space.",
+        "Jumps require tritium. Warehouse stock differs from fuel in the tank, and consumption depends on the journey and load. An application plan evaluates a configuration; actual services, finances and jumps are changed in the game.",
+        "A personal carrier’s tank holds 1,000 tonnes of tritium and its maximum jump is 500 light-years. Refuelling requires transfer from a docked ship; warehouse reserves do not automatically fill the tank."
+      ],
+      "practiceTitle": "Compare two plans and reconcile their inputs",
+      "practice": [
+        "Open Carrier Calculator and choose the intended type: personal or squadron. Each type keeps a separate plan. First record the ownership purpose, such as basing your ships or completing a specific hauling project. Review every optional service and select active, suspended or absent. Keep a personal reason for each decision in an objective. Do not treat mandatory services as optional savings available to reduce the configuration.",
+        "Set planned jumps, average tritium consumption, fuel price, other cargo, balance and desired reserve. Find the inputs for unknown values or retain the corresponding unknown estimate. Read the summary: purchase cost, free capacity, weekly expenses and the selected budget period. Compare at least two service configurations of the same type. Record the baseline in a note before changing it, so the comparison uses reproducible numbers rather than impressions from different screens.",
+        "If you already own a personal carrier, open Carrier and reconcile snapshot times, finances, services and inventory. Keep the commander’s balance distinct from the carrier account. Check tank fuel and known warehouse tritium separately. For a specific journey, open Carrier Route, enter actual load and fuel, and inspect replenishment stops and arrival reserve. Then perform and confirm actual service management and departure in the game."
+      ],
+      "checklist": [
+        "The correct carrier type is selected in the calculator.",
+        "Purchase cost is separate from running expenses.",
+        "Installed service capacity and cargo are included.",
+        "Upkeep reserves are separate from commodity buying money.",
+        "Tank tritium and warehouse stock are reconciled separately.",
+        "Unknown values have not become zero-cost assumptions.",
+        "Configurations are compared over the same period.",
+        "Actual changes are confirmed in the game."
+      ],
+      "exercise": "A fictional configuration costs 6.4 billion credits to purchase and has an assumed 12-million weekly upkeep. Keep sixteen weeks of upkeep plus 450 million for other activities. Calculate the starting budget. Compare fictional version B: purchase 6.25 billion, weekly upkeep ten million, with the same period and separate activity budget. How much cheaper is it, and is that difference sufficient to choose it? These amounts are invented rather than prices for particular services or carrier types.",
+      "solution": "For the first version, upkeep is 12 × 16 = 192 million. The budget is 6,400 + 192 + 450 = 7,042 million, or 7.042 billion. Version B needs 6,250 + 160 + 450 = 6,860 million, or 6.86 billion. The difference is 182 million: 150 million in purchase cost and 32 million in upkeep. That saving does not justify B if it cannot serve the intended purpose. Compare required services, free capacity and fuel assumptions. If tritium or another expense was excluded from the assumed twelve million, add it separately and keep the budget’s contents explicit.",
+      "reflection": "For each optional service, complete “I need it now because…”. Compare a configuration without it and decide whether your intended activity would change. Choose an upkeep horizon you can sustain without requiring a particular weekly income. Record when to review the plan again. When the purpose changes, recalculate the configuration and journey instead of carrying an old total into a new context.",
+      "quiz": [
+        {
+          "id": "fuel",
+          "prompt": "How should warehouse tritium be treated when checking the tank?",
+          "choices": [
+            "As the same quantity",
+            "As a separate stock",
+            "As tank fuel only when its price is unknown"
+          ],
+          "correctIndex": 1,
+          "explanation": "Warehouse reserves and fuel in the tank are checked separately."
+        },
+        {
+          "id": "reserve",
+          "prompt": "What budget covers the first example and both reserves?",
+          "choices": [
+            "6.4 billion credits",
+            "6.592 billion credits",
+            "7.042 billion credits"
+          ],
+          "correctIndex": 2,
+          "explanation": "6.4 billion + 192 million + 450 million = 7.042 billion credits."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "carrier-prerequisites",
+          "title": "Four separate money decisions",
+          "paragraphs": [
+            "Before selecting services, create four lines: purchase, upkeep, fuel and working capital. Add a personal reserve for other activities if needed. Give each line an amount, source and period. This prevents the balance remaining after purchase from being treated as entirely free capital. If you are still choosing when to buy, derive an affordability threshold from your plan rather than somebody else’s rounded recommendation.",
+            "Ownership is not required for this course. A prospective owner can compare hypothetical calculator plans and save notes. An existing owner begins by reconciling observed state. Both benefit from a desired cargo capacity, travel frequency and necessary services. If these are undecided, start with a small scenario covering one clearly defined period."
+          ]
+        },
+        {
+          "id": "carrier-capacity-decision",
+          "title": "Why a cheaper configuration may fail the task",
+          "paragraphs": [
+            "Compare money after checking capacity and functions. First exclude configurations that cannot hold the intended cargo or lack a service essential to your activity. Then compare costs among the remaining candidates. Retain the reason for exclusion so an attractive total does not draw you back to a plan already known to be unsuitable. The task’s requirements matter more than the number of installed services."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "carrier-calc-assumptions",
+          "title": "A record of calculator assumptions",
+          "paragraphs": [
+            "Create an objective named “carrier plan — date” and retain type, service states, starting balance, jumps, average consumption and fuel price. Label estimates separately from values checked in the game. After changing one input, record the new total and difference. Use the route’s own fuel calculation for a journey: an average week and a specific expedition answer different questions, so inspect their cost contents before combining them."
+          ],
+          "appSection": "carrier-calculator"
+        },
+        {
+          "id": "carrier-reconcile",
+          "title": "When the plan differs from observed state",
+          "paragraphs": [
+            "Check carrier type, snapshot time, service states, fuel inclusion and units in that order. Rewriting billions as millions, as in the exercise, helps expose unit errors. A missing commodity in an incomplete inventory does not establish zero stock. Changing a calculator service does not change it in the game. After a real action, refresh observations and compare the specific line again, recording the reason for the difference."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "carrier-budget-stress",
+          "title": "Checking the plan’s financial margin",
+          "paragraphs": [
+            "Temporarily increase weekly expense or the reserve period in a hypothetical budget and identify which line exceeds available funds. This tests sensitivity rather than predicting prices. If affordability depends on the most favourable assumption, record that dependency explicitly. A purchase decision benefits from knowing which money remains protected and which changes in purpose would require recalculation."
+          ]
+        }
+      ],
+      "basicsMinutes": 12,
+      "practiceMinutes": 15,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "carrier-trade",
+      "title": "Carrier trading: calculate the whole operation",
+      "summary": "Connect markets, hauling arrangements, capacity and expenses in one plan, then check remaining cargo and exit conditions.",
+      "category": "Fleet carrier",
+      "icon": "chart",
+      "difficulty": "Advanced",
+      "tags": [
+        "PTN",
+        "carrier trading",
+        "wholesale",
+        "haulers",
+        "profit",
+        "turnover"
+      ],
+      "appSection": "deals",
+      "sourceURL": "https://pilotstradenetwork.com/guides/fleet-carrier-trading/",
+      "basicsTitle": "Separate each participant’s margin",
+      "mechanics": [
+        "An owner loads near a supplier, moves the carrier and unloads near a buyer. Loading and unloading can be self-hauled or delegated by leaving haulers part of the price spread. A large batch needs checks of supply, demand, pad access and quote age as well as price.",
+        "Owner and hauler cash flows differ. Moving your own cargo between ship and carrier changes storage, without creating an external sale. Assess the operation after hauling allowances, fuel and other attributable costs."
+      ],
+      "practiceTitle": "Build and check a wholesale plan",
+      "practice": [
+        "1. Find candidate markets in Trade Routes, entering the trial ship’s free hold, available funds, pad size and quote-age limits. Read details for both sides. Search profit describes the selected ship leg; do not mechanically scale it to the carrier’s capacity. Verify the markets with a trial delivery and record actual timing.",
+        "2. First select the carrier type and required services in Carrier Calculator. In Carrier Trading, choose Use carrier configuration: this transfers the selected calculator plan’s type, service capacity, upkeep and investment amount; known fuel is supplemented from your own carrier’s data. Compare imported values with the actual carrier. In trip options, check capacity occupied by services, other cargo, tank fuel, warehouse tritium, reserve, fuel valuation and duration. For a personal carrier, you can import the calculated route into the intended leg; check its direction and loading.",
+        "3. Set the leg’s commodity, quantity, origin and destination systems, station prices, and loading and unloading modes. If haulers receive part of the price spread, enter it as the appropriate stage’s hauling allowance. Do not enter carrier-order prices and then deduct the same allowance again. Include loading, unloading and travel time plus additional costs.",
+        "4. Compare Trip, Costs and Checks. Resolve missing values or explicitly keep the operation provisional. Create a personal objective with a review deadline and acceptable leftover quantity. Set market orders in the game; reconcile stock, funds and actual trades after each stage before continuing."
+      ],
+      "checklist": [
+        "The supplier-to-final-buyer chain is checked.",
+        "Supply and demand are compared with the entire batch.",
+        "The owner’s margin is separate from hauler earnings.",
+        "Internal transfers are not recorded as external profit.",
+        "Review and completion conditions are defined.",
+        "Hauling allowances are deducted once.",
+        "Capacity, fuel and return-trip costs are checked.",
+        "Unknown prices or costs are not silently treated as zero."
+      ],
+      "exercise": "Fictional operation: the source sells at 4,600 cr/t and the final station buys at 29,100 cr/t. Haulers receive a 10,000 cr/t spread for loading and another 10,000 for unloading. The carrier therefore buys 5,000 t from them at 14,600 and sells at 19,100 cr/t. All other stated costs total 7 million credits. Calculate carrier purchasing turnover, revenue, margin before costs and result after costs. What final-station price breaks even if both hauling allowances and the full quantity remain unchanged?",
+      "solution": "The carrier spends 14,600 × 5,000 = 73 million credits and receives 19,100 × 5,000 = 95.5 million. Its margin before other costs is 22.5 million; after 7 million it retains 15.5 million. The station-price calculation agrees: (29,100 − 4,600 − 10,000 − 10,000) × 5,000 − 7,000,000. Other costs add 1,400 per tonne, making the break-even station price 26,000 cr/t. In the leg form use station prices of 4,600 and 29,100 plus both hauling allowances. The 73 million is the batch’s purchasing cost, not automatically the operation’s total capital requirement.",
+      "reflection": "Recalculate your plan with only 80% sold at the original price. What cost and storage location belong to the remainder? Record the condition for choosing another buyer and the longest time you are willing to tie up that capital.",
+      "quiz": [
+        {
+          "id": "transfer",
+          "prompt": "What happens when you transfer your cargo to your own carrier?",
+          "choices": [
+            "The stock’s storage location changes",
+            "A new external profit is earned",
+            "A mission is automatically completed"
+          ],
+          "correctIndex": 0,
+          "explanation": "A transfer alone is not an external sale."
+        },
+        {
+          "id": "net",
+          "prompt": "What is the owner’s result after the stated costs?",
+          "choices": [
+            "95.5 million credits",
+            "73 million credits",
+            "15.5 million credits"
+          ],
+          "correctIndex": 2,
+          "explanation": "(19,100 − 14,600) × 5,000 − 7 million = 15.5 million credits."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "readiness",
+          "title": "Prepare the owner’s inputs",
+          "paragraphs": [
+            "Before buying, gather four independent estimates: free capacity, available cash, operation time and market evidence. Capacity is not the desired batch size: services, other inventory and warehouse tritium occupy space. Tritium in the fuel tank is accounted for separately and does not occupy cargo capacity. Credits are needed beyond the commodity itself; separate upkeep and replacement reserves from working capital.",
+            "Start with one commodity and one direction. Add the return leg as a separate decision: an empty return still takes fuel and time, while return cargo needs its own buyer. Being able to include a return in the calculation does not establish that a suitable market exists."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "capacity-time",
+          "title": "Check throughput and committed funds",
+          "paragraphs": [
+            "For the fictional 5,000 t batch, a 250 t ship needs 20 loading cycles and 20 unloading cycles. At an assumed eight minutes per complete cycle, that is 320 minutes for one pilot. Adding one hour of travel gives 6 h 20 min before other delays. Additional haulers can change stage duration, but the headcount alone does not prove proportional speed gains.",
+            "In Costs, compare working capital, fuel, jump servicing and upkeep for the selected duration. Tritium from existing stock still has an economic value: choose a clear valuation and use it consistently. Do not repeat separately entered expenses in Additional Costs. Expected sales revenue that has not arrived is not available cash for another purchase."
+          ],
+          "appSection": "carrier-trade"
+        },
+        {
+          "id": "errors",
+          "title": "Reassess remaining stock without double counting",
+          "paragraphs": [
+            "If the selling price drops after loading, separate completed trades from the remaining-stock decision. Do not revalue past revenue at the new price. Compare selling the remainder now with relocation costs and extra time. The original purchase cost still belongs in the full-operation result, even when the new route appears profitable on its own.",
+            "Close the operation after reconciling sold quantity, warehouse remainder and cash flows. If you stop early, record the commodity, remaining amount, its cost and the next review in the objective. If haulers do not arrive, reconsider the offer, timing and route access before expanding the batch; an attractive full-carrier calculation does not finish an incomplete unloading stage."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "decision",
+          "title": "Compare complete and partial outcomes",
+          "paragraphs": [
+            "Additional fictional scenario: 4,000 t of the original 5,000 sell at the carrier order price of 19,100 cr/t. Revenue received is 76.4 million, while 1,000 t costing 14.6 million remains aboard. Comparing the full purchase with only that revenue does not describe a completed operation without explaining the stock. State received cash, remaining inventory and expenses together. Then estimate the future sale of those 1,000 t at a checked price, keeping that assumption visible to anyone reading the plan."
+          ]
+        }
+      ],
+      "basicsMinutes": 10,
+      "practiceMinutes": 12,
+      "checkpointMinutes": 10
+    },
+    {
+      "id": "robigo",
+      "title": "Robigo: prepare a tourist circuit and measure your result",
+      "summary": "Check the ship, cabins and passenger conditions, organise a complete Sirius Atmospherics circuit, and compare measured time with actual rewards.",
+      "category": "Passenger trips",
+      "icon": "route",
+      "difficulty": "Intermediate",
+      "tags": [
+        "PTN",
+        "Robigo",
+        "Sothis",
+        "Sirius Atmospherics",
+        "passengers",
+        "tourism",
+        "measurement"
+      ],
+      "appSection": "overview",
+      "sourceURL": "https://pilotstradenetwork.com/guides/robigo-tourist-missions",
+      "basicsTitle": "Understand the circuit and check departure conditions",
+      "mechanics": [
+        "The PTN circuit starts at Robigo Mines, takes tourists to Sirius Atmospherics in Sothis and returns them. The outpost requires a compatible ship size; Python is a familiar option. Match cabin class, group size and the conditions of each actual mission.",
+        "Arriving in the system does not replace the required beacon action. Confirm mission progress in the game. Available offers and payments depend on conditions including reputation; another commander’s figures do not promise the same income for you.",
+        "At Sothis A 5, drop at Sirius Atmospherics, stop, target the tourist beacon itself and face it to scan. Wait for scan completion and mission updates before returning to Robigo Mines."
+      ],
+      "practiceTitle": "Run three comparable circuits",
+      "practice": [
+        "Create “Robigo — trial session” in Objectives with the starting system and station. Note Robigo Mines, Sothis, Sirius Atmospherics, your ship and planned duration. Before travelling, check equipment suitability and a way back to your usual area. Keep the initial journey separate from repeated circuits: both times matter but answer different questions. Plot an ordinary ship route using the game’s galaxy map; Carrier Route is intended for a different vessel.",
+        "Before every departure, read the actual passenger offers and selected groups’ conditions in the game. Compare them with current cabins and your own difficulty limit. In Overview → Missions, review available records of accepted assignments; add missing conditions to the objective after checking them in the game. An empty cabin need not be a mistake. A compatible set that fits the plan matters more than accepting an unsuitable assignment merely to fill space.",
+        "Start timing before selecting missions and stop after returning, collecting rewards and completing preparation needed for the next departure. At the beacon, confirm progress for every relevant mission before heading back. Record rewards, duration and unusual delays after each circuit. Compare three complete circuits. Use Overview → Journal to clarify observed event order while manually recording pauses the game does not describe as separate events."
+      ],
+      "checklist": [
+        "Ship and cabins are checked against actual mission offers.",
+        "Accepted assignments and passenger conditions are read in the game.",
+        "The ordinary ship route is plotted on the game map.",
+        "The beacon action is confirmed by relevant mission progress.",
+        "The measured rate includes mission selection and hand-in.",
+        "Initial travel and unusual pauses are recorded separately.",
+        "Estimated results are distinct from actual payment.",
+        "The repeated session has a stopping condition."
+      ],
+      "exercise": "Three invented circuits paid thirteen, sixteen and fifteen million credits over a combined 48 minutes, including mission selection. Calculate the average rate. Then include thirty minutes of initial travel and a twelve-minute extra pause. What is the rate for that entire session? Explain why both calculations can be arithmetically correct. These figures do not predict mission availability, payments or sustainable income at Robigo.",
+      "solution": "The reward total is 44 million credits. Over 48 / 60 = 0.8 hours, that gives 55 million per hour. Including the extra 42 minutes produces ninety minutes, or 1.5 hours; 44 / 1.5 is approximately 29.3 million per hour. The first describes selected repeated circuits; the second covers the whole stated session. Neither promises future payment. Label the included time. When comparing two activities for an evening, use matching boundaries; when improving repeated circuits, inspect selection, travel and hand-in separately. A small sample identifies a useful question but does not demonstrate stable income.",
+      "reflection": "Choose the longest measured segment and propose one change to test on the next circuit. Record the expected effect and stopping condition beforehand. If the mission mix or passenger conditions change substantially, label the circuit as a different context rather than direct proof of an improvement. End according to your own goal and available time instead of trying to reach someone else’s income figure.",
+      "quiz": [
+        {
+          "id": "navigation",
+          "prompt": "Where do you plot an ordinary passenger ship route?",
+          "choices": [
+            "In Carrier Route",
+            "On the game’s galaxy map",
+            "In the upkeep calculator"
+          ],
+          "correctIndex": 1,
+          "explanation": "The game map plots the ship route; the carrier tool has a separate purpose."
+        },
+        {
+          "id": "pace",
+          "prompt": "What rate describes only the three example circuits?",
+          "choices": [
+            "44 million credits/hour",
+            "55 million credits/hour",
+            "16 million credits/hour"
+          ],
+          "correctIndex": 1,
+          "explanation": "44 million / (48 / 60) = 55 million per hour; this is an example, not a promise."
+        }
+      ],
+      "basicsSections": [
+        {
+          "id": "robigo-prerequisites",
+          "title": "Before the initial journey",
+          "paragraphs": [
+            "This course assumes familiar take-off, landing and ordinary navigation. Verify the ship and actual configuration in the game, then establish a travel budget and a reserve for other needs. Do not assemble a loadout solely from someone else’s total price. On a first visit, keep arrival as a separate objective and allow time to learn the location. The first evening may be preparatory even when later circuits are short.",
+            "Decide why you are measuring: choosing an evening’s activity, comparing loadouts or improving organisation. Choosing an activity requires all time spent; a loadout comparison needs similar conditions. Write the question in one sentence. Otherwise an accurate number may still fail to support a decision. Include a finish criterion: number of circuits, maximum duration or a completed learning task."
+          ]
+        },
+        {
+          "id": "robigo-log-template",
+          "title": "One record per circuit",
+          "paragraphs": [
+            "Use “number / start / selection / travel and action / return and hand-in / reward / deviations”. Timing every second is unnecessary; consistent boundaries are enough. State exactly when a circuit ends. Record rewards after confirming payment and label expected amounts separately. This compact log later helps explain why two apparently similar trips produced different results."
+          ]
+        }
+      ],
+      "practiceSections": [
+        {
+          "id": "robigo-mission-audit",
+          "title": "Checking the mission set before returning",
+          "paragraphs": [
+            "Compare your note with current assignments in the game. Check the required progress for each relevant mission rather than relying on one successful notification. If a condition was missed or a conflict appears, inspect its description first. Retain the reason in your session note. On the next departure, move that check earlier: an error becomes useful when it produces a specific preparation step."
+          ],
+          "appSection": "overview"
+        },
+        {
+          "id": "robigo-recovery",
+          "title": "When the circuit no longer fits the plan",
+          "paragraphs": [
+            "When suitable offers are scarce, record waiting time and choose an option allowed by your plan: a partial set, another activity or finishing. If Copilot has incomplete results, check assignments and payment in the game, then add confirmed values to the note. If one delay changes the average sharply, keep it in the overall result and also calculate ordinary circuits separately. Avoid deleting an inconvenient observation merely to improve the average."
+          ]
+        }
+      ],
+      "checkpointSections": [
+        {
+          "id": "robigo-comparison",
+          "title": "Comparing decisions consistently",
+          "paragraphs": [
+            "Imagine a second loadout flies faster but needs longer mission selection. Compare complete circuits and equal session lengths, then assess whether the gain justifies the change’s cost. If your purpose is relaxed repetition, include your own assessment of convenience. Enjoyment and attention can matter alongside credits. Record the criterion before calculating so one large payment does not replace the original goal."
+          ]
+        }
+      ],
+      "basicsMinutes": 12,
+      "practiceMinutes": 15,
+      "checkpointMinutes": 10
+    }
+  ]
+}

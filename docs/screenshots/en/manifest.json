@@ -1,0 +1,74 @@
+{
+  "applicationVersion": "2.5.0",
+  "language": "en",
+  "data": "synthetic",
+  "displayMode": "fullscreen",
+  "images": [
+    {
+      "file": "overview.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f92ab11130fba79f85376b283fde27998a0ea45cec1744924572ac8853898d46"
+    },
+    {
+      "file": "deals.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "b660375078f3297cbc2da34dfc6f3cad81ea527f76aa32795747e74d20b3e589"
+    },
+    {
+      "file": "carrier-trade.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "0d45f26096957891149fe947f1bffff2924553a0cc2100acb73c2e56cbf59bba"
+    },
+    {
+      "file": "route.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "0f023b13c426b8f6fe9e1c54c7e85f4ed8cc3e52b5f3f4f3a73ff158b8756c08"
+    },
+    {
+      "file": "ships.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8d6a91df6c0bf2a2124c26ecd7484a603ea3d120e9e35065deaa9b973e3f3b90"
+    },
+    {
+      "file": "ship.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "7ac3f0cd85b8e8cf6448663d560b29f9571f995622a65fed484944a066cbb6a9"
+    },
+    {
+      "file": "engineer.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "d4871d08966dbcaa8f52fddebd0dfe412bf4bd05c5df56d6e9f7a975e4de23d7"
+    },
+    {
+      "file": "article.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "da390fbad0531e781d33f2296e78f5b2ca8b8d64b8418940366904b0da20bc73"
+    },
+    {
+      "file": "colonization.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4a673eb69929a826c42a8f407106cb9dd459879c510a4e0e1f231f66a7a0b626"
+    },
+    {
+      "file": "academy.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "306aab60b694783695648760a2560d98571652a91334c7ca8c8ae078e95dd150"
+    },
+    {
+      "file": "exobiology.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "6fc5e42323b9315acb042e406c5c721a04033253f7e5b433a4f6191646d3f993"
+    }
+  ]
+}

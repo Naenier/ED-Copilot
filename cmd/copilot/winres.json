@@ -7,10 +7,10 @@
     "long-path-aware": true
   }}},
   "RT_VERSION": { "#1": { "0000": {
-    "fixed": { "file_version": "2.4.1.0", "product_version": "2.4.1.0" },
+    "fixed": { "file_version": "2.5.0.0", "product_version": "2.5.0.0" },
     "info": {
-      "0409": { "FileDescription": "ED Copilot — Elite Dangerous companion", "FileVersion": "2.4.1", "InternalName": "ED Copilot", "OriginalFilename": "ED Copilot.exe", "ProductName": "ED Copilot", "ProductVersion": "2.4.1" },
-      "0419": { "FileDescription": "ED Copilot — помощник пилота Elite Dangerous", "FileVersion": "2.4.1", "InternalName": "ED Copilot", "OriginalFilename": "ED Copilot.exe", "ProductName": "ED Copilot", "ProductVersion": "2.4.1" }
+      "0409": { "FileDescription": "ED Copilot — Elite Dangerous companion", "FileVersion": "2.5.0", "InternalName": "ED Copilot", "OriginalFilename": "ED Copilot.exe", "ProductName": "ED Copilot", "ProductVersion": "2.5.0" },
+      "0419": { "FileDescription": "ED Copilot — помощник пилота Elite Dangerous", "FileVersion": "2.5.0", "InternalName": "ED Copilot", "OriginalFilename": "ED Copilot.exe", "ProductName": "ED Copilot", "ProductVersion": "2.5.0" }
     }
   }}}
 }

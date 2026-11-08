@@ -12,17 +12,40 @@ function fixture() {
  return {tab:'learning',lesson:'',course:'',focus:false,layer:false,state:{learning:{courses,lessons,filteredLessons:lessons,recent:[],progress:{completed:0,total:4,percent:0},options:{filter:'all',query:'',courseId:''},reviewedAt:'2026-11-08'}}};
 }
 
-function runtime(C=fixture()) {
+function runtime(C=fixture(),language) {
  const timers=new Map();let timerID=0;
  const scope=vm.createContext({window:{},setTimeout:(fn,ms)=>{const id=++timerID;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
+ if(language){scope.window.CopilotTranslations=Object.assign({},...fs.readdirSync(path.join(__dirname,'../localization')).filter(name=>name.endsWith('_en.json')).sort().map(name=>JSON.parse(fs.readFileSync(path.join(__dirname,'../localization',name),'utf8'))));vm.runInContext(fs.readFileSync(path.join(__dirname,'i18n.js'),'utf8'),scope);scope.window.CopilotI18n.setLanguage(language);}
  vm.runInContext(fs.readFileSync(path.join(__dirname,'academy.js'),'utf8'),scope,{filename:'academy.js'});
  const calls=[],toasts=[],listeners=new Map(),scrollCalls=[];
  const host={scrollTop:120,scrollHeight:1000,clientHeight:400,getBoundingClientRect:()=>({top:0}),addEventListener:(name,fn)=>{if(listeners.has(name))throw Error('duplicate listener');listeners.set(name,fn);}};
  const nodes=new Map([['#page-scroll',host]]),collections=new Map();
  const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const ui={esc,icon:name=>`<svg data-icon="${esc(name)}"></svg>`,fmt:value=>String(value),money:value=>String(value),badge:(label,kind)=>`<span class="badge ${esc(kind||'')}">${esc(label)}</span>`,btn:(label,action,icon,style,attrs)=>`<button data-click="${esc(action)}" ${attrs||''}>${esc(label)}</button>`,heading:(title,description,actions)=>`<header><h1>${esc(title)}</h1><p>${esc(description)}</p>${actions||''}</header>`,call:async(op,body)=>{calls.push({op,body:JSON.parse(JSON.stringify(body))});return{};},toast:(message,error)=>toasts.push({message,error}),loadView:async()=>{calls.push({op:'loadView'});},navigate:async id=>{calls.push({op:'navigate',id});},renderPage:()=>{calls.push({op:'renderPage'});},dialog:(title,body,foot)=>{calls.push({op:'dialog',title,body,foot});},closeLayer:()=>{},$:selector=>nodes.get(selector)||null,$$:(selector,root)=>collections.get(selector)||[]};
- return {C,ui,api:scope.window.AcademyUI,calls,toasts,host,nodes,collections,listeners,scrollCalls,timers,async runTimers(ms){const ready=[...timers].filter(([,timer])=>ms===undefined||timer.ms===ms);for(const[id,timer]of ready){timers.delete(id);await timer.fn();}}};
+ return {C,ui,window:scope.window,api:scope.window.AcademyUI,calls,toasts,host,nodes,collections,listeners,scrollCalls,timers,async runTimers(ms){const ready=[...timers].filter(([,timer])=>ms===undefined||timer.ms===ms);for(const[id,timer]of ready){timers.delete(id);await timer.fn();}}};
 }
+
+test('English lesson content renders without changing persisted IDs, checklist indices, answer drafts or typed search',()=>{
+ const C=fixture(),s=C.state.learning;
+ for(const course of s.courses){course.title='Original Copilot course';course.summary='A complete practical learning path.';course.category='Trading';course.difficulty='Beginner';}
+ for(const lesson of s.lessons){lesson.title='Practical lesson '+lesson.order;lesson.summary='Study the decision and apply it in Copilot.';lesson.courseTitle='Original Copilot course';lesson.category='Trading';lesson.difficulty='Beginner';for(const section of lesson.sections){section.title='Section '+section.id;section.paragraphs=['Use the current observation, then review the plan.'];if(section.checklist)section.checklist=section.checklist.map((text,i)=>'Stable check '+i);}for(const question of lesson.quiz||[]){question.prompt='Choose the correct next step.';question.choices=['First option','Second option'];question.explanation='The second option keeps the plan consistent.';}}
+ s.options.query='Настройки';const r=runtime(C,'en');let html=r.api.render(C,r.ui);assert.match(html,/Academy/);assert.match(html,/Original Copilot course/);assert.match(html,/value="Настройки"/);assert.match(html,/08 Nov 2026/);
+ C.lesson='first.practice';s.lessons[1].checklistState={'checklist:2':true};html=r.api.render(C,r.ui);assert.match(html,/data-lesson="first.practice"/);assert.match(html,/data-academy-check="checklist" data-index="2"[^>]*checked/);assert.match(html,/original ED Copilot lesson/);assert.match(html,/Further reading at PTN/);assert.doesNotMatch(html,/original guide PTN/i);
+ C.lesson='first.checkpoint';C.academy.drafts={'first.checkpoint':{one:1}};html=r.api.render(C,r.ui);assert.match(html,/data-academy-answer="one"[^>]*value="1" checked/);assert.match(html,/Choose the correct next step/);assert.equal(C.state.learning.options.query,'Настройки');
+ r.window.CopilotI18n.setLanguage('ru');C.state.learning=fixture().state.learning;html=r.api.render(C,r.ui);assert.match(html,/Выберите ответ/);assert.match(html,/data-academy-answer="one"[^>]*value="1" checked/);assert.equal(C.lesson,'first.checkpoint');assert.equal(C.academy.drafts['first.checkpoint'].one,1);
+});
+
+test('actual Russian and English course categories retain the same semantic filter and reading state',async()=>{
+ const snapshot=file=>{const source=JSON.parse(fs.readFileSync(path.join(__dirname,'../learning',file),'utf8')),courses=source.courses.map(seed=>({...seed,minutes:seed.basicsMinutes+seed.practiceMinutes+seed.checkpointMinutes,totalLessons:3,completedLessons:0,percent:0,lessonIds:['basics','practice','checkpoint'].map(kind=>seed.id+'.'+kind)})),lessons=courses.flatMap(course=>course.lessonIds.map((id,index)=>({id,courseId:course.id,courseTitle:course.title,category:course.category,title:course.title+' '+index,kind:['reading','practice','checkpoint'][index],minutes:5,status:'not-started',sections:[]})));return {courses,lessons,filteredLessons:lessons,recent:[],progress:{completed:1,total:27,percent:4},options:{filter:'all',query:'tritium',courseId:''},reviewedAt:source.reviewedAt};};
+ const ru=snapshot('content.json'),en=snapshot('content_en.json'),C=fixture();C.state.learning=ru;C.course='carrier-trade';const r=runtime(C,'ru');r.api.render(C,r.ui);
+ await r.api.handle('academy-category',{dataset:{id:'fleet-carriers'}},C,r.ui);C.academy.query='Настройки';C.academy.drafts={'carrier-trade.checkpoint':{net:2}};
+ let html=r.api.render(C,r.ui);assert.equal((html.match(/class="course-card"/g)||[]).length,2);assert.match(html,/data-id="fleet-carriers" class="selected"/);
+ C.state.learning=en;r.window.CopilotI18n.setLanguage('en');html=r.api.render(C,r.ui);assert.equal(C.academy.category,'fleet-carriers');assert.equal((html.match(/class="course-card"/g)||[]).length,2);assert.equal((html.match(/data-click="academy-category" data-id="fleet-carriers"/g)||[]).length,1);assert.ok(html.includes(en.courses.find(c=>c.id==='carrier-basics').title));assert.ok(html.includes(en.courses.find(c=>c.id==='carrier-trade').title));assert.doesNotMatch(html,/Nothing found/);assert.match(html,/value="Настройки"/);assert.equal(C.course,'carrier-trade');assert.equal(C.academy.drafts['carrier-trade.checkpoint'].net,2);assert.equal(C.state.learning.options.query,'tritium');
+ en.options.filter='bookmarked';en.filteredLessons=en.lessons.filter(l=>['carrier-trade.practice','odyssey.basics'].includes(l.id));html=r.api.render(C,r.ui);assert.equal((html.match(/class="academy-library-lesson"/g)||[]).length,1);assert.match(html,/data-id="carrier-trade.practice"/);
+ C.state.learning=ru;r.window.CopilotI18n.setLanguage('ru');html=r.api.render(C,r.ui);assert.equal(C.academy.category,'fleet-carriers');assert.equal((html.match(/class="course-card"/g)||[]).length,2);
+ C.state.learning=en;en.options.filter='all';en.filteredLessons=en.lessons;r.window.CopilotI18n.setLanguage('en');C.academy.category='Флотоносец';html=r.api.render(C,r.ui);assert.equal(C.academy.category,'fleet-carriers');assert.equal((html.match(/class="course-card"/g)||[]).length,2);
+ C.academy.category='Removed category';r.api.render(C,r.ui);assert.equal(C.academy.category,'');assert.equal(C.academy.query,'Настройки');assert.equal(C.course,'carrier-trade');
+});
 
 test('catalogue renders courses, progress, filters and categories using escaped data',()=>{
  const r=runtime();const s=r.C.state.learning;
@@ -42,6 +65,24 @@ test('reader shows curriculum, structured sections, persisted checklist and conc
  assert.match(html,/data-index="2"[^>]* checked/);assert.match(html,/data-click="academy-tool" data-id="sale"/);
  r.C.lesson='first.checkpoint';html=r.api.render(r.C,r.ui);
  assert.equal((html.match(/class="academy-question"/g)||[]).length,2);assert.match(html,/<details class="academy-solution">/);assert.ok(!html.includes('quiz-feedback'));
+});
+
+test('actual carrier-trading practice links render and navigate in both languages',async()=>{
+ for(const language of ['ru','en']){
+  const source=JSON.parse(fs.readFileSync(path.join(__dirname,'../learning',language==='en'?'content_en.json':'content.json'),'utf8'));
+  const seed=source.courses.find(course=>course.id==='carrier-trade');
+  const section=seed.practiceSections.find(item=>item.appSection==='carrier-trade');
+  assert.ok(section,'the published practice includes its carrier-trading tool link');
+  const C=fixture(),lesson=C.state.learning.lessons[1];
+  lesson.sections=[section];C.lesson=lesson.id;
+  const r=runtime(C,language),html=r.api.render(C,r.ui);
+  const button=html.match(/<button data-click="academy-tool" data-id="([^"]+)">([^<]+)<\/button>/);
+  assert.ok(button,'the actual section renders a tool button');
+  assert.equal(button[1],'carrier-trade');
+  assert.equal(button[2],language==='en'?'Carrier trading':'Торговля флотоносцем');
+  await r.api.handle('academy-tool',{dataset:{id:button[1]}},C,r.ui);
+  assert.deepEqual(r.calls.filter(call=>call.op==='navigate'),[{op:'navigate',id:'carrier-trade'}]);
+ }
 });
 
 test('opening a course or lesson delegates selection and preserves a resumable cursor',async()=>{

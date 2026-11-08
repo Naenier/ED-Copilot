@@ -34,9 +34,10 @@ type Controller interface {
 	DataDir() string
 }
 type Options struct {
-	SmokeReport string
-	Smoke       bool
-	Demo        bool
+	SmokeReport       string
+	Smoke             bool
+	Demo              bool
+	ReadmeScreenshots bool
 }
 type Window struct {
 	modern                                                 *modernShell

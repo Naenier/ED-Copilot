@@ -158,6 +158,14 @@ func localizeReferenceEntry(entry M) {
 	// In these catalogue records the subtitle may be a canonical game name;
 	// translating it never substitutes a system, station or personal identity.
 	referenceCaption(entry, "subtitle")
+	referenceCaption(entry, "groupTitle")
+	if category != "systems" && !referenceIdentityLink(id) {
+		for _, field := range []string{"description", "summary"} {
+			if text := v.Str(entry[field]); text != "" {
+				entry[field] = localization.T("en", text)
+			}
+		}
+	}
 	for _, badge := range v.Rows(entry["badges"]) {
 		referenceCaption(badge, "label")
 	}
@@ -180,7 +188,7 @@ func localizeReferenceEntry(entry M) {
 		if section["type"] == "facts" {
 			referenceProperties(v.Rows(section["items"]))
 		}
-		if category == "exobiology" {
+		if category != "systems" {
 			for i, paragraph := range v.Arr(section["paragraphs"]) {
 				v.Arr(section["paragraphs"])[i] = localization.T("en", v.Str(paragraph))
 			}
@@ -191,6 +199,11 @@ func localizeReferenceEntry(entry M) {
 			}
 			if title, ok := item["title"].(string); ok {
 				item["title"] = referenceEntityName(v.Str(item["entryId"]), title)
+			}
+			for _, field := range []string{"text", "description"} {
+				if text := v.Str(item[field]); text != "" {
+					item[field] = localization.T("en", text)
+				}
 			}
 		}
 		columns := v.Arr(section["columns"])

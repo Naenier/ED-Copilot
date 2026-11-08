@@ -1,0 +1,45 @@
+{
+  "language": "ru",
+  "images": [
+    {
+      "file": "academy.png",
+      "sha256": "4c126f262e29060361dcc024c6eb2514beb554830b012d7a4069a81be306fa7b"
+    },
+    {
+      "file": "article.png",
+      "sha256": "d38bfeb949f9abcbf30bd403fae43ff7c34a0a5d46263380b2e8dcbc221b111b"
+    },
+    {
+      "file": "carrier-trade.png",
+      "sha256": "0f31a7dc2733faddd18cd2412475b0c2e553ab6186e807ee4366590a5f738a66"
+    },
+    {
+      "file": "colonization.png",
+      "sha256": "f55f6705dc99a1dc5aba6a222acd18eff00363a8f6e7484e080b2f5bd2041b92"
+    },
+    {
+      "file": "deals.png",
+      "sha256": "501b24be061215470dd2cefbffcc0eaba111f40e616eb6849afe692f92eaa6b9"
+    },
+    {
+      "file": "engineer.png",
+      "sha256": "bf1b8f2a280d1d308f505d8b577dad487db646db4f33a4bbc95fdd7647e61d4f"
+    },
+    {
+      "file": "overview.png",
+      "sha256": "0d5107dba06843ad44d76407e4ede12a1fe961cc77e2ca7daaa2ddefe050a2a2"
+    },
+    {
+      "file": "route.png",
+      "sha256": "2efd7f11c3833212682df8c37bdd0f5c701b95d7066992b8c193856260aaed4f"
+    },
+    {
+      "file": "ship.png",
+      "sha256": "95cd3053fc76743d7dbdc75957a5ecfd1bb39422871cbb8a88683347764f836a"
+    },
+    {
+      "file": "ships.png",
+      "sha256": "ea09d51db5a8d5c5c4d961f3cc8be8f66fa7c10e7eb73bca90fa3dbdf6072412"
+    }
+  ]
+}

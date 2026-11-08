@@ -42,18 +42,23 @@ func TestNinePTNTopicsHaveCompleteOriginalLearningPaths(t *testing.T) {
 	}
 	expected := map[string]bool{"trade-alerts": true, "wmm": true, "booze-cruise": true, "afk-combat": true, "odyssey": true, "operations": true, "carrier-basics": true, "carrier-trade": true, "robigo": true}
 	for _, course := range c.Courses {
-		if !expected[course.ID] || len(course.LessonIDs) != 3 || course.Minutes != 18 {
+		if !expected[course.ID] || len(course.LessonIDs) != 3 || course.Minutes <= 0 {
 			t.Fatal(course)
 		}
 		delete(expected, course.ID)
+		minutes := 0
 		for i, id := range course.LessonIDs {
 			lesson := lessonRow(t, fixedLibrary().Snapshot(), id)
+			minutes += v.Int(lesson["minutes"])
 			if v.Int(lesson["order"]) != i+1 || lesson["courseId"] != course.ID {
 				t.Fatal(lesson)
 			}
 			if !strings.Contains(LessonTextForTest(lesson), " ") {
 				t.Fatal("empty lesson", id)
 			}
+		}
+		if course.Minutes != minutes {
+			t.Fatal("course duration does not equal its three lesson durations", course.ID, course.Minutes, minutes)
 		}
 	}
 	if len(expected) > 0 {

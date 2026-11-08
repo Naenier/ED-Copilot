@@ -149,7 +149,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		state["carrierTrade"] = e.carrierTradeSnapshot(v.Obj(state["carrier"]))
 	}
 	if tab == "learning" {
-		state["learning"] = e.Learning.Snapshot()
+		state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
 	} else if !hud {
 		state["learning"] = e.Learning.ProgressSnapshot()
 	}
