@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/carrier"
+	"github.com/Naenier/ED-Copilot/internal/trading"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -47,8 +48,14 @@ func (e *Engine) startCarrierTradeOpportunities(input M) (M, error) {
 		v.Bool(cached["running"]) && sameTradeOpportunityContext(request, v.Obj(cached["options"]))) {
 		return M{"ok": true, "cached": true}, nil
 	}
+	// Keep a missing *http.Client out of the interface so the search uses
+	// its default clients.
+	var client trading.HTTPDoer
+	if e.opts.HTTPClient != nil {
+		client = e.opts.HTTPClient
+	}
 	return e.start(carrierTradeOpportunityJob, request, func(ctx context.Context, id uint64) (M, error) {
-		return carrier.FindTradeOpportunities(ctx, e.opts.HTTPClient, trade, snapshot, request, func(state M) {
+		return carrier.FindTradeOpportunities(ctx, client, trade, snapshot, request, func(state M) {
 			state["running"] = true
 			e.updateNetwork(carrierTradeOpportunityJob, id, state)
 		})

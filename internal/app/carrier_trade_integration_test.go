@@ -1,15 +1,64 @@
 package app
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
+
+func TestCarrierTradeOpportunitiesUseDefaultHTTPClient(t *testing.T) {
+	const child = "ED_COPILOT_CARRIER_TRADE_DEFAULT_HTTP_TEST"
+	if os.Getenv(child) != "1" {
+		command := exec.Command(os.Args[0], "-test.run=^TestCarrierTradeOpportunitiesUseDefaultHTTPClient$", "-test.timeout=30s")
+		command.Env = append(os.Environ(), child+"=1")
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("carrier trade with production HTTP defaults failed: %v\n%s", err, output)
+		}
+		return
+	}
+
+	// Isolate the process-wide default transport from other background jobs.
+	engine, _, _ := fixtureEngine(t, nil)
+	engine.opts.DisableNetwork = false
+	var requests atomic.Int32
+	http.DefaultTransport = economyRoundTripper(func(request *http.Request) (*http.Response, error) {
+		if request.Method != http.MethodPost || request.URL.Path != "/api/stations/search" {
+			return nil, fmt.Errorf("unexpected market request: %s %s", request.Method, request.URL.Path)
+		}
+		requests.Add(1)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(`{"count":0,"results":[]}`)),
+		}, nil
+	})
+
+	doOK(t, engine, "/api/carrier/trade", M{"action": "opportunities", "scenario": "custom"})
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		search := v.Obj(v.At(engine.SnapshotForUI("carrier-trade"), "carrierTrade", "opportunities"))
+		if v.Bool(search["running"]) {
+			time.Sleep(10 * time.Millisecond)
+			continue
+		}
+		if requests.Load() == 0 || search["stage"] != "routes" || search["error"] != nil || v.Bool(search["partial"]) {
+			t.Fatalf("default client did not complete a healthy market search: requests=%d, stage=%v, error=%v, partial=%v",
+				requests.Load(), search["stage"], search["error"], search["partial"])
+		}
+		return
+	}
+	t.Fatal("carrier trade opportunities did not finish")
+}
 
 func TestCarrierTradeOpportunityHandoffChecksContextAndKeepsLogistics(t *testing.T) {
 	engine, _, _ := fixtureEngine(t, nil)
