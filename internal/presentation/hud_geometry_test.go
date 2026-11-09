@@ -5,7 +5,7 @@ import "testing"
 func TestHUDSideBandsProtectCockpitInstrumentsAcrossVehiclesAndMonitors(t *testing.T) {
 	view := HUDRect{X: -1920, Y: 100, Width: 1920, Height: 1080}
 	bands := HUDSafeBands(view, "ship", 96)
-	if bands != ([2]HUDRect{{X: -344, Y: 370, Width: 330, Height: 302}, {X: -1906, Y: 370, Width: 330, Height: 248}}) {
+	if bands != ([2]HUDRect{{X: -344, Y: 370, Width: 330, Height: 302}, {X: -1906, Y: 370, Width: 330, Height: 302}}) {
 		t.Fatal(bands)
 	}
 	for _, vehicle := range []string{"srv", "Nomad", "Scorpion", "unknown", ""} {
@@ -27,9 +27,6 @@ func TestHUDSideBandsProtectCockpitInstrumentsAcrossVehiclesAndMonitors(t *testi
 		for _, dpi := range []int{0, 72, 96, 144, 192, 480, 999} {
 			for side, band := range HUDSafeBands(viewport, "ship", dpi) {
 				limit := viewport.Y + int(float64(viewport.Height)*.53)
-				if side == 1 {
-					limit = viewport.Y + int(float64(viewport.Height)*.48)
-				}
 				if band.X < viewport.X || band.Y < viewport.Y || band.X+band.Width > viewport.X+viewport.Width || band.Y+band.Height > limit {
 					t.Fatalf("cockpit overlap: view=%+v dpi=%d side=%d band=%+v", viewport, dpi, side, band)
 				}
@@ -65,12 +62,25 @@ func TestHUDLayoutKeepsPriorityOnRightAndMovesWholePanelsToLeft(t *testing.T) {
 			t.Fatal("panels overlap", plan)
 		}
 	}
-	if plan.Bounds[0].Height != 292 || plan.Bounds[1].Height != 166 {
+	if plan.Bounds[0].Height != 294 || plan.Bounds[1].Height != 167 {
 		t.Fatal("unused space inflated window", plan.Bounds)
 	}
 	short := LayoutHUDSections(view, "ship", 96, []int{60, 70})
 	if short.Bounds[1] != (HUDRect{}) || short.Hidden != 0 {
 		t.Fatal("left column shown unnecessarily", short)
+	}
+}
+
+func TestHUDLayoutUsesAvailableSpaceAfterMovingAShoppingCardLeft(t *testing.T) {
+	view := HUDRect{Width: 1920, Height: 1080}
+	plan := LayoutHUDSections(view, "ship", 96, []int{90, 240, 90}, 1)
+	if plan.Hidden != 0 || len(plan.Panels) != 3 {
+		t.Fatal("panels disappeared despite sufficient space", plan)
+	}
+	for i, want := range []int{0, 1, 0} {
+		if plan.Panels[i].Column != want || plan.Panels[i].Clipped {
+			t.Fatal("shopping should stay apart from the two immediate actions", plan)
+		}
 	}
 }
 

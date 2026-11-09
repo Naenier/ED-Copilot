@@ -70,7 +70,18 @@ func readCarrierStock(raw M, received any) M {
 		}
 		items[key] = num(items[key]) + num(count)
 	}
-	return M{"id": id, "callsign": text(value.At(raw, "name", "callsign"), 40), "receivedAt": validDate(received), "updatedAt": validDate(received), "items": items, "complete": true}
+	stock := M{"id": id, "callsign": text(value.At(raw, "name", "callsign"), 40), "receivedAt": validDate(received), "updatedAt": validDate(received), "items": items, "complete": true}
+	system, _ := raw["currentStarSystem"].(string)
+	if system == "" {
+		system, _ = value.At(raw, "currentStarSystem", "name").(string)
+	}
+	if system = text(system, 120); system != "" {
+		stock["location"] = M{
+			"system": system, "updatedAt": validDate(received),
+			"jumpPlanned": value.At(raw, "itinerary", "currentJump") != nil,
+		}
+	}
+	return stock
 }
 
 // ApplyCAPI accepts only the result verified for the currently selected
@@ -183,7 +194,15 @@ func (p *Planner) restoreCarrierStocks(saved M) {
 					pending[key] = validDate(raw["updatedAt"])
 				}
 			}
-			p.carrierStocks[kind] = M{"id": marketID(raw["id"]), "callsign": text(raw["callsign"], 40), "receivedAt": validDate(raw["receivedAt"]), "updatedAt": validDate(raw["updatedAt"]), "complete": true, "absent": absent, "items": items, "movementKeys": uniqueStrings(raw["movementKeys"], 1000), "pendingMovements": pending, "awaitingConfirmation": value.Bool(raw["awaitingConfirmation"])}
+			stock := M{"id": marketID(raw["id"]), "callsign": text(raw["callsign"], 40), "receivedAt": validDate(raw["receivedAt"]), "updatedAt": validDate(raw["updatedAt"]), "complete": true, "absent": absent, "items": items, "movementKeys": uniqueStrings(raw["movementKeys"], 1000), "pendingMovements": pending, "awaitingConfirmation": value.Bool(raw["awaitingConfirmation"])}
+			location := value.Obj(raw["location"])
+			if system := text(location["system"], 120); !absent && system != "" && value.Time(location["updatedAt"]).Equal(value.Time(raw["receivedAt"])) {
+				stock["location"] = M{
+					"system": system, "updatedAt": validDate(location["updatedAt"]),
+					"jumpPlanned": value.Bool(location["jumpPlanned"]),
+				}
+			}
+			p.carrierStocks[kind] = stock
 		}
 	}
 	p.carrierOwner = fid
@@ -321,7 +340,11 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 			knownTons = total
 		}
 		accessible := fid != "" && fid == p.carrierOwner && (kind == "fleet" || squadronAccess)
-		result = append(result, M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "awaitingConfirmation": len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]), "knownTons": knownTons, "items": list, "reason": reason})
+		warehouse := M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "awaitingConfirmation": len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]), "knownTons": knownTons, "items": list, "reason": reason}
+		if location := value.Obj(s["location"]); known && len(location) != 0 {
+			warehouse["location"] = value.Copy(location)
+		}
+		result = append(result, warehouse)
 		if !included {
 			continue
 		}

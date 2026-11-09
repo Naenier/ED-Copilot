@@ -1,12 +1,8 @@
 {
-  "ФН: ": "FC: ",
-  "Загрузить с ФН: ": "Load from FC: ",
-  "Ещё позиций: ": "More commodities: ",
-  "Обеспечено: ": "Stock covers: ",
-  "Учёт склада ФН выключен": "FC stock accounting is off",
-  "на борту ": "aboard ",
-  "купить ": "buy ",
-  "доставить ": "deliver ",
-  "Ресурсы на ФН · доставка на стройки ещё нужна": "Resources aboard FC · construction deliveries still needed",
-  "СНАБЖЕНИЕ · ПРОДОЛЖЕНИЕ": "SUPPLY · CONTINUED"
+  "ДОСТАВИТЬ": "DELIVER",
+  "РАЗГРУЗИТЬ": "UNLOAD",
+  "КУПИТЬ": "BUY",
+  "Проверьте груз корабля": "Check your ship's cargo",
+  "Забрать с флотоносца": "Collect from carrier",
+  "Сверьте запас на флотоносце": "Check carrier stock"
 }

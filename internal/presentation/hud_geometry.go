@@ -42,16 +42,15 @@ func HUDSafeBands(view HUDRect, vehicle string, dpi int) [2]HUDRect {
 		return bands
 	}
 	top := int(math.Round(float64(view.Height) * .25))
-	rightBottom := int(math.Floor(float64(view.Height) * .53))
-	leftBottom := int(math.Floor(float64(view.Height) * .48))
+	bottom := int(math.Floor(float64(view.Height) * .53))
 	if strings.EqualFold(vehicle, "foot") {
 		top = pad
-		rightBottom = int(math.Floor(float64(view.Height) * .70))
-		leftBottom = int(math.Floor(float64(view.Height) * .65))
+		bottom = int(math.Floor(float64(view.Height) * .70))
 	}
 	top = min(max(0, top), max(0, view.Height-pad))
-	bands[0] = HUDRect{X: view.X + view.Width - pad - width, Y: view.Y + top, Width: width, Height: max(0, min(view.Height-pad, rightBottom)-top)}
-	bands[1] = HUDRect{X: view.X + pad, Y: view.Y + top, Width: width, Height: max(0, min(view.Height-pad, leftBottom)-top)}
+	height := max(0, min(view.Height-pad, bottom)-top)
+	bands[0] = HUDRect{X: view.X + view.Width - pad - width, Y: view.Y + top, Width: width, Height: height}
+	bands[1] = HUDRect{X: view.X + pad, Y: view.Y + top, Width: width, Height: height}
 	return bands
 }
 
@@ -66,43 +65,56 @@ func HUDGeometry(view HUDRect, vehicle string, dpi, contentHeight int) HUDRect {
 // LayoutHUDSections packs measured GDI heights into the safe side bands. It
 // never squeezes panels into the middle or moves them over fuel/landing gear.
 // If both bands fill, a visible count replaces low-priority overflow panels.
-func LayoutHUDSections(view HUDRect, vehicle string, dpi int, heights []int) HUDLayout {
+func LayoutHUDSections(view HUDRect, vehicle string, dpi int, heights []int, preferLeft ...int) HUDLayout {
 	plan := HUDLayout{Bands: HUDSafeBands(view, vehicle, dpi)}
 	if plan.Bands[0].Width == 0 || plan.Bands[0].Height == 0 {
 		plan.Hidden = len(heights)
 		return plan
 	}
-	gap := max(1, int(math.Round(6*hudScale(dpi))))
+	gap := max(1, int(math.Round(7*hudScale(dpi))))
 	footerHeight := min(plan.Bands[1].Height, max(18, int(math.Round(24*hudScale(dpi)))))
+	left := make(map[int]bool, len(preferLeft))
+	for _, index := range preferLeft {
+		left[index] = true
+	}
 	pack := func(reserve bool) HUDLayout {
 		next := HUDLayout{Bands: plan.Bands}
 		used := [2]int{}
-		column := 0
 		for i, measured := range heights {
 			if measured <= 0 {
 				continue
 			}
-			for column < 2 {
-				limit := next.Bands[column].Height
-				if reserve && column == 1 {
+			order := [2]int{0, 1}
+			if left[i] {
+				order = [2]int{1, 0}
+			}
+			column, top, height := -1, 0, 0
+			for _, side := range order {
+				limit := next.Bands[side].Height
+				if reserve && side == 1 {
 					limit = max(0, limit-footerHeight-gap)
 				}
-				start := used[column]
+				start := used[side]
 				if start > 0 {
 					start += gap
 				}
-				if measured <= limit-start || (used[column] == 0 && limit > 0) {
-					height := min(measured, limit-start)
-					band := next.Bands[column]
-					next.Panels = append(next.Panels, HUDPlacement{Index: i, Column: column, Bounds: HUDRect{X: band.X, Y: band.Y + start, Width: band.Width, Height: height}, Clipped: measured > height})
-					used[column] = start + height
+				if measured <= limit-start {
+					column, top, height = side, start, measured
 					break
 				}
-				column++
+				// Keep a candidate for an oversized panel only while a whole
+				// band is empty. A full fit on either side wins.
+				if used[side] == 0 && limit > height {
+					column, top, height = side, 0, limit
+				}
 			}
-			if column >= 2 {
+			if column < 0 {
 				next.Hidden++
+				continue
 			}
+			band := next.Bands[column]
+			next.Panels = append(next.Panels, HUDPlacement{Index: i, Column: column, Bounds: HUDRect{X: band.X, Y: band.Y + top, Width: band.Width, Height: height}, Clipped: measured > height})
+			used[column] = top + height
 		}
 		for col, band := range next.Bands {
 			if used[col] > 0 {
@@ -111,8 +123,12 @@ func LayoutHUDSections(view HUDRect, vehicle string, dpi int, heights []int) HUD
 		}
 		if reserve && next.Hidden > 0 && footerHeight > 0 {
 			band := next.Bands[1]
-			next.Overflow = HUDRect{X: band.X, Y: band.Y + band.Height - footerHeight, Width: band.Width, Height: footerHeight}
-			next.Bounds[1] = band
+			top := used[1]
+			if top > 0 {
+				top += gap
+			}
+			next.Overflow = HUDRect{X: band.X, Y: band.Y + top, Width: band.Width, Height: footerHeight}
+			next.Bounds[1] = HUDRect{X: band.X, Y: band.Y, Width: band.Width, Height: top + footerHeight}
 		}
 		return next
 	}

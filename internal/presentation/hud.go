@@ -12,18 +12,33 @@ import (
 // tested without a running game or a real commander profile.
 type HUDDocument struct {
 	Activity string
+	Language string
 	Sections []HUDSection
-	// Native rendering may rebalance these bounded colony actions between
-	// safe side bands using actual font metrics. The source document is stable.
-	ColonySupplyActions int `json:",omitempty"`
-	ColonySupplyContext int `json:",omitempty"`
 }
 type HUDSection struct {
-	Title string
-	Lines []HUDLine
+	Title, Subtitle, Kind string
+	Lines                 []HUDLine
+	More                  int
 }
-type HUDLine struct{ Text, Role string }
+type HUDLine struct{ Text, Role, Value string }
 type HUDRect struct{ X, Y, Width, Height int }
+
+func hudCard(doc *HUDDocument, kind, title, subtitle string, more int, lines ...HUDLine) {
+	clean := make([]HUDLine, 0, len(lines))
+	seen := make(map[[2]string]bool, len(lines))
+	for _, line := range lines {
+		line.Text = strings.TrimSpace(line.Text)
+		line.Value = strings.TrimSpace(line.Value)
+		key := [2]string{line.Text, line.Value}
+		if line.Text != "" && !seen[key] {
+			clean = append(clean, line)
+			seen[key] = true
+		}
+	}
+	if len(clean) > 0 {
+		doc.Sections = append(doc.Sections, HUDSection{Title: title, Subtitle: strings.TrimSpace(subtitle), Kind: kind, Lines: clean, More: more})
+	}
+}
 
 // HUDVisible requires an identified game process. Journal activity alone is
 // insufficient: old journal files also exist when another program has focus.

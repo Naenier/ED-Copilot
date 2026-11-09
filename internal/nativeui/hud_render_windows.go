@@ -3,19 +3,22 @@
 package nativeui
 
 import (
+	"fmt"
 	"math"
 
+	"github.com/Naenier/ED-Copilot/internal/localization"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/lxn/win"
 )
 
 type hudSectionMetrics struct {
-	Height, TitleHeight int
-	Lines               []int
+	Height, ValueWidth int
+	Lines              []int
 }
 
 func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool) p.HUDLayout {
-	width := p.HUDGeometry(view, vehicle, dpi, 0).Width
+	bands := p.HUDSafeBands(view, vehicle, dpi)
+	width := bands[0].Width
 	if width <= 0 {
 		h.layoutView = p.HUDRect{}
 		return p.HUDLayout{}
@@ -29,145 +32,253 @@ func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool)
 		return p.HUDLayout{}
 	}
 	defer win.ReleaseDC(h.hwnd, hdc)
-	measure := func(sections []p.HUDSection) (p.HUDLayout, []hudSectionMetrics) {
-		heights := make([]int, len(sections))
-		metrics := make([]hudSectionMetrics, len(sections))
-		for i, section := range sections {
-			metrics[i] = h.measureSection(hdc, width, section)
-			heights[i] = metrics[i].Height
-		}
-		return p.LayoutHUDSections(view, vehicle, dpi, heights), metrics
-	}
+
 	sections := h.document.Sections
-	plan, metrics := measure(sections)
-	// Colony actions are ordered, bounded at ten, and can be distributed
-	// differently at each DPI. A fixed five/five split can overflow the shorter
-	// left safe band when long translated names wrap. Prefer the largest first
-	// group that fits both bands at the unchanged normal font size.
-	if h.document.Activity == "colonization" && len(sections) == 2 && h.document.ColonySupplyActions > 5 && h.document.ColonySupplyActions <= 10 {
-		n, context := h.document.ColonySupplyActions, h.document.ColonySupplyContext
-		if context > 0 && len(sections[0].Lines) == context+5 && len(sections[1].Lines) >= n-5 {
-			actions := append([]p.HUDLine(nil), sections[0].Lines[context:]...)
-			actions = append(actions, sections[1].Lines[:n-5]...)
-			footer := sections[1].Lines[n-5:]
-			for cut := n - 1; cut >= 1; cut-- {
-				first := append([]p.HUDLine(nil), sections[0].Lines[:context]...)
-				first = append(first, actions[:cut]...)
-				last := append([]p.HUDLine(nil), actions[cut:]...)
-				last = append(last, footer...)
-				candidate := []p.HUDSection{{Title: sections[0].Title, Lines: first}, {Title: sections[1].Title, Lines: last}}
-				next, nextMetrics := measure(candidate)
-				fits := next.Hidden == 0 && len(next.Panels) == 2 && next.Panels[0].Column == 0
-				for _, panel := range next.Panels {
-					fits = fits && !panel.Clipped
-				}
-				if fits {
-					sections, plan, metrics = candidate, next, nextMetrics
-					break
-				}
+	heights := make([]int, len(sections))
+	metrics := make([]hudSectionMetrics, len(sections))
+	var deliverySide []int
+	for i, section := range sections {
+		metrics[i] = h.measureSection(hdc, width, section)
+		heights[i] = metrics[i].Height
+		if section.Kind == "delivery" || section.Kind == "unload" {
+			deliverySide = append(deliverySide, i)
+		}
+	}
+	var shoppingSide []int
+	if h.document.Activity == "colonization" && len(deliverySide) > 0 {
+		for i, section := range sections {
+			if section.Kind == "purchase" {
+				shoppingSide = append(shoppingSide, i)
 			}
 		}
 	}
-	if plan.Bounds[0].Width == 0 || plan.Bounds[0].Height == 0 {
-		h.layoutView = p.HUDRect{}
-		return plan
+	if len(shoppingSide) > 0 && len(deliverySide) > 1 {
+		h.fitDeliveryCards(bands[0].Height, deliverySide, sections, metrics, heights)
+	}
+	plan := p.LayoutHUDSections(view, vehicle, dpi, heights, shoppingSide...)
+	for i := range plan.Panels {
+		panel := &plan.Panels[i]
+		panel.Clipped = panel.Bounds.Height < metrics[panel.Index].Height
 	}
 	h.renderSections, h.metrics, h.layoutView, h.layoutVehicle = sections, metrics, view, vehicle
 	return plan
+}
+
+// Keep a usable preview of each local action together when the right column
+// can show at least one row per card. The purchase card can then use the left.
+func (h *hudWindow) fitDeliveryCards(height int, cards []int, sections []p.HUDSection, metrics []hudSectionMetrics, heights []int) {
+	available := height - (len(cards)-1)*h.hudPX(7)
+	full := 0
+	for _, i := range cards {
+		full += heights[i]
+	}
+	if full <= available {
+		return
+	}
+	minimum := make([]int, len(cards))
+	remaining := available
+	for index, i := range cards {
+		if len(metrics[i].Lines) == 0 {
+			return
+		}
+		firstRow := 2*h.hudPX(8) + h.headerHeight(sections[i]) + h.hudPX(6) + metrics[i].Lines[0]
+		minimum[index] = min(heights[i], firstRow+h.hudPX(20))
+		remaining -= minimum[index]
+	}
+	if remaining < 0 {
+		return
+	}
+	for index, i := range cards {
+		extra := min(remaining, heights[i]-minimum[index])
+		heights[i] = minimum[index] + extra
+		remaining -= extra
+	}
 }
 
 func (h *hudWindow) hudPX(value int) int {
 	return max(1, int(math.Round(float64(value)*float64(h.dpi)/96)))
 }
 
-// Ten working colony actions need denser spacing, not a smaller font. Keep
-// measurement and drawing on the same contract at fractional display scales.
-func (h *hudWindow) sectionSpacing() (pad, titleGap, lineGap int) {
-	if h.document.Activity == "colonization" && h.document.ColonySupplyActions > 5 {
-		return h.hudPX(7), h.hudPX(3), h.hudPX(1)
+func (h *hudWindow) headerHeight(section p.HUDSection) int {
+	height := h.hudPX(17)
+	if section.Subtitle != "" {
+		height += h.hudPX(16)
 	}
-	return h.hudPX(9), h.hudPX(4), h.hudPX(2)
+	return height
 }
 
 func (h *hudWindow) measureSection(hdc win.HDC, width int, section p.HUDSection) hudSectionMetrics {
 	if hdc == 0 || width <= 0 {
 		return hudSectionMetrics{}
 	}
-	pad, titleGap, lineGap := h.sectionSpacing()
-	oldFont := win.SelectObject(hdc, win.HGDIOBJ(h.regular))
-	defer win.SelectObject(hdc, oldFont)
-	textHeight := func(text string, bold bool) int {
-		font := h.regular
-		if bold {
-			font = h.bold
+	pad, rowHeight, rowGap := h.hudPX(10), h.hudPX(17), h.hudPX(1)
+	innerWidth := max(1, width-2*pad)
+	m := hudSectionMetrics{Lines: make([]int, len(section.Lines))}
+	old := win.SelectObject(hdc, win.HGDIOBJ(h.bold))
+	defer win.SelectObject(hdc, old)
+	for _, row := range section.Lines {
+		if row.Value == "" {
+			continue
 		}
-		win.SelectObject(hdc, win.HGDIOBJ(font))
-		r := win.RECT{Left: int32(pad), Right: int32(max(pad+10, width-pad))}
-		win.DrawTextEx(hdc, wide(text), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_CALCRECT, nil)
-		return min(max(h.hudPX(17), int(r.Bottom)), h.hudPX(52))
+		var r win.RECT
+		win.DrawTextEx(hdc, wide(hudText(row.Value, 120)), -1, &r, win.DT_SINGLELINE|win.DT_NOPREFIX|win.DT_CALCRECT, nil)
+		m.ValueWidth = max(m.ValueWidth, min(int(r.Right-r.Left), innerWidth/2))
 	}
-	m := hudSectionMetrics{TitleHeight: textHeight(hudText(section.Title, 100), true), Lines: make([]int, len(section.Lines))}
-	m.Height = 2*pad + m.TitleHeight
-	if len(section.Lines) > 0 {
-		m.Height += titleGap
-	}
-	for i, line := range section.Lines {
-		m.Lines[i] = textHeight(hudText(line.Text, 280), false)
-		m.Height += m.Lines[i]
-		if i > 0 {
-			m.Height += lineGap
+	win.SelectObject(hdc, win.HGDIOBJ(h.regular))
+	m.Height = 2*h.hudPX(8) + h.headerHeight(section) + h.hudPX(6)
+	for i, row := range section.Lines {
+		available := innerWidth
+		if row.Value != "" {
+			available = max(1, innerWidth-m.ValueWidth-h.hudPX(8))
 		}
+		r := win.RECT{Right: int32(available)}
+		win.DrawTextEx(hdc, wide(hudText(row.Text, 240)), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_CALCRECT, nil)
+		m.Lines[i] = min(max(rowHeight, int(r.Bottom)), 2*rowHeight)
+		m.Height += m.Lines[i] + rowGap
+	}
+	if len(m.Lines) > 0 {
+		m.Height -= rowGap
+	}
+	if section.More > 0 {
+		m.Height += h.hudPX(20)
 	}
 	return m
 }
 
-// drawSection never draws a partial line into the cockpit's protected area.
-// In the rare case of an oversized font/panel it points to the full app instead.
+func fillRounded(hdc win.HDC, x, y, width, height, radius int, ink win.COLORREF) {
+	if width <= 0 || height <= 0 {
+		return
+	}
+	brush := win.CreateBrushIndirect(&win.LOGBRUSH{LbStyle: win.BS_SOLID, LbColor: ink})
+	if brush == 0 {
+		return
+	}
+	oldBrush := win.SelectObject(hdc, win.HGDIOBJ(brush))
+	oldPen := win.SelectObject(hdc, win.GetStockObject(win.NULL_PEN))
+	win.RoundRect(hdc, int32(x), int32(y), int32(x+width), int32(y+height), int32(2*radius), int32(2*radius))
+	win.SelectObject(hdc, oldPen)
+	win.SelectObject(hdc, oldBrush)
+	win.DeleteObject(win.HGDIOBJ(brush))
+}
+
+// Windows COLORREF stores the red component in the low byte.
+func mixHUDColor(base, tint win.COLORREF, percent uint32) win.COLORREF {
+	var mixed uint32
+	for _, shift := range []uint{0, 8, 16} {
+		a, b := uint32(base)>>shift&255, uint32(tint)>>shift&255
+		mixed |= ((a*(100-percent) + b*percent) / 100) << shift
+	}
+	return win.COLORREF(mixed)
+}
+
+func (h *hudWindow) sectionAccent(kind string) win.COLORREF {
+	switch kind {
+	case "delivery":
+		return h.ink("good")
+	case "purchase":
+		return h.ink("warn")
+	default:
+		return h.ink("accent")
+	}
+}
+
+func (h *hudWindow) cardBackground(hdc win.HDC, width, y, height int, accent win.COLORREF) win.COLORREF {
+	base := mixHUDColor(h.ink("panel"), accent, 4)
+	if base == h.key {
+		base ^= 1
+	}
+	border := mixHUDColor(base, accent, 21)
+	radius := h.hudPX(9)
+	fillRounded(hdc, 0, y, width, height, radius, border)
+	fillRounded(hdc, 1, y+1, width-2, height-2, max(1, radius-1), base)
+	return base
+}
+
+func hudDrawText(hdc win.HDC, text string, x, y, right, bottom int, ink win.COLORREF, flags uint32) {
+	if text == "" || x >= right || y >= bottom {
+		return
+	}
+	rect := win.RECT{Left: int32(x), Top: int32(y), Right: int32(right), Bottom: int32(bottom)}
+	win.SetTextColor(hdc, ink)
+	win.DrawTextEx(hdc, wide(text), -1, &rect, flags|win.DT_NOPREFIX|win.DT_END_ELLIPSIS, nil)
+}
+
 func (h *hudWindow) drawSection(hdc win.HDC, width, y, height int, section p.HUDSection, m hudSectionMetrics, clipped bool) {
 	if hdc == 0 || width <= 0 || height <= 0 {
 		return
 	}
-	pad, titleGap, lineGap := h.sectionSpacing()
-	bottom := y + height
-	fillSolid(hdc, win.RECT{Left: 0, Top: int32(y), Right: int32(width), Bottom: int32(bottom)}, h.ink("panel"))
-	fillSolid(hdc, win.RECT{Left: 0, Top: int32(y), Right: int32(h.hudPX(2)), Bottom: int32(bottom)}, h.ink("accent"))
+	pad, insetY, rowGap := h.hudPX(10), h.hudPX(8), h.hudPX(1)
+	right, bottom := width-pad, y+height
+	accent := h.sectionAccent(section.Kind)
+	base := h.cardBackground(hdc, width, y, height, accent)
 	oldFont := win.SelectObject(hdc, win.HGDIOBJ(h.bold))
 	defer win.SelectObject(hdc, oldFont)
 	win.SetBkMode(hdc, win.TRANSPARENT)
-	win.SetTextColor(hdc, h.ink("accent"))
-	r := win.RECT{Left: int32(pad), Top: int32(y + pad), Right: int32(max(pad+1, width-pad)), Bottom: int32(min(bottom, y+pad+m.TitleHeight))}
-	if r.Bottom > r.Top {
-		win.DrawTextEx(hdc, wide(hudText(section.Title, 100)), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_END_ELLIPSIS, nil)
+
+	titleY := y + insetY
+	titleEnd := min(bottom, titleY+h.hudPX(17))
+	if titleEnd-titleY >= h.hudPX(14) {
+		fillRounded(hdc, pad, titleY+h.hudPX(3), h.hudPX(4), h.hudPX(12), h.hudPX(2), accent)
 	}
-	lineY := y + pad + m.TitleHeight + titleGap
-	lineBottom := bottom - pad
-	if clipped {
-		lineBottom -= h.hudPX(19)
-	}
+	hudDrawText(hdc, hudText(section.Title, 100), pad+h.hudPX(10), titleY, right, titleEnd, h.ink("text"), win.DT_SINGLELINE)
 	win.SelectObject(hdc, win.HGDIOBJ(h.regular))
-	for i, line := range section.Lines {
+	hudDrawText(hdc, hudText(section.Subtitle, 160), pad+h.hudPX(10), titleEnd, right, min(bottom, titleEnd+h.hudPX(16)), h.ink("muted"), win.DT_SINGLELINE)
+
+	lineY := titleY + h.headerHeight(section) + h.hudPX(6)
+	lineBottom := bottom - insetY
+	footerHeight := h.hudPX(20)
+	if (clipped || section.More > 0) && lineBottom-lineY >= footerHeight {
+		lineBottom -= footerHeight
+	}
+	if lineY < lineBottom {
+		dividerY := lineY - h.hudPX(4)
+		fillSolid(hdc, win.RECT{Left: int32(pad), Top: int32(dividerY), Right: int32(right), Bottom: int32(dividerY + 1)}, mixHUDColor(base, h.ink("text"), 14))
+	}
+	drawn := 0
+	for i, row := range section.Lines {
 		if i >= len(m.Lines) || lineY+m.Lines[i] > lineBottom {
 			break
 		}
-		win.SetTextColor(hdc, h.ink(line.Role))
-		r = win.RECT{Left: int32(pad), Top: int32(lineY), Right: int32(max(pad+1, width-pad)), Bottom: int32(lineY + m.Lines[i])}
-		win.DrawTextEx(hdc, wide(hudText(line.Text, 280)), -1, &r, win.DT_WORDBREAK|win.DT_NOPREFIX|win.DT_END_ELLIPSIS, nil)
-		lineY += m.Lines[i] + lineGap
+		labelRight, labelInk := right, h.ink(row.Role)
+		if row.Value != "" {
+			labelRight -= m.ValueWidth + h.hudPX(8)
+			labelInk = h.ink("text")
+			valueInk := h.ink(row.Role)
+			if row.Role == "text" && (section.Kind == "delivery" || section.Kind == "unload" || section.Kind == "purchase") {
+				valueInk = accent
+			}
+			win.SelectObject(hdc, win.HGDIOBJ(h.bold))
+			hudDrawText(hdc, hudText(row.Value, 120), right-m.ValueWidth, lineY, right, lineY+m.Lines[i], valueInk, win.DT_SINGLELINE|win.DT_RIGHT)
+			win.SelectObject(hdc, win.HGDIOBJ(h.regular))
+		}
+		hudDrawText(hdc, hudText(row.Text, 240), pad, lineY, labelRight, lineY+m.Lines[i], labelInk, win.DT_WORDBREAK)
+		lineY += m.Lines[i] + rowGap
+		drawn++
 	}
-	if clipped && height >= pad*2+m.TitleHeight+h.hudPX(19) {
-		win.SetTextColor(hdc, h.ink("muted"))
-		r = win.RECT{Left: int32(pad), Top: int32(bottom - pad - h.hudPX(17)), Right: int32(max(pad+1, width-pad)), Bottom: int32(bottom - pad)}
-		win.DrawTextEx(hdc, wide("Подробности в ED Copilot"), -1, &r, win.DT_SINGLELINE|win.DT_END_ELLIPSIS|win.DT_NOPREFIX, nil)
+	remaining := section.More + len(section.Lines) - drawn
+	footerTop := bottom - insetY - h.hudPX(16)
+	if remaining > 0 && footerTop >= lineY {
+		label := fmt.Sprintf("%s %d", localization.T(h.document.Language, "Ещё"), remaining)
+		hudDrawText(hdc, label, pad, footerTop, right, bottom-insetY, h.ink("muted"), win.DT_SINGLELINE)
 	}
 }
 
-// layout is also used by hidden-window GDI tests. Production layout measures
-// the same sections and places them with LayoutHUDSections into two safe bands.
+func (h *hudWindow) drawOverflow(hdc win.HDC, width, y, height, count int) {
+	h.cardBackground(hdc, width, y, height, h.ink("muted"))
+	oldFont := win.SelectObject(hdc, win.HGDIOBJ(h.regular))
+	defer win.SelectObject(hdc, oldFont)
+	win.SetBkMode(hdc, win.TRANSPARENT)
+	text := fmt.Sprintf("%s · %d", localization.T(h.document.Language, "Скрыто панелей"), count)
+	pad := h.hudPX(10)
+	hudDrawText(hdc, text, pad, y, width-pad, y+height, h.ink("muted"), win.DT_SINGLELINE|win.DT_VCENTER)
+}
+
+// Hidden-window tests and the compositor use the same measured card height.
 func (h *hudWindow) layout(hdc win.HDC, width int, draw bool) int {
 	y := 0
 	for _, section := range h.document.Sections {
 		if y > 0 {
-			y += h.hudPX(6)
+			y += h.hudPX(7)
 		}
 		m := h.measureSection(hdc, width, section)
 		if draw {

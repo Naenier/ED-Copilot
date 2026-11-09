@@ -95,102 +95,149 @@ func hudExobiology(doc *HUDDocument, state M) {
 	ex := v.Obj(state["exobiology"])
 	body := v.Obj(ex["currentBody"])
 	tracker := v.Obj(ex["tracker"])
-	if len(body) == 0 && v.Bool(v.At(state, "commander", "docked")) && len(tracker) == 0 && v.Num(v.At(ex, "summary", "pendingSamples")) == 0 && len(v.Rows(ex["targets"])) == 0 {
-		return
+	docked := v.Bool(v.At(state, "commander", "docked"))
+
+	// Sample separation changes the pilot's next action, so it comes first
+	// while an unfinished set is active.
+	sampling := tracker["phase"] == "tracking" && v.Int(tracker["sampleCount"]) > 0
+	if sampling && !docked {
+		hudExobiologySample(doc, tracker, body)
 	}
-	if len(body) == 0 {
-		system := v.Obj(ex["system"])
-		if len(system) > 0 && (system["bodiesTotal"] != nil || v.Num(system["scannedBodies"]) > 0) {
-			lines := []HUDLine{hudMuted("FSS: " + Number(system["scannedBodies"]) + " / " + Number(system["bodiesTotal"]))}
-			if v.Num(system["biologicalBodies"]) > 0 {
-				lines = append(lines, hudText("Планет с биосигналами: "+Number(system["biologicalBodies"])), hudMuted("Картографировано: "+Number(system["mappedBiologicalBodies"])))
-			}
-			hudAdd(doc, "РАЗВЕДКА СИСТЕМЫ", lines...)
+	if !docked {
+		if len(body) > 0 {
+			hudExobiologyBody(doc, body, sampling && hudSameSampleBody(tracker, body))
+			hudExobiologyMarks(doc, ex)
 		} else {
-			hudAdd(doc, "ЭКЗОБИОЛОГИЯ", hudMuted("Выберите планету с биосигналами. FSS и DSS уточнят её состав."))
+			hudExobiologySurvey(doc, ex)
 		}
-	} else {
-		lines := []HUDLine{hudText(v.Str(body["name"]))}
-		if body["signals"] != nil {
-			lines = append(lines, hudMuted("Биосигналы: "+Number(body["signals"])+" · "+exoFootfall(body["firstFootfall"])))
-		}
-		value := v.Obj(body["valueRange"])
-		if value["maximum"] != nil {
-			lines = append(lines, hudMuted("Оценка: "+Number(value["minimum"])+"–"+Number(value["maximum"])+" кр."))
-		}
-		hudAdd(doc, "ПЛАНЕТА", lines...)
 	}
-	if len(tracker) > 0 {
-		lines := []HUDLine{hudText(v.Text(tracker["name"], tracker["name_en"]) + " · " + Number(tracker["sampleCount"]) + " / 3")}
-		if tracker["bodyKey"] != body["key"] && v.Str(tracker["bodyName"]) != "" {
-			lines = append(lines, hudWarn("Незавершённый набор: "+v.Str(tracker["bodyName"])))
-		}
-		if tracker["phase"] == "complete" {
-			lines = append(lines, hudText("Образцы собраны — можно искать следующий вид"))
-		} else {
-			if tracker["minSampleDistanceM"] != nil {
-				lines = append(lines, hudMuted("Разнообразие: не менее "+Number(tracker["minSampleDistanceM"])+" м"))
-			}
-			if tracker["nearestSampleDistanceM"] != nil {
-				text := "До ближайшей пробы: " + Number(tracker["nearestSampleDistanceM"]) + " м"
-				if tracker["nearestSampleMeetsMin"] == true {
-					lines = append(lines, hudText(text+" · расстояние достигнуто"))
-				} else {
-					lines = append(lines, hudWarn(text+" · осталось "+Number(tracker["remainingDistanceM"])+" м"))
+	if len(doc.Sections) == 0 || docked {
+		summary := v.Obj(ex["summary"])
+		if v.Num(summary["pendingSamples"]) > 0 {
+			rows := []HUDLine{hudValue("Наборов", Number(summary["pendingSamples"]), "text")}
+			if credits := v.Num(summary["pendingEstimatedCredits"]); credits > 0 {
+				estimate := "≈ " + Number(credits) + " кр."
+				if v.Num(summary["pendingUnknownPrices"]) > 0 {
+					estimate = "≥ " + Number(credits) + " кр."
 				}
-			} else {
-				lines = append(lines, hudMuted("Нет актуальной координаты для расчёта расстояния"))
+				rows = append(rows, hudValue("Оценка", estimate, "muted"))
+			}
+			hudCard(doc, "bio", "ДАННЫЕ VISTA GENOMICS", "", 0, rows...)
+		}
+	}
+}
+
+func hudExobiologySample(doc *HUDDocument, tracker, body M) {
+	rows := []HUDLine{hudValue("Собрано проб", Number(tracker["sampleCount"])+" / 3", "text")}
+	sameBody := hudSameSampleBody(tracker, body)
+	if bodyName := v.Str(tracker["bodyName"]); bodyName != "" && !sameBody {
+		rows = append(rows, hudValue("Планета набора", bodyName, "muted"))
+	}
+	switch {
+	case sameBody && tracker["nearestSampleMeetsMin"] == true:
+		rows = append(rows, HUDLine{Text: "Можно брать пробу", Role: "good"})
+	case sameBody && hudKnown(tracker["remainingDistanceM"]):
+		rows = append(rows, hudValue("Ещё отойти", Number(tracker["remainingDistanceM"])+" м", "warn"))
+	case hudKnown(tracker["minSampleDistanceM"]):
+		rows = append(rows, hudValue("Между пробами", "≥ "+Number(tracker["minSampleDistanceM"])+" м", "muted"))
+	}
+	hudCard(doc, "bio", "ГЕНЕТИЧЕСКИЕ ОБРАЗЦЫ", v.Text(tracker["name"], tracker["name_en"]), 0, rows...)
+}
+
+func hudSameSampleBody(tracker, body M) bool {
+	bodyKey := v.Str(body["key"])
+	return bodyKey != "" && bodyKey == v.Str(tracker["bodyKey"])
+}
+
+func hudExobiologyBody(doc *HUDDocument, body M, sampling bool) {
+	rows := []HUDLine{}
+	if signals := body["signals"]; hudKnown(signals) {
+		value := Number(signals)
+		if complete := v.Num(v.At(body, "progress", "completeGenera")); complete > 0 {
+			value = Number(complete) + " / " + value
+			rows = append(rows, hudValue("Наборов собрано", value, "text"))
+		} else {
+			rows = append(rows, hudValue("Биосигналы", value, "text"))
+		}
+	}
+	if footfall := exoFootfall(body["firstFootfall"]); footfall == "Первый след доступен" || footfall == "Первый след" {
+		rows = append(rows, HUDLine{Text: footfall, Role: "good"})
+	}
+	more := 0
+	if !sampling && !v.Bool(v.At(body, "progress", "allSamplesComplete")) {
+		predictions := 0
+		for _, species := range v.Rows(body["predictions"]) {
+			name := v.Text(species["name"], species["name_en"])
+			if name == "" || species["tier"] == "unlikely" || species["phase"] == "complete" || species["phase"] == "sold" {
+				continue
+			}
+			if predictions >= 2 {
+				more++
+				continue
+			}
+			var estimate string
+			if v.Num(species["estimatedCredits"]) > 0 {
+				estimate = "≈ " + Number(species["estimatedCredits"]) + " кр."
+			}
+			role := "text"
+			if species["confirmed"] != true {
+				name, role = "? "+name, "muted"
+			}
+			rows = append(rows, hudValue(name, estimate, role))
+			predictions++
+		}
+		if predictions == 0 {
+			value := v.Obj(body["valueRange"])
+			if minimum, maximum := v.Num(value["minimum"]), v.Num(value["maximum"]); maximum > 0 {
+				estimate := "≈ " + Number(maximum) + " кр."
+				if minimum > 0 && minimum < maximum {
+					estimate = Number(minimum) + "–" + Number(maximum) + " кр."
+				}
+				rows = append(rows, hudValue("Оценка", estimate, "muted"))
 			}
 		}
-		hudAdd(doc, "ГЕНЕТИЧЕСКИЕ ОБРАЗЦЫ", lines...)
 	}
-	predictions := []HUDLine{}
-	for _, r := range v.Rows(body["predictions"]) {
-		if r["tier"] == "unlikely" {
-			continue
-		}
-		name := v.Text(r["name"], r["name_en"])
-		if r["estimatedCredits"] != nil {
-			name += " · " + Number(r["estimatedCredits"]) + " кр."
-		}
-		if r["tier"] != "confirmed" {
-			name += " · проверить"
-		}
-		predictions = append(predictions, hudMuted(name))
-		if len(predictions) >= 3 {
-			break
-		}
-	}
-	hudAdd(doc, "ВОЗМОЖНЫЕ ВИДЫ", predictions...)
-	marks := []HUDLine{}
+	hudCard(doc, "bio", "ПЛАНЕТА", v.Str(body["name"]), more, rows...)
+}
+
+func hudExobiologyMarks(doc *HUDDocument, ex M) {
+	rows := []HUDLine{}
 	for _, mark := range v.Rows(ex["surfaceMarks"]) {
-		if mark["kind"] == "sample" {
+		if mark["kind"] == "sample" || !hudKnown(mark["distanceM"]) || !hudKnown(mark["bearing"]) {
 			continue
 		}
-		text := v.Text(mark["label"], "Точка поверхности")
-		if mark["distanceM"] != nil && mark["bearing"] != nil {
-			text += " · " + Number(mark["distanceM"]) + " м · " + Number(mark["bearing"]) + "°"
-		} else {
-			continue
-		}
+		value := Number(mark["distanceM"]) + " м · " + Number(mark["bearing"]) + "°"
 		if mark["confidence"] != "recorded-position" {
-			text += " · приблизительно"
+			value = "≈ " + value
 		}
-		marks = append(marks, hudMuted(text))
-		if len(marks) >= 2 {
+		rows = append(rows, hudValue(v.Text(mark["label"], "Точка поверхности"), value, "muted"))
+		if len(rows) == 2 {
 			break
 		}
 	}
-	hudAdd(doc, "ТОЧКИ ПОВЕРХНОСТИ", marks...)
-	sum := v.Obj(ex["summary"])
-	if v.Num(sum["pendingSamples"]) > 0 {
-		hudAdd(doc, "ДАННЫЕ VISTA GENOMICS", hudText("К продаже: "+Number(sum["pendingSamples"])+" · оценка "+Number(sum["pendingEstimatedCredits"])+" кр."))
+	hudCard(doc, "bio", "ТОЧКИ ПОВЕРХНОСТИ", "", 0, rows...)
+}
+
+func hudExobiologySurvey(doc *HUDDocument, ex M) {
+	system := v.Obj(ex["system"])
+	rows := []HUDLine{}
+	if total := system["bodiesTotal"]; hudKnown(total) {
+		rows = append(rows, hudValue("FSS", Number(system["scannedBodies"])+" / "+Number(total), "text"))
+	} else if v.Num(system["scannedBodies"]) > 0 {
+		rows = append(rows, hudValue("FSS", Number(system["scannedBodies"]), "text"))
 	}
-	if len(body) == 0 {
-		targets := v.Rows(ex["targets"])
-		if len(targets) > 0 {
-			r := targets[0]
-			hudAdd(doc, "СЛЕДУЮЩАЯ ПЛАНЕТА", hudMuted(strings.TrimSpace(v.Str(r["system"])+" · "+v.Str(r["name"]))))
+	if count := v.Num(system["biologicalBodies"]); count > 0 {
+		rows = append(rows, hudValue("Планет с биосигналами", Number(count), "text"))
+	}
+	if targets := v.Rows(ex["targets"]); len(targets) > 0 {
+		planet := v.Str(targets[0]["name"])
+		systemName := v.Str(targets[0]["system"])
+		if systemName != "" && planet != "" && !strings.HasPrefix(strings.ToLower(planet), strings.ToLower(systemName)+" ") {
+			planet = systemName + " · " + planet
+		}
+		if planet != "" {
+			rows = append(rows, hudValue("Следующая планета", planet, "muted"))
 		}
 	}
+	hudCard(doc, "bio", "РАЗВЕДКА СИСТЕМЫ", v.Str(system["name"]), 0, rows...)
 }

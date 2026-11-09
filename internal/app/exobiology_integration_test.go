@@ -20,7 +20,14 @@ func TestExobiologyJournalReplayAndActivityScope(t *testing.T) {
 	for _, kind := range []string{"Log", "Sample", "Sample", "Analyse"} {
 		events = append(events, testEvent("ScanOrganic", M{"SystemAddress": json.Number("18446744073709551613"), "Body": 1, "ScanType": kind, "Species": "$Codex_Ent_Stratum_01_Name;", "Variant": "$Codex_Ent_Stratum_01_m_Name;", "Genus": "$Codex_Ent_Stratum_Genus_Name;"}))
 	}
-	writeEvents(t, file, true, events)
+	writeEvents(t, file, true, events[:len(events)-1])
+	e.Reader.Poll()
+	doOK(t, e, "/api/settings", M{"activity": "exobiology", "language": "ru"})
+	hud := e.SnapshotForHUD()
+	if !strings.Contains(hudTextForTest(p.BuildHUD(hud, time.Now())), "Собрано проб 3 / 3") {
+		t.Fatal("HUD lost sample progress before analysis")
+	}
+	writeEvents(t, file, true, events[len(events)-1:])
 	e.Reader.Poll()
 	state := e.SnapshotForUI("exobiology")
 	ex := v.Obj(state["exobiology"])
@@ -30,13 +37,13 @@ func TestExobiologyJournalReplayAndActivityScope(t *testing.T) {
 	if len(p.Build("exobiology", "Образцы", "", state).Rows) != 1 {
 		t.Fatal("specimen not visible in workspace")
 	}
-	doOK(t, e, "/api/settings", M{"activity": "exobiology"})
-	hud := e.SnapshotForHUD()
+	hud = e.SnapshotForHUD()
 	if len(v.Obj(hud["exobiology"])) == 0 {
 		t.Fatal("exobiology activity lacks snapshot")
 	}
-	if !strings.Contains(hudTextForTest(p.BuildHUD(hud, time.Now())), "3 / 3") {
-		t.Fatal("HUD lost sample progress")
+	completed := hudTextForTest(p.BuildHUD(hud, time.Now()))
+	if !strings.Contains(completed, "Наборов собрано 1 / 3") || strings.Contains(completed, "Собрано проб") {
+		t.Fatal("HUD did not switch from sample tracking to planet progress", completed)
 	}
 	doOK(t, e, "/api/settings", M{"activity": "flight"})
 	if e.SnapshotForHUD()["exobiology"] != nil {
@@ -64,7 +71,7 @@ func hudTextForTest(doc p.HUDDocument) string {
 	out := ""
 	for _, s := range doc.Sections {
 		for _, l := range s.Lines {
-			out += l.Text + "\n"
+			out += l.Text + " " + l.Value + "\n"
 		}
 	}
 	return out

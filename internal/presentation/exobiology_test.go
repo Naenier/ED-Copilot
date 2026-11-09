@@ -35,12 +35,12 @@ func TestExobiologyHUDUnknownPositionAndCurrentBodyIsolation(t *testing.T) {
 	state := M{"settings": M{"activity": "exobiology"}, "commander": M{"system": "Test System", "vehicle": "foot"}, "exobiology": M{"currentBody": M{"key": "current", "name": "Current Planet", "system": "Test System", "signals": 3, "firstFootfall": "unknown", "predictions": []M{{"name": "Possible species", "tier": "uncertain", "estimatedCredits": nil}, {"name": "Excluded species", "tier": "unlikely"}}}, "selectedBody": M{"key": "other", "name": "Other Selected Planet"}, "tracker": M{"bodyKey": "old", "bodyName": "Old Planet", "name": "Stratum Tectonicas", "sampleCount": 1, "minSampleDistanceM": 500, "phase": "tracking"}, "summary": M{"pendingSamples": 0}}}
 	doc := BuildHUD(state, time.Now())
 	text := hudProse(doc)
-	for _, s := range []string{"Current Planet", "Old Planet", "1 / 3", "Нет актуальной координаты", "Неизвестно", "Possible species"} {
+	for _, s := range []string{"Current Planet", "Old Planet", "1 / 3", "Между пробами: ≥ 500 м", "Possible species"} {
 		if !strings.Contains(text, s) {
 			t.Fatal("missing useful biological HUD information", s, text)
 		}
 	}
-	for _, s := range []string{"Other Selected Planet", "Excluded species", "До ближайшей пробы: 0 м", "0 кр."} {
+	for _, s := range []string{"Other Selected Planet", "Excluded species", "Нет актуальной координаты", "0 кр."} {
 		if strings.Contains(text, s) {
 			t.Fatal("fabricated/stale HUD fact", s, text)
 		}
@@ -50,8 +50,12 @@ func TestExobiologyHUDUnknownPositionAndCurrentBodyIsolation(t *testing.T) {
 	}
 	tr := v.Obj(v.At(state, "exobiology", "tracker"))
 	tr["nearestSampleDistanceM"], tr["remainingDistanceM"], tr["nearestSampleMeetsMin"] = 550, 0, true
-	if !strings.Contains(hudProse(BuildHUD(state, time.Now())), "расстояние достигнуто") {
-		t.Fatal("valid sample distance not shown")
+	if strings.Contains(hudProse(BuildHUD(state, time.Now())), "Можно брать пробу") {
+		t.Fatal("old body sample distance shown as ready")
+	}
+	tr["bodyKey"] = "current"
+	if text := hudProse(BuildHUD(state, time.Now())); !strings.Contains(text, "Можно брать пробу") || strings.Contains(text, "Possible species") {
+		t.Fatal("active sampling on current planet must take priority over predictions", text)
 	}
 }
 

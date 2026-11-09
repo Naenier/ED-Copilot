@@ -25,7 +25,7 @@ func hudSection(doc HUDDocument, title string) *HUDSection {
 func hudHasWarning(doc HUDDocument, part string) bool {
 	for _, s := range doc.Sections {
 		for _, line := range s.Lines {
-			if line.Role == "warn" && strings.Contains(line.Text, part) {
+			if line.Role == "warn" && strings.Contains(hudLineProse(line), part) {
 				return true
 			}
 		}
@@ -62,12 +62,12 @@ func TestHUDIdleActivitiesDoNotReserveAHeaderPanel(t *testing.T) {
 func TestHUDWorkingPanelRetainsCompactLocationWithoutStaleSpaceBody(t *testing.T) {
 	s := M{"settings": M{"activity": "flight"}, "commander": M{"system": "Alpha", "body": "Old Body", "station": "Old Station", "vehicle": "ship", "docked": false}, "pilot": M{"fuel": M{"mainTons": 10}}}
 	doc := BuildHUD(s, hudFixtureNow)
-	if len(doc.Sections) != 1 || doc.Sections[0].Title != "ТОПЛИВО И ГРУЗ" || doc.Sections[0].Lines[1].Text != "Alpha" || strings.Contains(hudProse(doc), "Old") {
+	if len(doc.Sections) != 1 || doc.Sections[0].Title != "ТОПЛИВО И ГРУЗ" || doc.Sections[0].Subtitle != "Alpha" || len(doc.Sections[0].Lines) != 1 || strings.Contains(hudProse(doc), "Old") {
 		t.Fatal("location was lost or stale space body leaked into working panel", doc)
 	}
 	for _, vehicle := range []string{"srv", "foot"} {
 		v.Obj(s["commander"])["vehicle"] = vehicle
-		if panel := BuildHUD(s, hudFixtureNow).Sections[0]; panel.Lines[len(panel.Lines)-1].Text != "Alpha · Old Body" {
+		if panel := BuildHUD(s, hudFixtureNow).Sections[0]; panel.Subtitle != "Alpha · Old Body" {
 			t.Fatal("surface location was lost", vehicle, panel)
 		}
 	}
@@ -117,16 +117,16 @@ func TestHUDAsteroidCurrentContextValuableCompositionAndPreparation(t *testing.T
 	}
 }
 func TestHUDMiningDoesNotShowUnrelatedOrEmptyCargoDestination(t *testing.T) {
-	s := M{"settings": M{"activity": "asteroid"}, "commander": M{"cargoTons": 5, "cargo": []M{{"key": "drones", "count": 5}}}, "trading": M{"destination": M{"station": "Unrelated buyer", "system": "Remote", "updatedAt": v.ISO(hudFixtureNow), "quotes": []M{{"key": "gold", "price": 100, "demand": 100}}}}}
-	if strings.Contains(hudProse(BuildHUD(s, hudFixtureNow)), "Unrelated buyer") {
+	s := M{"settings": M{"activity": "asteroid"}, "commander": M{"cargoTons": 5, "cargo": []M{{"key": "drones", "count": 5}}}, "trading": M{"destination": M{"station": "Buyer", "system": "Remote", "updatedAt": v.ISO(hudFixtureNow), "quotes": []M{{"key": "silver", "name": "Uncarried silver", "price": 200, "demand": 100}, {"key": "gold", "name": "Carried gold", "price": 100, "demand": 100}}}}}
+	if strings.Contains(hudProse(BuildHUD(s, hudFixtureNow)), "Buyer") {
 		t.Fatal("limpets were treated as matching sell cargo")
 	}
 	v.Obj(s["commander"])["cargo"] = []M{{"key": "gold", "count": 5}}
-	if !strings.Contains(hudProse(BuildHUD(s, hudFixtureNow)), "Unrelated buyer") {
-		t.Fatal("explicit destination for real cargo disappeared")
+	if text := hudProse(BuildHUD(s, hudFixtureNow)); !strings.Contains(text, "Buyer") || !strings.Contains(text, "Carried gold") || strings.Contains(text, "Uncarried silver") {
+		t.Fatal("mining sale card failed to isolate carried goods", text)
 	}
 	v.Obj(v.At(s, "trading", "destination"))["selectionMode"] = "buy"
-	if strings.Contains(hudProse(BuildHUD(s, hudFixtureNow)), "Unrelated buyer") {
+	if strings.Contains(hudProse(BuildHUD(s, hudFixtureNow)), "Buyer") {
 		t.Fatal("unrelated buying station polluted mining overlay")
 	}
 }
@@ -164,7 +164,7 @@ func TestHUDRawNeedsKnownStockAndTargetsMatchingTheDeficit(t *testing.T) {
 	s["targets"] = append(v.Rows(s["targets"]), wrong, unknown)
 	doc := BuildHUD(s, hudFixtureNow)
 	text := hudProse(doc)
-	if !strings.Contains(text, "Полоний: нужно ещё 10 · есть 0") || !hudHasWarning(doc, "Unknown stock: нужно 100 · запас неизвестен") || !hudHasWarning(doc, "Запасы сырья") || !strings.Contains(text, "Needed raw body") || !strings.Contains(text, "Unknown stock needed body") || strings.Contains(text, "Far raw body") || strings.Contains(text, "Wrong material") || strings.Contains(text, "Commodity site") {
+	if !strings.Contains(text, "Полоний: 10") || !hudHasWarning(doc, "Unknown stock: ≤ 100") || !hudHasWarning(doc, "Запасы сырья") || !strings.Contains(text, "Needed raw body") || !strings.Contains(text, "Unknown stock needed body") || strings.Contains(text, "Far raw body") || strings.Contains(text, "Wrong material") || strings.Contains(text, "Commodity site") {
 		t.Fatal("raw stock or useful local targets distorted", doc)
 	}
 	v.Obj(s["engineering"])["materials"] = []M{{"category": "manufactured", "needed": 10, "missing": 10, "owned": 0}}
@@ -191,7 +191,7 @@ func TestHUDNearbyTargetsPreferCurrentSystemThenDistanceScoreAndStableID(t *test
 	s := M{"settings": M{"activity": "surface", "minTier": "low"}, "commander": M{"system": "Alpha"}, "targets": []M{farHigh, nearTie, nearLow, current, cheap, nearBest}}
 	doc := BuildHUD(s, hudFixtureNow)
 	section := hudSection(doc, "МЕСТА ПОБЛИЗОСТИ")
-	if section == nil || len(section.Lines) != 5 || section.Lines[0].Text != "Current body" || !strings.Contains(section.Lines[2].Text, "Higher score stable first") || section.Lines[4].Text != "Alpha" || strings.Contains(hudProse(doc), "Low value site") {
+	if section == nil || len(section.Lines) != 2 || section.Lines[0].Text != "Current body" || !strings.Contains(section.Lines[1].Text, "Higher score stable first") || !strings.Contains(section.Lines[1].Value, "5 св. л.") || strings.Contains(hudProse(doc), "Low value site") {
 		t.Fatal("nearby target priority/value boundary changed", doc)
 	}
 }
@@ -213,34 +213,52 @@ func TestHUDTradeArrivalKeepsOneStationAndSelectedCommodityWarnings(t *testing.T
 	s := M{"settings": M{"activity": "trade"}, "commander": M{"system": "Alpha", "station": "Buyer", "body": "Buyer", "docked": true}, "tradePlan": M{"key": "gold", "quantity": 40, "name": "Золото", "grossMargin": nil}, "trading": M{"destination": M{"station": "Buyer", "system": "Alpha", "selectionMode": "buy", "cargoChanged": true, "updatedAt": nil, "quotes": []M{{"key": "silver", "name": "Silver", "price": 100, "supply": 1000}, {"key": "copper", "name": "Copper", "price": 200, "supply": 1000}, {"key": "gold", "name": "Золото", "price": nil, "supply": 0, "demand": 999}}}}}
 	doc := BuildHUD(s, hudFixtureNow)
 	text := hudProse(doc)
-	if strings.Count(text, "Buyer") != 1 || !strings.Contains(text, "НА МЕСТЕ") || !strings.Contains(text, "Золото: — кр./т · запас 0 т") || strings.Contains(text, "Copper") || strings.Contains(text, "спрос 999") || strings.Contains(text, "Плановая маржа: 0") {
+	if strings.Count(text, "Buyer") != 1 || !strings.Contains(text, "НА МЕСТЕ") || !strings.Contains(text, "Золото: запас 0 т") || strings.Contains(text, "Copper") || strings.Contains(text, "спрос 999") || strings.Contains(text, "Плановая маржа: 0") {
 		t.Fatal("buy/arrival/current plan quote context failed", doc)
 	}
-	if !hudHasWarning(doc, "время не подтверждено") || !hudHasWarning(doc, "Состав груза изменился") {
+	if !hudHasWarning(doc, "Время цены неизвестно") || !hudHasWarning(doc, "Состав груза изменился") {
 		t.Fatal("quote/cargo risks were hidden", doc)
 	}
 }
 func TestHUDCarrierPendingJumpFuelSafetyAndStalePlanIsolation(t *testing.T) {
 	s := M{"settings": M{"activity": "carrier"}, "commander": M{"system": "Alpha"}, "carrier": M{"owned": true, "callsign": "TEST-1", "location": M{"system": "Alpha"}, "fuel": M{"tankTons": 0, "reserveTons": 100}, "jump": M{"pending": M{"system": "Beta", "departureTime": v.ISO(hudFixtureNow.Add(5 * time.Minute))}}}, "carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Alpha", "visited": true}, {"name": "Beta", "fuelUsedTons": 92, "distanceLy": 450}}}, "summary": M{"remainingJumps": 1}}}
 	doc := BuildHUD(s, hudFixtureNow)
-	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[0].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "через 5 мин") || !hudHasWarning(doc, "Перелейте в бак 92") {
+	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[0].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "До отправления: 5 мин") || !hudHasWarning(doc, "Перелить в бак: 92") {
 		t.Fatal("pending action, de-duplication or known fuel prep failed", doc)
 	}
+	doc = BuildHUD(s, hudFixtureNow.Add(6*time.Minute))
+	if hudHasWarning(doc, "Перелить") || !strings.Contains(hudProse(doc), "Ожидаем подтверждение прибытия") {
+		t.Fatal("past departure kept advising a transfer for the pending jump", doc)
+	}
 	v.Obj(v.At(s, "carrier", "fuel"))["tankTons"] = nil
-	if hudHasWarning(BuildHUD(s, hudFixtureNow), "Перелейте") {
+	if hudHasWarning(BuildHUD(s, hudFixtureNow), "Перелить") {
 		t.Fatal("unknown tank generated a guessed transfer")
 	}
 	v.Obj(v.At(s, "carrier", "fuel"))["tankTons"] = 0
 	v.Obj(v.At(s, "carrier", "fuel"))["needsRefresh"] = true
 	doc = BuildHUD(s, hudFixtureNow)
-	if hudHasWarning(doc, "Перелейте") || !hudHasWarning(doc, "не обновлено") {
+	if hudHasWarning(doc, "Перелить") || !hudHasWarning(doc, "не обновлено") || strings.Contains(hudProse(doc), "Тритий в баке") {
 		t.Fatal("stale inventory was treated as fresh fuel")
 	}
 	v.Obj(v.At(s, "carrier", "fuel"))["needsRefresh"] = false
 	v.Obj(s["carrierRoute"])["error"] = "Synthetic route failure"
 	doc = BuildHUD(s, hudFixtureNow)
-	if hudHasWarning(doc, "Перелейте") || strings.Contains(hudProse(doc), "Расход:") || !hudHasWarning(doc, "Synthetic route failure") {
+	if hudHasWarning(doc, "Перелить") || strings.Contains(hudProse(doc), "Дальность и расход") || !hudHasWarning(doc, "Synthetic route failure") {
 		t.Fatal("failed route gave instructions from an old plan", doc)
+	}
+}
+
+func TestHUDEnglishCarrierKeepsTargetIdentityAndLocalizesPairedFacts(t *testing.T) {
+	system := "Станция"
+	s := M{"settings": M{"activity": "carrier", "language": "en"},
+		"carrier":      M{"owned": true, "fuel": M{"tankTons": 0, "reserveTons": 100}, "jump": M{"pending": M{"system": system, "departureTime": v.ISO(hudFixtureNow.Add(5 * time.Minute))}}},
+		"carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Alpha"}, {"name": system, "fuelUsedTons": 92, "distanceLy": 450}}}}}
+	doc := BuildHUD(s, hudFixtureNow)
+	got := hudProse(doc)
+	for _, want := range []string{"CARRIER JUMP", system, "Departure in: 5 min", "Transfer to tank: 92 t", "Distance and fuel use: 450 ly · 92 t"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in %q", want, got)
+		}
 	}
 }
 func TestHUDColonyPrioritizesCargoAndNeverAggregatesOtherProjects(t *testing.T) {
@@ -251,8 +269,8 @@ func TestHUDColonyPrioritizesCargoAndNeverAggregatesOtherProjects(t *testing.T) 
 	before, _ := json.Marshal(s)
 	doc := BuildHUD(s, hudFixtureNow)
 	text := hudProse(doc)
-	supplies := hudSection(doc, "СНАБЖЕНИЕ КОЛОНИИ")
-	if supplies == nil || !strings.Contains(supplies.Lines[1].Text, "Already loaded item: осталось 20 т · на борту 10 т") || strings.Contains(text, "Buy 500 units first") || strings.Contains(text, "Other colony") || strings.Contains(text, "Global supplies") || !hudHasWarning(doc, "Сметы неизвестны: 2") {
+	hudCheckAction(t, doc, "ДОСТАВИТЬ", "Already loaded item", "10 т")
+	if doc.Sections[0].Kind != "delivery" || strings.Contains(text, "Buy 500 units first") || strings.Contains(text, "Other colony") || strings.Contains(text, "Global supplies") || !hudHasWarning(doc, "Сметы неизвестны: 2") {
 		t.Fatal("colony cargo priority or isolation failed", doc)
 	}
 	after, _ := json.Marshal(s)
@@ -261,7 +279,7 @@ func TestHUDColonyPrioritizesCargoAndNeverAggregatesOtherProjects(t *testing.T) 
 	}
 	p["status"] = "complete"
 	doc = BuildHUD(s, hudFixtureNow)
-	if hudSection(doc, "СНАБЖЕНИЕ КОЛОНИИ") != nil || strings.Contains(hudProse(doc), "Готово к доставке") {
+	if len(doc.Sections) != 0 {
 		t.Fatal("completed colony still advertises active deliveries", doc)
 	}
 }
@@ -364,7 +382,9 @@ func TestHUDDiscoveredInitialDepotCompletionRemovesDeadlineDuringNextPhase(t *te
 			t.Fatal("fixture no longer reproduces a completed untyped initial port plus another active construction")
 		}
 		doc := BuildHUD(M{"settings": M{"activity": "colonization"}, "colonization": M{"activeProject": project}}, hudFixtureNow)
-		if strings.Contains(hudProse(doc), "Срок первичного порта:") || hudSection(doc, "СНАБЖЕНИЕ КОЛОНИИ") == nil {
+		text := hudProse(doc)
+		if strings.Contains(text, "Срок первичного порта:") ||
+			!(strings.Contains(text, "Synthetic 32100102: посетите депо") || strings.Contains(text, "Сталь: ≤80 т")) {
 			t.Fatal("completed discovered phase kept its deadline or hid subsequent construction supply", doc)
 		}
 	}
@@ -373,8 +393,10 @@ func TestHUDColonySupplyOmitsRepeatedZeroWithoutConvertingUnknownStock(t *testin
 	supplies := []M{{"name": "Loaded", "missing": 20, "cargoAvailable": 4}, {"name": "Empty one", "missing": 30, "cargoAvailable": 0}, {"name": "Unknown cargo", "missing": 40, "cargoAvailable": nil}}
 	s := M{"settings": M{"activity": "colonization"}, "colonization": M{"activeProject": M{"status": "building", "name": "Synthetic colony", "operationalSupplies": supplies}}}
 	doc := BuildHUD(s, hudFixtureNow)
-	text := hudProse(doc)
-	if !strings.Contains(text, "Loaded: осталось 20 т · на борту 4 т") || strings.Contains(text, "на борту 0") || strings.Contains(text, "Empty one: осталось 30 т ·") || strings.Contains(text, "Unknown cargo: осталось 40 т ·") {
+	hudCheckAction(t, doc, "ДОСТАВИТЬ", "Loaded", "4 т")
+	hudCheckAction(t, doc, "КУПИТЬ", "Empty one", "30 т")
+	hudCheckAction(t, doc, "КУПИТЬ", "Unknown cargo", "≤40 т")
+	if !hudHasWarning(doc, "Проверьте груз корабля") {
 		t.Fatal("supply rows repeated empty cargo or invented unknown stock", doc)
 	}
 }

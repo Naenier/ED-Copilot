@@ -187,20 +187,47 @@ func localizedFacilityName(name string) string {
 }
 
 func LocalizeHUD(doc HUDDocument, state M) HUDDocument {
-	if Language(state) != "en" {
+	doc.Language = Language(state)
+	if doc.Language != "en" || len(doc.Sections) == 0 {
 		return doc
 	}
 	doc.Sections = append([]HUDSection(nil), doc.Sections...)
+	ids := hudIdentities(state, doc.Activity)
 	for i := range doc.Sections {
 		section := &doc.Sections[i]
 		section.Title = localization.Text("en", section.Title)
+		section.Subtitle = localization.TextProtected("en", section.Subtitle, ids)
 		section.Lines = append([]HUDLine(nil), section.Lines...)
-		ids := stateIdentities(state)
 		for j := range section.Lines {
 			section.Lines[j].Text = localization.TextProtected("en", section.Lines[j].Text, ids)
+			section.Lines[j].Value = localization.TextProtected("en", section.Lines[j].Value, ids)
 		}
 	}
 	return doc
+}
+
+func hudIdentities(state M, activity string) []string {
+	ids := stateIdentities(state)
+	switch activity {
+	case "carrier":
+		c := v.Obj(state["carrier"])
+		pending := v.Obj(v.At(c, "jump", "pending"))
+		next := hudCarrierNextStop(v.Obj(state["carrierRoute"]))
+		ids = append(ids, v.Text(c["callsign"], c["name"]), v.Str(v.At(c, "location", "system")),
+			v.Text(pending["system"], pending["name"]), v.Text(next["name"], next["system"]))
+	case "trade", "asteroid":
+		ids = append(ids, rowIdentities(v.Obj(v.At(state, "trading", "destination")))...)
+	case "exobiology":
+		ex := v.Obj(state["exobiology"])
+		ids = append(ids, v.Str(v.At(ex, "currentBody", "name")), v.Str(v.At(ex, "tracker", "bodyName")), v.Str(v.At(ex, "system", "name")))
+		if targets := v.Rows(ex["targets"]); len(targets) > 0 {
+			ids = append(ids, v.Str(targets[0]["name"]), v.Str(targets[0]["system"]))
+		}
+		for _, mark := range v.Rows(ex["surfaceMarks"]) {
+			ids = append(ids, v.Str(mark["label"]))
+		}
+	}
+	return ids
 }
 
 // LocalizeWebState receives an already copied/redacted response. Only known

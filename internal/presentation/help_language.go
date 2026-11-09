@@ -115,7 +115,7 @@ Overview lists your colonies. Open Construction to add facilities, see their res
 
 Supplies is the delivery log: date, commodity and quantity. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. It combines all planned and active structures in the selected colony.
 
-The overlay lists up to ten outstanding commodities and shows how many more remain. When carrier accounting is enabled, requirements fully covered by fresh accessible carrier stock are hidden from the overlay while remaining visible in the application. Unknown or stale stock cannot hide a requirement. Journal-observed carrier transfers update a known warehouse immediately; Frontier may confirm those changes later.
+The overlay groups cargo to deliver, stock to unload and goods to buy. With carrier accounting enabled, the unload card requires fresh, accessible stock and a confirmed carrier location in the colony system. Long lists show how many rows remain. Journal-observed transfers update a known warehouse immediately.
 
 Cargo aboard is ready for delivery but has not yet been accepted by the depot. A colonisation ship is a supply vessel, not a completed facility. Confirmed permanent stations in your own claim can establish completed construction without inventing a variant or an unobserved resource bill.`,
 	"encyclopedia": `Encyclopedia

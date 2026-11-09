@@ -252,7 +252,7 @@ func (h *hudWindow) refresh() {
 	}
 	vehicle := v.Str(v.At(s, "commander", "vehicle"))
 	plan := h.arrange(view, vehicle, dpi, fontsChanged || documentChanged)
-	if plan.Bounds[0].Width <= 0 || plan.Bounds[0].Height <= 0 {
+	if plan.Bounds[0].Height <= 0 && plan.Bounds[1].Height <= 0 {
 		h.layoutView = p.HUDRect{}
 		h.hide()
 		return
@@ -296,7 +296,7 @@ func (h *hudWindow) setFonts(dpi int) {
 		return win.CreateFontIndirect(&font)
 	}
 	h.regular = makeFont(10, 400)
-	h.bold = makeFont(10, 700)
+	h.bold = makeFont(10, 650)
 }
 
 func fillSolid(hdc win.HDC, r win.RECT, c win.COLORREF) {
@@ -371,14 +371,7 @@ func (h *hudWindow) paintWindow(hwnd win.HWND) {
 	}
 	if column == 1 && h.plan.Hidden > 0 && h.plan.Overflow.Height > 0 {
 		r := h.plan.Overflow
-		rect := win.RECT{Left: 0, Top: int32(r.Y - bounds.Y), Right: int32(width), Bottom: int32(r.Y - bounds.Y + r.Height)}
-		fillSolid(hdc, rect, h.ink("panel"))
-		old := win.SelectObject(hdc, win.HGDIOBJ(h.regular))
-		win.SetBkMode(hdc, win.TRANSPARENT)
-		win.SetTextColor(hdc, h.ink("muted"))
-		rect.Left += int32(h.hudPX(9))
-		win.DrawTextEx(hdc, wide(fmt.Sprintf("Ещё панелей: %d · в ED Copilot", h.plan.Hidden)), -1, &rect, win.DT_SINGLELINE|win.DT_VCENTER|win.DT_END_ELLIPSIS|win.DT_NOPREFIX, nil)
-		win.SelectObject(hdc, old)
+		h.drawOverflow(hdc, int(width), r.Y-bounds.Y, r.Height, h.plan.Hidden)
 	}
 	win.BitBlt(target, 0, 0, width, height, hdc, 0, 0, win.SRCCOPY)
 }

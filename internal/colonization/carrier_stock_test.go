@@ -35,6 +35,32 @@ func steelSupply(t *testing.T, p *Planner, context M) M {
 	return nil
 }
 
+func TestCarrierStockPersistsObservedLocationSeparatelyFromJump(t *testing.T) {
+	p, _, context := stockFixture(t)
+	personal := capiStock("42", 30)
+	personal["currentStarSystem"] = "Observed Fleet System"
+	personal["itinerary"] = M{"currentJump": "Planned Destination"}
+	squadron := capiStock("43", 40)
+	squadron["currentStarSystem"] = M{"name": "Observed Squadron System"}
+	p.ApplyCAPI(stockResult(personal, squadron, testNow), value.Obj(context["commander"]))
+	for _, planner := range []*Planner{p, New(p.ExportSettings(), WithClock(func() time.Time { return testNow }))} {
+		warehouses := rows(planner.Snapshot(context)["carrierWarehouses"])
+		fleetLocation := value.Obj(warehouses[0]["location"])
+		squadronLocation := value.Obj(warehouses[1]["location"])
+		if fleetLocation["system"] != "Observed Fleet System" || !value.Bool(fleetLocation["jumpPlanned"]) || !value.Time(fleetLocation["updatedAt"]).Equal(testNow) || squadronLocation["system"] != "Observed Squadron System" || value.Bool(squadronLocation["jumpPlanned"]) {
+			t.Fatal("wrong carrier identity, location, or jump status", warehouses)
+		}
+		fleetLocation["system"] = "Caller Mutation"
+		if got := value.At(rows(planner.Snapshot(context)["carrierWarehouses"])[0], "location", "system"); got != "Observed Fleet System" {
+			t.Fatal("snapshot shared the cached location", got)
+		}
+		other := planner.Snapshot(M{"commander": M{"fid": "F2"}})
+		if value.At(rows(other["carrierWarehouses"])[0], "location") != nil {
+			t.Fatal("carrier location exposed to another commander")
+		}
+	}
+}
+
 func TestCarrierStocksOptInAndNoDoubleCounting(t *testing.T) {
 	p, colony, context := stockFixture(t)
 	p.ApplyCAPI(stockResult(capiStock("42", 30), capiStock("43", 40), testNow), value.Obj(context["commander"]))
