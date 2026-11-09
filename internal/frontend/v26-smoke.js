@@ -4,7 +4,15 @@ async function run(C,u){
  if(window.COPILOT_SMOKE!==true)throw Error('Commander smoke requires an isolated launcher');
  const checks=[],original={tab:C.tab,mode:C.mode,language:C.state.settings?.language,updates:C.state.settings?.autoUpdateEnabled};
  const check=(name,ok)=>checks.push({name,ok:!!ok});
- const wait=async test=>{const until=Date.now()+6000;while(Date.now()<until){if(test())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Update checkbox did not settle');};
+ const waitForUpdateToggle=async enabled=>{
+  const until=Date.now()+6000;
+  while(Date.now()<until){
+   const input=u.$('#auto-update-enabled');
+   if(input&&!input.disabled&&input.checked===enabled&&C.state.settings?.autoUpdateEnabled===enabled)return;
+   await new Promise(resolve=>setTimeout(resolve,20));
+  }
+  throw Error('Update checkbox did not settle at '+(enabled?'enabled':'disabled'));
+ };
  try{
   for(const language of ['en','ru']){
    await u.call('settings',{values:{language}});
@@ -32,11 +40,11 @@ async function run(C,u){
   }
   await u.navigate('settings');
   const input=u.$('#auto-update-enabled');check('Automatic updates are enabled in a fresh profile',input?.checked===true);
-  input.click();await wait(()=>C.state.settings?.autoUpdateEnabled===false&&!u.$('#auto-update-enabled')?.checked);
+  input.click();await waitForUpdateToggle(false);
   check('Update opt-out reaches the actual Go settings store',(await u.call('view',{tab:'settings'})).state?.settings?.autoUpdateEnabled===false);
   let refused=false;try{await u.call('updates-check');}catch{refused=true;}
   check('Isolated update checks cannot contact GitHub',refused);
-  u.$('#auto-update-enabled').click();await wait(()=>C.state.settings?.autoUpdateEnabled===true);
+  u.$('#auto-update-enabled').click();await waitForUpdateToggle(true);
   check('Automatic updates can be enabled again',u.$('#auto-update-enabled')?.checked===true);
  }finally{
   await u.call('settings',{values:{language:original.language,autoUpdateEnabled:original.updates!==false}});
