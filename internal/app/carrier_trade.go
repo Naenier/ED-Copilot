@@ -34,7 +34,7 @@ func (e *Engine) startCarrierTradeOpportunities(input M) (M, error) {
 	if err := e.networkAllowed(); err != nil {
 		return nil, err
 	}
-	request := M{"scenario": "booze-cruise", "system": v.Str(input["system"])}
+	request := M{"scenario": carrier.TradeOpportunityScenario, "system": v.Str(input["system"])}
 	if credits, known := v.Number(input["credits"]); known && credits > 0 && credits <= 1e15 {
 		request["credits"] = credits
 	}
@@ -45,7 +45,7 @@ func (e *Engine) startCarrierTradeOpportunities(input M) (M, error) {
 	at := v.Time(cached["updatedAt"])
 	if !v.Bool(input["force"]) && (sameTradeOpportunityContext(key, v.Obj(cached["context"])) &&
 		(v.Bool(cached["running"]) || !at.IsZero() && time.Since(at) < 10*time.Minute) ||
-		v.Bool(cached["running"]) && sameTradeOpportunityContext(request, v.Obj(cached["options"]))) {
+		v.Bool(cached["running"]) && len(v.Obj(cached["context"])) == 0 && sameTradeOpportunityContext(request, v.Obj(cached["options"]))) {
 		return M{"ok": true, "cached": true}, nil
 	}
 	// Keep a missing *http.Client out of the interface so the search uses

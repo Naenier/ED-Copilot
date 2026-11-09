@@ -3,14 +3,20 @@
 'use strict';
 const t=(value,vars)=>window.CopilotI18n?.t(value,vars)??String(value??'');
 const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const prefix='carrier-trade-',peakScenario='booze-cruise',peakSystem='HIP 58832',types=[['fleet','Личный'],['squadron','Эскадрильи']];
-const peakGoods=[['wine','Вино'],['liquor','Спиртное']];
+const prefix='carrier-trade-',opportunityScenario='profitable',peakScenario='booze-cruise',peakSystem='HIP 58832',types=[['fleet','Личный'],['squadron','Эскадрильи']];
+const minimumProfit=400_000_000;
 const optionFields=[
- ['tritiumPrice','Оценка трития, кр./т',true,1e9],['durationHours','Весь рейс, ч',true,100000],['servicesTons','Службы и комплекты, т',false,100000],['weeklyUpkeep','Содержание без прыжков, кр./нед.',false,1e12],['extraCosts','Прочие расходы, кр.',false,1e15],['carrierInvestment','Сумма для окупаемости, кр.',true,1e15],['haulerCapacity','Трюм перевозчика, т',true,100000],['maxQuoteAgeHours','Максимум возраста цены, ч',false,720],['demandRatio','Запас спроса к объёму',false,100],
+ ['tritiumPrice','Оценка трития, кр./т',true,1e9],['durationHours','Весь рейс, ч',true,100000],['servicesTons','Службы и комплекты, т',false,100000],['weeklyUpkeep','Содержание без прыжков, кр./нед.',false,1e12],['extraCosts','Прочие расходы, кр.',false,1e15],['carrierInvestment','Сумма для окупаемости, кр.',true,1e15],['haulerCapacity','Трюм корабля для закупки, т',true,100000],['unloadHaulerCapacity','Трюм корабля для продажи, т',true,100000],['maxQuoteAgeHours','Максимум возраста цены, ч',false,720],['demandRatio','Запас спроса к объёму',false,100],
+];
+const manualFuelFields=[
+ ['otherCargoTons','Другой груз, т',false,1000000],['tankTons','Тритий в баке перед вылетом, т',false,1000],
+ ['cargoTritiumTons','Тритий в трюме, т',true,100000],['arrivalReserveTons','Резерв трития по возвращении, т',false,100000],
 ];
 const legFields=[['quantity','Объём, т',false,1000000],['buyPrice','Цена закупки, кр./т',true,1e9],['sellPrice','Цена продажи, кр./т',true,1e9],['loadRewardPerTon','Оплата погрузки, кр./т',false,1e9],['unloadRewardPerTon','Оплата продажи, кр./т',false,1e9],['loadingHours','Погрузка, ч',true,100000],['unloadingHours','Продажа, ч',true,100000],['jumps','Прыжков',true,50000],['tritiumTons','Расход трития, т',true,1000000],['travelHours','Перелёт и дозаправки, ч',true,100000]];
 let latest=null,picker=null,pollTimer=null,queue=Promise.resolve();
 const model=C=>C.state?.carrierTrade||{options:{},legs:[],summary:{},issues:[],missing:[]};
+const peakPlan=C=>model(C).options?.preset===peakScenario;
+const fullLoadPlan=C=>peakPlan(C)||model(C).options?.plannedFullLoad===true;
 const run=task=>{const next=queue.then(task);queue=next.catch(()=>{});return next;};
 const button=(u,label,action,ico='',style='',attrs='')=>u.btn(label,prefix+action,ico,style,attrs);
 const numberText=value=>value===null||value===undefined?'':String(value);
@@ -22,7 +28,7 @@ function numeric(spec,raw){
  const [key,label,optional,max]=spec,text=String(raw??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');
  if(text===''){if(optional)return null;throw new Error(t("Заполните поле «")+t(label)+'».');}
  if(!/^\d+(?:\.\d+)?$/.test(text))throw new Error(t(label)+t(": укажите неотрицательное число."));
- const value=Number(text);if(!Number.isFinite(value)||value>max||['quantity','jumps','haulerCapacity'].includes(key)&&!Number.isInteger(value))throw new Error(t(label)+t(": значение вне допустимого диапазона."));
+ const value=Number(text);if(!Number.isFinite(value)||value>max||['quantity','jumps','haulerCapacity','unloadHaulerCapacity'].includes(key)&&!Number.isInteger(value))throw new Error(t(label)+t(": значение вне допустимого диапазона."));
  return value;
 }
 function input(u,key,label,value,attrs='',optional=true){return `<label class="ct-field"><span>${u.esc(t(label))}</span><input type="text" inputmode="decimal" value="${u.esc(numberText(value))}" ${attrs} placeholder="${optional?t("Неизвестно"):'0'}" autocomplete="off"></label>`;}
@@ -48,12 +54,16 @@ function opportunityKey(C){
  return JSON.stringify([opportunityFilters(C),departureSystem(C),services?.crewTons,services?.shipPacksTons,
   services?.modulePacksTons,commander.shipModel,commander.shipType,
   commander.cargoCapacity,pilot.credits,o.carrierType,o.servicesTons,
-  o.haulerPad,o.haulerCapacity,squadronFuel,o.tritiumPrice,
+  o.haulerPad,o.haulerCapacity,o.unloadHaulerPad,o.unloadHaulerCapacity,squadronFuel,o.tritiumPrice,
   o.weeklyUpkeep,o.durationHours,o.extraCosts,o.maxQuoteAgeHours,o.demandRatio,o.holidayConfirmed]);
 }
 function matchingOpportunities(C){
  const result=model(C).opportunities||{},request=result.options||{},filters=opportunityFilters(C);
- return request.scenario===peakScenario&&(request.system||'')===filters.system&&(request.credits??null)===filters.credits?result:{};
+ return request.scenario===opportunityScenario&&(request.system||'')===filters.system&&(request.credits??null)===filters.credits?result:{};
+}
+function qualifiesOpportunity(row){
+ const profit=row?.summary?.profit,capacity=Math.floor(row?.summary?.availableCargoTons);
+ return Number.isFinite(profit)&&profit>=minimumProfit&&capacity>0&&row.quantity===capacity;
 }
 function opportunityQuotesExpired(result){
  const now=Date.now();
@@ -70,7 +80,7 @@ function startOpportunities(C,u,force=false){
  if(!force&&old?.key===key&&(old.pending||Date.now()-old.started<10*60*1000))return;
  const request={key,pending:true,started:Date.now(),error:'',expiredAt:force?result.updatedAt:null};
  C.carrierOpportunityRequest=request;
- return u.call('carrier-trade',{values:{action:'opportunities',...filters,scenario:peakScenario,...(force?{force:true}:{})}}).then(()=>{
+ return u.call('carrier-trade',{values:{action:'opportunities',...filters,scenario:opportunityScenario,...(force?{force:true}:{})}}).then(()=>{
   if(C.carrierOpportunityRequest===request&&C.tab==='carrier-trade'&&opportunityMode(C))return u.loadView(true);
  }).catch(error=>{
   request.error=error.message;
@@ -83,18 +93,22 @@ function marketAge(value,u){
 }
 function purchaseOrders(orders,u){
  if(!(orders?.length>1))return '';
- return `<ol class="ct-op-orders">${orders.map(order=>`<li><strong>${u.esc(order.station)}</strong><span>${u.esc(u.fmt(order.quantity))}${th(" т")} · ${u.esc(u.money(order.price))}${th("/т")}</span></li>`).join('')}</ol>`;
+ return `<ol class="ct-op-orders">${orders.map(order=>`<li><div><strong>${u.esc(order.station)}</strong>${marketSystem(u,order.system)}</div>
+ <span>${u.esc(u.fmt(order.quantity))}${th(" т")} · ${u.esc(u.money(order.price))}${th("/т")}</span></li>`).join('')}</ol>`;
 }
 function copySystem(u,system){
  const label=th("Скопировать систему");
  return button(u,'','copy-system','copy','icon-only',`data-system="${u.esc(system)}" title="${label}" aria-label="${label}"`);
 }
+function marketSystem(u,system){
+ return system?`<div class="ct-op-system">${u.esc(system)}${copySystem(u,system)}</div>`:'';
+}
 function opportunityMarket(row,side,u){
- const m=row[side]||{},buy=side==='buy',age=marketAge(m.updatedAt,u),availability=m[buy?'supply':'demand'];
+ const m=row[side]||{},buy=side==='buy',age=marketAge(m.updatedAt,u),availability=m[buy?'supply':'demand'],combined=m.orders?.length>1;
  return `<section class="ct-op-market"><span>${th(buy?"Закупка":"Продажа")}${m.pad?' · '+th("Площадка ")+u.esc(m.pad):''}</span>
- <strong>${u.esc(m.orders?.length>1?t("Несколько станций"):m.station)}</strong><div class="ct-op-system">${u.esc(m.system)}${m.system?copySystem(u,m.system):''}</div>
+ <strong>${u.esc(combined?t("Несколько станций"):m.station)}</strong>${combined?'':marketSystem(u,m.system)}
  ${purchaseOrders(m.orders,u)}
- ${m.price==null?`<p>${th("Свежей котировки нет")}</p>`:`<dl><div><dt>${th(m.orders?.length>1?"Средняя цена, кр./т":"Цена, кр./т")}</dt><dd>${u.esc(u.fmt(m.price))}</dd></div>
+ ${m.price==null?`<p>${th("Свежей котировки нет")}</p>`:`<dl><div><dt>${th(combined?"Средняя цена, кр./т":"Цена, кр./т")}</dt><dd>${u.esc(u.fmt(m.price))}</dd></div>
  ${availability==null?'':`<div><dt>${th(buy?"Запас":"Спрос")}</dt><dd>${u.esc(u.fmt(availability))}${th(" т")}</dd></div>`}
  ${m.distanceLs==null?'':`<div><dt>${th("От звезды")}</dt><dd>${u.esc(u.fmt(m.distanceLs))}${th(" св. с.")}</dd></div>`}
  ${age?`<div><dt>${th("Котировка")}</dt><dd>${u.esc(age)}</dd></div>`:''}</dl>`}
@@ -113,20 +127,32 @@ function opportunityFuel(tons,market,origin,u,cost){
  const details=[market?.station,market?.system,total==null?'':u.money(total),remote?t("Доставка из другой системы"):''].filter(Boolean);
  return `<p class="ct-op-detail">${th("Подготовить тритий")} · ${u.esc(u.fmt(tons))}${th(" т")}${details.length?' · '+u.esc(details.join(' · ')):''}</p>`;
 }
+function tripTimeDetails(times,u){
+ const components=[
+  ["Погрузка товара",times.loadingHours,times.loadingSorties],
+  ["Разгрузка товара",times.unloadingHours,times.unloadingSorties],
+  ["Погрузка трития",times.fuelLoadingHours],
+  ["Перелёт на флотоносце",times.travelHours],
+ ].filter(([,hours])=>hours!=null);
+ if(!components.length)return '';
+ return `<details class="ct-op-path"><summary>${th("Из чего складывается время рейса")}</summary>
+ ${components.map(([label,hours,sorties])=>`<div class="ct-summary-row"><span>${th(label)}${sorties==null?'':' · '+th("ходок")+ ' '+u.esc(u.fmt(sorties))}</span><strong>${u.esc(u.fmt(hours))} ${th("ч")}</strong></div>`).join('')}</details>`;
+}
 function opportunityCard(row,u,index,disabled){
- const s=row.summary||{},options=row.options||{};
+ const s=row.summary||{},options=row.options||{},times={...row,...s};
  const metric=(name,value)=>`<div><dt>${th(name)}</dt><dd>${u.esc(value)}</dd></div>`;
  const quantity=(value,unit)=>value==null?'—':u.fmt(value)+(unit?' '+t(unit):'');
  return `<article class="panel ct-op-card" data-carrier-opportunity="${u.esc(row.id)}">
- <header><div><h2>${u.esc(row.commodityName)}</h2><span class="muted">${u.esc(quantity(row.quantity,'т'))}${s.availableCargoTons==null?'':` / ${u.esc(quantity(s.availableCargoTons,'т'))}`}</span></div>
- <div class="ct-op-profit"><span>${th("Прибыль за рейс")}</span><strong>${u.esc(u.money(s.profit))}</strong></div></header>
+ <header><div><h2>${u.esc(row.commodityName)}</h2><span class="muted">${u.esc(quantity(row.quantity,'т'))} / ${u.esc(quantity(Math.floor(s.availableCargoTons),'т'))}</span></div>
+ <div class="ct-op-profit"><span>${th("Чистая прибыль за рейс")}</span><strong>${u.esc(u.money(s.profit))}</strong></div></header>
  <div class="ct-op-markets">${opportunityMarket(row,'buy',u)}${opportunityMarket(row,'sell',u)}</div>
  <dl class="ct-op-metrics">${metric("Закупка",u.money(row.purchaseCost))}${metric("Прыжки",quantity(s.jumpCount,''))}
  ${metric("Расход трития",quantity(s.fuelTons,'т'))}${metric("Стоимость топлива",u.money(s.fuelCost))}
- ${metric("Все расходы",u.money(s.totalOperatingCosts))}${metric("Время рейса",quantity(s.durationHours,'ч'))}
+ ${metric("Все расходы",u.money(s.totalOperatingCosts))}${times.workingHours==null?metric("Время рейса",quantity(s.durationHours,'ч')):metric("Чистое время рейса",quantity(times.workingHours,'ч'))}
  ${metric("Службы и комплекты",quantity(s.servicesTons??options.servicesTons,'т'))}
  ${metric("Тритий в трюме",quantity(s.cargoTritiumTons,'т'))}
  ${metric("Резерв трития (10%)",quantity(s.arrivalReserveTons??options.arrivalReserveTons,'т'))}</dl>
+ ${tripTimeDetails(times,u)}
  ${opportunityFuel(row.fuelPurchaseTons,row.fuelMarket,row.route?.origin,u,row.fuelPurchaseCost)}
  <footer>${opportunityPath(row.route,u)}${button(u,t("Открыть в планировщике"),'use-opportunity','arrow-right','primary',`data-index="${index}" ${disabled?'disabled':''}`)}</footer>
  </article>`;
@@ -135,18 +161,20 @@ function opportunities(C,u){
  const m=model(C),result=matchingOpportunities(C),request=C.carrierOpportunityRequest;
  const outdated=request&&request.key!==opportunityKey(C)||opportunityQuotesExpired(result);
  const loading=result.running||request?.pending||!result.updatedAt&&!request?.error&&!m.networkDisabled;
- const rows=outdated?[]:result.results||[];
+ const rows=outdated?[]:(result.results||[]).flatMap((row,index)=>qualifiesOpportunity(row)?[{row,index}]:[]);
  const origin=departureSystem(C);
  const status=outdated?t("Условия изменились. Обновляем рейсы…"):loading?(result.stage==='routes'?t("Рассчитываем прыжки и топливо…"):t("Сравниваем цены и объёмы…")):
-  request?.error||result.error||result.status||(m.networkDisabled?t("Рынки недоступны в автономном режиме."):'');
+  request?.error||result.error||result.status||(m.networkDisabled?t("Рынки недоступны в автономном режиме."):
+  rows.length?'':t("Рейсов с полной загрузкой и чистой прибылью от 400 млн кр. не найдено."));
  return `<section class="ct-opportunities" aria-busy="${!!loading}">
- <header class="ct-op-filters"><p class="ct-op-caption">${origin?u.esc(origin)+' → ':''}${th("HIP 58832 · Rackham’s Peak · площадка M")}</p>
+ <header class="ct-op-filters"><p class="ct-op-caption">${origin?th("Отправление из системы")+" "+u.esc(origin):th("Система отправления флотоносца")}</p>
  ${button(u,t("Условия подбора"),'opportunity-filters','settings','quiet')}</header>
+ <p class="ct-op-caption">${th("Полный трюм · чистая прибыль от 400 млн кр. за рейс")}</p>
  <p class="ct-op-caption">${th("Место под товар — вместимость за вычетом служб, комплектов и трития в трюме. Запас трития на весь рейс включает 10% сверх расхода.")}</p>
  ${status?`<p class="${rows.length?'ct-op-caption':'panel ct-op-status'}" role="status">${loading?u.icon('refresh-cw'):''}${u.esc(status)}</p>`:''}
  ${result.partial||result.limited?`<p class="ct-op-caption">${th(result.partial?"Часть рынков недоступна.":"Поиск охватывает часть рынков.")}</p>`:''}
- ${rows.length?`<p class="ct-op-caption">${th("Оценка времени включает 10 мин на погрузку или разгрузку каждого трюма перевозчика.")}${rows[0].estimatedCarrier?' '+th("Вместимость оценочная."):''}</p>`:''}
- ${rows.map((row,index)=>opportunityCard(row,u,index,loading)).join('')}
+ ${rows.length?`<p class="ct-op-caption">${th("Оценка времени включает 10 мин на погрузку или разгрузку каждого трюма перевозчика.")}${rows[0].row.estimatedCarrier?' '+th("Вместимость оценочная."):''}</p>`:''}
+ ${rows.map(({row,index})=>opportunityCard(row,u,index,loading)).join('')}
  </section>`;
 }
 function opportunitiesFilterDialog(C,u){
@@ -158,7 +186,7 @@ function opportunitiesFilterDialog(C,u){
 }
 async function useOpportunity(C,u,index,confirmed){
  const row=matchingOpportunities(C).results?.[index];
- if(!row)throw new Error(t("Этот вариант больше недоступен."));
+ if(!qualifiesOpportunity(row))throw new Error(t("Этот вариант больше недоступен."));
  if(!confirmed&&C.carrierTradeDraft?.dirty){
   u.dialog(t("Заменить несохранённый план?"),'',button(u,t("Открыть в планировщике"),'confirm-opportunity','arrow-right','primary',`data-index="${index}"`));
   return;
@@ -176,24 +204,26 @@ async function useOpportunity(C,u,index,confirmed){
  await u.loadView();
 }
 function top(C,u){
+ const tabs=`<div class="filters"><div class="segmented">${[['Рейсы','Выгодные рейсы'],['Рейс','План рейса'],['Расходы','Расходы'],['Проверки','Проверки']].map(([mode,label])=>`<button data-mode="${mode}" class="${(C.mode||'Рейсы')===mode?'selected':''}">${th(label)}</button>`).join('')}</div></div>`;
+ const heading=u.heading(t("Торговля флотоносцем"),'')+tabs;
+ if(opportunityMode(C))return heading;
  const m=model(C);
- const tabs=`<div class="filters"><div class="segmented">${[['Рейсы','Крыша мира'],['Рейс','План рейса'],['Расходы','Расходы'],['Проверки','Проверки']].map(([mode,label])=>`<button data-mode="${mode}" class="${(C.mode||'Рейсы')===mode?'selected':''}">${th(label)}</button>`).join('')}</div></div>`;
  const cruise=`<div class="ct-cruise"><span class="ct-cruise-icon">${u.icon('route')}</span>
- <div><strong>${th("Баббл ↔ Rackham’s Peak")}</strong><p>${th("Вино и спиртное · HIP 58832 · максимальная площадка M.")}</p>
+ <div><strong>${th("Баббл ↔ Rackham’s Peak")}</strong><p>${th("HIP 58832 · Rackham’s Peak · площадка M")}</p>
  <label class="ct-check"><input type="checkbox" data-trade-option="holidayConfirmed" ${draft(C).options.holidayConfirmed?'checked':''}>${th("Public Holiday подтверждён в игре")}</label></div>
  ${u.badge(m.options.holidayConfirmed?t("Событие отмечено вами"):t("Праздник не подтверждён"),m.options.holidayConfirmed?'good':'warn')}</div>`;
- const heading=u.heading(t("Торговля флотоносцем"),'')+tabs;
- if(opportunityMode(C)||m.options?.preset!==peakScenario)return heading;
  const controls=`<div class="ct-planbar">${button(u,t("Шаблон «Крыша мира»"),'preset','route','quiet')}<span class="spacer"></span>${button(u,t("Конфигурация флотоносца"),'import-carrier','ship','quiet')}</div>`;
- return heading+controls+cruise+unsaved(C,u);
+ return heading+controls+(peakPlan(C)?cruise:'')+unsaved(C,u);
 }
 function marketCard(C,u,leg,side){
  const source=leg[side+'Market']||{},buy=side==='buy',label=buy?t("Где закупаем"):t("Где продаём"),price=buy?'buyPrice':'sellPrice',id=leg.id;
  const compatible=source.padCompatible!==false;
- const station=buy?(source.orders?.length>1?t("Несколько станций"):source.station||t("Выберите станцию")):"Rackham’s Peak";
- const system=buy?(source.system||draft(C).legs[id]?.sourceSystem||t("Система не указана")):peakSystem;
- const pad=buy?source.pad:'M';
- return `<section class="ct-market-card"><div class="ct-market-head"><span>${u.icon(buy?'package':'wallet')}${label}</span>${pad?u.badge(t("Площадка ")+pad,compatible?'':'warn'):u.badge(t("Площадка неизвестна"),'warn')}</div><strong>${u.esc(station)}</strong><span class="ct-market-system">${u.esc(system)}</span>${purchaseOrders(source.orders,u)}<div class="ct-quote-meta"><span>${source.ageHours==null?t("Цена не подтверждена"):u.fmt(Math.max(0,source.ageHours))+t(" ч назад")}</span><span>${buy?t("Запас"):t("Спрос")}: ${u.fmt(source[buy?'supply':'demand'])}${th(" т")}</span></div>${legInput(C,u,id,price)}${button(u,buy?t("Найти продавцов"):t("Проверить котировку"),'markets','search','','data-leg="'+id+'" data-side="'+side+'"')}</section>`;
+ const peakSale=peakPlan(C)&&id==='outbound'&&!buy;
+ const combined=source.orders?.length>1;
+ const station=peakSale?"Rackham’s Peak":combined?t("Несколько станций"):source.station||t("Выберите станцию");
+ const system=peakSale?peakSystem:source.system||draft(C).legs[id]?.[buy?'sourceSystem':'destinationSystem']||t("Система не указана");
+ const pad=peakSale?'M':source.pad;
+ return `<section class="ct-market-card"><div class="ct-market-head"><span>${u.icon(buy?'package':'wallet')}${label}</span>${pad?u.badge(t("Площадка ")+pad,compatible?'':'warn'):u.badge(t("Площадка неизвестна"),'warn')}</div><strong>${u.esc(station)}</strong>${combined?'':`<span class="ct-market-system">${u.esc(system)}</span>`}${purchaseOrders(source.orders,u)}<div class="ct-quote-meta"><span>${source.ageHours==null?t("Цена не подтверждена"):u.fmt(Math.max(0,source.ageHours))+t(" ч назад")}</span><span>${buy?t("Запас"):t("Спрос")}: ${u.fmt(source[buy?'supply':'demand'])}${th(" т")}</span></div>${legInput(C,u,id,price)}${button(u,buy?t("Найти продавцов"):t("Проверить котировку"),'markets','search','','data-leg="'+id+'" data-side="'+side+'"')}</section>`;
 }
 function legSystem(u,id,key,label,value,fixed=false){
  return `<label class="ct-field"><span>${th(label)}</span><input value="${u.esc(value||'')}" data-trade-leg="${id}" data-trade-field="${key}" ${fixed?'readonly':''}></label>`;
@@ -206,16 +236,26 @@ function legRoute(C,u,leg){
  ${opportunityFuel(leg.route?.fuelPurchaseTons,leg.route?.fuelMarket,leg.route?.positioningSource,u,leg.route?.fuelPurchaseCost)}${opportunityPath(leg.route,u)}
  ${squadron?`<p class="info-note ct-short-note">${th("Расход трития эскадрильи нужно указать по данным корабля.")}</p>`:''}`;
 }
+function commodityChoices(C,leg){
+ const goods=new Map();
+ for(const item of [...(C.state?.goods||[]),...(C.state?.resources||[])]){
+  if(item.key&&item.kind!=='raw'&&item.key!=='drones')goods.set(item.key,item.name||item.key);
+ }
+ const key=draft(C).legs[leg.id]?.commodityKey;
+ if(key&&!goods.has(key))goods.set(key,key===leg.commodityKey?leg.commodityName||key:key);
+ return [...goods].sort((a,b)=>a[1].localeCompare(b[1],window.CopilotI18n?.locale()||'ru-RU'));
+}
 function legCard(C,u,leg){
  const id=leg.id,d=draft(C).legs[id]||{},outbound=id==='outbound';
- const head=`<header class="ct-section-head"><div class="ct-leg-number">${outbound?'01':'02'}</div><div><h2>${outbound?th("Рейс туда"):th("Возвращение")}</h2><p>${outbound?th("Основной товар и рынок продажи"):th("Пустой перелёт тоже расходует топливо.")}</p></div></header>`;
- const systems=outbound
-  ?legSystem(u,id,'sourceSystem',"Откуда",d.sourceSystem)+legSystem(u,id,'destinationSystem',"Куда",peakSystem,true)
-  :legSystem(u,id,'sourceSystem',"Откуда",peakSystem,true)+legSystem(u,id,'destinationSystem',"Куда",d.destinationSystem);
- if(!outbound)return `<section class="panel ct-leg">${head}<div class="ct-leg-basics">${systems}</div>${legRoute(C,u,leg)}</section>`;
+ const emptyReturn=!outbound&&fullLoadPlan(C),peak=peakPlan(C);
+ const head=`<header class="ct-section-head"><div class="ct-leg-number">${outbound?'01':'02'}</div><div><h2>${outbound?th("Рейс туда"):th("Возвращение")}</h2>${outbound?`<p>${th("Основной товар и рынок продажи")}</p>`:emptyReturn?`<p>${th("Пустой перелёт тоже расходует топливо.")}</p>`:''}</div></header>`;
+ const fixedSource=peak&&!outbound,fixedDestination=peak&&outbound;
+ const systems=legSystem(u,id,'sourceSystem',"Откуда",fixedSource?peakSystem:d.sourceSystem,fixedSource)+
+  legSystem(u,id,'destinationSystem',"Куда",fixedDestination?peakSystem:d.destinationSystem,fixedDestination);
+ if(emptyReturn)return `<section class="panel ct-leg">${head}<div class="ct-leg-basics">${systems}</div>${legRoute(C,u,leg)}</section>`;
  const labour=[['self','Своими силами'],['haulers','Другими пилотами']];
  return `<section class="panel ct-leg">${head}<div class="ct-leg-basics">
- ${select(u,"Товар",'commodityKey',d.commodityKey,peakGoods,`data-trade-leg="${id}" data-trade-field="commodityKey"`)}${legInput(C,u,id,'quantity')}${systems}</div>
+ ${select(u,"Товар",'commodityKey',d.commodityKey,commodityChoices(C,leg),`data-trade-leg="${id}" data-trade-field="commodityKey"`)}${legInput(C,u,id,'quantity')}${systems}</div>
  <div class="ct-markets">${marketCard(C,u,leg,'buy')}${marketCard(C,u,leg,'sell')}</div>${legRoute(C,u,leg)}
  <details class="ct-details"><summary>${th("Погрузка, продажа и оплата перевозчиков")}</summary><div class="ct-grid two">
  ${select(u,"Погрузка",'loadingMode',d.loadingMode,labour,`data-trade-leg="${id}" data-trade-field="loadingMode"`)}
@@ -223,15 +263,28 @@ function legCard(C,u,leg){
  ${legInput(C,u,id,'loadRewardPerTon')}${legInput(C,u,id,'unloadRewardPerTon')}${legInput(C,u,id,'loadingHours')}${legInput(C,u,id,'unloadingHours')}</div>
  <p class="info-note">${th("При самостоятельной перевозке оплата другим пилотам не включается. При их помощи цена ордера закупки: ")}${u.fmt(leg.carrierBuyPrice)}${th(" кр./т; продажи: ")}${u.fmt(leg.carrierSellPrice)}${th(" кр./т. Это расчёт — ордера задаются в игре.")}</p></details></section>`;
 }
-function parameters(C,u){return `<details class="panel ct-details ct-parameters" open><summary>${u.icon('settings')}${th("Флотоносец, время и расходы")}</summary><div class="ct-grid two">${select(u,t("Тип флотоносца"),'carrierType',draft(C).options.carrierType,types,'data-trade-option="carrierType"')}${select(u,t("Площадка корабля-перевозчика"),'haulerPad',draft(C).options.haulerPad,[['',t("Не выбрано")],['S',t("S · малая")],['M',t("M · средняя")],['L',t("L · большая")]],'data-trade-option="haulerPad"')}${optionFields.map(spec=>optionInput(C,u,spec)).join('')}</div><p class="info-note">${th("Запас трития рассчитывается по расходу туда и обратно с резервом 10%. Тритий в баке хранится отдельно.")}</p></details>`;}
+function parameters(C,u){
+ const options=draft(C).options,fullLoad=fullLoadPlan(C);
+ const pads=[['',"Не выбрано"],['S',"S · малая"],['M',"M · средняя"],['L',"L · большая"]];
+ return `<details class="panel ct-details ct-parameters" open><summary>${u.icon('settings')}${th("Флотоносец, время и расходы")}</summary>
+ <div class="ct-grid two">${select(u,"Тип флотоносца",'carrierType',options.carrierType,types,'data-trade-option="carrierType"')}
+ ${select(u,"Площадка корабля для закупки",'haulerPad',options.haulerPad,pads,'data-trade-option="haulerPad"')}
+ ${select(u,"Площадка корабля для продажи",'unloadHaulerPad',options.unloadHaulerPad,pads,'data-trade-option="unloadHaulerPad"')}
+ ${optionFields.map(spec=>optionInput(C,u,spec)).join('')}${fullLoad?'':manualFuelFields.map(spec=>optionInput(C,u,spec)).join('')}</div>
+ ${fullLoad?`<p class="info-note">${th("Запас трития рассчитывается по расходу туда и обратно с резервом 10%. Тритий в баке хранится отдельно.")}</p>`:
+ `<label class="ct-check"><input type="checkbox" data-trade-option="returnTrip" ${options.returnTrip?'checked':''}>${th("Включить обратный перелёт")}</label>`}</details>`;
+}
 function summary(C,u){
  const m=model(C),s=m.summary||{},status={ready:[t("План проверен"),'good'],review:[t("Сценарная оценка"),'warn'],'needs-data':[t("Нужны исходные данные"),'warn'],blocked:[t("План требует исправления"),'warn']}[s.status]||[t("Настройте план"),''];
  const value=(label,number,unit=t("кр."))=>`<div class="ct-summary-row"><span>${u.esc(t(label))}</span><strong>${u.esc(u.fmt(number))}${number==null?'':' '+unit}</strong></div>`;
  return `<aside class="panel ct-summary"><div class="ct-summary-top">${u.badge(...status)}<span class="ct-summary-label">${th("Результат владельца за весь рейс")}</span><strong class="ct-profit ${s.profit!=null&&s.profit<0?'danger':''}">${u.esc(u.money(s.profit))}</strong><span class="muted">${s.profit==null?t("Неизвестные расходы пока не позволяют оценить итог."):t("После трития, прыжков, содержания и перевозчиков.")}</span></div>
- ${value("Маржа товаров",s.grossMargin)}${value("Все расходы",s.totalOperatingCosts)}${value("Полное время",s.durationHours,t("ч"))}${value("Прибыль за час",s.profitPerHour)}<div class="divider"></div>
+ ${value("Маржа товаров",s.grossMargin)}${value("Все расходы",s.totalOperatingCosts)}
+ ${s.workingHours==null?'':value("Чистое время рейса",s.workingHours,t("ч"))}
+ ${s.workingHours===s.durationHours?'':value("Полное время",s.durationHours,t("ч"))}${value("Прибыль за час",s.profitPerHour)}<div class="divider"></div>
+ ${tripTimeDetails(s,u)}
  ${value("Капитал в рейсе",s.workingCapital)}${value("Безубыточная продажа туда",s.breakEvenSellPrice,t("кр./т"))}${value("Окупаемость",s.paybackTrips,t("рейсов"))}<div class="divider"></div>
  ${value("Свободно под товар",s.availableCargoTons,t("т"))}${value("Службы и комплекты",s.servicesTons,t("т"))}${value("Тритий в трюме",s.cargoTritiumTons,t("т"))}
- ${value("Расход за весь рейс",s.fuelTons,t("т"))}${value("Резерв трития (10%)",s.arrivalReserveTons??m.options?.arrivalReserveTons,t("т"))}
+ ${value("Расход за весь рейс",s.fuelTons,t("т"))}${value(fullLoadPlan(C)?"Резерв трития (10%)":"Резерв трития по возвращении",s.arrivalReserveTons??m.options?.arrivalReserveTons,t("т"))}
  ${s.overCapacityTons>0?`<div class="notice">${th("Не помещается ")}${u.esc(u.fmt(s.overCapacityTons))}${th(" т. Уменьшите объём товара.")}</div>`:''}
  <button class="ct-summary-link" data-click="${prefix}max">${th("Подставить доступный объём в рейс туда ")}${u.icon('arrow-right')}</button>
  ${button(u,t("Скопировать итог"),'copy','copy','quiet')}<p class="info-note">${th("Оценка чувствительна к цене и спросу. Окупаемость относится к введённой сумме вложений.")}</p></aside>`;
@@ -241,15 +294,11 @@ function checks(C,u){const m=model(C);return `<section class="panel"><h2>${th("�
 function render(C,u){
  const m=model(C),mode=C.mode||'Рейсы';
  if(opportunityMode(C))return `<div class="ct-page">${top(C,u)}${opportunities(C,u)}</div>`;
- if(m.options?.preset!==peakScenario){
-  return `<div class="ct-page">${top(C,u)}<section class="panel"><h2>${th("План рейса к Крыше мира")}</h2>
-  <p class="info-note">${th("Откройте найденный рейс или загрузите шаблон для расчёта вручную.")}</p>
-  ${button(u,t("Шаблон «Крыша мира»"),'preset','route','primary')}</section></div>`;
- }
  return `<div class="ct-page">${top(C,u)}<div class="ct-layout"><div class="ct-main">${mode==='Расходы'?costs(C,u):mode==='Проверки'?checks(C,u):`<form id="carrier-trade-form" novalidate>${(m.legs||[]).map(leg=>legCard(C,u,leg)).join('')}${parameters(C,u)}<div class="ct-form-error hidden" id="carrier-trade-error" role="alert"></div><div class="ct-save-bar">${button(u,t("Сохранить и рассчитать"),'save','check','primary')}</div></form>`}</div>${summary(C,u)}</div></div>`;
 }
 function capture(C,u){const d=draft(C);for(const node of u.$$('[data-trade-option],[data-trade-leg]')){const value=node.type==='checkbox'?node.checked:node.value;if(node.dataset.tradeOption)d.options[node.dataset.tradeOption]=value;else if(d.legs[node.dataset.tradeLeg])d.legs[node.dataset.tradeLeg][node.dataset.tradeField]=value;}return d;}
 function writableOptions(options){
+ if(options.preset!==peakScenario&&options.plannedFullLoad!==true)return {...options};
  const writable={...options,otherCargoTons:0,returnTrip:true};
  delete writable.tankTons;
  delete writable.cargoTritiumTons;
@@ -258,15 +307,16 @@ function writableOptions(options){
 }
 function payload(C,u){
  const d=capture(C,u),options=writableOptions(d.options),legs={};
- for(const spec of optionFields)options[spec[0]]=numeric(spec,options[spec[0]]);
+ for(const spec of (fullLoadPlan(C)?optionFields:[...optionFields,...manualFuelFields]))options[spec[0]]=numeric(spec,options[spec[0]]);
  for(const [id,raw] of Object.entries(d.legs)){
   const leg={};
   for(const key of ['commodityKey','sourceSystem','destinationSystem','loadingMode','unloadingMode'])leg[key]=raw[key];
   for(const spec of legFields)leg[spec[0]]=numeric(spec,raw[spec[0]]);
   legs[id]=leg;
  }
- if(legs.outbound)legs.outbound.destinationSystem=peakSystem;
- if(legs.return)Object.assign(legs.return,{sourceSystem:peakSystem,quantity:0});
+ if(peakPlan(C)&&legs.outbound)legs.outbound.destinationSystem=peakSystem;
+ if(peakPlan(C)&&legs.return)legs.return.sourceSystem=peakSystem;
+ if(fullLoadPlan(C)&&legs.return)legs.return.quantity=0;
  return {action:'configure',options,legs};
 }
 async function save(C,u){let body;try{body=payload(C,u);}catch(error){const box=u.$('#carrier-trade-error');if(box){box.textContent=error.message;box.classList.remove('hidden');}throw error;}await run(async()=>{await u.call('carrier-trade',{values:body});C.carrierTradeDraft=null;await u.loadView();});u.toast(t("План рейса сохранён"));}
@@ -282,20 +332,24 @@ function pickerRows(C){
  if(!picker.peakSale)return rows;
  return rows.filter(row=>row.system?.toUpperCase()===peakSystem&&row.station?.replace('’',"'").toLowerCase()==="rackham's peak");
 }
-function renderPickerResults(C,u){if(!picker||!u.$('#carrier-trade-market-results'))return;const trade=C.state.trading||{},rows=pickerRows(C);picker.rows=rows;const rank={S:1,M:2,L:3},ship=model(C).options.haulerPad;u.$('#carrier-trade-market-results').innerHTML=picker.searching||trade.running?`<div class="ct-market-status">${u.icon('refresh-cw')}${th("Поиск рынков выполняется…")}</div>`:trade.error?`<div class="notice">${u.esc(trade.error)}</div>`:rows.length?`<div class="table-scroll"><table class="ct-market-table"><thead><tr><th>${th("Станция и система")}</th><th>${th("Цена, кр./т")}</th><th>${picker.side==='buy'?t("Запас"):t("Спрос")}${th(", т")}</th><th>${th("Площадка")}</th><th>${th("Возраст")}</th><th>${th("От звезды")}</th><th></th></tr></thead><tbody>${rows.map((row,index)=>{const q=(row.quotes||[]).find(item=>item.key===picker.key)||{},bad=rank[row.pad]&&rank[ship]&&rank[row.pad]<rank[ship];return `<tr><td><strong>${u.esc(row.station)}</strong><small>${u.esc(row.system)} · ${u.esc(u.fmt(row.distanceLy))}${th(" св. л.")}</small></td><td>${u.esc(u.fmt(q.price))}</td><td>${u.esc(u.fmt(q[picker.side==='buy'?'supply':'demand']))}</td><td>${u.badge(row.pad||'?',bad?'warn':'')}</td><td>${u.esc(u.fmt(row.ageHours))}${th(" ч")}</td><td>${u.esc(u.fmt(row.distanceLs))}${th(" св. с.")}</td><td>${button(u,bad?t("Не подходит"):t("Выбрать"),'market-choose','','',`data-index="${index}" ${bad?`disabled title="${th("Корабль требует большую площадку")}"`:''}`)}</td></tr>`;}).join('')}</tbody></table></div>`:`<div class="empty-state"><strong>${th(picker.system?"Подходящих котировок нет":"Укажите исходную систему поиска.")}</strong></div>`;}
+function shipPadForMarket(C,side){
+ const options=model(C).options;
+ return side==='sell'?(options.unloadHaulerPad||(peakPlan(C)?'M':options.haulerPad)):options.haulerPad;
+}
+function renderPickerResults(C,u){if(!picker||!u.$('#carrier-trade-market-results'))return;const trade=C.state.trading||{},rows=pickerRows(C);picker.rows=rows;const rank={S:1,M:2,L:3},ship=shipPadForMarket(C,picker.side);u.$('#carrier-trade-market-results').innerHTML=picker.searching||trade.running?`<div class="ct-market-status">${u.icon('refresh-cw')}${th("Поиск рынков выполняется…")}</div>`:trade.error?`<div class="notice">${u.esc(trade.error)}</div>`:rows.length?`<div class="table-scroll"><table class="ct-market-table"><thead><tr><th>${th("Станция и система")}</th><th>${th("Цена, кр./т")}</th><th>${picker.side==='buy'?t("Запас"):t("Спрос")}${th(", т")}</th><th>${th("Площадка")}</th><th>${th("Возраст")}</th><th>${th("От звезды")}</th><th></th></tr></thead><tbody>${rows.map((row,index)=>{const q=(row.quotes||[]).find(item=>item.key===picker.key)||{},bad=rank[row.pad]&&rank[ship]&&rank[row.pad]<rank[ship];return `<tr><td><strong>${u.esc(row.station)}</strong><small>${u.esc(row.system)} · ${u.esc(u.fmt(row.distanceLy))}${th(" св. л.")}</small></td><td>${u.esc(u.fmt(q.price))}</td><td>${u.esc(u.fmt(q[picker.side==='buy'?'supply':'demand']))}</td><td>${u.badge(row.pad||'?',bad?'warn':'')}</td><td>${u.esc(u.fmt(row.ageHours))}${th(" ч")}</td><td>${u.esc(u.fmt(row.distanceLs))}${th(" св. с.")}</td><td>${button(u,bad?t("Не подходит"):t("Выбрать"),'market-choose','','',`data-index="${index}" ${bad?`disabled title="${th("Корабль требует большую площадку")}"`:''}`)}</td></tr>`;}).join('')}</tbody></table></div>`:`<div class="empty-state"><strong>${th(picker.system?"Подходящих котировок нет":"Укажите исходную систему поиска.")}</strong></div>`;}
 function schedulePicker(C,u){clearTimeout(pollTimer);pollTimer=setTimeout(async()=>{if(!picker||!u.$('#carrier-trade-market-results')){picker=null;return;}try{await u.loadView();renderPickerResults(C,u);}catch(error){u.toast(error.message,true);}if(picker&&u.$('#carrier-trade-market-results')&&C.state.trading?.running)schedulePicker(C,u);},1000);}
 async function openMarkets(C,u,id,side){
  await before(C,u);
  const leg=(model(C).legs||[]).find(row=>row.id===id);
  if(!leg)throw new Error(t("Плечо рейса не найдено."));
  const m=model(C),age=m.options.maxQuoteAgeHours||24;
- const peakSale=id==='outbound'&&side==='sell';
+ const peakSale=peakPlan(C)&&id==='outbound'&&side==='sell';
  const system=peakSale?peakSystem:leg[side==='buy'?'sourceSystem':'destinationSystem']||departureSystem(C);
  picker={leg:id,side,key:leg.commodityKey,rows:[],system,peakSale,searching:false};
  u.dialog(side==='buy'?t("Где загрузить флотоносец"):t("Куда продать груз"),
  `<div class="ct-picker-filters">
  <label class="ct-field"><span>${th(peakSale?"Система продажи":"Рядом с системой")}</span><input data-trade-filter="system" value="${u.esc(system)}" placeholder="${th("Название системы")}" ${peakSale?'readonly':''}></label>
- ${select(u,t("Площадка"),'pad',m.options.haulerPad||'any',[['any',t("Любая")],['S',t("S и больше")],['M',t("M и больше")],['L','L']],'data-trade-filter="minPad"')}
+ ${select(u,t("Площадка"),'pad',shipPadForMarket(C,side)||'any',[['any',t("Любая")],['S',t("S и больше")],['M',t("M и больше")],['L','L']],'data-trade-filter="minPad"')}
  ${input(u,'radiusLy',t("Радиус, св. л."),100,'data-trade-filter="radiusLy"',false)}
  ${input(u,'maxAgeHours',t("Возраст цены, ч"),age,'data-trade-filter="maxAgeHours"',false)}
  ${input(u,'availability',side==='buy'?t("Мин. запас, т"):t("Мин. спрос, т"),Math.min(leg.quantity||1,1000),'data-trade-filter="availability"',false)}
@@ -365,12 +419,12 @@ async function handle(action,b,C,u){if(!action.startsWith(prefix))return false;c
  if(name==='market-search'){await searchMarkets(C,u);return true;}
  if(name==='market-close'){picker=null;clearTimeout(pollTimer);u.closeLayer();return true;}
  if(name==='market-choose'){const market=picker?.rows[Number(b.dataset.index)];if(!market)throw new Error(t("Котировка больше недоступна. Повторите поиск."));await u.call('carrier-trade',{values:{action:'market',leg:picker.leg,side:picker.side,market}});picker=null;clearTimeout(pollTimer);C.carrierTradeDraft=null;u.closeLayer();await u.loadView();u.toast(t("Котировка добавлена в рейс"));return true;}
- if(name==='help'){u.dialog(t("Как спланировать торговлю флотоносцем"),`<div class="prose-small"><p>${th("1. Откройте рейс на вкладке «Крыша мира», чтобы перенести маршрут, топливо и котировки в план.")}</p><p>${th("2. Для перевозки на Rackham’s Peak выберите корабль с малой или средней площадкой.")}</p><p>${th("3. Проверьте расчёт расхода трития, расходы на перевозчиков и длительность. Подтвердите Public Holiday в игре.")}</p></div>`,u.btn(t("Закрыть"),'close-dialog'));return true;}
+ if(name==='help'){u.dialog(t("Как спланировать торговлю флотоносцем"),`<div class="prose-small"><p>${th("Откройте выгодный рейс, чтобы перенести маршрут, топливо и котировки в план.")}</p><p>${th("Проверьте расход трития, расходы на перевозчиков и длительность рейса.")}</p><p>${th("Для перевозки на Rackham’s Peak выберите корабль с малой или средней площадкой и проверьте Public Holiday в игре.")}</p></div>`,u.btn(t("Закрыть"),'close-dialog'));return true;}
  if(name==='copy'){
   const m=model(C),s=m.summary;
   const legs=m.legs.map(leg=>{
    const systems=`${leg.sourceSystem||'—'} → ${leg.destinationSystem||'—'}`;
-   const cargo=leg.id==='outbound'?`${leg.commodityName}, ${u.fmt(leg.effectiveQuantity)}${t(" т · ")}`:'';
+   const cargo=leg.effectiveQuantity>0?`${leg.commodityName}, ${u.fmt(leg.effectiveQuantity)}${t(" т · ")}`:'';
    return `${leg.name} · ${cargo}${systems}`;
   });
   await u.call('native',{action:'copy',text:[t("Торговля флотоносцем"),...legs,t("Результат владельца: ")+u.money(s.profit),t("Тритий за весь рейс: ")+u.fmt(s.fuelTons)+t(" т"),t("Расходы: ")+u.money(s.totalOperatingCosts),t("Полное время: ")+u.fmt(s.durationHours)+t(" ч"),t("Безубыточная продажа туда: ")+u.fmt(s.breakEvenSellPrice)+t(" кр./т"),t("Цены и спрос требуют проверки в игре.")].join('\r\n')});

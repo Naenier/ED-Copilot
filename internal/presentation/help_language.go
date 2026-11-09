@@ -74,11 +74,11 @@ Enter planned jumps per week, average tritium consumption, fuel price, planned c
 Compare purchase cost, occupied capacity, weekly upkeep and budget projections. The 30-day and 365-day estimates are proportional planning periods. Use Carrier Route for fuel on a specific journey. Calculator changes do not alter in-game services or finances.`,
 	"carrier-trade": `Carrier trading
 
-Compare wine and liquor suppliers for Rackham's Peak in HIP 58832. The planner uses the built-in corridor from Sol and works out the connection from your departure system.
+Compare regional markets and Rackham's Peak. Suggestions fill the available hold and estimate at least 400 million credits in net profit. A run can pick up cargo in up to three systems before selling and returning empty.
 
 Plan service space and the fuel for both directions. The cargo hold keeps enough tritium for the round trip plus 10%, after accounting for the separate tank. For a squadron carrier, enter the expected fuel burn in each direction.
 
-Check the quote age, supply, demand and landing pad before loading. Rackham's Peak takes small and medium ships. Confirm Public Holiday and carrier parking in the game.`,
+Enter separate loading and selling ship capacities. The working time adds carrier jumps, cargo shuttles and tritium preparation. Rackham's Peak takes small and medium ships. Confirm market conditions and carrier parking in the game.`,
 	"route": `Carrier route
 
 Enter the departure and destination systems, occupied capacity, tank and warehouse tritium, arrival reserve and timing assumptions. Waypoint and refuelling lists accept one system per line; autocomplete replaces only the line containing the caret.

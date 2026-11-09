@@ -42,8 +42,8 @@ func tradeRackham(market M) bool {
 
 func tradeSnapshot(options, legs M, now time.Time) M {
 	typeData, _ := calculatorCatalog(v.Str(options["carrierType"]))
-	peak := options["preset"] == tradePeakScenario
-	if peak {
+	fullLoad := options["preset"] == tradePeakScenario || v.Bool(options["plannedFullLoad"])
+	if fullLoad {
 		options = v.Copy(options)
 		options["otherCargoTons"], options["returnTrip"] = 0, true
 	}
@@ -56,11 +56,13 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 	results := []M{}
 	legGross, legNet, legFees := []any{}, []any{}, []any{}
 	fuels, jumps, hours := []any{}, []any{}, []any{}
+	var loadingTimes, unloadingTimes, travelTimes, fuelLoadingTimes []any
+	var loadingSorties, unloadingSorties []any
 	maxQuantity := float64(0)
 	for _, name := range []string{"outbound", "return"} {
 		leg := v.Copy(v.Obj(legs[name]))
 		active := name == "outbound" || v.Bool(options["returnTrip"])
-		if peak && name == "return" {
+		if fullLoad && name == "return" {
 			leg["quantity"] = 0
 		}
 		q := v.Num(leg["quantity"])
@@ -99,10 +101,18 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 		if q == 0 {
 			loading, unloading = float64(0), float64(0)
 		}
-		duration := tradeSum(travel, loading, unloading)
-		var sorties any
+		fuelLoading := float64(0)
+		if active {
+			fuelLoading = v.Num(v.At(leg, "route", "fuelLoadingHours"))
+		}
+		duration := tradeSum(travel, loading, unloading, fuelLoading)
+		var loadSorties, unloadSorties any
 		if v.Num(options["haulerCapacity"]) > 0 {
-			sorties = math.Ceil(q / v.Num(options["haulerCapacity"]))
+			loadSorties = tradeLoadingSorties(v.Obj(leg["buyMarket"]), q, v.Num(options["haulerCapacity"]))
+		}
+		unloadCapacity := v.Num(v.First(options["unloadHaulerCapacity"], options["haulerCapacity"]))
+		if unloadCapacity > 0 {
+			unloadSorties = math.Ceil(q / unloadCapacity)
 		}
 		leg["id"], leg["name"], leg["active"], leg["commodityName"] = name, map[string]string{"outbound": "Туда", "return": "Обратно"}[name], active, tradeCommodity(v.Str(leg["commodityKey"]))
 		leg["buyCost"], leg["saleRevenue"], leg["grossMargin"], leg["haulingFees"], leg["contribution"] = tradeMoney(buy), tradeMoney(sell), tradeMoney(gross), tradeMoney(fees), tradeMoney(contribution)
@@ -113,7 +123,7 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 		if leg["sellPrice"] != nil {
 			leg["carrierSellPrice"] = v.Num(leg["sellPrice"]) - unloadReward
 		}
-		leg["durationHours"], leg["haulerSortiesEachWay"], leg["effectiveQuantity"] = duration, sorties, q
+		leg["durationHours"], leg["haulerSortiesEachWay"], leg["effectiveQuantity"] = duration, loadSorties, q
 		if active {
 			if q > maxQuantity {
 				maxQuantity = q
@@ -158,6 +168,9 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 					market["pad"] = "M"
 				}
 				shipPad := v.Str(options["haulerPad"])
+				if side == "sell" {
+					shipPad = v.Text(options["unloadHaulerPad"], shipPad)
+				}
 				rank := map[string]int{"S": 1, "M": 2, "L": 3}
 				var compatible any
 				if rank[pad] > 0 && rank[shipPad] > 0 {
@@ -193,8 +206,8 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 					issue("warn", "insufficient-market-volume", "Рынок не покрывает весь груз", fmt.Sprintf("Нужно %g т, в котировке указано %g т. Доход всего груза остаётся сценарной оценкой.", q, v.Num(available)), name+"."+side+"Market")
 				}
 				saleHaul := q
-				if cap := v.Num(options["haulerCapacity"]); cap > 0 {
-					saleHaul = math.Min(saleHaul, cap)
+				if unloadCapacity > 0 {
+					saleHaul = math.Min(saleHaul, unloadCapacity)
 				}
 				if side == "sell" && v.Num(available) > 0 && v.Num(available) < saleHaul*v.Num(options["demandRatio"]) {
 					issue("warn", "bulk-tax-risk", "Есть риск снижения цены за крупный груз", "Спрос меньше выбранного запаса к трюму перевозчика. Цена продажи может уменьшиться; проверьте её в игре.", name+".sellMarket")
@@ -220,10 +233,13 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 		fuels = append(fuels, fuel)
 		jumps = append(jumps, jump)
 		hours = append(hours, duration)
+		loadingTimes, unloadingTimes = append(loadingTimes, loading), append(unloadingTimes, unloading)
+		travelTimes, fuelLoadingTimes = append(travelTimes, travel), append(fuelLoadingTimes, fuelLoading)
+		loadingSorties, unloadingSorties = append(loadingSorties, loadSorties), append(unloadingSorties, unloadSorties)
 	}
 	fuelTons, totalJumps := tradeSum(fuels...), tradeSum(jumps...)
 	var hold any = options["cargoTritiumTons"]
-	if peak {
+	if fullLoad {
 		hold = nil
 		options["tankTons"], options["arrivalReserveTons"] = nil, nil
 		if fuelTons != nil {
@@ -333,10 +349,14 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 	if blocked {
 		status = "blocked"
 	}
-	return M{"options": v.Copy(options), "legs": results, "summary": M{"status": status, "profit": tradeMoney(profit), "grossMargin": tradeMoney(gross), "haulingFees": tradeMoney(fees), "fuelTons": fuelTons, "fuelCost": tradeMoney(fuelCost), "jumpCount": totalJumps, "jumpCost": tradeMoney(jumpCost), "jumpCostPerJump": typeData.JumpCost, "allocatedUpkeep": tradeMoney(upkeep), "upkeepBankReserve": tradeMoney(weeklyReserve), "extraCosts": options["extraCosts"], "totalOperatingCosts": tradeMoney(tradeSum(fixed, fees)), "durationHours": duration, "profitPerHour": func() any {
-		if profit != nil && v.Num(duration) > 0 {
-			return math.Round(v.Num(profit) / v.Num(duration))
-		}
-		return nil
-	}(), "capacityTons": typeData.Capacity, "servicesTons": options["servicesTons"], "cargoTritiumTons": hold, "availableCargoTons": capacity, "overCapacityTons": over, "fuelFits": fuelFits, "requiredFuelTons": tradeSum(fuelTons, options["arrivalReserveTons"]), "fuelProvisionValue": tradeMoney(fuelProvision), "workingCapital": tradeMoney(capital), "returnOnCapitalPercent": roi, "breakEvenSellPrice": breakEvenPrice, "breakEvenSpread": breakEvenSpread, "breakEvenQuantity": breakEvenQuantity, "paybackTrips": payback, "paybackHours": paybackHours}, "issues": issues, "missing": missing, "ready": !blocked && len(missing) == 0 && warnings == 0, "sources": []M{{"title": "Торговля флотоносцем · PTN", "url": "https://pilotstradenetwork.com/guides/fleet-carrier-trading/"}, {"title": "Booze Cruise · PTN", "url": "https://pilotstradenetwork.com/booze-cruise/"}, {"title": "Службы и содержание · PTN", "url": CalculatorSourceURL}}, "notes": []string{"Учитывается доход владельца: при помощи других пилотов их оплата уменьшает маржу владельца.", "Содержание распределяется пропорционально времени рейса; фактический недельный счёт списывается отдельно. Резерв банка показан консервативно целыми неделями.", "Расход трития вводится из расчёта маршрута для текущей загрузки. Дальность и число прыжков не заменяют расчёт топлива.", "Капитал в рейсе — консервативный бюджет: сумма закупок обоих плеч, оплаты перевозчиков, топлива с резервом, прыжков и недельного банка. Выручка от первого плеча может уменьшить фактическую потребность в новых кредитах. Уже имеющееся топливо также включено по оценочной стоимости.", "Безубыточность рассчитана при тех же расходах маршрута. Изменение объёма требует пересчёта топлива.", "Котировки — наблюдения рынка, а не гарантия цены, спроса, наличия товара или свободной стоянки."}}
+	return M{"options": v.Copy(options), "legs": results, "summary": M{
+		"workingHours": tradeSum(hours...), "loadingHours": tradeSum(loadingTimes...), "unloadingHours": tradeSum(unloadingTimes...),
+		"travelHours": tradeSum(travelTimes...), "fuelLoadingHours": tradeSum(fuelLoadingTimes...),
+		"loadingSorties": tradeSum(loadingSorties...), "unloadingSorties": tradeSum(unloadingSorties...),
+		"status": status, "profit": tradeMoney(profit), "grossMargin": tradeMoney(gross), "haulingFees": tradeMoney(fees), "fuelTons": fuelTons, "fuelCost": tradeMoney(fuelCost), "jumpCount": totalJumps, "jumpCost": tradeMoney(jumpCost), "jumpCostPerJump": typeData.JumpCost, "allocatedUpkeep": tradeMoney(upkeep), "upkeepBankReserve": tradeMoney(weeklyReserve), "extraCosts": options["extraCosts"], "totalOperatingCosts": tradeMoney(tradeSum(fixed, fees)), "durationHours": duration, "profitPerHour": func() any {
+			if profit != nil && v.Num(duration) > 0 {
+				return math.Round(v.Num(profit) / v.Num(duration))
+			}
+			return nil
+		}(), "capacityTons": typeData.Capacity, "servicesTons": options["servicesTons"], "cargoTritiumTons": hold, "availableCargoTons": capacity, "overCapacityTons": over, "fuelFits": fuelFits, "requiredFuelTons": tradeSum(fuelTons, options["arrivalReserveTons"]), "fuelProvisionValue": tradeMoney(fuelProvision), "workingCapital": tradeMoney(capital), "returnOnCapitalPercent": roi, "breakEvenSellPrice": breakEvenPrice, "breakEvenSpread": breakEvenSpread, "breakEvenQuantity": breakEvenQuantity, "paybackTrips": payback, "paybackHours": paybackHours}, "issues": issues, "missing": missing, "ready": !blocked && len(missing) == 0 && warnings == 0, "sources": []M{{"title": "Торговля флотоносцем · PTN", "url": "https://pilotstradenetwork.com/guides/fleet-carrier-trading/"}, {"title": "Booze Cruise · PTN", "url": "https://pilotstradenetwork.com/booze-cruise/"}, {"title": "Службы и содержание · PTN", "url": CalculatorSourceURL}}, "notes": []string{"Учитывается доход владельца: при помощи других пилотов их оплата уменьшает маржу владельца.", "Содержание распределяется пропорционально времени рейса; фактический недельный счёт списывается отдельно. Резерв банка показан консервативно целыми неделями.", "Расход трития вводится из расчёта маршрута для текущей загрузки. Дальность и число прыжков не заменяют расчёт топлива.", "Капитал в рейсе — консервативный бюджет: сумма закупок обоих плеч, оплаты перевозчиков, топлива с резервом, прыжков и недельного банка. Выручка от первого плеча может уменьшить фактическую потребность в новых кредитах. Уже имеющееся топливо также включено по оценочной стоимости.", "Безубыточность рассчитана при тех же расходах маршрута. Изменение объёма требует пересчёта топлива.", "Котировки — наблюдения рынка, а не гарантия цены, спроса, наличия товара или свободной стоянки."}}
 }

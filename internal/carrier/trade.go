@@ -98,6 +98,7 @@ func tradeNumbers(out, input M, specs []tradeNumberSpec) error {
 }
 
 var tradeOptionNumbers = []tradeNumberSpec{
+	{"unloadHaulerCapacity", "Трюм корабля для разгрузки", 100000, true, true},
 	{"servicesTons", "Объём служб", 100000, false, false}, {"otherCargoTons", "Другие грузы", 1000000, false, false}, {"tankTons", "Тритий в баке перед вылетом", 1000, false, false}, {"cargoTritiumTons", "Тритий в трюме перед вылетом", 100000, true, false}, {"arrivalReserveTons", "Резерв трития по возвращении", 100000, false, false}, {"tritiumPrice", "Оценка трития, кр./т", 1e9, true, false}, {"weeklyUpkeep", "Содержание за неделю", 1e12, false, false}, {"durationHours", "Полная длительность рейса, ч", 100000, true, false}, {"extraCosts", "Прочие расходы", 1e15, false, false}, {"carrierInvestment", "Сумма для расчёта окупаемости", 1e15, true, false}, {"haulerCapacity", "Трюм корабля-перевозчика", 100000, true, true}, {"maxQuoteAgeHours", "Предельный возраст котировки, ч", 720, false, false}, {"demandRatio", "Запас спроса к объёму", 100, false, false},
 }
 var tradeLegNumbers = []tradeNumberSpec{
@@ -114,8 +115,11 @@ func tradeNormalize(options, legs M) (M, M, error) {
 	if out["preset"] != "custom" && out["preset"] != "booze-cruise" {
 		return nil, nil, errors.New("Неизвестный шаблон рейса.")
 	}
-	for _, key := range []string{"returnTrip", "holidayConfirmed"} {
+	for _, key := range []string{"returnTrip", "holidayConfirmed", "plannedFullLoad"} {
 		value, ok := options[key].(bool)
+		if key == "plannedFullLoad" && options[key] == nil {
+			continue
+		}
 		if !ok {
 			return nil, nil, fmt.Errorf("%s: требуется переключатель.", key)
 		}
@@ -126,13 +130,19 @@ func tradeNormalize(options, legs M) (M, M, error) {
 		return nil, nil, errors.New("Площадка корабля: S, M или L.")
 	}
 	out["haulerPad"] = pad
+	unloadPad := v.Str(options["unloadHaulerPad"])
+	if unloadPad != "" && unloadPad != "S" && unloadPad != "M" && unloadPad != "L" {
+		return nil, nil, errors.New("Площадка корабля: S, M или L.")
+	}
+	out["unloadHaulerPad"] = unloadPad
 	if err := tradeNumbers(out, options, tradeOptionNumbers); err != nil {
 		return nil, nil, err
 	}
 	if v.Num(out["maxQuoteAgeHours"]) <= 0 || v.Num(out["demandRatio"]) < 1 {
 		return nil, nil, errors.New("Возраст котировки должен быть больше нуля, запас спроса — не меньше единицы.")
 	}
-	if out["haulerCapacity"] != nil && v.Num(out["haulerCapacity"]) == 0 {
+	if out["haulerCapacity"] != nil && v.Num(out["haulerCapacity"]) == 0 ||
+		out["unloadHaulerCapacity"] != nil && v.Num(out["unloadHaulerCapacity"]) == 0 {
 		return nil, nil, errors.New("Трюм корабля должен быть больше нуля.")
 	}
 	typeData, _ := calculatorCatalog(v.Str(out["carrierType"]))
@@ -169,8 +179,8 @@ func tradeNormalize(options, legs M) (M, M, error) {
 	}
 	if out["preset"] == "booze-cruise" {
 		leg := v.Obj(cleanLegs["outbound"])
-		if (leg["commodityKey"] != "wine" && leg["commodityKey"] != "liquor") || v.Key(leg["destinationSystem"]) != "hip58832" {
-			return nil, nil, errors.New("Для Booze Cruise выберите вино или спиртное и назначение HIP 58832.")
+		if v.Key(leg["destinationSystem"]) != "hip58832" {
+			return nil, nil, errors.New("Для рейса к Rackham’s Peak выберите назначение HIP 58832.")
 		}
 	}
 	return out, cleanLegs, nil

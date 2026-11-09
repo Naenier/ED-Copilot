@@ -18,6 +18,7 @@ import (
 type opportunityMarkets struct {
 	at        string
 	freshPeak bool
+	mixedPeak bool
 }
 
 func (fixture opportunityMarkets) Do(req *http.Request) (*http.Response, error) {
@@ -45,7 +46,12 @@ func (fixture opportunityMarkets) Do(req *http.Request) (*http.Response, error) 
 		if err := json.NewDecoder(req.Body).Decode(&query); err != nil {
 			return nil, err
 		}
-		filter := v.Rows(v.At(query, "filters", "market"))[0]
+		filters := v.Rows(v.At(query, "filters", "market"))
+		if len(filters) == 0 {
+			reply = M{"count": 0, "results": []M{}}
+			break
+		}
+		filter := filters[0]
 		key, buy := v.Key(filter["name"]), filter["supply"] != nil
 		market := func(id int, station, system string, x int, buyPrice, sellPrice, supply, demand int, at string) M {
 			return M{"name": station, "system_name": system, "system_x": x, "system_y": 0, "system_z": 0,
@@ -56,7 +62,11 @@ func (fixture opportunityMarkets) Do(req *http.Request) (*http.Response, error) 
 		switch {
 		case key == "wine" && buy:
 			rows = append(rows, market(1, "Synthetic Wine A", "Sol", 0, 100, 0, 9000, 0, fixture.at))
-			rows = append(rows, market(2, "Synthetic Wine B", "Sol", 0, 120, 0, 17000, 0, fixture.at))
+			secondSystem, x := "Sol", 0
+			if fixture.mixedPeak {
+				secondSystem, x = "Synthetic Supplier", 25
+			}
+			rows = append(rows, market(2, "Synthetic Wine B", secondSystem, x, 120, 0, 17000, 0, fixture.at))
 		case key == "liquor" && buy && fixture.freshPeak:
 			rows = append(rows, market(7, "Synthetic Liquor", "Sol", 0, 550, 0, 20000, 0, fixture.at))
 		case key == "tritium":
@@ -89,7 +99,7 @@ func opportunityFixture() (M, M) {
 	return NewTradePlanner(nil).Snapshot(), state
 }
 
-func TestCarrierTradeOnlyPlansPeakAndIgnoresLiveCargoAndFuel(t *testing.T) {
+func TestCarrierTradeProfitSearchIgnoresLiveCargoAndFuel(t *testing.T) {
 	trade, state := opportunityFixture()
 	request := M{"scenario": "custom"}
 	contextBefore := TradeOpportunityContext(trade, state, request)
@@ -102,7 +112,7 @@ func TestCarrierTradeOnlyPlansPeakAndIgnoresLiveCargoAndFuel(t *testing.T) {
 	if !reflect.DeepEqual(contextBefore, TradeOpportunityContext(trade, state, request)) {
 		t.Fatal("unrelated inventory or legacy fuel settings changed the search")
 	}
-	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now())}, trade, state, request, nil)
+	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now()), freshPeak: true}, trade, state, request, nil)
 	rows := v.Rows(result["results"])
 	if err != nil || len(rows) == 0 {
 		t.Fatalf("Peak route search failed: %v (%d matches, %v)", err, len(rows), result["status"])
@@ -117,16 +127,17 @@ func TestCarrierTradeOnlyPlansPeakAndIgnoresLiveCargoAndFuel(t *testing.T) {
 		v.Num(summary["jumpCount"]) != 36 || summary["fuelFits"] != true {
 		t.Fatalf("unexpected full-load calculation: %v", row)
 	}
-	if v.At(result, "options", "scenario") != tradePeakScenario || row["commodityKey"] != "wine" || v.At(row, "sell", "station") != tradePeakPort {
-		t.Fatal("legacy ordinary search did not resolve to a Peak trade")
+	if v.At(result, "options", "scenario") != TradeOpportunityScenario || row["commodityKey"] != "wine" || v.At(row, "sell", "station") != tradePeakPort ||
+		v.Num(summary["profit"]) < netOpportunityMinimum {
+		t.Fatal("search did not return the fully funded Peak trade")
 	}
 }
 
 func TestCarrierTradeBoozeCruiseCombinesSuppliersAndOmitsStaleProfit(t *testing.T) {
 	trade, state := opportunityFixture()
-	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now())}, trade, state, M{"scenario": "booze-cruise"}, nil)
+	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now()), freshPeak: true}, trade, state, M{"scenario": "booze-cruise"}, nil)
 	rows := v.Rows(result["results"])
-	if err != nil || len(rows) < 3 {
+	if err != nil || len(rows) == 0 {
 		t.Fatalf("missing purchase alternatives: %v (%d matches, %v)", err, len(rows), result["status"])
 	}
 	best := rows[0]
@@ -136,31 +147,86 @@ func TestCarrierTradeBoozeCruiseCombinesSuppliersAndOmitsStaleProfit(t *testing.
 		v.Num(orders[1]["quantity"]) != quantity-9000 || v.Num(best["purchaseCost"]) != 900000+(quantity-9000)*120 {
 		t.Fatalf("purchase did not combine capacity and actual cost: %v", best["buy"])
 	}
-	if v.At(best, "summary", "profit") != nil || v.At(best, "sell", "price") != nil ||
-		v.At(best, "options", "holidayConfirmed") != false || v.Num(v.At(best, "summary", "jumpCount")) != 36 {
-		t.Fatalf("stale Peak quote or incorrect route: %v", best["summary"])
+	if v.At(best, "options", "holidayConfirmed") != false || v.Num(v.At(best, "summary", "jumpCount")) != 36 {
+		t.Fatalf("incorrect route: %v", best["summary"])
 	}
 	if len(v.Rows(v.At(best, "route", "return"))) != 18 || v.Num(v.At(best, "summary", "fuelCost")) <= 0 {
 		t.Fatal("route does not include the fuel cost of the empty return")
 	}
+	stale, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now())}, trade, state, nil, nil)
+	if err != nil || len(v.Rows(stale["results"])) != 0 {
+		t.Fatalf("stale sale price produced a route: %v, %v", stale, err)
+	}
 }
 
-func TestCarrierTradeBoozeCruiseUsesDistinctFreshSaleQuotes(t *testing.T) {
+func TestCarrierTradeBoozeCruiseCombinesSystemsAndEstimatesEachShuttle(t *testing.T) {
 	trade, state := opportunityFixture()
-	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now()), freshPeak: true}, trade, state, M{"scenario": "booze-cruise"}, nil)
+	options := v.Obj(trade["options"])
+	options["haulerPad"], options["haulerCapacity"] = "L", 1300
+	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now()), freshPeak: true, mixedPeak: true}, trade, state, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := map[string]float64{"wine": 250000, "liquor": 40000}
-	seen := map[string]bool{}
+	foundMixed := false
 	for _, row := range v.Rows(result["results"]) {
-		key := v.Str(row["commodityKey"])
-		if v.Num(v.At(row, "sell", "price")) != want[key] || v.Num(v.At(row, "summary", "profit")) <= 0 {
-			t.Fatalf("incorrect %s sale %v", key, row["sell"])
+		if row["commodityKey"] == "liquor" {
+			t.Fatal("a fresh high price does not qualify if its supplier cannot fill the hold")
 		}
-		seen[key] = true
+		orders := v.Rows(v.At(row, "buy", "orders"))
+		if len(orders) != 2 || orders[0]["system"] == orders[1]["system"] {
+			continue
+		}
+		foundMixed = true
+		quantity := v.Num(row["quantity"])
+		summary := v.Obj(row["summary"])
+		loading := math.Ceil(v.Num(orders[0]["quantity"])/1300) + math.Ceil(v.Num(orders[1]["quantity"])/1300)
+		unloading := math.Ceil(quantity / 400)
+		if v.Num(summary["loadingSorties"]) != loading || v.Num(summary["unloadingSorties"]) != unloading ||
+			v.Num(summary["jumpCount"]) <= 36 || v.Num(summary["profit"]) < netOpportunityMinimum {
+			t.Fatalf("mixed route or shuttle estimate is wrong: %v", summary)
+		}
+		total := v.Num(summary["travelHours"]) + v.Num(summary["loadingHours"]) +
+			v.Num(summary["unloadingHours"]) + v.Num(summary["fuelLoadingHours"])
+		if math.Abs(total-v.Num(summary["workingHours"])) > .000001 {
+			t.Fatalf("working time excludes a route stage: %v", summary)
+		}
 	}
-	if !seen["wine"] || !seen["liquor"] {
-		t.Fatalf("missing fresh quotes %v", seen)
+	if !foundMixed {
+		t.Fatal("no fully loaded route using both systems")
+	}
+}
+
+func TestCarrierTradeRequiresFullLoadAndMinimumNetProfit(t *testing.T) {
+	trade, state := opportunityFixture()
+	plan, err := newTradeOpportunityInputs(trade, state, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan.options["durationHours"] = 0
+	now := time.Now()
+	quantity := plan.capacity - plan.services
+	buy := M{"system": "Sol", "station": "Supplier", "price": 1, "supply": quantity, "pad": "L"}
+	sell := M{"system": "Sol", "station": "Buyer", "price": 1 + float64(netOpportunityMinimum)/quantity, "demand": 30000, "pad": "L"}
+	find := func() M {
+		supply := v.Num(buy["supply"])
+		return plan.candidate("gold", []M{buy}, sell, supply, supply, nil, nil, nil, nil, now)
+	}
+	if row := find(); v.Num(v.At(row, "summary", "profit")) != netOpportunityMinimum {
+		t.Fatalf("route at the minimum net profit was excluded: %v", row)
+	}
+	plan.options["extraCosts"] = 1
+	if find() != nil {
+		t.Fatal("gross margin passed even though net profit was under the threshold")
+	}
+	plan.options["extraCosts"] = 0
+	sell["price"] = 500000
+	buy["supply"] = quantity - 1
+	if find() != nil {
+		t.Fatal("profitable partial load was included")
+	}
+	buy["supply"] = quantity
+	plan.budget = quantity - 1
+	if find() != nil {
+		t.Fatal("unfunded full load was included")
 	}
 }

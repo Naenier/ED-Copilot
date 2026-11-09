@@ -59,7 +59,7 @@ Select a route, set its buyer as the overlay destination or save a plan for a pa
 
 ## Fleet carrier trading: the whole journey in one calculation
 
-Plan a wine or liquor run to Rackham’s Peak and the empty return. Copilot uses a built-in 18-jump corridor from Sol and plans only the connection to it. Cargo capacity accounts for services and the tritium needed for both directions, with a 10% fuel reserve.
+Find fully loaded runs with at least 400 million credits in estimated net profit. Copilot compares fresh regional markets and Rackham’s Peak, and can combine purchases across stations and systems. Each result includes separate estimates for jumping, loading, unloading and preparing tritium.
 
 ![Fleet carrier trading plan](docs/screenshots/en/carrier-trade.png)
 
@@ -151,4 +151,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new](docs/RELEASE-2.8.3.md) · [Build and delivery](docs/DELIVERY.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new](docs/RELEASE-2.8.4.md) · [Build and delivery](docs/DELIVERY.md)
