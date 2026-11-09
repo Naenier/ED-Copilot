@@ -163,27 +163,40 @@ function Assert-EDPublicURL {
 }
 
 function Invoke-EDPublicDownload {
-    param([Parameter(Mandatory)][string]$URL,[string]$Destination='', [long]$MaxBytes=1048576)
+    param([Parameter(Mandatory)][string]$URL,[string]$Destination='', [long]$MaxBytes=1048576,[switch]$PublisherMetadata)
+    $current=[uri]$URL
+    $timeout=[TimeSpan]::FromMinutes(5)
+    if($PublisherMetadata){
+        Assert-EDPublicURL $current
+        if($Destination -or $current.DnsSafeHost -ne 'api.github.com'){throw 'Publication credentials are restricted to GitHub API metadata.'}
+        if(-not $env:GH_TOKEN){throw 'GitHub publication metadata requires the workflow token.'}
+        $timeout=[TimeSpan]::FromSeconds(30)
+    }
     $handler=[Net.Http.HttpClientHandler]::new();$handler.AllowAutoRedirect=$false
-    $client=[Net.Http.HttpClient]::new($handler);$client.Timeout=[TimeSpan]::FromMinutes(5)
-    $cancel=[Threading.CancellationTokenSource]::new([TimeSpan]::FromMinutes(5))
+    $client=[Net.Http.HttpClient]::new($handler);$client.Timeout=$timeout
+    $cancel=[Threading.CancellationTokenSource]::new($timeout)
     $partial=''
     if($Destination){$Destination=Get-EDSafePath $Destination;$partial=$Destination+'.'+[guid]::NewGuid().ToString('N')+'.partial'}
     $client.DefaultRequestHeaders.UserAgent.ParseAdd('ED-Copilot-Delivery/1')
     $client.DefaultRequestHeaders.Accept.ParseAdd('application/vnd.github+json')
     $null=$client.DefaultRequestHeaders.TryAddWithoutValidation('X-GitHub-Api-Version','2022-11-28')
-    $current=[uri]$URL
     try {
+        if($PublisherMetadata){
+            $client.DefaultRequestHeaders.Authorization=[Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$env:GH_TOKEN)
+            $client.DefaultRequestHeaders.CacheControl=[Net.Http.Headers.CacheControlHeaderValue]::new()
+            $client.DefaultRequestHeaders.CacheControl.NoCache=$true
+        }
         for ($redirect=0;$redirect -le 4;$redirect++) {
             Assert-EDPublicURL $current
             $response=$client.GetAsync($current,[Net.Http.HttpCompletionOption]::ResponseHeadersRead,$cancel.Token).GetAwaiter().GetResult()
             try {
                 $status=[int]$response.StatusCode
                 if ($status -in @(301,302,303,307,308)) {
+                    if($PublisherMetadata){throw 'Authenticated GitHub metadata redirects are refused.'}
                     if ($null -eq $response.Headers.Location -or $redirect -eq 4) { throw 'Invalid update redirect.' }
                     $current=[uri]::new($current,$response.Headers.Location);continue
                 }
-                if ($status -ne 200) { throw "Public GitHub download returned HTTP $status." }
+                if ($status -ne 200) { throw "GitHub download returned HTTP $status." }
                 if ($response.Content.Headers.ContentLength -gt $MaxBytes) { throw 'Delivery response exceeds size limit.' }
                 $input=$response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
                 $output=if($Destination){[IO.File]::Open($partial,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)}else{[IO.MemoryStream]::new()}
@@ -261,6 +274,22 @@ function Test-EDReleaseTag {
     try{$actual=Resolve-EDReleaseCommit $Tag $Request}catch{if($_.Exception.Message -match 'HTTP 404\.$'){return $false};throw}
     if($actual -ne $ExpectedCommit){throw 'Existing release tag points to different source; increment app.Version.'}
     return $true
+}
+
+function Assert-EDCreatedReleaseTag {
+    param($Reference,[string]$Tag,[string]$ExpectedCommit)
+    if($Reference.ref -cne "refs/tags/$Tag" -or $Reference.object.type -cne 'commit' -or $Reference.object.sha -cne $ExpectedCommit){
+        throw 'Tag creation did not acknowledge the expected release commit.'
+    }
+}
+
+function Wait-EDReleaseTag {
+    param([string]$Tag,[string]$ExpectedCommit,[scriptblock]$Request,[scriptblock]$Delay={param($seconds) Start-Sleep -Seconds $seconds})
+    for($attempt=1;$attempt -le 5;$attempt++){
+        if(Test-EDReleaseTag $Tag $ExpectedCommit $Request){return}
+        if($attempt -lt 5){& $Delay $attempt}
+    }
+    throw 'Exact release tag did not become visible within five checks.'
 }
 
 function Save-EDReleaseAssets {

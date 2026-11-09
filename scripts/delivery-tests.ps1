@@ -56,6 +56,26 @@ try{
     Check 'Mock API resolves exact tag commit' {$request={param($url) return ,[Text.Encoding]::UTF8.GetBytes('{"object":{"type":"commit","sha":"'+$commit+'"}}')};Must ((Resolve-EDReleaseCommit 'v2.3.4' $request) -eq $commit) 'Tag identity lost.'}
     Check 'Orphan tag for different commit blocks publication' {$request={param($url) return ,[Text.Encoding]::UTF8.GetBytes('{"object":{"type":"commit","sha":"'+('b'*40)+'"}}')};Reject {Test-EDReleaseTag 'v2.3.4' $commit $request} 'different source'}
     Check 'Missing tag can be created without suppressing unrelated errors' {$missing={param($url) throw 'Public GitHub download returned HTTP 404.'};Must (-not(Test-EDReleaseTag 'v2.3.4' $commit $missing)) 'Missing tag not recognized.';Reject {Test-EDReleaseTag 'v2.3.4' $commit {throw 'Public GitHub download returned HTTP 403.'}} '403'}
+    Check 'Publisher metadata cannot send credentials to a CDN' {
+        Reject {Invoke-EDPublicDownload -URL 'https://release-assets.githubusercontent.com/fixture' -PublisherMetadata} 'restricted to GitHub API'
+    }
+    Check 'Tag creation confirms exact name and commit' {
+        Assert-EDCreatedReleaseTag @{ref='refs/tags/v2.3.4';object=@{type='commit';sha=$commit}} 'v2.3.4' $commit
+        Reject {Assert-EDCreatedReleaseTag @{ref='refs/tags/v2.3.4';object=@{type='commit';sha=('b'*40)}} 'v2.3.4' $commit} 'expected release commit'
+    }
+    Check 'New exact tag can appear after an initial missing response' {
+        $observed=@{reads=0;delays=0}
+        $request={param($url) $observed.reads++;if($observed.reads -eq 1){throw 'GitHub download returned HTTP 404.'};return ,[Text.Encoding]::UTF8.GetBytes('{"object":{"type":"commit","sha":"'+$commit+'"}}')}
+        Wait-EDReleaseTag 'v2.3.4' $commit $request {param($seconds) $observed.delays+=$seconds}
+        Must ($observed.reads -eq 2 -and $observed.delays -eq 1) 'Delayed tag was not verified after a single retry.'
+    }
+    Check 'Missing tag retries are bounded and other failures stop immediately' {
+        $observed=@{reads=0;delays=0}
+        $request={param($url) $observed.reads++;throw 'GitHub download returned HTTP 404.'}
+        Reject {Wait-EDReleaseTag 'v2.3.4' $commit $request {param($seconds) $observed.delays+=$seconds}} 'five checks'
+        Must ($observed.reads -eq 5 -and $observed.delays -eq 10) 'Tag visibility wait was not bounded.'
+        Reject {Wait-EDReleaseTag 'v2.3.4' $commit {throw 'GitHub download returned HTTP 403.'} {throw 'Unexpected retry'}} '403'
+    }
     Check 'Prerelease cannot be installed as stable' {$release.prerelease=$true;Reject {Save-EDReleaseAssets $release $commit $downloaded $mock} 'stable release';$release.prerelease=$false}
     $profile=Join-Path $temp 'profile';[IO.Directory]::CreateDirectory((Join-Path $profile 'WebView2'))|Out-Null
     [IO.File]::WriteAllText((Join-Path $profile 'settings-go-v2.json'),'synthetic commander data')
