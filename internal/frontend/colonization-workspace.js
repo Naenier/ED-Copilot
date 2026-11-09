@@ -37,15 +37,15 @@ function date(value){
  if(!value)return '';
  const parsed=new Date(value);return Number.isNaN(+parsed)?'':parsed.toLocaleString(window.CopilotI18n?.locale()||'ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
-function summary(C,u){
- const colony=C.state?.colonization||{},project=colony.activeProject;
+function summary(C,u,project=C.state?.colonization?.activeProject){
+ const colony=C.state?.colonization||{};
  if(!project?.id)return '<section class="colony-start"><div class="colony-start-symbol">'+u.icon('orbit')+`</div><div><span class="eyebrow">${th("Колонизация")}</span><h2>${th("Колонии не добавлены")}</h2><p>${th("Найдите систему или добавьте колонию вручную.")}</p></div>`+action(C,u,'colony.create',t("Добавить план вручную"),'plus')+'</section>';
  const buildings=project.buildings||[],unfinished=buildings.filter(item=>!['complete','cancelled','failed'].includes(item.status));
  const unknown=Number(project.unknownBills)||0,missing=known(project.totalMissing)?Number(project.totalMissing):null;
  const remaining=missing===null||unknown>0&&missing===0?t("Неизвестно"):(unknown>0?t("Не менее "):'')+u.fmt(missing)+t(" т");
  const next=project.nextTask||{},deadline=project.primaryComplete||project.deadlineActive===false?'':date(project.effectiveDeadline??project.deadline),warnings=project.warnings||[];
- const needs=C.mode==='Бюджет'?[]:(project.operationalSupplies||project.supplies||[]).filter(item=>known(item.missing)&&Number(item.missing)>0).slice(0,4);
- return '<section class="colony-overview" data-colony-id="'+u.esc(project.id)+`"><header><div class="colony-overview-title"><span class="eyebrow">${th("Выбранная колония")}</span><h2>`+u.esc(project.name||project.targetSystem)+'</h2><div class="colony-overview-meta"><span>'+u.icon('orbit')+u.esc(project.targetSystem||t("Система не задана"))+'</span>'+u.badge(t(statusNames[project.status]||"Статус не задан"))+'</div></div><div class="colony-overview-actions">'+(project.targetSystem?u.btn(t("Копировать систему"),'colony-workspace-copy','copy','quiet','type="button" data-system="'+u.esc(project.targetSystem)+'"'):'')+action(C,u,'colony.edit',t("Параметры"),'settings')+`</div></header><dl class="colony-origin-summary"><div><dt>${th("Исходная система")}</dt><dd>`+u.esc(project.originSystem||t("Не задана"))+`</dd></div><div><dt>${th("Фракция колонии")}</dt><dd>`+u.esc(project.faction||t("Не задана"))+`</dd></div><div><dt>${th("Направление")}</dt><dd>`+u.esc(project.economyPlan?.name||t("Не задано"))+'</dd></div></dl><div class="colony-summary-metrics">'+metric(t("Объектов в плане"),u.fmt(buildings.length),t("В строительстве: ")+u.fmt(project.concurrent||0),u)+metric(t("Осталось доставить"),remaining,unknown?t("Без ")+u.fmt(unknown)+t(" неизвестных смет"):t("По учтённым требованиям"),u)+metric(t("Сметы объектов"),u.fmt(Math.max(0,unfinished.length-unknown))+' / '+u.fmt(unfinished.length),t("Для незавершённых объектов"),u)+metric(t("Очки архитектора"),'T2 '+format(project.points?.tier2,u)+' · T3 '+format(project.points?.tier3,u),t("Введено в параметрах колонии"),u)+'</div>'+(next.text?'<div class="colony-next-step"><span>'+u.icon(next.kind==='delivery'?'package':'arrow-right')+`</span><div><strong>${th("Следующий шаг")}</strong><p>`+u.esc(next.text)+'</p>'+(deadline?`<small>${th("Срок первичного порта: ")}`+u.esc(deadline)+(project.deadlineSource==='claim-estimate'?t(" · расчёт по дате заявки"):'')+'</small>':'')+'</div>'+(next.kind==='delivery'?`<button type="button" class="pill quiet" data-mode="Снабжение">`+u.icon('arrow-right')+`${th("К снабжению")}</button>`:'')+'</div>':'')+(needs.length?`<div class="colony-supply-preview"><div class="colony-supply-heading"><strong>${th("Ближайшие потребности")}</strong><button type="button" data-mode="Снабжение">${th("Все товары ")}`+u.icon('arrow-right')+'</button></div><div class="colony-supply-items">'+needs.map(item=>'<div><span>'+u.esc(item.name||item.commodity)+'</span><strong>'+u.esc(format(item.missing,u,t(" т")))+`</strong><small>${th("В корабле: ")}`+u.esc(format(item.cargoAvailable,u,t(" т")))+'</small>'+(colony.includeCarrierWarehouse?'<small>'+th('На флотоносце: ')+u.esc(format(item.carrierAvailable,u,t(' т')))+'</small><small>'+th('Купить: ')+u.esc(known(item.toBuy)?format(item.toBuy,u,t(' т')):known(item.toBuyAtMost)?t('Не более ')+format(item.toBuyAtMost,u,t(' т')):t('Неизвестно'))+'</small>':'')+'</div>').join('')+'</div></div>':'')+(warnings.length?`<details class="colony-data-warnings"><summary>${th("Проверить данные · ")}`+u.esc(u.fmt(warnings.length))+'</summary><ul>'+warnings.map(item=>'<li>'+u.esc(item)+'</li>').join('')+'</ul></details>':'')+'</section>';
+ const needs=(project.operationalSupplies||project.supplies||[]).filter(item=>known(item.missing)&&Number(item.missing)>0).slice(0,4);
+ return '<section class="colony-overview" data-colony-id="'+u.esc(project.id)+`"><header><div class="colony-overview-title"><h2>`+u.esc(project.name||project.targetSystem)+'</h2><div class="colony-overview-meta"><span>'+u.icon('orbit')+u.esc(project.targetSystem||t("Система не задана"))+'</span>'+u.badge(t(statusNames[project.status]||"Статус не задан"))+'</div></div><div class="colony-overview-actions">'+(project.targetSystem?u.btn(t("Копировать систему"),'colony-workspace-copy','copy','quiet','type="button" data-project="'+u.esc(project.id)+'"'):'')+(colony.activeProject?.id===project.id?action(C,u,'colony.edit',t("Параметры"),'settings'):'')+u.btn(t('Строительство'),'colony-workspace-open','arrow-right','quiet','data-project="'+u.esc(project.id)+'"')+`</div></header><dl class="colony-origin-summary"><div><dt>${th("Исходная система")}</dt><dd>`+u.esc(project.originSystem||t("Не задана"))+`</dd></div><div><dt>${th("Фракция колонии")}</dt><dd>`+u.esc(project.faction||t("Не задана"))+`</dd></div><div><dt>${th("Направление")}</dt><dd>`+u.esc(project.economyPlan?.name||t("Не задано"))+'</dd></div></dl><div class="colony-summary-metrics">'+metric(t("Объектов в плане"),u.fmt(buildings.length),t("В строительстве: ")+u.fmt(project.concurrent||0),u)+metric(t("Осталось доставить"),remaining,unknown?t("Без ")+u.fmt(unknown)+t(" неизвестных смет"):t("По учтённым требованиям"),u)+metric(t("Сметы объектов"),u.fmt(Math.max(0,unfinished.length-unknown))+' / '+u.fmt(unfinished.length),t("Для незавершённых объектов"),u)+metric(t("Очки архитектора"),'T2 '+format(project.points?.tier2,u)+' · T3 '+format(project.points?.tier3,u),t("Введено в параметрах колонии"),u)+'</div>'+(next.text?'<div class="colony-next-step"><span>'+u.icon(next.kind==='delivery'?'package':'arrow-right')+`</span><div><strong>${th("Следующий шаг")}</strong><p>`+u.esc(next.text)+'</p>'+(deadline?`<small>${th("Срок первичного порта: ")}`+u.esc(deadline)+(project.deadlineSource==='claim-estimate'?t(" · расчёт по дате заявки"):'')+'</small>':'')+'</div>'+'</div>':'')+(needs.length?`<div class="colony-supply-preview"><div class="colony-supply-heading"><strong>${th("Ближайшие потребности")}</strong></div><div class="colony-supply-items">`+needs.map(item=>'<div><span>'+u.esc(item.name||item.commodity)+'</span><strong>'+u.esc(format(item.missing,u,t(" т")))+`</strong><small>${th("В корабле: ")}`+u.esc(format(item.cargoAvailable,u,t(" т")))+'</small>'+(colony.includeCarrierWarehouse?'<small>'+th('На флотоносце: ')+u.esc(format(item.carrierAvailable,u,t(' т')))+'</small><small>'+th('Купить: ')+u.esc(known(item.toBuy)?format(item.toBuy,u,t(' т')):known(item.toBuyAtMost)?t('Не более ')+format(item.toBuyAtMost,u,t(' т')):t('Неизвестно'))+'</small>':'')+'</div>').join('')+'</div></div>':'')+(warnings.length?`<details class="colony-data-warnings"><summary>${th("Проверить данные · ")}`+u.esc(u.fmt(warnings.length))+'</summary><ul>'+warnings.map(item=>'<li>'+u.esc(item)+'</li>').join('')+'</ul></details>':'')+'</section>';
 }
 function originSearch(C,u){
  const {r,search,ready,stations,selected}=source(C),running=!!search.running||r.pending;
@@ -76,7 +76,7 @@ function budget(C,u){
  if(unpriced)warnings.push(t('Без средней цены: ')+u.fmt(unpriced));
  if(manualBills)warnings.push(t('Ручных смет: ')+u.fmt(manualBills));
  const covered=[metric(t('Принято стройками'),budgetValue(cost.delivered,u),t('Стоимость уже принятых ресурсов по тем же ценам'),u),metric(t('Покрыто грузом корабля'),budgetValue(cost.cargoCovered,u),t('Груз ещё нужно передать на стройку'),u),metric(t('Покрыто складом флотоносца'),budgetValue(cost.carrierCovered,u),t('В пределах потребности и включённого учёта'),u)].join('');
- return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><p class="colony-budget-basis">'+th('По средним ценам галактики')+'</p><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. Подробные цены и суммы каждого товара находятся на экранах «Снабжение» и «Бюджет».')+'</p></details></section>';
+ return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><p class="colony-budget-basis">'+th('По средним ценам галактики')+'</p><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ')+'</p></details></section>';
 }
 function warehouseOptions(C,u){
  const colony=C.state?.colonization||{},r=state(C),enabled=colony.includeCarrierWarehouse===true,canConfirm=!!stockAccessScope(C);
@@ -85,12 +85,18 @@ function warehouseOptions(C,u){
 function budgetContext(C,u){
  const project=C.state?.colonization?.activeProject;
  if(!project?.id)return summary(C,u);
- return '<header class="colony-budget-context" data-colony-id="'+u.esc(project.id)+'"><div><span class="eyebrow">'+th('Выбранная колония')+'</span><h2>'+u.esc(project.name||project.targetSystem)+'</h2><div class="colony-overview-meta">'+(!same(project.name,project.targetSystem)?'<span>'+u.icon('orbit')+u.esc(project.targetSystem||t('Система не задана'))+'</span>':'')+u.badge(t(statusNames[project.status]||'Статус не задан'))+'</div></div><div class="colony-overview-actions">'+(project.targetSystem?u.btn(t('Копировать систему'),'colony-workspace-copy','copy','quiet','type="button" data-system="'+u.esc(project.targetSystem)+'"'):'')+action(C,u,'colony.edit',t('Параметры'),'settings')+'</div></header>';
+ return '<header class="colony-budget-context" data-colony-id="'+u.esc(project.id)+'"><div><span class="eyebrow">'+th('Выбранная колония')+'</span><h2>'+u.esc(project.name||project.targetSystem)+'</h2><div class="colony-overview-meta">'+(!same(project.name,project.targetSystem)?'<span>'+u.icon('orbit')+u.esc(project.targetSystem||t('Система не задана'))+'</span>':'')+u.badge(t(statusNames[project.status]||'Статус не задан'))+'</div></div><div class="colony-overview-actions">'+(project.targetSystem?u.btn(t('Копировать систему'),'colony-workspace-copy','copy','quiet','type="button" data-project="'+u.esc(project.id)+'"'):'')+'</div></header>';
 }
 function render(C,u){
  if(!active(C))return '';
  if(C.mode==='Бюджет')return '<div data-colony-workspace class="colony-budget-workspace">'+budgetContext(C,u)+budget(C,u)+'<details class="colony-budget-stock"><summary>'+th('Запасы и учёт')+'</summary>'+warehouseOptions(C,u)+'</details></div>';
- return '<div data-colony-workspace>'+summary(C,u)+warehouseOptions(C,u)+(!selectionMode(C)?budget(C,u):'')+(selectionMode(C)?originSearch(C,u):'')+'</div>';
+ if(selectionMode(C)&&C.mode)return '<div data-colony-workspace>'+originSearch(C,u)+action(C,u,'colony.create',t('Добавить колонию вручную'),'plus')+'</div>';
+ if(!C.mode||C.mode==='Обзор'){
+  const colony=C.state?.colonization||{},projects=colony.projects?.length?colony.projects:colony.activeProject?.id?[colony.activeProject]:[];
+  return '<div data-colony-workspace class="colony-overview-list">'+(projects.length?projects.map(project=>summary(C,u,project)).join(''):summary(C,u,null))+
+   '<div class="colony-overview-actions">'+u.btn(t('Выбрать систему'),'colony-workspace-new','search','quiet')+(projects.length?action(C,u,'colony.create',t('Добавить колонию вручную'),'plus'):'')+'</div></div>';
+ }
+ return '';
 }
 function clearError(C,u){const r=state(C);r.error='';const node=u.$('.colony-workspace-error');if(node){node.textContent='';node.hidden=true;}}
 function clearStation(C,u,changedOrigin=false){
@@ -126,20 +132,46 @@ function handleChange(event,C,u){
    finally{r.warehousePending=false;if(active(C)){u.renderPage();u.$('#'+target.id)?.focus?.({preventScroll:true});}}
   })();return true;
  }
+ if(target?.id==='colony-workspace-origin'&&selectionMode(C)){queueSearch(C,u,'colony-workspace-check');return true;}
  if(target?.id!=='colony-workspace-station')return false;
  const {r,stations}=source(C),station=stations.find(item=>stationKey(item)===event.target.value);
  r.station=station?stationKey(station):'';r.faction=station?.faction||'';r.error='';
- u.renderPage();u.$('#colony-workspace-station')?.focus?.({preventScroll:true});return true;
+ u.renderPage();u.$('#colony-workspace-station')?.focus?.({preventScroll:true});
+ if(station)queueSearch(C,u,'colony-workspace-find');return true;
+}
+
+function renderBuilding(C,u){
+ const project=C.state?.colonization?.activeProject, building=project?.buildings?.find(item=>item.id===C.selected);
+ if(!building)return '';
+ const requirements=Array.isArray(building.requirements)?building.requirements:[];
+ if(!requirements.length)return '';
+ const total=requirements.reduce((n,row)=>n+(known(row.required)?Number(row.required):0),0);
+ const delivered=requirements.reduce((n,row)=>n+(known(row.required)&&known(row.delivered)?Math.min(Number(row.required),Number(row.delivered)):0),0);
+ const complete=total>0&&requirements.every(row=>known(row.required)&&known(row.delivered));
+ const headings=['Товар','Нужно, т','Сдано, т','Осталось, т'];
+ return '<section class="panel colony-building-cost"><header><h2>'+u.esc(building.name||building.typeName||t('Строительство'))+'</h2>'+
+  (complete?'<div class="colony-building-progress"><progress max="'+u.esc(total)+'" value="'+u.esc(delivered)+'" aria-label="'+th('Ход поставок')+'"></progress><span>'+u.esc(u.fmt(delivered))+' / '+u.esc(u.fmt(total))+th(' т')+'</span></div>':'')+'</header>'+
+  '<div class="table-scroll"><table><thead><tr>'+headings.map(h=>'<th>'+th(h)+'</th>').join('')+'</tr></thead><tbody>'+requirements.map(row=>'<tr><td>'+u.esc(row.name||row.commodity)+'</td>'+[row.required,row.delivered,row.missing].map(v=>'<td>'+u.esc(format(v,u))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></section>';
 }
 async function handleClick(action,button,C,u){
  if(!active(C)||!action?.startsWith('colony-workspace-'))return false;
+ if(action==='colony-workspace-new'){await u.navigate('colonization',{mode:'Выбор системы'});return true;}
+ if(action==='colony-workspace-open'){
+  const id=button.dataset.project;
+  if(id&&id!==C.state?.colonization?.selectedProjectId)await u.call('select-colony',{...u.context?.(),id});
+  if(active(C))await u.navigate('colonization',{mode:'Строительство'});
+  return true;
+ }
  if(action==='colony-workspace-copy'){
-  const system=C.state?.colonization?.activeProject?.targetSystem;
+  const colony=C.state?.colonization||{},id=button?.dataset?.project;
+  const project=id?(colony.projects||[]).find(item=>item.id===id)||((colony.activeProject?.id===id)?colony.activeProject:null):colony.activeProject;
+  const system=project?.targetSystem;
   if(system){await u.call('native',{action:'copy',text:system});u.toast(t("Система колонии скопирована"));}return true;
  }
  if(!['colony-workspace-check','colony-workspace-find'].includes(action))return false;
  const {r,search,ready,selected}=source(C);
  if(r.pending||search.running)return true;
+ if(r.queuedSearch?.action===action)r.queuedSearch=null;
  const origin=r.origin.trim(),faction=action==='colony-workspace-check'?'':String(selected?.faction||r.faction).trim();
  r.error='';
  if(!origin)r.error=t("Укажите точное название исходной обитаемой системы.");
@@ -155,11 +187,32 @@ async function handleClick(action,button,C,u){
  finally{r.pending=false;if(active(C))u.renderPage();}
  return true;
 }
+function queueSearch(C,u,action){
+ if(window.COPILOT_SMOKE||typeof window.setTimeout!=='function')return;
+ const r=state(C),origin=r.origin.trim();if(!origin)return;
+ r.queuedSearch={action,origin,station:r.station};
+ flushSearch(C,u);
+}
+function flushSearch(C,u){
+ const {r,ready,search}=source(C),pending=r.queuedSearch;
+ if(!pending||r.autoTimer||r.pending||search.running)return;
+ const valid=()=>active(C)&&selectionMode(C)&&same(pending.origin,r.origin)&&(pending.action!=='colony-workspace-find'||pending.station===r.station);
+ if(!valid()||pending.action==='colony-workspace-check'&&ready){r.queuedSearch=null;return;}
+ r.autoTimer=window.setTimeout(()=>{
+  r.autoTimer=null;
+  if(r.queuedSearch!==pending){flushSearch(C,u);return;}
+  if(!valid()){r.queuedSearch=null;return;}
+  if(r.pending||source(C).search.running)return;
+  r.queuedSearch=null;void handleClick(pending.action,null,C,u);
+ },250);
+}
 function init(C,u){
  if(!active(C))return;
  const r=state(C),{stations}=source(C);
  if(r.station&&!stations.some(item=>stationKey(item)===r.station)){r.station='';r.faction='';}
  if(!realFaction(r.faction))r.faction='';
+ if(selectionMode(C)&&C.mode&&r.autoOrigin!==r.origin&&r.origin){r.autoOrigin=r.origin;queueSearch(C,u,'colony-workspace-check');}
+ if(selectionMode(C))flushSearch(C,u);
 }
-window.ColonyWorkspaceUI={active,render,init,handleClick,handleInput,handleChange};
+window.ColonyWorkspaceUI={active,render,renderBuilding,init,handleClick,handleInput,handleChange};
 })();

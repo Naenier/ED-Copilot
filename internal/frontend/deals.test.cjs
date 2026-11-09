@@ -57,6 +57,46 @@ test('backend text is escaped and unknown observation values never become a fres
 test('unrelated global input does not initialize stale route filters and buttons do not submit twice',()=>{
  const {api,C,u,listeners}=fixture();assert.equal(api.handleInput({target:{id:'settings-other',matches:()=>false}},C,u),false);assert.equal(C.dealsUI,undefined);api.init(C,u);const first=listeners.get('submit');api.init(C,u);assert.equal(listeners.get('submit'),first);assert.match(api.render(C,u),/data-click="deals-search" type="button"/);
 });
+test('opening trade finds routes automatically using confirmed hold, credits and ship pad',async()=>{
+ const {api,C,u,calls}=fixture();
+ C.mode='Поиск';C.state.tradeRoutes={};C.state.commander.shipPad='M';
+ assert.match(api.render(C,u),/Подбираем выгодные рейсы/);
+ assert.doesNotMatch(api.render(C,u),/Рейсы не найдены/);
+ const first=api.init(C,u), duplicate=api.init(C,u);
+ await Promise.all([first,duplicate]);
+ assert.equal(calls.length,1);
+ const {values}=calls[0].params;
+ assert.equal(calls[0].op,'deals-search');
+ assert.equal(values.automatic,true);
+ assert.equal(values.system,'Alpha');
+ assert.equal(values.cargoCapacity,80);
+ assert.equal(values.credits,100000);
+ assert.equal(values.minPad,'M');
+ C.state.tradeRoutes={options:values,updatedAt:new Date().toISOString(),results:[]};
+ await api.init(C,u);
+ assert.equal(calls.length,1);
+});
+
+test('automatic routes do not guess empty cargo, funding or saved-route intent',async()=>{
+ const {api,C,u,calls}=fixture();
+ C.state.tradeRoutes={};C.mode='Поиск';C.state.commander.cargoKnown=false;
+ assert.match(api.render(C,u),/Укажите свободный трюм/);
+ await api.init(C,u);
+ C.state.commander.cargoKnown=true;C.state.pilot.credits=null;
+ assert.match(api.render(C,u),/Укажите бюджет закупки/);
+ await api.init(C,u);
+ C.state.pilot.credits=100000;C.mode='Сохранённые';
+ await api.init(C,u);
+ assert.equal(calls.length,0);
+});
+test('an empty manual search from a previous session does not suppress automatic suggestions',async()=>{
+ const {api,C,u,calls}=fixture();
+ C.mode='Поиск';C.state.commander.shipPad='M';
+ C.state.tradeRoutes={options:{system:'Alpha',automatic:false},updatedAt:new Date().toISOString(),results:[]};
+ await api.init(C,u);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].params.values.automatic,true);
+});
 test('component smoke is independent of selected result or saved view',async()=>{const {api,C,u}=fixture();api.render(C,u);C.dealsUI.view='saved';assert.ok((await api.smoke(C,u)).every(check=>check.ok));});
 
 test('raw child-market pages and malformed legacy records never become empty route cards',async()=>{

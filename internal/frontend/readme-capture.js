@@ -33,12 +33,12 @@ async function run(C,u){
   await u.navigate('ranks');check('All eight rank cards are available',u.$$('[data-rank-card]').length===8);await capture('readme-ranks');
   await u.navigate('commander',{mode:'Флот'});check('Commander fleet is available',!!u.$('[data-commander-section="Флот"]'));await capture('readme-fleet');
   await u.navigate('commander',{mode:'Инвентарь'});check('Commander inventory is available',!!u.$('[data-commander-section="Инвентарь"]'));await capture('readme-inventory');
-  await u.navigate('overview',{mode:'Состояние'});check('Navigation has one permanent settings control',u.$$('.rail [data-click="settings-nav"]').length===1&&u.$$('.sidebar [data-nav="settings"]').length===0);await capture('readme-navigation');
+  await u.navigate('overview');check('Navigation has one permanent settings control',u.$$('.rail [data-click="settings-nav"]').length===1&&u.$$('.sidebar [data-nav="settings"]').length===0);await capture('readme-navigation');
   const wasCollapsed=C.collapsed;
   try{if(!C.collapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));check('Compact navigation collapses only the sidebar',C.collapsed===true);await capture('readme-navigation-compact');}
   finally{if(C.collapsed!==wasCollapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));}
   await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
-  await u.navigate('carrier-trade');await capture('readme-carrier-trade');
+  await u.navigate('carrier-trade',{mode:'Рейс'});await capture('readme-carrier-trade');
   await u.navigate('route');await capture('route-details');
   await category('ships');await capture('readme-ships');
   await entry('ships','Python');await capture('readme-ship');

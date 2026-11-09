@@ -14,7 +14,8 @@ func Language(state M) string {
 
 func Build(tab, mode, query string, state M) Page {
 	page := buildPage(tab, mode, query, state)
-	if Language(state) != "en" {
+	// Guide topics already select their language and search both bodies.
+	if tab == "help" || Language(state) != "en" {
 		return page
 	}
 	// English search must also work when the persisted catalogue's display

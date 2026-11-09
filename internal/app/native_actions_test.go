@@ -135,7 +135,8 @@ func TestNativeFormsDriveGoalsTradingMiningAndEngineering(t *testing.T) {
 
 func TestNativeFormsDriveSettingsPaletteAndCarrierStock(t *testing.T) {
 	e, file, dir := fixtureEngine(t, nil)
-	runNative(t, e, "settings", "", "settings.filters", nil, M{"minTier": "high", "method": "core", "radiusLy": 75, "maxArrivalLs": 5000, "minLaserPercent": 20, "hideDepleted": false, "overlayEnabled": false})
+	runNative(t, e, "settings", "", "settings.filters", nil, M{"minTier": "high", "method": "core", "radiusLy": 75, "maxArrivalLs": 5000, "minLaserPercent": 20, "hideDepleted": false})
+	doOK(t, e, "/api/settings", M{"overlayEnabled": false})
 	if v.At(e.Snapshot(), "settings", "minTier") != "high" || v.At(e.Snapshot(), "settings", "overlayEnabled") != false {
 		t.Fatal("native settings not applied")
 	}

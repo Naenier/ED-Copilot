@@ -10,8 +10,18 @@ import (
 func CarrierTradePage(mode, query string, state M) Page {
 	c := v.Obj(state["carrierTrade"])
 	s := v.Obj(c["summary"])
-	page := Page{Title: "Торговля флотоносцем", Description: "Посчитайте весь рейс владельца: рынки, тритий, прыжки, содержание и работу перевозчиков.", Modes: []string{"Рейс", "Расходы", "Проверки"}, Summary: "Плановая прибыль: " + Number(s["profit"]) + " кр. · Неизвестные цены и расходы не считаются нулевыми."}
+	page := Page{Title: "Торговля флотоносцем", Modes: []string{"Рейсы", "Рейс", "Расходы", "Проверки"}, Summary: "Плановая прибыль: " + Number(s["profit"]) + " кр. · Неизвестные цены и расходы не считаются нулевыми."}
 	switch mode {
+	case "Рейсы":
+		page.Columns = []string{"Товар", "Закупка", "Продажа", "Объём, т", "Прыжки", "Прибыль, кр."}
+		for _, offer := range v.Rows(v.At(c, "opportunities", "results")) {
+			if contains(query, offer["commodityName"], v.At(offer, "buy", "system"), v.At(offer, "sell", "system")) {
+				from := v.Text(v.At(offer, "buy", "station")) + " · " + v.Text(v.At(offer, "buy", "system"))
+				to := v.Text(v.At(offer, "sell", "station")) + " · " + v.Text(v.At(offer, "sell", "system"))
+				page.Rows = append(page.Rows, row(offer, []string{v.Str(offer["commodityName"]), from, to,
+					Number(offer["quantity"]), Number(v.At(offer, "summary", "jumpCount")), Number(v.At(offer, "summary", "profit"))}, from+" → "+to))
+			}
+		}
 	case "Проверки":
 		page.Columns = []string{"Проверка", "Результат", "Пояснение"}
 		for _, r := range v.Rows(c["issues"]) {

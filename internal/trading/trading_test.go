@@ -73,6 +73,36 @@ func TestLedgerMinedColonizationSRVAndReplayBoundaries(t *testing.T) {
 		t.Fatal("death did not clear cargo")
 	}
 }
+
+func TestTradingStatisticsIncludeLossesAndSeparateUnknownCosts(t *testing.T) {
+	s := New(M{})
+	context := M{"commander": M{"vehicle": "ship"}, "carrierId": "42"}
+	s.Apply(event("MarketBuy", M{"Type": "Gold", "Count": 10, "TotalCost": 1000}), context)
+	s.Apply(event("MarketSell", M{"Type": "Gold", "Count": 6, "TotalSale": 300}), context)
+	s.Apply(event("MarketSell", M{"Type": "Gold", "Count": 6, "TotalSale": 300}), context)
+	s.Apply(event("MarketBuy", M{"Type": "Silver", "Count": 2, "TotalCost": 200}), M{
+		"commander": context["commander"], "carrierId": "42", "ownMarket": true,
+	})
+	snapshot := s.Snapshot(context)
+	totals := v.Obj(snapshot["totals"])
+	for key, want := range map[string]float64{
+		"buyCount": 1, "sellCount": 2, "boughtTons": 10, "soldTons": 12, "purchaseCost": 1000,
+		"revenue": 600, "grossMargin": -500, "unknownCostTons": 2,
+	} {
+		if got := v.Num(totals[key]); got != want {
+			t.Fatalf("total %s = %v, want %v", key, got, want)
+		}
+	}
+	days, goods := v.Rows(snapshot["daily"]), v.Rows(snapshot["byResource"])
+	if len(days) != 1 || len(goods) < 1 || v.Str(goods[0]["key"]) != "gold" {
+		t.Fatalf("unexpected trading aggregates: %v, %v", days, goods)
+	}
+	checkN(t, days[0]["grossMargin"], -500)
+	checkN(t, days[0]["unknownCostTons"], 2)
+	checkN(t, goods[0]["grossMargin"], -500)
+	checkN(t, goods[0]["unknownCostTons"], 2)
+}
+
 func TestBasketAndMarketPriceDirection(t *testing.T) {
 	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
 	state := M{"commander": M{"cargo": []M{{"key": "gold", "count": 10}, {"key": "drones", "count": 4}}}}

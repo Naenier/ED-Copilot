@@ -157,7 +157,7 @@ func (s *Service) Reset() {
 	}
 	s.ActiveVessel = "ship"
 	s.Totals = M{}
-	for _, k := range []string{"boughtTons", "soldTons", "purchaseCost", "revenue", "knownCost", "knownRevenue", "grossMargin", "unknownCostTons", "miningRevenue", "internalTons", "operatingCosts"} {
+	for _, k := range []string{"boughtTons", "soldTons", "buyCount", "sellCount", "purchaseCost", "revenue", "knownCost", "knownRevenue", "grossMargin", "unknownCostTons", "miningRevenue", "internalTons", "operatingCosts"} {
 		s.Totals[k] = float64(0)
 	}
 	s.Rows = map[string]M{}
@@ -277,15 +277,22 @@ func (s *Service) record(event, t M, countInPeriod bool) {
 		case "buy":
 			plus(s.Totals, "boughtTons", count)
 			plus(s.Totals, "purchaseCost", value)
+			plus(s.Totals, "buyCount", 1)
+			plus(day, "boughtTons", count)
+			plus(day, "buyCount", 1)
 			plus(day, "purchaseCost", value)
 		case "sell":
 			plus(s.Totals, "soldTons", count)
 			plus(s.Totals, "revenue", value)
+			plus(s.Totals, "sellCount", 1)
 			for _, p := range [][2]string{{"knownCost", "knownCost"}, {"knownRevenue", "knownRevenue"}, {"grossMargin", "margin"}, {"unknownCostTons", "unknownTons"}, {"miningRevenue", "minedRevenue"}} {
-				plus(s.Totals, p[0], n(t, p[1]))
+				plus(s.Totals, p[0], v.Num(t[p[1]]))
 			}
+			plus(day, "soldTons", count)
+			plus(day, "sellCount", 1)
 			plus(day, "revenue", value)
-			plus(day, "grossMargin", n(t, "margin"))
+			plus(day, "grossMargin", v.Num(t["margin"]))
+			plus(day, "unknownCostTons", n(t, "unknownTons"))
 		case "cost":
 			plus(s.Totals, "operatingCosts", value)
 		}
@@ -304,7 +311,7 @@ func (s *Service) record(event, t M, countInPeriod bool) {
 		if !internal && kind == "sell" {
 			plus(r, "soldTons", count)
 			plus(r, "revenue", value)
-			plus(r, "grossMargin", n(t, "margin"))
+			plus(r, "grossMargin", v.Num(t["margin"]))
 			plus(r, "unknownCostTons", n(t, "unknownTons"))
 		}
 	}

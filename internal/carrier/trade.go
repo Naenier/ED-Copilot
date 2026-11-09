@@ -169,8 +169,8 @@ func tradeNormalize(options, legs M) (M, M, error) {
 	}
 	if out["preset"] == "booze-cruise" {
 		leg := v.Obj(cleanLegs["outbound"])
-		if leg["commodityKey"] != "wine" || v.Key(leg["destinationSystem"]) != "hip58832" {
-			return nil, nil, errors.New("Шаблон Booze Cruise перевозит вино в HIP 58832. Для другого товара или назначения выберите обычный рейс.")
+		if (leg["commodityKey"] != "wine" && leg["commodityKey"] != "liquor") || v.Key(leg["destinationSystem"]) != "hip58832" {
+			return nil, nil, errors.New("Для Booze Cruise выберите вино или спиртное и назначение HIP 58832.")
 		}
 	}
 	return out, cleanLegs, nil

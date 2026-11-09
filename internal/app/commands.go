@@ -109,6 +109,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			return nil, err
 		}
 	case "/api/carrier/trade":
+		if body["action"] == "opportunities" {
+			return e.startCarrierTradeOpportunities(body)
+		}
 		if err := e.updateCarrierTrade(body); err != nil {
 			return nil, err
 		}

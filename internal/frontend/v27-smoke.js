@@ -25,16 +25,19 @@ async function run(C,u){
     await wait(()=>C.group===group.id&&C.page&&window.NavigationUI.groupFor(C.tab)===group.id);
     const expected=new Set(group.tabs);check(language+': sidebar contains only '+group.id,u.$$('.sidebar [data-nav]').every(node=>expected.has(node.dataset.nav)));
    }
+   check(language+': status and overlay switch live in the rail',u.$$('#journal-indicator').length===1&&u.$$('.rail [data-click="overlay"]').length===1&&!u.$('#page-toolbar .status'));
+   await u.navigate('settings');check(language+': connections are embedded in Settings',!!u.$('#inara-connection-form')&&!!u.$('.connections-settings')&&!window.NavigationUI.groupFor('account'));
+   await u.navigate('help');check(language+': the guide has a grouped index and a readable article',!!u.$('.guide-index section')&&!!u.$('.guide-article')&&!u.$('#page table'));
    const avatar=u.$('.rail .avatar');avatar.click();await wait(()=>C.tab==='commander'&&!!u.$('[data-commander-section]'));
    check(language+': commander avatar opens commander instead of OAuth',C.group==='commander'&&C.tab==='commander'&&C.state.commanderProfile?.commanderFID==='FNATIVE-SYNTHETIC');
-   for(const mode of ['Сводка','Финансы','Инвентарь','Имущество','Флот','Статистика','Репутация','Журнал']){
+   for(const mode of ['Сводка','Финансы','Инвентарь','Имущество','Флот','Статистика','Журнал']){
     const button=u.$('.sidebar [data-nav="commander"][data-nav-mode="'+mode+'"]');check(language+': commander section '+mode+' exists',!!button);button.click();
     await wait(()=>C.tab==='commander'&&C.mode===mode&&u.$('[data-commander-section]')?.dataset.commanderSection===mode);
     check(language+': commander section renders '+mode,!!u.$('#page h1')&&!u.$('#page .table-layout'));
     if(language==='en')check('English commander '+mode+' has no untranslated prose',!/[\p{Script=Cyrillic}]/u.test(u.$$('.page-heading,.commander-panel h2,.commander-empty').map(node=>node.innerText).join(' ')));
    }
    await u.navigate('ranks');await window.RankInsignia?.load?.(C.state.ranks?.disciplines||[],u,C);check(language+': rank pages use embedded game insignia',u.$$('.ranks-card .rank-insignia img').length===8);
-   await u.navigate('colonization',{mode:'Снабжение'});
+   await u.navigate('colonization',{mode:'Бюджет'});
    const budget=u.$('[data-colony-budget]');
    check(language+': colony resource budget belongs to the active project',!!budget&&budget.dataset.colonyBudget===C.state.colonization?.activeProject?.id&&!!C.state.colonization?.activeProject?.costSummary);
    check(language+': budget shows three distinct totals and a collapsed detailed breakdown',budget.querySelectorAll(':scope>.colony-budget-metrics>.colony-summary-metric').length===3&&budget.querySelector('.colony-budget-breakdown')?.open===false);
@@ -55,21 +58,14 @@ async function run(C,u){
    check(language+': budget preserves table width without a side inspector',!u.$('.data-split .inspector'));
    await u.smokeCapture('colony-budget-'+language);
    if(language==='ru')await u.call('smoke-viewport',{compact:false});
-   await u.navigate('colonization',{mode:'Снабжение'});
+   await u.navigate('colonization',{mode:'Бюджет'});
    const warehouseBefore=C.state.colonization?.includeCarrierWarehouse===true;
-   const warehouse=u.$('#colony-include-carrier-stock');check(language+': colony warehouse option is available',!!warehouse);warehouse.click();
+   const stock=u.$('.colony-budget-stock');if(stock)stock.open=true;const warehouse=u.$('#colony-include-carrier-stock');check(language+': colony warehouse option is available',!!warehouse);warehouse.click();
    await wait(()=>C.state.colonization?.includeCarrierWarehouse===!warehouseBefore&&!u.$('#colony-include-carrier-stock')?.disabled);
    check(language+': colony warehouse option saves through the real backend',u.$('#colony-include-carrier-stock')?.checked===!warehouseBefore);
    if(!warehouseBefore){
     check(language+': unread squadron warehouse requires an observed carrier',u.$('#colony-squadron-stock-access')?.disabled===true);
-    const cards=u.$$('.colony-supply-items>div');check(language+': enabled warehouse supply cards are present',cards.length>0);
-    check(language+': enabled warehouse metrics have separate readable rows',cards.every(card=>{
-     const rows=[...card.querySelectorAll('small')],box=card.getBoundingClientRect();
-     return rows.length===3&&rows.every((row,index)=>{
-      const bounds=row.getBoundingClientRect(),previous=index?rows[index-1].getBoundingClientRect():null;
-      return bounds.width>0&&bounds.height>0&&bounds.left>=box.left&&bounds.right<=box.right+1&&row.scrollWidth<=row.clientWidth+1&&(!previous||bounds.top-previous.bottom>=4);
-     });
-    }));
+    check(language+': budget contains no repeated overview card',!u.$('.colony-overview'));
     const stockGroup=u.$('.colony-warehouse-options');check(language+': warehouse controls remain an independent visible group',stockGroup?.tagName==='DIV'&&stockGroup.getAttribute('role')==='group'&&!stockGroup.closest('summary,.summary-trigger,.section-summary-trigger'));
    }
    u.$('#colony-include-carrier-stock').click();await wait(()=>C.state.colonization?.includeCarrierWarehouse===warehouseBefore&&!u.$('#colony-include-carrier-stock')?.disabled);

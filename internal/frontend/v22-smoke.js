@@ -14,8 +14,8 @@ async function run(C,u){
   await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
   await u.navigate('overview');
   check('Баланс командира без имени Status.json',!u.$('#page').textContent.includes('Status.json'));
-  C.mode='Состояние';await u.loadView();check('Состояние командира оформлено карточками',!!u.$('.ov-facts')&&!u.$('#page table'));
-  await u.navigate('carrier-trade');check('Демонстрационный рейс содержит рассчитанную прибыль',C.state.carrierTrade?.summary?.profit!=null&&Number.isFinite(Number(C.state.carrierTrade.summary.profit)));await capture('readme-carrier-trade');
+  check('Обзор содержит топливо без отдельного экрана состояния',!!u.$('.overview-page .ov-metrics')&&!C.page.Modes.includes('Состояние'));
+  await u.navigate('carrier-trade',{mode:'Рейс'});check('Демонстрационный рейс содержит рассчитанную прибыль',C.state.carrierTrade?.summary?.profit!=null&&Number.isFinite(Number(C.state.carrierTrade.summary.profit)));await capture('readme-carrier-trade');
   await category('ships');check('Корабли представлены карточками',!!u.$('.ref-grid-ships'));await capture('readme-ships');
   await openFirst('ships','Python');check('Корабль открывается на отдельной странице',!!u.$('[data-reference="entry"]')&&!u.$('.inspector'));await capture('readme-ship');
   await category('engineers');await openFirst('engineers','Фарсир');check('Инженер открывается на отдельной странице',!!u.$('[data-reference="entry"]')&&!u.$('.inspector'));check('Инженер имеет настоящее изображение',!!u.$('.ref-art-hero img'));await capture('readme-engineer');

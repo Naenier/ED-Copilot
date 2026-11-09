@@ -23,7 +23,7 @@ func CommanderPage(s M, selection ...string) Page {
 		}
 		return ru
 	}
-	p := Page{Title: text("Командир", "Commander"), Description: text("Подтверждённые сведения о командире, средствах, имуществе и игровых достижениях.", "Observed commander finances, possessions and game statistics."), Modes: []string{"Сводка", "Финансы", "Инвентарь", "Имущество", "Флот", "Статистика", "Репутация", "Журнал"}, Columns: []string{text("Параметр", "Parameter"), text("Значение", "Value")}, Rows: []Row{}}
+	p := Page{Title: text("Командир", "Commander"), Description: text("Подтверждённые сведения о командире, средствах, имуществе и игровых достижениях.", "Observed commander finances, possessions and game statistics."), Modes: []string{"Сводка", "Финансы", "Инвентарь", "Имущество", "Флот", "Статистика", "Журнал"}, Columns: []string{text("Параметр", "Parameter"), text("Значение", "Value")}, Rows: []Row{}}
 	profile := v.Obj(s["commanderProfile"])
 	cmd := v.Obj(s["commander"])
 	add := func(id, title string, value any, data M) {
@@ -109,6 +109,11 @@ func CommanderPage(s M, selection ...string) Page {
 		add("identity.ship", text("Текущий корабль", "Current ship"), Ship(cmd), cmd)
 		add("summary.credits", text("Баланс", "Balance"), v.At(profile, "finance", "credits"), nil)
 		add("summary.netWorth", text("Стоимость имущества", "Net worth"), v.At(profile, "finance", "netWorth"), nil)
+		for _, field := range []struct{ key, ru, en string }{{"federation", "Федерация", "Federation"}, {"empire", "Империя", "Empire"}, {"alliance", "Альянс", "Alliance"}, {"independent", "Независимые", "Independent"}} {
+			if observed := v.At(profile, "reputation", field.key); observed != nil {
+				add("reputation."+field.key, text(field.ru, field.en), observed, nil)
+			}
+		}
 		for _, rank := range v.Rows(v.At(s, "ranks", "disciplines")) {
 			add("rank."+v.Str(rank["id"]), v.Str(rank["title"]), rank["rankName"], rank)
 		}

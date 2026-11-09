@@ -24,9 +24,9 @@ async function run(C,u){
    if(language==='en')check('English politics has no Russian interface prose',!/[\p{Script=Cyrillic}]/u.test(u.$('#page').innerText));
    await u.smokeCapture('politics-'+language);
    if(language==='en'){
-    for(const [view,name]of [['factions','politics-factions'],['goals','politics-goals']]){
-     const button=u.$('.pol-tabs [data-view="'+view+'"]');if(!button)throw Error('Political view button missing');
-     await u.handleClick(button.dataset.click,button);await u.smokeCapture(name);
+    for(const [mode,name]of [['Фракции и конфликты','politics-factions'],['Цели сообщества','politics-goals']]){
+     const button=u.$('#navigation [data-nav="politics"][data-nav-mode="'+mode+'"]');if(!button)throw Error('Galaxy sidebar view is missing');
+     await u.navigate(button.dataset.nav,{mode:button.dataset.navMode});await u.smokeCapture(name);
     }
    }
   }

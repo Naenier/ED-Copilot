@@ -80,18 +80,16 @@ async function run(C,u){
   const plan=(await fresh('deals')).tradePlan||{},second=saved.legs[1];
   check('Рейсы: план второго плеча сохраняет правильные системы и станции',plan.key===second.key&&plan.buy?.system===second.buy.system&&plan.buy?.station===second.buy.station&&plan.sell?.system===second.sell.system&&plan.sell?.station===second.sell.station&&Number(plan.quantity)===Number(second.quantity));
 
-  await visit('colonization',{mode:'Строительство'});
+  await visit('colonization',{mode:'Обзор'});
   originalColony=C.state.colonization?.selectedProjectId;
   const projects=clone(C.state.colonization?.projects||[]);
-  check('Колонии: в smoke есть два независимых плана',projects.length>=2&&projects[0].id!==projects[1].id);
+  check('Колонии: два плана показаны в общем обзоре',projects.length>=2&&projects.slice(0,2).every(project=>{const card=u.$('[data-colony-id="'+project.id+'"]');return card&&textHas(card,project.name)&&textHas(card,project.faction);}));
   const requirements=[];
   for(const project of projects.slice(0,2)){
-   await u.call('select-colony',{tab:'colonization',id:project.id});await u.loadView();
-   const current=C.state.colonization?.activeProject,hero=u.$('[data-colony-id]');
-   check('Колонии: выбранный план и шапка совпадают — '+project.name,current?.id===project.id&&hero?.dataset.colonyId===project.id&&textHas(u.$('.colony-overview-title',hero),project.name)&&textHas(hero,current.originSystem)&&textHas(hero,current.faction));
-   const supplies=JSON.stringify((current?.supplies||[]).map(item=>[item.commodity,item.required,item.delivered,item.missing]));requirements.push(supplies);
-   const remaining=u.$$('.colony-summary-metric',hero).find(node=>textHas(node,'Осталось доставить'));
-   check('Колонии: снабжение принадлежит выбранному плану — '+project.name,!!remaining&&(Number(current.unknownBills)>0&&Number(current.totalMissing)===0?textHas(remaining,'Неизвестно'):textHas(remaining,u.fmt(current.totalMissing))));
+   await u.call('select-colony',{tab:'colonization',id:project.id});await visit('colonization',{mode:'Строительство'});
+   const current=C.state.colonization?.activeProject;
+   check('Колонии: строительство использует выбранный план — '+project.name,current?.id===project.id&&!u.$('.colony-overview')&&u.$('#colony-select')?.value===project.id);
+   requirements.push(JSON.stringify((current?.supplies||[]).map(item=>[item.commodity,item.required,item.delivered,item.missing])));
   }
   check('Колонии: требования двух синтетических складов различаются',requirements[0]!==requirements[1]);
 

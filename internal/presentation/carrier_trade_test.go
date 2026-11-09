@@ -15,7 +15,7 @@ func TestCarrierTradePresentationModesAndUnknownInputs(t *testing.T) {
 	before := v.Copy(state)
 	for _, mode := range []string{"Рейс", "Расходы", "Проверки"} {
 		page := CarrierTradePage(mode, "", state)
-		if len(page.Rows) == 0 || len(page.Columns) == 0 || len(page.Modes) != 3 || page.Title != "Торговля флотоносцем" {
+		if len(page.Rows) == 0 || len(page.Columns) == 0 || len(page.Modes) != 4 || page.Modes[0] != "Рейсы" || page.Title != "Торговля флотоносцем" {
 			t.Fatal("incomplete page", mode, page)
 		}
 		for _, row := range page.Rows {

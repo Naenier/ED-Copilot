@@ -104,6 +104,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	political.Apply(M{"event": "Location", "timestamp": "2026-11-08T12:00:00Z", "StarSystem": "Synthetic A", "SystemAddress": 1})
 	s["politics"] = political.Snapshot()
 	s["carrierCalculator"] = carrier.NewCalculator(nil).Snapshot()
+	v.Obj(s["carrierTrade"])["opportunities"] = M{"results": []M{{"id": "synthetic-opportunity", "commodityName": "Gold", "quantity": 1000, "buy": M{"system": "Synthetic A", "station": "Purchase port"}, "sell": M{"system": "Synthetic B", "station": "Sale port"}, "summary": M{"jumpCount": 2, "profit": 900000}}}}
 	s["bookmarks"] = []M{{"id": "saved-one", "targetId": "target", "system": "Synthetic A", "body": "A 1", "ring": "A Ring", "kind": "laser", "addedAt": "2026-11-07T12:00:00Z"}}
 	s["commanderProfile"] = M{"finance": M{"credits": 0}, "fleet": M{"known": true, "count": 1, "currentShip": M{"known": true, "ship": "Python"}, "entries": []M{{"shipId": "42", "ship": "Python", "system": "Synthetic A"}}}, "storedModules": M{"known": true, "count": 0, "entries": []M{}}, "inventory": M{"materials": M{"raw": M{"known": true, "count": 2, "entries": []M{{"key": "iron", "name": "Iron", "count": 2}}}}}, "statistics": M{"sections": []M{{"id": "Combat", "label": "Combat", "entries": []M{{"id": "Bounties_Claimed", "label": "Bounties Claimed", "value": 0}}}}}, "reputation": M{"federation": 0}}
 	if len(v.Rows(v.At(s, "pilot", "recent"))) == 0 {
@@ -325,7 +326,7 @@ func TestHelpNativeWorkflowAndReadableTables(t *testing.T) {
 			t.Fatal("missing contextual help", tab.ID)
 		}
 	}
-	if !strings.Contains(HelpFor("settings"), "цен") || !strings.Contains(HelpFor("colonization"), "Очередь снабжения") || !strings.Contains(HelpFor("help"), "Ещё") {
+	if !strings.Contains(HelpFor("settings"), "цен") || !strings.Contains(HelpFor("colonization"), "приоритет поставок") || !strings.Contains(HelpFor("help"), "Ещё") {
 		t.Fatal("wrong contextual help topic")
 	}
 }

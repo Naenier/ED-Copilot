@@ -184,8 +184,12 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 				} else if v.Num(available) < q {
 					issue("warn", "insufficient-market-volume", "Рынок не покрывает весь груз", fmt.Sprintf("Нужно %g т, в котировке указано %g т. Доход всего груза остаётся сценарной оценкой.", q, v.Num(available)), name+"."+side+"Market")
 				}
-				if side == "sell" && v.Num(available) > 0 && v.Num(available) < q*v.Num(options["demandRatio"]) {
-					issue("warn", "bulk-tax-risk", "Есть риск снижения цены за крупный груз", "Спрос меньше выбранного запаса к объёму. Цена продажи может уменьшиться; проверьте её в игре.", name+".sellMarket")
+				saleHaul := q
+				if cap := v.Num(options["haulerCapacity"]); cap > 0 {
+					saleHaul = math.Min(saleHaul, cap)
+				}
+				if side == "sell" && v.Num(available) > 0 && v.Num(available) < saleHaul*v.Num(options["demandRatio"]) {
+					issue("warn", "bulk-tax-risk", "Есть риск снижения цены за крупный груз", "Спрос меньше выбранного запаса к трюму перевозчика. Цена продажи может уменьшиться; проверьте её в игре.", name+".sellMarket")
 				}
 				leg[side+"Market"] = market
 			}

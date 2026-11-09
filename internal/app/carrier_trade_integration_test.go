@@ -5,10 +5,41 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
+
+func TestCarrierTradeOpportunityHandoffChecksContextAndKeepsLogistics(t *testing.T) {
+	engine, _, _ := fixtureEngine(t, nil)
+	state := engine.SnapshotForUI("carrier-trade")
+	trade := v.Obj(state["carrierTrade"])
+	request := M{"scenario": "custom", "system": "Synthetic A", "credits": 15000000.0}
+	now := v.ISO(time.Now())
+	offer := v.Copy(trade)
+	offer["id"], offer["buy"] = "synthetic", M{"price": 1000, "updatedAt": now}
+	outbound := v.Rows(offer["legs"])[0]
+	outbound["quantity"], outbound["buyPrice"], outbound["sellPrice"], outbound["tritiumTons"] = 300, 1000, 3000, 25
+	outbound["buyMarket"] = M{"station": "Synthetic Purchase", "system": "Synthetic A", "orders": []M{
+		{"station": "Synthetic Purchase", "quantity": 100}, {"station": "Synthetic Secondary", "quantity": 200}}}
+	outbound["route"] = M{"fuelPurchaseTons": 50, "fuelMarket": M{"station": "Synthetic Fuel"}}
+	engine.mu.Lock()
+	engine.network[carrierTradeOpportunityJob] = v.Copy(M{"options": request, "context": carrier.TradeOpportunityContext(trade, state, request),
+		"updatedAt": now, "results": []M{offer}})
+	engine.mu.Unlock()
+	doOK(t, engine, "/api/carrier/trade", M{"action": "apply-opportunity", "id": "synthetic"})
+	plan := engine.CarrierTrade.ExportSettings()
+	leg := v.Obj(v.At(plan, "legs", "outbound"))
+	if v.Num(leg["quantity"]) != 300 || len(v.Rows(v.At(leg, "buyMarket", "orders"))) != 2 ||
+		v.At(leg, "route", "fuelMarket", "station") != "Synthetic Fuel" {
+		t.Fatal("applying the option lost purchase or replenishment details", leg)
+	}
+	doOK(t, engine, "/api/carrier/trade", M{"options": M{"tritiumPrice": 49000}})
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "apply-opportunity", "id": "synthetic"}); err == nil {
+		t.Fatal("stale option replaced a changed plan")
+	}
+}
 
 func tradeIntegrationRoute(t *testing.T) M {
 	t.Helper()

@@ -12,4 +12,38 @@
 .sidebar-footer .commander-mini{margin-top:0}
 .nav-item[aria-current=page]{color:var(--text)}
 .customize-item .item-arrows[hidden]{display:none}
+.rail #rail-overlay .icon-button[aria-pressed=true]{background:var(--hover);color:var(--accent)}
+.rail .connection-dot[data-status=waiting]{background:#777;border-color:#777}
+.rail .connection-dot[data-status=scanning]{background:var(--accent);border-color:var(--accent)}
+.rail .connection-dot[data-status=error]{background:#de7973;border-color:#de7973}
+.sidebar #sidebar-activity:empty{display:none}
+.sidebar .activity-strip{display:flex;flex-direction:column;align-items:stretch;gap:5px;margin:0;padding:8px;border-radius:9px;background:var(--panel);border:1px solid var(--border);min-width:0}
+.sidebar .activity-caption{font-size:11px;line-height:1.4;gap:5px}
+.sidebar .activity-caption .icon{width:13px;height:13px}
+.sidebar .activity-fields{display:grid;gap:5px;min-width:0}
+.sidebar .activity-field{display:grid;min-width:0;gap:3px;font-size:10px}
+.sidebar .activity-field select{font-size:11px;min-width:0;width:100%;height:29px;padding:4px 7px;text-overflow:ellipsis}
+.sidebar .activity-empty{display:grid;font-size:10px;gap:3px}
+.sidebar .activity-empty .pill{justify-content:flex-start;min-height:25px;padding:3px 5px;font-size:10px}
+.sidebar.collapsed .sidebar-footer{visibility:hidden}
+.guide-workspace{display:grid;grid-template-columns:minmax(180px,245px) minmax(0,1fr);gap:var(--section-gap);align-items:start}
+.guide-index{display:grid;gap:12px;min-width:0}
+.guide-index h2{font-size:11px;font-weight:600;color:var(--muted);margin:0 0 6px;padding-inline:9px}
+.guide-index button{display:block;width:100%;border-radius:8px;padding:9px;text-align:left;color:var(--muted);font-size:12px}
+.guide-index button:hover,.guide-index button[aria-current=true]{background:var(--hover);color:var(--text)}
+.guide-article{min-width:0;padding:clamp(16px,3vw,32px);outline:none}
+.guide-article h2{margin:0 0 15px}
+.connections-settings{margin-top:var(--section-gap)}
+.connections-settings .setting-row{margin-bottom:12px}
+.connection-form,.connection-form>label:first-child{display:grid;gap:8px}
+.connection-form label{font-size:12px;color:var(--muted)}
+.connection-form .connection-check{display:flex;gap:7px;align-items:center}
+.connection-form .pill{justify-self:start}
+.colony-overview-list{display:grid;gap:var(--section-gap)}
+.colony-building-cost{padding:18px;margin-top:var(--section-gap)}
+.colony-building-cost header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.colony-building-cost h2{font-size:16px;margin:0}
+.colony-building-progress{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.colony-building-progress progress{accent-color:var(--accent);width:clamp(70px,14vw,160px)}
+@media(max-width:850px){.guide-workspace{grid-template-columns:1fr}.guide-index{max-height:220px;overflow:auto}}
 @media(max-height:700px){.rail{gap:5px}.rail .rail-groups{gap:2px}.rail .rail-groups .icon-button{width:31px;height:31px}.sidebar-head{min-height:48px}}

@@ -1,0 +1,31 @@
+.trade-stats{display:grid;gap:16px}
+.trade-stats-metrics{margin:0}
+.trade-stats-section{min-width:0;padding:18px 20px}
+.trade-stats-section>header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.trade-stats-section h2{margin:0;font-size:15px}
+.trade-stats-section header p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.trade-stats-legend{display:flex;flex-wrap:wrap;gap:12px;margin:0;padding:0;list-style:none;color:var(--muted);font-size:11px}
+.trade-stats-legend li{display:flex;align-items:center;gap:6px}
+.trade-stats-legend li:before{content:"";width:8px;height:8px;background:var(--series);border-radius:2px}
+.trade-stats .revenue{--series:var(--accent)}
+.trade-stats .purchaseCost{--series:var(--warn)}
+.trade-stats .grossMargin{--series:var(--good)}
+.trade-stats .grossMargin.loss{--series:var(--danger)}
+.trade-stats-plot{display:flex;gap:clamp(2px,1vw,10px);height:174px;position:relative;isolation:isolate}
+.trade-stats-day{flex:1;min-width:0;max-width:72px;display:flex;flex-direction:column;align-items:center}
+.trade-stats-day-bars{height:152px;width:100%;position:relative}
+.trade-stats-day-bars:before{content:"";position:absolute;inset:auto 0 var(--zero) 0;height:1px;background:var(--border);z-index:-1}
+.trade-stats-bar{position:absolute;max-width:12px;width:25%;border-radius:2px 2px 0 0;background:var(--series)}
+.trade-stats-bar.revenue{left:8%}.trade-stats-bar.purchaseCost{left:37.5%}.trade-stats-bar.grossMargin{left:67%}
+.trade-stats-bar.loss{border-radius:0 0 2px 2px}
+.trade-stats-day-label{padding-top:5px;white-space:nowrap;color:var(--muted);font-size:9px;font-variant-numeric:tabular-nums}
+.trade-stats-day-details{margin-top:10px;color:var(--muted);font-size:12px}
+.trade-stats-day-details summary{cursor:pointer}
+.trade-stats-day-details[open] summary{margin-bottom:10px}
+.trade-stats-table{overflow:auto;max-height:450px;border:1px solid var(--border);border-radius:8px}
+.trade-stats-table th,.trade-stats-table td{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.trade-stats-table th:first-child{text-align:left}
+.trade-stats-table tbody tr{cursor:default}
+.trade-stats-table tbody th{position:static;color:var(--text);border-bottom:1px solid var(--border);background:transparent}
+.trade-stats-table td.loss{color:var(--danger)}
+@media(max-width:720px){.trade-stats-section{padding:15px}.trade-stats-day-label{font-size:8px}}

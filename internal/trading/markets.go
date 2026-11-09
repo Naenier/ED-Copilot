@@ -34,16 +34,21 @@ func NewSearcher(client HTTPDoer) *Searcher {
 	return &Searcher{Client: client, BaseURL: "https://spansh.co.uk/api", EDSMURL: "https://www.edsm.net/api-v1/system", Now: time.Now}
 }
 func NormalizeOptions(input M) M {
-	out := M{"mode": "sell", "system": "", "resourceKey": "", "useCargo": true, "useCarrierCargo": false, "radiusLy": 300, "maxAgeHours": 24, "carrierMaxAgeHours": 6, "minDemand": 1, "minSupply": 1, "includeCarriers": true, "includeOwn": false, "minPad": "L", "maxArrivalLs": 10000, "quantity": 1, "demandRatio": 4}
+	out := M{"mode": "sell", "system": "", "resourceKey": "", "useCargo": true, "useCarrierCargo": false, "radiusLy": 300, "maxAgeHours": 24, "carrierMaxAgeHours": 6, "minDemand": 1, "minSupply": 1, "includeCarriers": true, "includePlanetary": true, "includeOwn": false, "minPad": "L", "maxArrivalLs": 10000, "quantity": 1, "demandRatio": 4}
 	if input["mode"] == "buy" {
 		out["mode"] = "buy"
 	}
 	out["system"] = strings.TrimSpace(v.Str(input["system"]))
 	out["resourceKey"] = v.Key(input["resourceKey"])
-	for _, k := range []string{"includeCarriers", "includeOwn", "useCargo", "useCarrierCargo"} {
+	for _, k := range []string{"includeCarriers", "includePlanetary", "includeOwn", "useCargo", "useCarrierCargo"} {
 		if b, ok := input[k].(bool); ok {
 			out[k] = b
 		}
+	}
+	switch input["marketType"] {
+	case "carriers", "stations", "all":
+		out["marketType"] = input["marketType"]
+		out["includeCarriers"] = input["marketType"] != "stations"
 	}
 	for _, r := range []struct {
 		k        string
@@ -159,8 +164,11 @@ func StationResult(station M, basket []M, options M, now time.Time, reference an
 	if updated.IsZero() || updated.After(now.Add(10*time.Minute)) {
 		return nil
 	}
-	carrier := strings.Contains(strings.ToLower(v.Str(station["type"])), "carrier")
-	if carrier && !v.Bool(options["includeCarriers"]) {
+	stationType := strings.ToLower(v.Str(station["type"]))
+	carrier := strings.Contains(stationType, "carrier")
+	planetary := v.Bool(station["is_planetary"]) || strings.Contains(stationType, "planet") || strings.Contains(stationType, "settlement")
+	if carrier && !v.Bool(options["includeCarriers"]) || !carrier && options["marketType"] == "carriers" ||
+		planetary && options["includePlanetary"] == false {
 		return nil
 	}
 	age := math.Max(0, now.Sub(updated).Hours())
@@ -236,7 +244,7 @@ func StationResult(station M, basket []M, options M, now time.Time, reference an
 	if marketID == "" {
 		id = "station:" + v.Str(station["system_name"]) + ":" + v.Str(station["name"])
 	}
-	return M{"id": id, "marketId": marketID, "station": v.Str(station["name"]), "system": v.Str(station["system_name"]), "systemAddress": station["system_id64"], "type": station["type"], "carrier": carrier, "pad": pad, "planetary": v.Bool(station["is_planetary"]), "coordinates": coords, "distanceLy": distance, "distanceLs": v.Nullable(arrival, aok), "updatedAt": timestamp, "sourceUpdatedAt": timestamp, "ageHours": age, "quotes": quotes, "estimatedTotal": total, "requestedTons": requested, "coveredTons": covered, "missingTons": math.Max(0, requested-covered), "coverageComplete": covered >= requested, "demandSafe": !bulk, "bulkTaxRisk": bulk, "averagePrice": total / covered, "warnings": warnings, "source": "Spansh", "sourceUrl": "https://spansh.co.uk/station/" + url.PathEscape(marketID)}
+	return M{"id": id, "marketId": marketID, "station": v.Str(station["name"]), "system": v.Str(station["system_name"]), "systemAddress": station["system_id64"], "type": station["type"], "carrier": carrier, "pad": pad, "planetary": planetary, "coordinates": coords, "distanceLy": distance, "distanceLs": v.Nullable(arrival, aok), "updatedAt": timestamp, "sourceUpdatedAt": timestamp, "ageHours": age, "quotes": quotes, "estimatedTotal": total, "requestedTons": requested, "coveredTons": covered, "missingTons": math.Max(0, requested-covered), "coverageComplete": covered >= requested, "demandSafe": !bulk, "bulkTaxRisk": bulk, "averagePrice": total / covered, "warnings": warnings, "source": "Spansh", "sourceUrl": "https://spansh.co.uk/station/" + url.PathEscape(marketID)}
 }
 func RankResults(rows []M, mode string) []M {
 	sort.SliceStable(rows, func(i, j int) bool {
@@ -303,6 +311,24 @@ func SearchPayload(resource, options M, reference []float64, page int, now time.
 	}
 	since := now.Add(-time.Duration(math.Max(n(options, "maxAgeHours"), n(options, "carrierMaxAgeHours")) * float64(time.Hour)))
 	filters := M{"has_market": M{"value": true}, "market": []M{{"name": v.First(resource["marketName"], resource["english"]), availability: M{"value": []string{fmt.Sprint(minimum), "999999999999"}, "comparison": "<=>"}}}, "market_updated_at": M{"value": []string{v.ISO(since), v.ISO(now.Add(10 * time.Minute))}, "comparison": "<=>"}, "distance": M{"min": 0, "max": options["radiusLy"]}}
+	// Apply the scope before selecting the most competitive pages. Otherwise
+	// excluded carrier or surface quotes can crowd out qualifying stations.
+	const carrierType = "Drake-Class Carrier"
+	if options["marketType"] == "carriers" {
+		filters["type"] = M{"value": []string{carrierType}}
+	} else {
+		excluded := []string{}
+		if options["includeCarriers"] == false {
+			excluded = append(excluded, carrierType)
+		}
+		if options["includePlanetary"] == false {
+			excluded = append(excluded, "Dockable Planet Station", "Planetary Construction Depot", "Planetary Outpost",
+				"Planetary Port", "Settlement", "Surface Settlement")
+		}
+		if len(excluded) > 0 {
+			filters["type"] = M{"value": excluded, "logic": "not"}
+		}
+	}
 	if options["minPad"] == "L" {
 		filters["has_large_pad"] = M{"value": true}
 	}

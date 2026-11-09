@@ -30,10 +30,10 @@ function content(C,u){
   t("Панель подробностей показывает данные выбранной строки. Её можно скрыть кнопкой в верхней панели."),
  ],u)+facts([[t("Отображение"),mode],[t("Быстрый переход"),'Ctrl + K'],[t("Полноэкранный режим"),'F11']],u);
  if(topic==='overlay'){
-  const activity=(C.boot?.activities||[]).find(item=>item.Value===settings.activity)?.Label||t("Выберите занятие в панели над разделом");
+  const activity=(C.boot?.activities||[]).find(item=>item.Value===settings.activity)?.Label||t("Выберите занятие в боковом меню");
   body=text([
    t("Оверлей виден только при активном окне Elite Dangerous."),
-   t("Выберите занятие над разделом. Для снабжения дополнительно выберите колонию."),
+   t("Нажмите значок глаза и выберите занятие под названием корабля. Для снабжения выберите колонию."),
   ],u)+facts([[t("Панели в игре"),settings.overlayEnabled?t("Включены"):t("Выключены")],[t("Занятие"),activity],[t("Переключение"),'Ctrl + Alt + H']],u);
  }
  if(topic==='theme'){

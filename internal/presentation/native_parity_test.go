@@ -40,32 +40,18 @@ func TestSavedMiningPlacesAreReachableAndEditable(t *testing.T) {
 	}
 }
 
-func TestPilotAndStatisticsSummaryRetainObservedValues(t *testing.T) {
+func TestStatisticsSummaryRetainsObservedPeriodAfterRemovingDuplicateOverviewMode(t *testing.T) {
 	s := presentationState(t)
-	pilot := v.Obj(s["pilot"])
-	pilot["fuel"] = M{"mainTons": 8, "mainCapacityTons": 16, "updatedAt": "2026-11-07T12:00:00Z"}
-	pilot["session"] = M{"since": "2026-11-07T11:00:00Z", "jumps": 3, "distanceLy": 42.5}
-	pilot["legalState"] = "Wanted"
+	overview := Build("overview", "", "", s)
+	if !reflect.DeepEqual(overview.Modes, []string{"Обзор", "Корабль и груз", "Миссии", "Журнал"}) {
+		t.Fatal("duplicate overview mode", overview.Modes)
+	}
 	values := map[string]string{}
-	for _, r := range Build("overview", "Состояние", "", s).Rows {
-		values[r.ID] = r.Cells[1]
-	}
-	for key, want := range map[string]string{"pilot.fuel.mainTons": "8", "pilot.fuel.mainCapacityTons": "16", "pilot.session.jumps": "3", "pilot.session.distanceLy": "42,5", "pilot.legalState": "В розыске"} {
-		if values[key] != want {
-			t.Fatal(key, values[key], want)
-		}
-	}
-	values = map[string]string{}
 	for _, r := range Build("statistics", "Итоги", "", s).Rows {
 		values[r.ID] = r.Cells[1]
 	}
 	if values["total.refinedTons"] != "15" || values["total.prospected"] != "1" || values["since"] == "—" {
 		t.Fatal("observed period totals hidden", values)
-	}
-	for _, r := range Build("overview", "Состояние", "", nil).Rows {
-		if r.ID != "ship" && r.Cells[1] != "—" {
-			t.Fatal("unknown observed value became zero", r)
-		}
 	}
 }
 

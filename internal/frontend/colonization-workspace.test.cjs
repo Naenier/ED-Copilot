@@ -27,7 +27,7 @@ function project(id,name,extra={}){
 
 test('initial colony workflow explains station discovery without an empty faction selector or implicit network request',()=>{
  const f=fixture(),before=clone(f.C.state),html=f.api.render(f.C,f.ui);
- assert.match(html,/Колонии не добавлены/);assert.match(html,/Проверить систему/);
+ assert.doesNotMatch(html,/Колонии не добавлены|colony-overview/);assert.match(html,/Проверить систему/);
  assert.match(html,/Поиск загрузит известные станции системы/);assert.match(html,/Станция → фракция → новая система/);
  assert.doesNotMatch(html,/id="colony-workspace-station"|id="colony-workspace-faction"/);
  assert.equal(f.C.colonizationWorkspace.origin,'Current system');assert.equal(f.calls.length,0);
@@ -41,6 +41,20 @@ test('the first phase explicitly clears a saved faction and cannot accidentally 
  await f.api.handleClick('colony-workspace-check',null,f.C,f.ui);
  assert.deepEqual(f.calls,[{op:'action',params:{tab:'colonization',mode:'Выбор системы',selected:'',query:'',actionId:'colony.search',values:{originSystem:'New origin',faction:''}}}]);
  assert.equal(f.loads,1);assert.equal(f.C.state.colonization.config.faction,'Old faction');
+});
+
+test('an origin chosen while another query is running automatically loads when that query settles',async()=>{
+ const f=fixture(),timers=[];
+ f.window.setTimeout=fn=>{timers.push(fn);return timers.length;};
+ f.C.state.colonization.search.running=true;
+ f.api.handleInput({target:{id:'colony-workspace-origin',value:'Second origin'}},f.C,f.ui);
+ f.api.handleChange({target:{id:'colony-workspace-origin'}},f.C,f.ui);
+ f.api.init(f.C,f.ui);assert.equal(timers.length,0);
+ f.C.state.colonization.search.running=false;
+ f.api.init(f.C,f.ui);assert.equal(timers.length,1);timers.shift()();
+ await Promise.resolve();
+ assert.equal(f.calls[0].params.values.originSystem,'Second origin');
+ assert.equal(f.calls[0].params.values.faction,'');
 });
 
 test('a station selection uses its exact controlling faction rather than the faction of its system',async()=>{
@@ -90,23 +104,23 @@ test('search validation and asynchronous failures preserve drafts and make retry
  f.setRPC(async()=>({ok:true}));await f.api.handleClick('colony-workspace-check',null,f.C,f.ui);assert.equal(f.calls.length,2);
 });
 
-test('colony summary switches between independent projects and distinguishes unknown bills from zero remaining',()=>{
- const f=fixture();f.C.mode='Строительство';
+test('overview presents every colony once; separate construction uses the selected project',async()=>{
+ const f=fixture();f.C.mode='Обзор';
  const alpha=project('a','Alpha'),beta=project('b','Beta',{unknownBills:2,totalMissing:0,points:{tier2:null,tier3:0},operationalSupplies:[]});
  f.C.state.colonization.projects=[alpha,beta];f.C.state.colonization.activeProject=alpha;
- let html=f.api.render(f.C,f.ui);
- assert.match(html,/data-colony-id="a"/);assert.match(html,/Alpha origin/);assert.match(html,/Alpha faction/);
- assert.match(html,/Не менее 80 т/);assert.match(html,/T2 0 · T3 Неизвестно/);assert.match(html,/В корабле: 0 т/);
- assert.doesNotMatch(html,/id="colony-workspace-origin"|Beta origin/);
- f.C.state.colonization.activeProject=beta;html=f.api.render(f.C,f.ui);
- assert.match(html,/data-colony-id="b"/);assert.match(html,/Beta origin/);assert.doesNotMatch(html,/Alpha origin/);
- assert.match(html,/<span>Осталось доставить<\/span><strong>Неизвестно/);
- assert.match(html,/T2 Неизвестно · T3 0/);
- beta.unknownBills=0;html=f.api.render(f.C,f.ui);assert.match(html,/<span>Осталось доставить<\/span><strong>0 т/);
+ const html=f.api.render(f.C,f.ui);
+ assert.equal((html.match(/class="colony-overview"/g)||[]).length,2);
+ assert.match(html,/data-colony-id="a"/);assert.match(html,/data-colony-id="b"/);assert.match(html,/Alpha faction/);assert.match(html,/Beta faction/);
+ assert.match(html,/Не менее 80 т/);assert.match(html,/Осталось доставить<\/span><strong>Неизвестно/);
+ assert.doesNotMatch(html,/colony-workspace-origin|colony-budget|colony-warehouse-options/);
+ const next=[];f.ui.navigate=async(...args)=>next.push(args);
+ await f.api.handleClick('colony-workspace-open',{dataset:{project:'b'}},f.C,f.ui);
+ assert.equal(f.calls[0].params.id,'b');assert.deepEqual(clone(next[0]),['colonization',{mode:'Строительство'}]);
+ for(const mode of ['Строительство','Снабжение']){f.C.mode=mode;assert.equal(f.api.render(f.C,f.ui),'');}
 });
 
 test('primary deadline is shown only while active and later construction keeps its supply preview',()=>{
- const f=fixture();f.C.mode='Строительство';
+ const f=fixture();f.C.mode='Обзор';
  const historical='2031-01-28T12:00:00Z',effective='2031-02-12T12:00:00Z';
  const p=project('synthetic-deadline','Synthetic established colony',{deadline:historical,primaryComplete:true,deadlineActive:false,effectiveDeadline:null});
  f.C.state.colonization.activeProject=p;
@@ -120,13 +134,13 @@ test('primary deadline is shown only while active and later construction keeps i
 });
 
 test('copy uses the active colony rather than stale button data and every rendered value is escaped',async()=>{
- const f=fixture();f.C.state.colonization.activeProject=project('a','<Colony>',{targetSystem:'Actual current system',warnings:['<script>bad()</script>'],nextTask:{text:'<img src=x>'}});
+ const f=fixture();f.C.mode='Обзор';f.C.state.colonization.activeProject=project('a','<Colony>',{targetSystem:'Actual current system',warnings:['<script>bad()</script>'],nextTask:{text:'<img src=x>'}});
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/&lt;Colony&gt;/);assert.match(html,/&lt;script&gt;bad\(\)&lt;\/script&gt;/);assert.match(html,/&lt;img src=x&gt;/);
  assert.doesNotMatch(html,/<script|<img/);
  await f.api.handleClick('colony-workspace-copy',{dataset:{system:'Stale or forged system'}},f.C,f.ui);
  assert.deepEqual(f.calls[0],{op:'native',params:{action:'copy',text:'Actual current system'}});assert.equal(f.toasts.length,1);
- f.origin();f.C.colonizationWorkspace.origin='Home system';f.C.state.colonization.search.claimStations[0].name='<Station>';
+ f.C.mode='Выбор системы';f.origin();f.C.state.colonization.originSystem='Home system';f.C.state.colonization.search.claimStations[0].name='<Station>';
  html=f.api.render(f.C,f.ui);assert.match(html,/&lt;Station&gt;/);
 });
 
@@ -172,7 +186,7 @@ test('unknown contact remains selectable with an explicit game check and stale i
 });
 
 test('carrier warehouse controls distinguish unknown and zero with separate squadron availability',()=>{
- const f=fixture();f.C.mode='Снабжение';
+ const f=fixture();f.C.mode='Бюджет';
  f.C.state.colonization.carrierWarehouses=[{kind:'fleet',known:false,included:true,knownTons:null,receivedAt:'2031-01-01T12:00:00Z',reason:'Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически.'},{kind:'squadron',known:true,included:false,knownTons:0,callsign:'<SYN-001>'}];
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/Учитывать склад флотоносца/);assert.doesNotMatch(html,/id="colony-squadron-stock-access"/);
@@ -189,7 +203,7 @@ test('carrier warehouse controls distinguish unknown and zero with separate squa
 });
 
 test('enabled supply preview keeps ship carrier and purchase values separate from warehouse controls',()=>{
- const f=fixture();f.C.mode='Снабжение';
+ const f=fixture();f.C.mode='Обзор';
  f.C.state.colonization.includeCarrierWarehouse=true;
  f.C.state.colonization.activeProject=project('supplies','Supply preview',{operationalSupplies:[{commodity:'steel',name:'Сталь',missing:80,cargoAvailable:0,carrierAvailable:null,toBuy:null,toBuyAtMost:80}]});
  const html=f.api.render(f.C,f.ui),preview=html.match(/<div class="colony-supply-items">([\s\S]*?)<\/div><\/div>/)?.[1]||'';
@@ -197,19 +211,19 @@ test('enabled supply preview keeps ship carrier and purchase values separate fro
  assert.match(preview,/<small>В корабле: 0 т<\/small>/);
  assert.match(preview,/<small>На флотоносце: Неизвестно<\/small>/);
  assert.match(preview,/<small>Купить: Не более 80 т<\/small>/);
- assert.match(html,/<div class="colony-warehouse-options" role="group" aria-label="Учёт склада флотоносца">/);
+ assert.doesNotMatch(html,/colony-warehouse-options/);
  assert.doesNotMatch(html,/<section class="colony-warehouse-options"/);
 });
 
 test('warehouse checkbox persists both options and finishes without a disabled stale control',async()=>{
- const f=fixture();f.C.mode='Снабжение';f.C.colonizationWorkspace={origin:'Keep draft',faction:'Keep faction'};
+ const f=fixture();f.C.mode='Бюджет';f.C.colonizationWorkspace={origin:'Keep draft',faction:'Keep faction'};
  const pending=deferred();f.setRPC(()=>pending.promise);
  const event={target:{id:'colony-include-carrier-stock',checked:true}};
  assert.equal(f.api.handleChange(event,f.C,f.ui),true);
  assert.equal(f.C.colonizationWorkspace.warehousePending,true);assert.equal(f.calls.length,1);
  assert.match(f.api.render(f.C,f.ui),/id="colony-include-carrier-stock" type="checkbox" disabled/);
  f.api.handleChange(event,f.C,f.ui);assert.equal(f.calls.length,1);
- assert.deepEqual(f.calls[0],{op:'action',params:{tab:'colonization',mode:'Снабжение',selected:'unrelated-row',query:'filter',actionId:'colony.carrier-stock',values:{includeCarrierWarehouse:true,squadronWarehouseAccessConfirmed:false}}});
+ assert.deepEqual(f.calls[0],{op:'action',params:{tab:'colonization',mode:'Бюджет',selected:'unrelated-row',query:'filter',actionId:'colony.carrier-stock',values:{includeCarrierWarehouse:true,squadronWarehouseAccessConfirmed:false}}});
  pending.resolve({ok:true});await f.C.colonizationWorkspace.warehouseSave;
  assert.equal(f.C.state.colonization.includeCarrierWarehouse,true);assert.equal(f.C.colonizationWorkspace.warehousePending,false);
  assert.equal(f.C.colonizationWorkspace.origin,'Keep draft');assert.equal(f.loads,1);
@@ -217,7 +231,7 @@ test('warehouse checkbox persists both options and finishes without a disabled s
 });
 
 test('warehouse save failure preserves settings and completion does not redraw a different tab',async()=>{
- const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.includeCarrierWarehouse=true;
  f.C.state.commander.fid='F1';f.C.state.colonization.carrierWarehouses=[{kind:'squadron',id:'43',known:true}];
  f.setRPC(async()=>{throw new Error('<save failed>');});
  f.api.handleChange({target:{id:'colony-squadron-stock-access',checked:true}},f.C,f.ui);
@@ -232,7 +246,7 @@ test('warehouse save failure preserves settings and completion does not redraw a
 });
 
 test('shared stock confirmation is disabled without identity and submits the displayed owner and carrier scope',async()=>{
- const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.includeCarrierWarehouse=true;
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/id="colony-squadron-stock-access"[^>]*disabled/);
  assert.match(html,/После входа в Frontier данные флотоносца эскадры обновляются автоматически/);
@@ -267,7 +281,7 @@ test('colony budget values belong only to the selected colony and distinguish to
 });
 
 test('budget unknown totals remain lower bounds and a bounded purchase estimate is separate from a confirmed zero',()=>{
- const f=fixture();f.C.mode='Снабжение';const p=budgetProject('a','Synthetic');f.C.state.colonization.activeProject=p;
+ const f=fixture();f.C.mode='Бюджет';const p=budgetProject('a','Synthetic');f.C.state.colonization.activeProject=p;
  p.costSummary.required=costMetric(5000,false,{unpricedCommodityCount:2});p.costSummary.unknownBills=1;
  p.costSummary.missing=costMetric(0,false,{unpricedCommodityCount:2});p.costSummary.toBuy=costMetric(0,false,{unknownQuantityCount:1});p.costSummary.toBuyAtMost=costMetric(7000);
  let html=f.api.render(f.C,f.ui);
@@ -287,7 +301,7 @@ test('budget renders fully in English without translating user records and never
 });
 
 test('warehouse journal corrections remain visible with separate receipt and movement times',()=>{
- const f=fixture();f.C.mode='Снабжение';f.C.state.colonization.includeCarrierWarehouse=true;
+ const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.includeCarrierWarehouse=true;
  const warehouse={kind:'fleet',known:true,included:true,knownTons:200,callsign:'SYN-001',receivedAt:'2031-01-01T12:00:00Z',updatedAt:'2031-01-01T12:02:00Z',awaitingConfirmation:true,reason:'Склад скорректирован по журналу. Frontier пока не подтвердил последние перемещения.'};
  f.C.state.colonization.carrierWarehouses=[warehouse];
  let html=f.api.render(f.C,f.ui);assert.match(html,/Получено /);assert.match(html,/Скорректировано по журналу /);assert.match(html,/Frontier пока не подтвердил последние перемещения/);
@@ -304,7 +318,7 @@ test('Budget keeps a compact colony context and puts warehouse controls in a clo
  assert.match(stock,/<summary>Запасы и учёт<\/summary>/);assert.match(stock,/id="colony-include-carrier-stock"/);
  assert.doesNotMatch(html,/<details class="colony-budget-stock"[^>]*\bopen/);
  await f.api.handleClick('colony-workspace-copy',null,f.C,f.ui);assert.deepEqual(f.calls[0],{op:'native',params:{action:'copy',text:'Synthetic system'}});
- f.C.mode='Снабжение';const normal=f.api.render(f.C,f.ui);assert.match(normal,/class="colony-overview"/);assert.doesNotMatch(normal,/colony-budget-stock/);
+ f.C.mode='Обзор';const normal=f.api.render(f.C,f.ui);assert.match(normal,/class="colony-overview"/);assert.doesNotMatch(normal,/colony-budget-stock/);
 });
 
 test('manual bill totals stay labelled as planning estimates without implying that a known sum is incomplete',()=>{

@@ -1,0 +1,20 @@
+{
+  "Темы руководства": "Guide topics",
+  "Подключено": "Connected",
+  "Не подключено": "Not connected",
+  "Отправка включена": "Sync enabled",
+  "Отправка выключена": "Sync disabled",
+  "Ключ не добавлен": "No key configured",
+  "Состояние подключения": "Connection status",
+  "Рынки": "Markets",
+  "/т": "/t",
+  "Скопировать систему": "Copy system",
+  "Ход поставок": "Delivery progress",
+  "Выгодные рейсы": "Profitable routes",
+  "Готовые маршруты с ценами, объёмами и прибылью.": "Ready routes with prices, quantities and profit.",
+  "Посмотреть рейсы": "View routes",
+  "В карте галактики нажмите Ctrl+V.": "Press Ctrl+V in the galaxy map.",
+  "Выберите занятие в боковом меню": "Choose an activity in the sidebar",
+  "Нажмите значок глаза и выберите занятие под названием корабля. Для снабжения выберите колонию.": "Select the eye icon, then choose an activity below the ship name. For supplies, select a colony.",
+  "Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ": "Completed, cancelled and failed structures are excluded. Stock is allocated once within this colony; it is not reserved between different colonies. "
+}

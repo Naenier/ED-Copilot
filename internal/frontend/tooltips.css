@@ -2,3 +2,17 @@
 .app-tooltip[hidden]{display:none!important}
 @keyframes tooltip-in{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.app-tooltip{animation:none}}
+.menu{background:#303030;border-color:#404040;border-radius:8px;box-shadow:0 4px 16px #0004,0 1px 3px #0003}
+
+/* Use Chromium's accessible picker; older WebView2 versions keep native selects. */
+@supports (appearance:base-select){
+ select:not([multiple]):not([size]),select:not([multiple]):not([size])::picker(select){appearance:base-select}
+ select:not([multiple]):not([size]){cursor:pointer;background-image:none;min-inline-size:0;gap:6px}
+ select:not([multiple]):not([size])::picker-icon{color:var(--muted);margin-inline-start:6px}
+ select:not([multiple]):not([size]):open::picker-icon{transform:rotate(180deg)}
+ select:not([multiple]):not([size])::picker(select){font:inherit;color:#f1f1f1;background:#303030;border:1px solid #404040;border-radius:8px;padding:4px;box-shadow:0 4px 16px #0004,0 1px 3px #0003;max-block-size:min(350px,60vh);max-inline-size:calc(100vw - 16px);overflow:auto;margin-block:4px}
+ select:not([multiple]):not([size]) option{padding:7px 9px;border-radius:5px;font-size:12px;cursor:pointer;white-space:normal}
+ select:not([multiple]):not([size]) option:is(:hover,:focus-visible){background:#444}
+ select:not([multiple]):not([size]) option:checked{background:#3c3c3c;color:#fff;font-weight:600}
+ select:not([multiple]):not([size]) option:disabled{opacity:.5;cursor:default}
+}

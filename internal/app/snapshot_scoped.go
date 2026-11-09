@@ -86,6 +86,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	state["tradeLedger"], state["tradePlan"] = ledger, ledger["plan"]
 	if tab == "deals" {
 		state["savedTradeRoutes"] = e.Trading.SavedRoutesSnapshot()
+		cmd["shipPad"] = trading.ShipPad(cmd)
 	}
 	resources, goods := trading.Resources(), v.Rows(ledger["goods"])
 	for _, rows := range [][]M{resources, goods} {

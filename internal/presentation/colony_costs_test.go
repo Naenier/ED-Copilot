@@ -23,8 +23,18 @@ func TestColonyBudgetKeepsCoveredGoodsAndShowsUnknownPrices(t *testing.T) {
 		t.Fatal("unknown price became free resource", p.Rows[1].Cells)
 	}
 	supply := Build("colonization", "Снабжение", "", s)
-	if supply.Rows[1].Cells[6] != "≤20" || supply.Rows[0].Cells[7] != "50" || supply.Rows[0].Cells[8] != "4 500" {
-		t.Fatal("supply table lost procurement bound or row valuation", supply.Rows)
+	if len(supply.Rows) != 0 || len(supply.Columns) != 3 {
+		t.Fatal("undelivered supplies should not appear as journal deliveries", supply.Rows)
+	}
+}
+
+func TestColonyDeliveryLogListsJournalResourcesWithoutProvenanceColumns(t *testing.T) {
+	s := M{"colonization": M{"activeProject": M{"id": "test", "journalDeliveries": []M{
+		{"timestamp": "2031-01-01T10:00:00Z", "resources": []M{{"name": "Сталь", "count": 30}, {"name": "Алюминий", "count": 20}}},
+	}, "manualDeliveries": []M{{"timestamp": "2031-01-01T09:00:00Z", "name": "Медь", "count": 7}}}}}
+	p := Build("colonization", "Снабжение", "", s)
+	if len(p.Rows) != 3 || len(p.Columns) != 3 || p.Rows[0].Cells[1] != "Сталь" || p.Rows[2].Cells[2] != "7" || p.Rows[0].ID == p.Rows[1].ID {
+		t.Fatalf("wrong delivery ordering, identity or columns: %v %v", p.Columns, p.Rows)
 	}
 }
 

@@ -37,12 +37,12 @@ func RouteOptions(input, commander M) M {
 	for _, r := range []struct {
 		k        string
 		min, max float64
-	}{{"cargoCapacity", 1, 25000}, {"credits", 0, 1e15}, {"radiusLy", 5, 5000}, {"maxLegLy", 1, 5000}, {"maxAgeHours", 1, 720}, {"carrierMaxAgeHours", .25, 168}, {"minutesPerLeg", 1, 1440}, {"operatingCostPerLeg", 0, 1e12}, {"demandRatio", 1, 20}, {"minSupply", 1, 1e9}, {"minDemand", 1, 1e9}, {"maxArrivalLs", 0, 1e7}} {
+	}{{"cargoCapacity", 0, 25000}, {"credits", 0, 1e15}, {"radiusLy", 5, 5000}, {"maxLegLy", 1, 5000}, {"maxAgeHours", 1, 720}, {"carrierMaxAgeHours", .25, 168}, {"minutesPerLeg", 1, 1440}, {"operatingCostPerLeg", 0, 1e12}, {"demandRatio", 1, 20}, {"minSupply", 1, 1e9}, {"minDemand", 1, 1e9}, {"maxArrivalLs", 0, 1e7}} {
 		if x, ok := v.Number(input[r.k]); ok {
 			out[r.k] = v.Clamp(x, r.min, r.max)
 		}
 	}
-	for _, k := range []string{"includeCarriers", "includePlanetary", "roundTrip"} {
+	for _, k := range []string{"includeCarriers", "includePlanetary", "roundTrip", "automatic"} {
 		if b, ok := input[k].(bool); ok {
 			out[k] = b
 		}
@@ -53,6 +53,11 @@ func RouteOptions(input, commander M) M {
 	}
 	if ship := v.Str(input["shipPad"]); input["minPad"] == nil && (ship == "S" || ship == "M" || ship == "L") {
 		out["minPad"] = ship
+	}
+	if input["minPad"] == nil && input["shipPad"] == nil {
+		if pad := ShipPad(commander); pad != "" {
+			out["minPad"] = pad
+		}
 	}
 	out["shipPad"] = out["minPad"]
 	if v.Bool(out["includeCarriers"]) {
@@ -314,6 +319,11 @@ func (s *Searcher) FindRoutes(ctx context.Context, input, state M) (M, error) {
 	if options["cargoCapacity"] == nil || n(options, "cargoCapacity") < 1 || options["credits"] == nil {
 		return nil, errors.New("Укажите свободный трюм и известный бюджет на закупку.")
 	}
+	if v.Bool(options["automatic"]) {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+	}
 	out := M{"running": false, "options": options, "results": []M{}, "checked": 0, "total": len(keys) * 2, "updatedAt": v.ISO(s.Now()), "coverageLimited": false, "assumptions": "Спрос ограничивает объём с выбранным запасом. Доход в час использует введённое время рейса. Доставка к первой станции не включена. Котировки могут измениться."}
 	markets := map[string]M{}
 	errs := []string{}
@@ -338,6 +348,12 @@ func (s *Searcher) FindRoutes(ctx context.Context, input, state M) (M, error) {
 		markets[key] = M{}
 		for _, mode := range []string{"buy", "sell"} {
 			if err := ctx.Err(); err != nil {
+				if v.Bool(options["automatic"]) && errors.Is(err, context.DeadlineExceeded) {
+					out["coverageLimited"] = true
+					out["status"] = "Поиск остановлен по времени."
+					out["error"] = "За отведённое время проверены не все рынки."
+					return out, nil
+				}
 				return out, err
 			}
 			request := v.Copy(options)

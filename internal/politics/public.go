@@ -66,7 +66,7 @@ func (s *Service) request(ctx context.Context, method, address string, body M) (
 	return result, nil
 }
 
-func (s *Service) fetch(ctx context.Context, kind, name, power, state string, page int) (M, error) {
+func (s *Service) fetch(ctx context.Context, kind, name, power, state, language string, page int) (M, error) {
 	now := s.now()
 	base := strings.TrimRight(s.opts.SpanshURL, "/")
 	if kind == "goals" {
@@ -74,7 +74,7 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state string, pa
 		if strings.Contains(s.opts.GoalsURL, "?") {
 			separator = "&"
 		}
-		raw, err := s.request(ctx, "GET", s.opts.GoalsURL+separator+"lang=en", nil)
+		raw, err := s.request(ctx, "GET", s.opts.GoalsURL+separator+"lang="+language, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -97,6 +97,7 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state string, pa
 		}
 		goals := meta("frontier-public", "", now, "https://www.elitedangerous.com/community/goals")
 		goals["entries"] = entries
+		goals["language"] = language
 		return M{"goals": goals}, nil
 	}
 	if kind == "system" {
@@ -131,55 +132,80 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state string, pa
 		if normalized == nil {
 			return nil, errors.New("Public system record is missing")
 		}
+		normalized["detailsFetchedAt"] = now
 		return M{"system": normalized}, nil
 	}
 	field := "power_state"
 	if kind == "thargoid" {
 		field = "thargoid_war_state"
 	}
-	indexRaw, err := s.request(ctx, "GET", base+"/systems/field_values/"+field, nil)
-	if err != nil {
-		return nil, err
-	}
-	available, ok := indexRaw["values"]
-	if !ok || v.Arr(available) == nil {
-		return nil, errors.New("Public state index is missing")
-	}
-	index := meta("spansh", "", now, "https://spansh.co.uk/systems")
-	index["states"] = indexRows(indexRaw)
-	filters := M{}
+	index := M{}
 	if kind == "powerplay" {
-		powers, err := s.request(ctx, "GET", base+"/systems/field_values/controlling_power", nil)
+		s.mu.RLock()
+		index = v.Copy(s.powerIndex)
+		s.mu.RUnlock()
+		if !v.Bool(index["known"]) || v.Time(index["fetchedAt"]).IsZero() || s.opts.Now().Sub(v.Time(index["fetchedAt"])) >= refreshInterval {
+			index = M{}
+		}
+	}
+	if len(index) == 0 {
+		indexRaw, err := s.request(ctx, "GET", base+"/systems/field_values/"+field, nil)
 		if err != nil {
 			return nil, err
 		}
-		index["powers"] = indexRows(powers)
-		if power != "" {
-			valid := false
-			for _, r := range v.Rows(index["powers"]) {
-				valid = valid || r["name"] == power
-			}
-			if !valid {
-				return nil, errors.New("Power is not present in the public index")
-			}
-			filters["controlling_power"] = M{"value": []string{power}}
+		if v.Arr(indexRaw["values"]) == nil {
+			return nil, errors.New("Public state index is missing")
 		}
+		index = meta("spansh", "", now, "https://spansh.co.uk/systems")
+		index["states"] = indexRows(indexRaw)
+		if kind == "powerplay" {
+			powers, err := s.request(ctx, "GET", base+"/systems/field_values/controlling_power", nil)
+			if err != nil {
+				return nil, err
+			}
+			if v.Arr(powers["values"]) == nil {
+				return nil, errors.New("Public controlling power index is missing")
+			}
+			index["powers"] = indexRows(powers)
+		}
+	}
+	filters := M{}
+	if kind == "powerplay" && power != "" {
+		found := false
+		for _, row := range v.Rows(index["powers"]) {
+			if row["name"] == power {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return M{"index": index}, errors.New("Power is not present in the public index")
+		}
+		filters["controlling_power"] = M{"value": []string{power}}
 	}
 	values := []string{}
 	if state != "" {
 		values = []string{state}
 	} else if kind == "thargoid" {
-		for _, name := range states(available) {
+		for _, row := range v.Rows(index["states"]) {
+			name := v.Str(row["name"])
 			if name != "None" {
 				values = append(values, name)
 			}
 		}
+	} else {
+		// An unfiltered systems query includes ordinary, unexplored systems.
+		// Keep the automatic first page relevant to Powerplay.
+		values = []string{"Stronghold", "Fortified", "Exploited", "Contested"}
 	}
 	if kind == "thargoid" && state == "None" {
 		return nil, errors.New("Choose an affected Thargoid state, not None")
 	}
 	search := meta("spansh", "", now, "https://spansh.co.uk/systems")
 	search["kind"], search["power"], search["state"], search["page"], search["limit"], search["entries"], search["states"] = kind, power, state, page, 10, []M{}, index["states"]
+	if kind == "powerplay" {
+		search["scope"] = "controlled"
+	}
 	if kind == "thargoid" && len(values) == 0 {
 		// A successful state-index response can establish no indexed affected state,
 		// not that the galaxy contains no Thargoid activity.
@@ -192,11 +218,11 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state string, pa
 	request := M{"filters": filters, "sort": []M{{"name": M{"direction": "asc"}}}, "size": 10, "page": page}
 	raw, err := s.request(ctx, "POST", base+"/systems/search", request)
 	if err != nil {
-		return nil, err
+		return M{"index": index}, err
 	}
 	items, ok := raw["results"]
 	if !ok || v.Arr(items) == nil {
-		return nil, errors.New("Public system search results are missing")
+		return M{"index": index}, errors.New("Public system search results are missing")
 	}
 	entries := []M{}
 	for _, r := range boundedRows(items, 10) {

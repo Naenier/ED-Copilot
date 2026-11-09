@@ -25,6 +25,11 @@ func TestFindRoutesProgressNeverPublishesChildMarketPages(t *testing.T) {
 			t.Fatal(err)
 		}
 		commodity := v.Rows(v.At(body, "filters", "market"))[0]
+		scope := v.Obj(v.At(body, "filters", "type"))
+		types := v.Arr(scope["value"])
+		if scope["logic"] != "not" || len(types) != 1 || types[0] != "Drake-Class Carrier" {
+			t.Fatalf("station-only routes must exclude carriers before ranking market pages: %v", scope)
+		}
 		if v.Key(commodity["name"]) != "gold" {
 			return &http.Response{StatusCode: 400, Body: response(M{}).Body, Header: http.Header{}}, nil
 		}

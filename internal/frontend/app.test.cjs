@@ -23,7 +23,7 @@ function fixture() {
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,referenceCell,context,uiContext,currentLanguage,applyLanguage,captureInputs,restoreInputs,closeLayer,dialog,emptyStateInfo,renderEmptyState,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,referenceCell,context,uiContext,currentLanguage,applyLanguage,captureInputs,restoreInputs,closeLayer,dialog,emptyStateInfo,renderEmptyState,renderActions,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setShell(value){shell=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout(fn,delay) { timers.push({fn,delay});return timers.length; }, clearTimeout() {}, setInterval() {} });
@@ -43,16 +43,21 @@ test('rank and politics readers do not expose a nonfunctional generic details to
  }
 });
 test('unchanged background chrome refresh preserves focused tooltip triggers and updates changed controls',()=>{
- const f=fixture(),a=f.api;let writes=0,markup='';const toolbar={};Object.defineProperty(toolbar,'innerHTML',{get:()=>markup,set:value=>{writes++;markup=value;}});
- f.nodes.set('page-toolbar',toolbar);f.nodes.set('sidebar-ship',{});f.nodes.set('sidebar-system',{});a.C.tab='overview';a.C.group='work';a.C.tabs=[{ID:'overview',Title:'Обзор'}];a.C.page={Rows:[]};a.C.state={commander:{name:'Pilot'},settings:{overlayEnabled:false}};
- a.renderChrome();assert.equal(writes,1);a.renderChrome();assert.equal(writes,1);
- a.C.state.settings.overlayEnabled=true;a.renderChrome();assert.equal(writes,2);assert.ok(markup.includes('Оверлей включён'));
+ const f=fixture(),a=f.api;let toolbarWrites=0,eyeWrites=0,eyeMarkup='';
+ const toolbar={set innerHTML(value){toolbarWrites++;}};
+ const eye={set innerHTML(value){eyeWrites++;eyeMarkup=value;}};
+ f.nodes.set('page-toolbar',toolbar);f.nodes.set('rail-overlay',eye);f.nodes.set('sidebar-ship',{});f.nodes.set('sidebar-system',{});
+ a.C.tab='overview';a.C.group='work';a.C.tabs=[{ID:'overview',Title:'Обзор'}];a.C.page={Rows:[]};a.C.state={commander:{name:'Pilot'},settings:{overlayEnabled:false}};
+ a.renderChrome();a.renderChrome();assert.equal(toolbarWrites,1);assert.equal(eyeWrites,1);
+ a.C.state.settings.overlayEnabled=true;a.renderChrome();
+ assert.equal(toolbarWrites,1);assert.equal(eyeWrites,2);assert.match(eyeMarkup,/data-click="overlay"[^>]+aria-pressed="true"/);
+ assert.match(eyeMarkup,/Выключить оверлей/);
 });
 
 test('commander pages render against the actual shared UI contract',()=>{
  const f=fixture(),a=f.api;a.C.state={commander:{name:'Synthetic Pilot'},settings:{language:'en'}};
  assert.equal(typeof a.uiContext().metric,'function');
- for(const mode of ['Сводка','Финансы','Инвентарь','Имущество','Флот','Статистика','Репутация','Журнал']){
+ for(const mode of ['Сводка','Финансы','Инвентарь','Имущество','Флот','Статистика','Журнал']){
   a.C.tab='commander';a.C.mode=mode;
   const html=f.window.CommanderUI.render(a.C,a.uiContext());
   assert.ok(html.includes('data-commander-section="'+mode+'"'));
@@ -249,9 +254,11 @@ test('dashboard binds the carrier location and preserves a known zero cargo capa
   assert.match(api.renderOverview(), /Вместимость неизвестна/);
 });
 
-test('header reports the actual journal Reader.State lifecycle rather than assuming connection', () => {
+test('the single rail indicator reflects the journal Reader.State lifecycle', () => {
   const { api, nodes } = fixture();
   nodes.set('page-toolbar', {}); nodes.set('sidebar-ship', {}); nodes.set('sidebar-system', {});
+  const attributes = new Map();
+  nodes.set('journal-indicator',{dataset:{},setAttribute:(key,value)=>attributes.set(key,value)});
   const cases = [
     [{}, 'Журнал не настроен'],
     [{ journalDir: 'Synthetic Journals', eventCount: 0 }, 'Ожидаем события игры'],
@@ -263,7 +270,9 @@ test('header reports the actual journal Reader.State lifecycle rather than assum
     api.C.state = { connection, commander: { ship: 'Panther Clipper Mk II', system: 'Synthetic Origin' } };
     api.renderChrome();
     assert.equal(api.connectionStatus(), text);
-    assert.ok(nodes.get('page-toolbar').innerHTML.includes(text));
+    assert.equal(attributes.get('aria-label'),text);
+    assert.equal(attributes.get('data-tooltip'),text);
+    assert.doesNotMatch(nodes.get('page-toolbar').innerHTML,/Журнал/);
     assert.equal(nodes.get('sidebar-ship').textContent, 'Panther Clipper Mk II');
     assert.equal(nodes.get('sidebar-system').textContent, 'Synthetic Origin');
   }
@@ -333,46 +342,53 @@ test('Academy metadata open, next and previous actions switch the reader and res
   }
 });
 
-test('page menu includes all actions even on custom settings pages', async () => {
+test('overflow shows only actions missing from the main row and disappears without extras', async () => {
   const { api, selectors } = fixture();
-  api.C.actions = ['theme', 'journal', 'prices', 'hotkey'].map(id => ({ id, title: id }));
-  await api.handleClick('page-menu', null);
+  api.C.actions = ['theme', 'journal', 'prices', 'hotkey', 'locked'].map(id => ({ id, title:id, disabled:id==='locked' }));
+  const row=api.renderActions();
+  for(const id of ['theme','journal','prices'])assert.match(row,new RegExp('data-action-id="'+id+'"'));
+  assert.doesNotMatch(row,/data-action-id="hotkey"|data-action-id="locked"/);
+  assert.match(row,/data-extra-actions="hotkey"/);
+  await api.handleClick('page-menu',{dataset:{extraActions:'hotkey'},getBoundingClientRect:()=>({left:10,bottom:10})});
   const html = selectors.get('.menu').innerHTML;
-  for (const id of ['theme', 'journal', 'prices', 'hotkey']) assert.match(html, new RegExp('data-action-id="'+id+'"'));
-  assert.equal((html.match(/data-action-id=/g) || []).length, 4);
+  assert.match(html,/data-action-id="hotkey"/);
+  assert.equal((html.match(/data-action-id=/g) || []).length,1);
+  assert.doesNotMatch(api.renderActions(api.C.actions.slice(0,3)),/data-click="page-menu"/);
 });
 
-test('system selection empty state offers the search form even when two colonies already exist', async () => {
-  const { api, dialogs } = fixture();
+test('system selection reserves its inline search when two colonies already exist', () => {
+  const { api, window } = fixture();
   api.C.tab = 'colonization'; api.C.mode = 'Выбор системы';
+  api.C.page = {Title:'Колонизация',Rows:[],Modes:['Выбор системы'],Columns:[]};
   api.C.state.colonization = { selectedProjectId: 'alpha', activeProject: { id: 'alpha', buildings: [] }, projects: [{ id: 'alpha' }, { id: 'beta' }] };
+  window.ColonyWorkspaceUI={render:()=>'<form id="colony-workspace-search-form"></form>'};
   api.C.actions = [
     { id: 'colony.select', title: 'Выбрать колонию', fields: [{ key: 'id' }] },
     { id: 'colony.search', title: 'Найти системы для колонизации', fields: [{ key: 'originSystem', label: 'Исходная система', kind: 'text', default: 'Synthetic Origin' }, { key: 'faction', label: 'Фракция станции', kind: 'combo', default: 'Synthetic Faction' }] },
   ];
-  const html = api.renderEmptyState();
-  assert.match(html, /data-action-id="colony.search"/);
-  assert.doesNotMatch(html, /data-action-id="colony.select"|Добавьте колонию/);
-  await api.handleClick('action', { dataset: { actionId: api.emptyStateInfo().actionId } });
-  assert.match(dialogs[0].body, /name="originSystem"[^>]*value="Synthetic Origin"/);
-  assert.match(dialogs[0].body, /name="faction"[^>]*value="Synthetic Faction"/);
+  const html = api.renderGeneral();
+  assert.match(html,/id="colony-workspace-search-form"/);
+  assert.doesNotMatch(html,/data-action-id="colony.search"|data-action-id="colony.select"|Добавьте колонию/);
 });
 
-test('construction and supply empty states select the next action for the current colony', () => {
+test('construction shows one add action and supply only reports its empty delivery journal', () => {
   const { api } = fixture(); api.C.tab = 'colonization';
+  api.C.page={Title:'Колонизация',Rows:[],Modes:['Строительство','Снабжение'],Columns:[]};
   api.C.state.colonization = { activeProject: { id: 'alpha', buildings: [] } };
   api.C.actions = ['colony.select', 'colony.add-building', 'colony.resource-upsert'].map(id => ({ id, title: id, fields: [] }));
-  api.C.mode = 'Строительство'; assert.match(api.renderEmptyState(), /data-action-id="colony.add-building"/);
-  api.C.mode = 'Снабжение'; assert.match(api.renderEmptyState(), /data-mode="Строительство"/);
-  assert.doesNotMatch(api.renderEmptyState(), /data-action-id="colony.select"/);
+  api.C.mode = 'Строительство'; assert.equal((api.renderGeneral().match(/data-action-id="colony.add-building"/g)||[]).length,1);
+  api.C.mode = 'Снабжение';
+  assert.match(api.renderGeneral(),/Поставок этой колонии пока нет/);
+  assert.doesNotMatch(api.renderGeneral(),/data-action-id=|data-mode="Строительство"/);
   api.C.state.colonization.activeProject.buildings = [{ id: 'port' }];
-  assert.match(api.renderEmptyState(), /data-action-id="colony.resource-upsert"/);
-  assert.match(api.renderEmptyState(), /Добавьте смету или посетите строительный склад/);
+  assert.match(api.renderGeneral(),/Поставок этой колонии пока нет/);
+  assert.doesNotMatch(api.renderGeneral(),/data-action-id="colony.resource-upsert"/);
 });
 
 test('generic empty states use a compact factual status and preserve relevant real actions',()=>{
- const {api}=fixture();api.C.tab='targets';api.C.mode='Цели';api.C.page={Rows:[],Modes:['Цели']};api.C.actions=[{id:'goal.add',title:'Добавить цель'}];
- let html=api.renderEmptyState();assert.match(html,/Нет активных целей/);assert.match(html,/data-action-id="goal.add"/);
+ const {api}=fixture();api.C.tab='targets';api.C.mode='Цели';api.C.page={Rows:[],Modes:['Цели'],Columns:[]};api.C.actions=[{id:'goal.add',title:'Добавить цель'}];
+ let html=api.renderEmptyState();assert.match(html,/Нет активных целей/);assert.doesNotMatch(html,/data-action-id="goal.add"/);
+ assert.equal((api.renderGeneral().match(/data-action-id="goal.add"/g)||[]).length,1);
  assert.doesNotMatch(html,/Здесь появятся|выберите другой экран|<p><\/p>|^<div class="empty-state"><svg/);
  api.C.tab='unlisted';html=api.renderEmptyState();assert.match(html,/Нет записей/);assert.doesNotMatch(html,/<p>|Дождитесь/);
 });
@@ -394,9 +410,10 @@ test('statistics does not prompt to reset a period and engineering empty prompts
   assert.match(api.renderEmptyState(), /Торговых сделок пока нет/);
   assert.doesNotMatch(api.renderEmptyState(), /data-action-id=/);
   api.C.tab = 'engineering'; api.C.mode = 'Обмен'; api.C.actions = [{ id: 'engineering.trade', title: 'Рассчитать обмен', fields: [] }];
-  assert.match(api.renderEmptyState(), /data-action-id="engineering.trade"/);
+  api.C.page={Rows:[],Columns:[],Modes:['Обмен']};
+  assert.equal((api.renderGeneral().match(/data-action-id="engineering.trade"/g)||[]).length,1);
   assert.doesNotMatch(api.renderEmptyState(), /Добавьте улучшение/);
-  api.C.mode = 'Материалы плана'; assert.match(api.renderEmptyState(), /data-mode="План"/);
+  api.C.mode = 'Материалы'; assert.doesNotMatch(api.renderEmptyState(),/data-mode="План"/);
 });
 
 
@@ -465,10 +482,10 @@ test('the actual toolbar offers details only for the renderer that can display a
  const f=fixture();mountedPage(f);const {api,nodes}=f;
  api.C.page={Rows:[{ID:'selected',Cells:['Known row']}],Columns:['Value'],Modes:[]};
  for(const [tab,mode,kind,details] of [
-  ['settings','','settings',true],['overview','','overview',false],['overview','Планы','overview',false],['overview','Состояние','overview',false],['overview','Корабль и груз','table',true],
+  ['settings','','settings',true],['overview','','overview',false],['overview','Обзор','overview',false],['overview','Корабль и груз','table',true],
   ['encyclopedia','Корабли','reference',false],['engineering','Инженеры','reference',false],['targets','Инженеры','reference',false],['engineering','План','table',true],
   ['learning','','learning',false],['carrier-calculator','','carrier-calculator',false],['carrier-trade','','carrier-trade',false],['deals','Поиск','deals',false],
-  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['colonization','Бюджет','table',false],['sale','Продать','table',true],
+  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['colonization','Снабжение','table',false],['colonization','Бюджет','table',false],['sale','Продать','table',true],
  ]){
   api.C.tab=tab;api.C.mode=mode;api.renderChrome();
   assert.equal(api.rendererKind(),kind,tab+' / '+mode);
@@ -480,7 +497,7 @@ test('the actual toolbar offers details only for the renderer that can display a
 
 test('Budget devotes the table width to prices and offers procurement without changing the saved inspector preference',()=>{
  const f=fixture();mountedPage(f);const {api}=f;
- f.window.ColonyWorkspaceUI={render:()=>'<div class="colony-budget-workspace"></div>'};
+ f.window.ColonyWorkspaceUI={render:()=>'<div class="colony-budget-workspace"></div>',renderBuilding:()=>''};
  api.C.tab='colonization';api.C.mode='Бюджет';api.C.inspector=true;api.C.selected='steel';api.C.state={settings:{overlayEnabled:false}};
  api.C.page={Title:'Колонизация',Description:'Description',Summary:'Repeated context',Modes:['Бюджет','Снабжение'],Columns:['Товар'],Rows:[{ID:'steel',Cells:['Steel'],Data:{},Details:'More detail'}]};
  api.C.actions=['colony.carrier-stock','colony.select','colony.create','colony.export-csv','colony.resource-upsert','colony.purchase'].map(id=>({id,title:id}));
@@ -490,7 +507,8 @@ test('Budget devotes the table width to prices and offers procurement without ch
  assert.ok(html.indexOf('data-action-id="colony.resource-upsert"')<html.indexOf('data-action-id="colony.export-csv"'));
  api.renderChrome();assert.doesNotMatch(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);
  assert.equal(api.C.inspector,true);
- api.C.mode='Снабжение';html=api.renderGeneral();assert.match(html,/<aside class="inspector"/);
+ api.C.mode='Снабжение';html=api.renderGeneral();assert.doesNotMatch(html,/<aside class="inspector"/);
+ api.C.mode='Строительство';html=api.renderGeneral();assert.match(html,/<aside class="inspector"/);
  api.renderChrome();assert.match(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);assert.equal(api.C.inspector,true);
 });
 
@@ -656,9 +674,9 @@ test('an older colony save failure cannot clear a newer explicit selection',asyn
  finishSecond({ok:true});await two;assert.match(api.activityHtml(),/value="c" selected/);
 });
 
-test('background activity updates keep the focused selector DOM intact and apply after focus leaves the bar',async()=>{
+test('background activity updates preserve the focused sidebar selector until blur',async()=>{
  const {api,window,document,nodes,listeners}=activityFixture();let replacements=0,html='';
- const strip={set outerHTML(value){replacements++;html=value;}};nodes.set('activity-strip',strip);
+ const strip={};nodes.set('sidebar-activity',{set innerHTML(value){replacements++;html=value;}});
  api.C.page={};const control={closest:selector=>selector==='#activity-strip'?strip:null};document.activeElement=control;
  window.copilotReceive({event:'update',data:{settings:{overlayEnabled:true,activity:'flight'},connection:{},commander:{},revision:4}});
  assert.equal(replacements,0);assert.equal(api.C.activityRefreshPending,true);
@@ -668,7 +686,7 @@ test('background activity updates keep the focused selector DOM intact and apply
 });
 
 test('turning the overlay off removes the activity controls even if a selector had focus',()=>{
- const {api,document,nodes}=activityFixture();let html='unchanged';const strip={set outerHTML(value){html=value;}};nodes.set('activity-strip',strip);
+ const {api,document,nodes}=activityFixture();let html='unchanged';const strip={};nodes.set('sidebar-activity',{set innerHTML(value){html=value;}});
  api.C.page={};document.activeElement={closest:()=>strip};api.C.state.settings.overlayEnabled=false;
  api.renderActivity();assert.equal(html,'');assert.equal(api.C.activityRefreshPending,false);
 });
@@ -677,11 +695,11 @@ function selectorUpdate(f,revision,overlayColonies){
  f.window.copilotReceive({event:'update',data:{revision,overlayColonies,settings:f.api.C.state.settings,commander:f.api.C.state.commander||{},connection:f.api.C.state.connection||{}}});
 }
 
-test('a live selector DTO updates the activity bar without replacing full colony construction data',()=>{
+test('a live selector DTO updates the sidebar without replacing full colony construction data',()=>{
  const f=activityFixture(),{api,nodes}=f;let html='',renders=0;
  const full={projects:[{id:'a',name:'A',targetSystem:'System A',buildings:[{id:'construction-a',requirements:[{commodity:'steel',missing:80}]}]}],selectedProjectId:'a',activeProject:{id:'a',buildings:[{id:'construction-a'}]},catalog:[{id:'coriolis'}]};
  api.C.page={};api.C.state.revision=10;api.C.state.colonization=full;
- nodes.set('activity-strip',{set outerHTML(value){html=value;renders++;}});
+ nodes.set('sidebar-activity',{set innerHTML(value){html=value;renders++;}});
  const dto={projects:[{id:'a',name:'A',targetSystem:'System A',status:'building'},{id:'b',name:'Discovered B',targetSystem:'System B',status:'claimed'}],selectedProjectId:'b',activeProject:{id:'b'}};
  selectorUpdate(f,11,dto);
  assert.equal(renders,1);assert.match(html,/value="b" selected>Discovered B · System B/);
@@ -693,7 +711,7 @@ test('a live selector DTO updates the activity bar without replacing full colony
 });
 
 test('a fresh full view wins over an older selector update and cache revisions cannot go backwards',async()=>{
- const f=activityFixture(),{api,nodes}=f;nodes.set('activity-strip',{outerHTML:''});
+ const f=activityFixture(),{api,nodes}=f;nodes.set('sidebar-activity',{innerHTML:''});
  const rows=[{id:'a',name:'A'},{id:'b',name:'B'}];api.C.state.revision=20;api.C.state.colonization={projects:rows,selectedProjectId:'b'};
  selectorUpdate(f,19,{projects:rows,selectedProjectId:'a',activeProject:{id:'a'}});
  assert.equal(api.C.overlayColonies,undefined);assert.equal(api.colonySelectorModel().selected,'b');
@@ -716,7 +734,7 @@ test('a live colony update keeps the pending choice and focused selector until b
  const f=activityFixture(),{api,nodes,document,listeners}=f;let renders=0,html='',writes=0;
  api.C.page={};api.C.state.revision=5;api.C.state.colonization={projects:[{id:'a',name:'A'},{id:'b',name:'B'}],selectedProjectId:'a'};
  api.C.colonySelection={id:'b',pending:true,sequence:1};api.setCall(async()=>{writes++;});
- const strip={set outerHTML(value){renders++;html=value;}};nodes.set('activity-strip',strip);const control={closest:selector=>selector==='#activity-strip'?strip:null};document.activeElement=control;
+ const strip={};nodes.set('sidebar-activity',{set innerHTML(value){renders++;html=value;}});const control={closest:selector=>selector==='#activity-strip'?strip:null};document.activeElement=control;
  selectorUpdate(f,6,{projects:[{id:'c',name:'New C'},{id:'a',name:'A'},{id:'b',name:'B'}],selectedProjectId:'a',activeProject:{id:'a'}});
  assert.equal(renders,0);assert.equal(api.C.activityRefreshPending,true);assert.equal(api.colonySelectorModel().selected,'b');assert.equal(writes,0);
  document.activeElement=null;listeners.get('focusout')({target:control});await Promise.resolve();await Promise.resolve();

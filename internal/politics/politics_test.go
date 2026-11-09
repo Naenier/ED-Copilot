@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -197,6 +198,9 @@ func fixtureServer(t *testing.T, now *time.Time) (*Service, *atomic.Int32, *atom
 			if v.Num(input["size"]) != 10 || v.Int(input["page"]) > 100 {
 				t.Error("unbounded search", input)
 			}
+			if values := states(v.At(input, "filters", "power_state", "value")); len(values) == 0 {
+				t.Error("Powerplay search did not restrict results to political states", input)
+			}
 			fmt.Fprint(w, `{"count":22,"results":[{"name":"Public result","id64":42,"updated_at":"2026-11-08T10:00:00Z","controlling_power":"Power A","power_state":"Contested"}]}`)
 		default:
 			http.NotFound(w, r)
@@ -242,6 +246,77 @@ func TestPublicRequestsCacheAndFailedRefreshPreservesLastData(t *testing.T) {
 	tries := count.Load()
 	if _, err := s.Fetch(context.Background(), M{"kind": "goals"}); err == nil || count.Load() != tries {
 		t.Fatal("failed refresh has no retry backoff")
+	}
+}
+
+func TestAutomaticPoliticalLookupsKeepFollowingCurrentSystem(t *testing.T) {
+	now := testClock()
+	s, count, _ := fixtureServer(t, &now)
+	s.Apply(jump())
+	if _, err := s.Fetch(context.Background(), M{"kind": "system", "system": "Fixture", "keepSelection": true}); err != nil {
+		t.Fatal(err)
+	}
+	if count.Load() != 2 || v.At(s.Snapshot(), "activeSystem", "detailsFetchedAt") != v.ISO(now) {
+		t.Fatal("full system observation was not recorded")
+	}
+	event := jump()
+	event["StarSystem"] = "Next system"
+	s.Apply(event)
+	if s.Snapshot()["selectedSystem"] != "Next system" {
+		t.Fatal("background refresh pinned the previous current system")
+	}
+	if err := s.Update(M{"action": "select-system", "system": "Fixture"}); err != nil {
+		t.Fatal(err)
+	}
+	if s.Snapshot()["selectedSystem"] != "Fixture" {
+		t.Fatal("explicit selection was not retained")
+	}
+	if err := s.Update(M{"action": "select-current"}); err != nil || s.Snapshot()["selectedSystem"] != "Next system" {
+		t.Fatal("current-system control did not restore following", err)
+	}
+}
+
+func TestPowerplayPagesReusePowerIndexAndRestrictTheAutomaticSearch(t *testing.T) {
+	now := testClock()
+	s, count, _ := fixtureServer(t, &now)
+	if _, err := s.Fetch(context.Background(), M{"kind": "powerplay"}); err != nil {
+		t.Fatal(err)
+	}
+	if count.Load() != 3 || v.At(s.Snapshot(), "search", "scope") != "controlled" {
+		t.Fatal("automatic search did not fetch bounded Powerplay data")
+	}
+	if _, err := s.Fetch(context.Background(), M{"kind": "powerplay", "power": "Power A", "page": 1}); err != nil {
+		t.Fatal(err)
+	}
+	if count.Load() != 4 || v.At(s.Snapshot(), "search", "power") != "Power A" {
+		t.Fatal("paging fetched a duplicate global index or lost the filter")
+	}
+}
+
+func TestCommunityGoalLocalizationIsPartOfTheCacheKey(t *testing.T) {
+	var mu sync.Mutex
+	requests := []string{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		language := r.URL.Query().Get("lang")
+		mu.Lock()
+		requests = append(requests, language)
+		mu.Unlock()
+		fmt.Fprint(w, `{"activeInitiatives":[]}`)
+	}))
+	defer server.Close()
+	s := New(nil, Options{HTTPClient: server.Client(), GoalsURL: server.URL})
+	for _, language := range []string{"en", "ru", "ru"} {
+		if _, err := s.Fetch(context.Background(), M{"kind": "goals", "language": language}); err != nil {
+			t.Fatal(err)
+		}
+		if v.At(s.Snapshot(), "communityGoals", "language") != language {
+			t.Fatal("community-goal locale was ignored")
+		}
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if !reflect.DeepEqual(requests, []string{"en", "ru"}) {
+		t.Fatal("community-goal cache lost the locale", requests)
 	}
 }
 

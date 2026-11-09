@@ -25,11 +25,11 @@ The current ship is separate from an owned-ship inventory. Visiting a shipyard p
 Eight cards show your in-game ranks and the observed percentage towards the next rank. Open a discipline to read advancement methods and rank-specific rewards. Progress comes from journal Progress events and promotions from Promotion events; first observation is not an achievement date. Frontier can supplement a known rank without inventing an unknown percentage.
 
 A dash means no observation is available. Start the game or reread journals to update your record. Ship and system unlocks appear beside their relevant rank.`,
-	"politics": `Galactic politics
+	"politics": `Galaxy
 
-Choose a system and refresh its observations. Separate views cover community goals, powers, faction conflicts and Thargoid states. Select a system suggestion or copy a name for the galaxy map.
+Politics shows the controlling faction and power in the selected system. Search for another system or return to your current one. Factions and conflicts appear when observations are available for the selected system.
 
-Each block identifies its observation time and data source. A failed refresh keeps the last available data. A public index covers reported systems; missing records do not establish that the entire galaxy is free of conflict. Your personal community-goal contribution is read separately from the game journal.`,
+Community goals and Powerplay update automatically. Personal goal progress and conflict scores come from the game journal.`,
 	"overview": `Commander dashboard
 
 Use this page to check your current location, ship, cargo and the tasks relevant to your chosen activity. Journal observations update as you play; a missing value means the application has not observed it yet.
@@ -111,9 +111,9 @@ The engineer reference lists locations, access requirements, supported modules a
 
 First check an inhabited origin system, choose an eligible station and its controlling faction, then search nearby candidate systems. Public observations can be incomplete; confirm claim availability and restrictions in the game. Adding a personal plan does not purchase a claim.
 
-Each colony has its own selected project, construction order and supply queue. Add planned facilities and review prerequisites and available construction points. Visiting a depot loads its observed bill; manual bills remain estimates.
+Overview lists your colonies. Open Construction to add facilities, see their resource bills and change construction order or supply priority. Visiting a depot loads its observed bill; manual bills remain estimates.
 
-Supplies shows delivery quantities and the latest observed galactic average prices. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. The resource budget combines all planned and active structures of the selected colony. Its breakdown separates accepted deliveries, ship cargo and enabled carrier warehouses. Unknown bills and prices keep totals incomplete; these estimates do not represent actual expenditure or a market offer. Completed, cancelled and failed structures are excluded.
+Supplies is the delivery log: date, commodity and quantity. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. It combines all planned and active structures in the selected colony.
 
 The overlay lists up to ten outstanding commodities and shows how many more remain. When carrier accounting is enabled, requirements fully covered by fresh accessible carrier stock are hidden from the overlay while remaining visible in the application. Unknown or stale stock cannot hide a requirement. Journal-observed carrier transfers update a known warehouse immediately; Frontier may confirm those changes later.
 
@@ -148,16 +148,16 @@ Choose a palette, edit colours or preview a palette imported from the game befor
 Reference commodity prices are optional personal planning inputs. They help value cargo; market searches and recorded transactions keep their own prices and timestamps. Configure the overlay and select the activity whose panels you want while the game has focus.`,
 	"account": `Frontier account
 
-Select Sign in with Frontier to open the official sign-in page in your browser. Your password stays on the Frontier website. ED Copilot stores the resulting connection securely in your Windows profile.
+In Settings → Connections, select Sign in with Frontier to open the official sign-in page in your browser.
 
 After sign-in, ED Copilot automatically refreshes supported commander, ship, current station and carrier information in the background. Companion API snapshots may lag behind journal events, so check their time before using inventory or finances for a plan. If the connection fails, saved observations remain dated and unknown information stays unknown.
 
 Sign out when you want to remove the saved connection. You can still use local journal observations and offline tools without being signed in.`,
 	"integrations": `Inara synchronisation
 
-Create or obtain your personal API key in your Inara account settings. Enter the key here, save it and enable event delivery. Leaving the key field empty retains the existing saved key.
+Obtain your personal API key in your Inara account settings. In Copilot, open Settings → Connections, enter the key and enable event delivery. Leaving the field empty retains the saved key.
 
-The application sends supported events for the current commander. Review queued events, acknowledgements, last successful delivery and the next retry. The encrypted queue retains unacknowledged events; re-reading old journals does not resend their history.
+Connection status appears next to the key. Re-reading old journals does not resend their history.
 
 Service restrictions or temporary network failures may delay delivery. A saved key does not by itself prove that the service has accepted an event. You can disable sending while keeping the saved key.`,
 	"help": `Using ED Copilot

@@ -194,7 +194,7 @@ func TestWebViewReturnsCanonicalContextAndRowSpecificActionsInOneSnapshot(t *tes
 	for _, test := range []struct{ selected, expected string }{{"", "first-goal"}, {"stale-goal", "first-goal"}, {"second-goal", "second-goal"}} {
 		backend := &dispatchProbeController{platformController: platformController{state: state}}
 		result, err := dispatchWeb(backend, "view", M{"tab": "overview", "selected": test.selected})
-		if err != nil || backend.snapshots != 1 || v.At(result, "context", "mode") != "Планы" || v.At(result, "context", "selected") != test.expected {
+		if err != nil || backend.snapshots != 1 || v.At(result, "context", "mode") != "Обзор" || v.At(result, "context", "selected") != test.expected {
 			t.Fatalf("wrong initial context: %v err=%v snapshots=%d", result["context"], err, backend.snapshots)
 		}
 		page := result["page"].(p.Page)
@@ -204,7 +204,7 @@ func TestWebViewReturnsCanonicalContextAndRowSpecificActionsInOneSnapshot(t *tes
 				row = candidate
 			}
 		}
-		expected := webActions(p.CoreActions("overview", "Планы", state, row.Data, M{}))
+		expected := webActions(p.CoreActions("overview", "Обзор", state, row.Data, M{}))
 		if !reflect.DeepEqual(result["actions"], expected) {
 			t.Fatal("actions do not match the returned canonical selection", test)
 		}
@@ -216,12 +216,12 @@ func TestWebViewReturnsCanonicalContextAndRowSpecificActionsInOneSnapshot(t *tes
 	}
 	for _, selected := range []string{"", "stale-goal"} {
 		backend := &dispatchProbeController{platformController: platformController{state: state}}
-		if _, err := dispatchWeb(backend, "action", M{"tab": "overview", "mode": "Планы", "selected": selected, "actionId": "goal.complete"}); err == nil || backend.path != "" {
+		if _, err := dispatchWeb(backend, "action", M{"tab": "overview", "mode": "Обзор", "selected": selected, "actionId": "goal.complete"}); err == nil || backend.path != "" {
 			t.Fatal("action fell back to the first record without an explicit valid selection", selected, err, backend.path)
 		}
 	}
 	backend = &dispatchProbeController{platformController: platformController{state: state}}
-	if _, err := dispatchWeb(backend, "action", M{"tab": "overview", "mode": "Планы", "selected": "second-goal", "actionId": "goal.complete"}); err != nil || backend.last["id"] != "second-goal" {
+	if _, err := dispatchWeb(backend, "action", M{"tab": "overview", "mode": "Обзор", "selected": "second-goal", "actionId": "goal.complete"}); err != nil || backend.last["id"] != "second-goal" {
 		t.Fatal("explicit action selected a different record", backend.last, err)
 	}
 }

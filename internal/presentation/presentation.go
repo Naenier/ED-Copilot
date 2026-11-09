@@ -18,8 +18,8 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Торговля", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
-var DefaultTabs = []string{"overview", "ranks", "politics", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Рынки", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var DefaultTabs = []string{"overview", "ranks", "politics", "targets", "deals", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
 type Choice struct{ Value, Label string }
@@ -225,14 +225,9 @@ func buildPage(tab, mode, query string, s M) Page {
 	case "carrier-trade":
 		return CarrierTradePage(mode, query, s)
 	case "overview":
-		p.Modes = []string{"Планы", "Состояние", "Корабль и груз", "Миссии", "Журнал"}
+		p.Modes = []string{"Обзор", "Корабль и груз", "Миссии", "Журнал"}
 		p.Summary = v.Text(cmd["system"], "Ожидание журналов") + "  ·  " + Ship(cmd) + "  ·  " + Number(v.At(s, "pilot", "credits")) + " кр."
 		switch mode {
-		case "Состояние":
-			p.Rows = append(p.Rows, row(M{"key": "ship"}, []string{"Корабль", Ship(cmd)}, "Модель, личное имя и идентификатор корабля."))
-			for _, pair := range [][2]string{{"commander.system", "Система"}, {"commander.body", "Тело"}, {"commander.station", "Станция"}, {"commander.vehicle", "Положение пилота"}, {"commander.docked", "Пристыкован"}, {"commander.cargoTons", "Груз, т"}, {"commander.cargoCapacity", "Вместимость трюма, т"}, {"pilot.credits", "Баланс, кр."}, {"pilot.creditsAt", "Время баланса"}, {"pilot.creditsSource", "Источник баланса"}, {"pilot.fuel.mainTons", "Основное топливо, т"}, {"pilot.fuel.mainCapacityTons", "Вместимость основного бака, т"}, {"pilot.fuel.updatedAt", "Время снимка топлива"}, {"pilot.session.since", "Начало сеанса"}, {"pilot.session.jumps", "Прыжков за сеанс"}, {"pilot.session.distanceLy", "Пройдено за сеанс, св. л."}, {"pilot.legalState", "Правовой статус"}, {"pilot.navTarget.system", "Следующий прыжок"}, {"pilot.navTarget.remainingJumps", "Прыжков до цели"}} {
-				p.Rows = append(p.Rows, row(M{"key": pair[0]}, []string{pair[1], Format(v.At(s, strings.Split(pair[0], ".")...))}, "Последние известные наблюдения журнала и текущего снимка игры. Проверяйте время обновления."))
-			}
 		case "Корабль и груз":
 			p.Columns = []string{"Товар", "На борту, т"}
 			for _, r := range v.Rows(cmd["cargo"]) {
@@ -275,12 +270,12 @@ func buildPage(tab, mode, query string, s M) Page {
 				p.Rows = append(p.Rows, row(saved, []string{v.Str(saved["system"]), v.Text(saved["ring"], saved["body"], saved["label"]), Label(saved["kind"]), Date(saved["addedAt"])}, detailsTarget(target)+"\r\nСохранённое место. При необходимости обновите сведения перед перелётом."))
 			}
 		case "Места добычи":
-			p.Columns = []string{"Система / тело", "Место", "Качество", "Дальность, св. л.", "Основание"}
+			p.Columns = []string{"Система / тело", "Место", "Качество", "Дальность, св. л."}
 			for _, r := range rowsByPath(s, "targets") {
 				if !contains(query, r["system"], r["body"], r["ring"]) {
 					continue
 				}
-				p.Rows = append(p.Rows, row(r, []string{v.Str(r["system"]) + " · " + v.Str(r["body"]), v.Text(r["ring"], r["body"]), Label(r["tier"]), Number(r["distanceLy"]), Label(r["confidence"])}, detailsTarget(r)))
+				p.Rows = append(p.Rows, row(r, []string{v.Str(r["system"]) + " · " + v.Str(r["body"]), v.Text(r["ring"], r["body"]), Label(r["tier"]), Number(r["distanceLy"])}, detailsTarget(r)))
 			}
 		case "Навигация":
 			p.Columns = []string{"Система", "Класс звезды", "Пройдено"}
@@ -351,9 +346,9 @@ func buildPage(tab, mode, query string, s M) Page {
 				p.Rows = append(p.Rows, row(service, []string{v.Text(service["name"], service["key"]), Format(service["installed"]), Format(service["enabled"]), Format(service["crewName"]), Date(service["updatedAt"])}, "Службы устанавливаются и приостанавливаются через управление флотоносцем в игре."))
 			}
 		case "Склад":
-			p.Columns = []string{"Товар", "Известный остаток, т", "Источник", "Наблюдение"}
+			p.Columns = []string{"Товар", "Известный остаток, т", "Наблюдение"}
 			for _, r := range v.Rows(v.At(c, "warehouse", "items")) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["key"]), Number(r["count"]), Label(v.First(v.At(c, "warehouse", "sourceLabel"), v.At(c, "warehouse", "source"))), Date(v.At(c, "warehouse", "updatedAt"))}, "Отсутствие товара в неполном снимке не означает нулевой остаток."))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["key"]), Number(r["count"]), Date(v.At(c, "warehouse", "updatedAt"))}, "Отсутствие товара в неполном снимке не означает нулевой остаток."))
 			}
 		case "Торговые приказы":
 			p.Columns = []string{"Товар", "Приказ", "Цена, кр./т", "Объём, т"}
@@ -390,11 +385,17 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Rows = append(p.Rows, row(stop, []string{Number(stop["index"]), v.Text(stop["name"], stop["system"]), Number(v.First(stop["distanceLy"], stop["distance"])), Number(stop["fuelUsedTons"]), Number(v.First(stop["tankTons"], stop["tankAfterTons"], stop["fuelRemainingTons"])), Number(stop["restockTons"]), Format(stop["visited"])}, fields(stop, "cargoTritiumTons", "Тритий в грузе, т", "elapsedMinutes", "Время от начала, мин", "refuelMinutes", "Дозаправка, мин", "estimatedArrival", "Прибытие", "estimatedDeparture", "Отправление", "estimatedReady", "Готовность")+"\r\n"+joinStrings(r["warnings"])+"\r\n"+joinStrings(r["assumptions"])))
 		}
 	case "colonization":
-		p.Modes = []string{"Выбор системы", "Строительство", "Очередь снабжения", "Снабжение", "Бюджет", "Поставки"}
+		p.Modes = []string{"Обзор", "Выбор системы", "Строительство", "Снабжение", "Бюджет"}
 		c := v.Obj(s["colonization"])
 		project := v.Obj(c["activeProject"])
 		p.Summary = v.Text(project["name"], project["targetSystem"], "Создайте или выберите колонию") + " · " + Label(project["status"])
 		switch mode {
+		case "Обзор", "":
+			p.Summary = ""
+			p.Columns = []string{"Колония", "Система", "Статус", "Строятся"}
+			for _, r := range v.Rows(c["projects"]) {
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["targetSystem"]), v.Str(r["targetSystem"]), Label(r["status"]), Number(r["concurrent"])}, fields(r, "originSystem", "Исходная система", "faction", "Фракция колонии")))
+			}
 		case "Строительство", "Очередь снабжения":
 			p.Columns = []string{"№", "Объект", "Тело", "Уровень", "Статус", "Осталось, т"}
 			buildings := v.Rows(project["buildings"])
@@ -419,25 +420,29 @@ func buildPage(tab, mode, query string, s M) Page {
 					p.Rows = append(p.Rows, row(M{"id": fmt.Sprintf("colony-advice-%d", i), "kind": "colony-advice"}, []string{"—", v.Str(advice["title"]), "—", "—", "Рекомендация", "—"}, v.Str(advice["text"])))
 				}
 			}
-		case "Снабжение":
-			p.Columns = []string{"Товар", "Нужно, т", "Сдано, т", "Осталось, т", "На борту, т", "На флотоносце, т", "Купить, т", "Средняя по галактике, кр./т", "Стоимость остатка, кр.", "Основание"}
-			for _, r := range v.Rows(project["supplies"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["delivered"]), Number(r["missing"]), Number(r["cargoAvailable"]), Number(r["carrierAvailable"]), colonyProcurement(r["toBuy"], r["toBuyAtMost"]), Number(r["galacticAveragePrice"]), Number(r["missingCost"]), Label(r["source"])}, colonyCostDetails(r)))
-			}
 		case "Бюджет":
 			p.Columns = []string{"Товар", "Полная потребность, т", "Осталось, т", "Средняя по галактике, кр./т", "Полная стоимость, кр.", "Стоимость остатка, кр.", "Закупить, кр.", "Цена получена"}
 			for _, r := range v.Rows(project["supplies"]) {
 				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), Number(r["galacticAveragePrice"]), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
 			}
-		case "Поставки":
-			p.Columns = []string{"Время", "Товар", "Объём, т", "Основание", "Объект"}
-			for _, r := range append(v.Rows(project["manualDeliveries"]), v.Rows(project["journalDeliveries"])...) {
+		case "Снабжение", "Поставки":
+			p.Columns = []string{"Время", "Товар", "Объём, т"}
+			deliveries := append(append([]M{}, v.Rows(project["manualDeliveries"])...), v.Rows(project["journalDeliveries"])...)
+			sort.SliceStable(deliveries, func(i, j int) bool {
+				return v.Time(deliveries[i]["timestamp"]).After(v.Time(deliveries[j]["timestamp"]))
+			})
+			seen := map[string]int{}
+			for _, r := range deliveries {
+				key := v.Text(r["source"], "journal") + ":" + v.Text(r["id"], v.Str(r["timestamp"])+":"+v.Str(r["marketId"]))
+				seen[key]++
 				resources := v.Rows(r["resources"])
 				if len(resources) == 0 {
 					resources = []M{r}
 				}
-				for _, q := range resources {
-					p.Rows = append(p.Rows, row(r, []string{Date(r["timestamp"]), v.Text(q["name"], q["commodity"]), Number(v.First(q["count"], q["amount"])), Label(r["source"]), v.Text(r["buildingId"], r["marketId"])}, v.Str(r["notes"])))
+				for j, q := range resources {
+					entry := row(r, []string{Date(r["timestamp"]), v.Text(q["name"], q["commodity"]), Number(v.First(q["count"], q["amount"]))}, v.Str(r["notes"]))
+					entry.ID = fmt.Sprintf("colony-delivery:%s:%d:%d", key, seen[key], j)
+					p.Rows = append(p.Rows, entry)
 				}
 			}
 		default:
@@ -449,7 +454,7 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "engineering":
-		p.Modes = []string{"План", "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана", "Обмен", "Инженеры"}
+		p.Modes = []string{"План", "Материалы", "Обмен", "Инженеры"}
 		e := v.Obj(s["engineering"])
 		p.Summary = "Нужно материалов: " + Number(v.At(e, "shopping", "neededUnits")) + " · Не хватает: " + Number(v.At(e, "shopping", "missingUnits"))
 		switch mode {
@@ -484,12 +489,7 @@ func buildPage(tab, mode, query string, s M) Page {
 	case "encyclopedia":
 		return encyclopedia(mode, query, s)
 	case "help":
-		p.Columns = []string{"Раздел", "Тема", "Кратко"}
-		for _, r := range data.Array("help.json") {
-			if contains(query, r["title"], r["summary"], r["body"], r["keywords"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Str(r["group"]), v.Str(r["title"]), v.Str(r["summary"])}, v.Str(r["body"])))
-			}
-		}
+		return guidePage(query, Language(s))
 	case "statistics":
 		p.Description = "Результаты за выбранный период. Доставки колониям учитываются отдельно от продаж."
 		p.Modes = []string{"Ресурсы", "Итоги", "Дни", "Торговля", "Колонии"}
@@ -512,8 +512,7 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 		if mode == "Торговля" {
-			sub := Build("sale", "Журнал сделок", query, s)
-			p.Columns, p.Rows, p.Summary = sub.Columns, sub.Rows, sub.Summary
+			p = tradeStatisticsPage(p, s)
 		}
 		if mode == "Колонии" {
 			sub := Build("colonization", "Поставки", query, s)
@@ -611,9 +610,6 @@ func marketDetails(r M) string {
 }
 func buildDetails(r, project M) string {
 	out := fields(r, "status", "Статус", "body", "Тело", "pointCost", "Очки начала", "pointReward", "Очки завершения", "billSource", "Основание сметы") + "\r\n" + joinStrings(r["warnings"])
-	for _, q := range v.Rows(r["requirements"]) {
-		out += "\r\n" + v.Str(q["name"]) + ": нужно " + Number(q["required"]) + ", принято " + Number(q["delivered"]) + ", осталось " + Number(q["missing"]) + " т"
-	}
 	for _, a := range v.Rows(project["buildAdvice"]) {
 		out += "\r\n\r\n" + v.Str(a["title"]) + "\r\n" + v.Str(a["text"])
 	}

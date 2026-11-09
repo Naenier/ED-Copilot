@@ -33,6 +33,38 @@ test('carrier trade separates the two legs and keeps unknown market prices blank
  C.mode='Проверки';assert.match(api.render(C,ui),/Укажите цены, объём, топливо и длительность рейса/);
 });
 
+test('default carrier trade view requests nearby opportunities once and opens an offer in the planner',async()=>{
+ const {api,C,ui,calls}=fixture();
+ C.mode='';
+ assert.match(api.render(C,ui),/Сравниваем цены и объёмы/);
+ await api.init(C,ui);await api.init(C,ui);
+ assert.equal(calls.filter(x=>x.params.values?.action==='opportunities').length,1);
+ const updatedAt=new Date().toISOString();
+ C.state.carrierTrade.opportunities={updatedAt,options:{scenario:'custom',system:''},results:[{
+  id:'offer',commodityName:'Золото',quantity:3000,
+  buy:{station:'Seller',system:'Alpha',price:200,updatedAt,orders:[{station:'Seller',quantity:1000,price:190},{station:'Another',quantity:2000,price:205}]},
+  sell:{station:'Buyer',system:'Beta',price:3000,updatedAt},summary:{profit:123456,jumpCount:2,fuelTons:98},
+  route:{loaded:[{from:'Alpha',to:'Beta',distanceLy:50}]}
+ }]};
+ const html=api.render(C,ui);
+ assert.match(html,/Another/);assert.match(html,/Системы маршрута/);assert.match(html,/123456/);
+ await api.handle('carrier-trade-use-opportunity',{dataset:{index:'0'}},C,ui);
+ assert.equal(calls.at(-1).params.values.action,'apply-opportunity');
+ assert.equal(calls.at(-1).params.values.id,'offer');
+ assert.equal(C.mode,'Рейс');
+});
+
+test('expired quotes are hidden and force a replacement search',async()=>{
+ const {api,C,ui,calls}=fixture();C.mode='Рейсы';
+ await api.init(C,ui);
+ C.state.carrierTrade.opportunities={updatedAt:new Date().toISOString(),options:{scenario:'custom',system:''},
+  results:[{id:'old',commodityName:'Stale result',buy:{price:2,updatedAt:'2000-01-01T00:00:00Z'}}]};
+ assert.doesNotMatch(api.render(C,ui),/Stale result/);
+ await api.init(C,ui);await api.init(C,ui);
+ const requests=calls.filter(x=>x.params.values?.action==='opportunities');
+ assert.equal(requests.length,2);assert.equal(requests[1].params.values.force,true);
+});
+
 test('Booze Cruise explains the M pad and never invents a holiday price',()=>{
  const {api,C,ui}=fixture();C.state.carrierTrade.options.preset='booze-cruise';
  const html=api.render(C,ui);assert.match(html,/HIP 58832/);assert.match(html,/максимальная площадка M/);assert.match(html,/Праздник не подтверждён/);assert.match(html,/data-trade-option="holidayConfirmed"/);assert.doesNotMatch(html,/278.?000|270.?000|250.?000/);

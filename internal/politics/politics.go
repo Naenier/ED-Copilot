@@ -21,6 +21,7 @@ import (
 type M = v.M
 
 const MaxSystems = 40
+const refreshInterval = 5 * time.Minute
 
 type Options struct {
 	HTTPClient          *http.Client
@@ -154,6 +155,9 @@ func (s *Service) mergeLocked(row M) {
 	if row["address"] != nil && v.Str(row["address"]) != "" {
 		old["address"] = row["address"]
 	}
+	if at := v.Time(row["detailsFetchedAt"]); at.After(v.Time(old["detailsFetchedAt"])) {
+		old["detailsFetchedAt"] = v.ISO(at)
+	}
 	for _, domain := range []string{"info", "factions", "conflicts", "powerplay", "thargoid"} {
 		next := v.Obj(row[domain])
 		if len(next) == 0 {
@@ -192,7 +196,7 @@ func (s *Service) Update(body M) error {
 		if s.current == "" {
 			return errors.New("Current system is not observed yet")
 		}
-		s.selected = s.current
+		s.selected = ""
 	default:
 		return errors.New("Unknown politics action")
 	}
@@ -247,7 +251,7 @@ func (s *Service) Snapshot() M {
 			active[domain] = stale(raw)
 		}
 	}
-	return M{"selectedSystem": name, "currentSystem": s.current, "activeSystem": active, "systems": systems, "communityGoals": stale(s.publicGoals), "personalGoals": stale(s.personalGoals), "powerIndex": stale(s.powerIndex), "search": stale(s.search), "pledge": v.Copy(s.pledge), "status": v.Merge(v.Copy(s.status), M{"offline": s.opts.DisableNetwork}), "limits": M{"systems": MaxSystems, "searchPageSize": 10, "cacheMinutes": 5}, "sources": []M{{"name": "Frontier community goals", "url": "https://www.elitedangerous.com/community/goals"}, {"name": "Spansh system index", "url": "https://spansh.co.uk/systems"}, {"name": "Frontier journal manual", "url": "https://hosting.zaonce.net/community/journal/v37/Journal_Manual_v37.pdf"}, {"name": "Thargoid reporting", "url": "https://navbeacon.app/"}}}
+	return M{"selectedSystem": name, "currentSystem": s.current, "activeSystem": active, "systems": systems, "communityGoals": stale(s.publicGoals), "personalGoals": stale(s.personalGoals), "powerIndex": stale(s.powerIndex), "search": stale(s.search), "pledge": v.Copy(s.pledge), "status": v.Merge(v.Copy(s.status), M{"offline": s.opts.DisableNetwork}), "limits": M{"systems": MaxSystems, "searchPageSize": 10, "cacheMinutes": refreshInterval.Minutes()}}
 }
 
 func (s *Service) ExportSettings() M {
@@ -283,6 +287,15 @@ func (s *Service) Fetch(ctx context.Context, body M) (M, error) {
 	if kind != "system" && kind != "goals" && kind != "powerplay" && kind != "thargoid" {
 		return nil, errors.New("Unknown political data request")
 	}
+	language := "en"
+	if raw, exists := body["language"]; exists {
+		value, ok := raw.(string)
+		if kind != "goals" || !ok || (value != "en" && value != "ru") {
+			return nil, errors.New("Invalid community goal language")
+		}
+		language = value
+	}
+	keepSelection, _ := body["keepSelection"].(bool)
 	s.mu.Lock()
 	if s.opts.DisableNetwork {
 		s.status = M{"running": false, "kind": kind, "error": "offline", "failedAt": s.now()}
@@ -314,28 +327,38 @@ func (s *Service) Fetch(ctx context.Context, body M) (M, error) {
 		s.mu.Unlock()
 		return nil, errors.New("Page must be between 0 and 100")
 	}
-	requestKey := fmt.Sprintf("%s|%s|%s|%s|%d", kind, key(name), power, state, page)
+	systemKey := ""
+	if kind == "system" {
+		systemKey = key(name)
+	}
+	requestKey := fmt.Sprintf("%s|%s|%s|%s|%d|%s", kind, systemKey, power, state, page, language)
 	if at := s.failedRequests[requestKey]; !at.IsZero() && s.opts.Now().Sub(at) < time.Minute {
 		s.mu.Unlock()
 		return nil, errors.New("Wait one minute before retrying this public request")
 	}
-	cacheAvailable := kind == "system" && s.systems[key(name)] != nil || kind == "goals" && v.Bool(s.publicGoals["known"]) || (kind == "powerplay" || kind == "thargoid") && s.search["requestKey"] == requestKey
-	if at := s.lastRequests[requestKey]; cacheAvailable && !at.IsZero() && s.opts.Now().Sub(at) < 5*time.Minute {
-		if kind == "system" {
+	cacheAvailable := kind == "system" && s.systems[key(name)] != nil ||
+		kind == "goals" && v.Bool(s.publicGoals["known"]) && v.Text(s.publicGoals["language"], "en") == language ||
+		(kind == "powerplay" || kind == "thargoid") && s.search["requestKey"] == requestKey
+	if at := s.lastRequests[requestKey]; cacheAvailable && !at.IsZero() && s.opts.Now().Sub(at) < refreshInterval {
+		if kind == "system" && !keepSelection {
 			s.selected = name
 		}
 		s.mu.Unlock()
 		return M{"status": "cached", "kind": kind}, nil
 	}
-	s.status = M{"running": true, "kind": kind, "startedAt": s.now()}
+	params := M{"system": name, "language": language, "power": power, "state": state, "page": page}
+	s.status = M{"running": true, "kind": kind, "parameters": params, "startedAt": s.now()}
 	s.mu.Unlock()
 	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 	defer cancel()
-	result, err := s.fetch(ctx, kind, name, power, state, page)
+	result, err := s.fetch(ctx, kind, name, power, state, language, page)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err != nil {
-		s.status = M{"running": false, "kind": kind, "error": err.Error(), "failedAt": s.now()}
+		if index := v.Obj(result["index"]); kind == "powerplay" && len(index) > 0 {
+			s.powerIndex = index
+		}
+		s.status = M{"running": false, "kind": kind, "parameters": params, "error": err.Error(), "failedAt": s.now()}
 		s.failedRequests[requestKey] = s.opts.Now()
 		if len(s.failedRequests) > 128 {
 			s.failedRequests = map[string]time.Time{requestKey: s.opts.Now()}
@@ -349,7 +372,9 @@ func (s *Service) Fetch(ctx context.Context, body M) (M, error) {
 	switch kind {
 	case "system":
 		s.mergeLocked(v.Obj(result["system"]))
-		s.selected = name
+		if !keepSelection {
+			s.selected = name
+		}
 	case "goals":
 		s.publicGoals = v.Obj(result["goals"])
 	case "powerplay":
@@ -360,6 +385,6 @@ func (s *Service) Fetch(ctx context.Context, body M) (M, error) {
 		s.search = v.Obj(result["search"])
 		s.search["requestKey"] = requestKey
 	}
-	s.status = M{"running": false, "kind": kind, "updatedAt": s.now()}
+	s.status = M{"running": false, "kind": kind, "parameters": params, "updatedAt": s.now()}
 	return M{"status": "updated", "kind": kind}, nil
 }
