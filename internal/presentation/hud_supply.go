@@ -10,12 +10,13 @@ import (
 const hudCarrierLocationMaxAge = 15 * time.Minute
 
 type hudColonyWarehouse struct {
-	label string
-	items map[string]float64
-	local bool
+	label     string
+	items     map[string]float64
+	local     bool
+	estimated bool
 }
 
-func hudCarrierInColony(warehouse, carrier, colony M, now time.Time) bool {
+func hudCarrierInColony(warehouse, carrier, commander, colony M, now time.Time) bool {
 	location := v.Obj(warehouse["location"])
 	fresh := func(at time.Time) bool {
 		age := now.Sub(at)
@@ -45,6 +46,9 @@ func hudCarrierInColony(warehouse, carrier, colony M, now time.Time) bool {
 			location, trusted = journal, true
 		}
 	}
+	if !unknownDeparture && v.Bool(commander["docked"]) && hudEqual(commander["marketId"], warehouse["id"]) && v.Str(commander["system"]) != "" {
+		location, trusted = commander, true
+	}
 	if !trusted {
 		return false
 	}
@@ -54,7 +58,7 @@ func hudCarrierInColony(warehouse, carrier, colony M, now time.Time) bool {
 	return hudEqual(location["system"], colony["targetSystem"])
 }
 
-func hudColonyWarehouses(colony, project, carrier M, now time.Time) []hudColonyWarehouse {
+func hudColonyWarehouses(colony, project, carrier, commander M, now time.Time) []hudColonyWarehouse {
 	if !v.Bool(colony["includeCarrierWarehouse"]) {
 		return nil
 	}
@@ -62,7 +66,8 @@ func hudColonyWarehouses(colony, project, carrier M, now time.Time) []hudColonyW
 	seen := map[string]bool{}
 	for _, warehouse := range v.Rows(colony["carrierWarehouses"]) {
 		id := v.Str(warehouse["id"])
-		if id == "" || seen[id] || !v.Bool(warehouse["accessible"]) || !v.Bool(warehouse["known"]) || warehouse["included"] == false {
+		estimated := v.Bool(warehouse["estimated"])
+		if id == "" || seen[id] || !v.Bool(warehouse["accessible"]) || !(v.Bool(warehouse["known"]) || estimated) || warehouse["included"] == false {
 			continue
 		}
 		seen[id] = true
@@ -73,7 +78,8 @@ func hudColonyWarehouses(colony, project, carrier M, now time.Time) []hudColonyW
 				label = "Флотоносец эскадрильи"
 			}
 		}
-		stock := hudColonyWarehouse{label: label, items: map[string]float64{}, local: hudCarrierInColony(warehouse, carrier, project, now)}
+		stock := hudColonyWarehouse{label: label, items: map[string]float64{},
+			local: hudCarrierInColony(warehouse, carrier, commander, project, now), estimated: estimated}
 		for _, item := range v.Rows(warehouse["items"]) {
 			key := v.Key(v.First(item["key"], item["commodity"]))
 			if key != "" && hudKnown(item["count"]) {
@@ -102,15 +108,21 @@ func hudColonyAmount(name string, amount float64, bound, estimated bool) HUDLine
 	return line
 }
 
-func hudColonyActions(colony, project, carrier M, now time.Time) ([]hudColonyAction, []HUDLine) {
-	warehouses := hudColonyWarehouses(colony, project, carrier, now)
+func hudEstimatedStock(line HUDLine) HUDLine {
+	line.Value = "≈" + strings.TrimPrefix(line.Value, "≤")
+	line.Role = "warn"
+	return line
+}
+
+func hudColonyActions(colony, project, carrier, commander M, now time.Time) ([]hudColonyAction, []HUDLine) {
+	warehouses := hudColonyWarehouses(colony, project, carrier, commander, now)
 	delivery := hudColonyAction{kind: "delivery", title: "ДОСТАВИТЬ"}
 	purchase := hudColonyAction{kind: "purchase", title: "КУПИТЬ"}
 	unloads := make([]hudColonyAction, len(warehouses))
 	for i, warehouse := range warehouses {
 		unloads[i] = hudColonyAction{kind: "unload", title: "РАЗГРУЗИТЬ", subtitle: warehouse.label}
 	}
-	unknownHold, unknownStock, otherStockBound := false, false, false
+	unknownHold, unknownStock, otherStockBound, otherStockEstimated := false, false, false, false
 	otherStock := float64(0)
 	for _, row := range v.Rows(project["operationalSupplies"]) {
 		missing := v.Num(row["missing"])
@@ -130,9 +142,15 @@ func hudColonyActions(colony, project, carrier M, now time.Time) ([]hudColonyAct
 		}
 		left := missing - onboard
 		key := v.Key(row["commodity"])
+		estimatedStock := false
 		for i, warehouse := range warehouses {
 			if amount := min(warehouse.items[key], left); warehouse.local && amount > 0 {
-				unloads[i].rows = append(unloads[i].rows, hudColonyAmount(name, amount, !holdKnown, estimate))
+				line := hudColonyAmount(name, amount, !holdKnown, estimate)
+				if warehouse.estimated {
+					line = hudEstimatedStock(line)
+					estimatedStock = true
+				}
+				unloads[i].rows = append(unloads[i].rows, line)
 				left -= amount
 			}
 		}
@@ -140,10 +158,14 @@ func hudColonyActions(colony, project, carrier M, now time.Time) ([]hudColonyAct
 			continue
 		}
 		if v.Bool(colony["includeCarrierWarehouse"]) {
-			knownOther := float64(0)
+			knownOther, projectedOther := float64(0), float64(0)
 			for _, warehouse := range warehouses {
 				if !warehouse.local {
-					knownOther += warehouse.items[key]
+					if warehouse.estimated {
+						projectedOther += warehouse.items[key]
+					} else {
+						knownOther += warehouse.items[key]
+					}
 				}
 			}
 			// Older or scoped projections may only have aggregate stock.
@@ -155,11 +177,20 @@ func hudColonyActions(colony, project, carrier M, now time.Time) ([]hudColonyAct
 			otherStock += reserved
 			otherStockBound = otherStockBound || reserved > 0 && !holdKnown
 			left -= reserved
+			if projected := min(left, projectedOther); projected > 0 {
+				otherStock += projected
+				left -= projected
+				estimatedStock, otherStockEstimated = true, true
+			}
 		}
 		if left > 0 {
 			stockIncomplete := v.Bool(colony["includeCarrierWarehouse"]) && !v.Bool(row["carrierComplete"])
-			unknownStock = unknownStock || stockIncomplete
-			purchase.rows = append(purchase.rows, hudColonyAmount(name, left, !holdKnown || stockIncomplete, estimate))
+			unknownStock = unknownStock || stockIncomplete && !estimatedStock
+			line := hudColonyAmount(name, left, !holdKnown || stockIncomplete, estimate)
+			if estimatedStock {
+				line = hudEstimatedStock(line)
+			}
+			purchase.rows = append(purchase.rows, line)
 		}
 	}
 	actions := append([]hudColonyAction{delivery}, unloads...)
@@ -169,10 +200,14 @@ func hudColonyActions(colony, project, carrier M, now time.Time) ([]hudColonyAct
 		notes = append(notes, hudWarn("Проверьте груз корабля"))
 	}
 	if otherStock > 0 {
-		notes = append(notes, hudColonyAmount("Забрать с флотоносца", otherStock, otherStockBound, false))
+		line := hudColonyAmount("Забрать с флотоносца", otherStock, otherStockBound, false)
+		if otherStockEstimated {
+			line = hudEstimatedStock(line)
+		}
+		notes = append(notes, line)
 	}
 	if unknownStock {
-		notes = append(notes, hudMuted("Сверьте запас на флотоносце"))
+		notes = append(notes, hudMuted("Склад ожидает данных Frontier"))
 	}
 	return actions, notes
 }

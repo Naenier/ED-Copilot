@@ -34,7 +34,7 @@ func (e *Engine) startCarrierTradeOpportunities(input M) (M, error) {
 	if err := e.networkAllowed(); err != nil {
 		return nil, err
 	}
-	request := M{"scenario": v.Str(input["scenario"]), "system": v.Str(input["system"])}
+	request := M{"scenario": "booze-cruise", "system": v.Str(input["system"])}
 	if credits, known := v.Number(input["credits"]); known && credits > 0 && credits <= 1e15 {
 		request["credits"] = credits
 	}
@@ -109,22 +109,12 @@ func (e *Engine) updateCarrierTrade(input M) error {
 		calculator := e.Calculator.Snapshot()
 		summary := v.Obj(calculator["summary"])
 		options := M{"carrierType": calculator["selectedType"], "weeklyUpkeep": summary["weeklyServicesAndCore"], "carrierInvestment": summary["totalBuyPrice"], "servicesTons": summary["servicesCapacityTons"]}
-		// The installed-services calculator is an explicit plan, not a reading
-		// of the in-game cargo. Never replace unknown quantities with zero.
+		// Import the configured services without copying the live cargo or fuel.
 		if options["servicesTons"] == nil {
 			options["servicesTons"] = summary["servicesTons"]
 		}
 		if options["servicesTons"] == nil {
 			delete(options, "servicesTons")
-		}
-		e.domainMu.Lock()
-		owned := e.Carrier.Snapshot(nil)
-		e.domainMu.Unlock()
-		if fuel := v.At(owned, "fuel", "tankTons"); fuel != nil && calculator["selectedType"] == "fleet" {
-			options["tankTons"] = fuel
-		}
-		if reserve := v.At(owned, "fuel", "reserveTons"); reserve != nil && calculator["selectedType"] == "fleet" {
-			options["cargoTritiumTons"] = reserve
 		}
 		body = M{"action": "configure", "options": options}
 	}

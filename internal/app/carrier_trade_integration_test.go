@@ -33,6 +33,10 @@ func TestCarrierTradeOpportunitiesUseDefaultHTTPClient(t *testing.T) {
 	engine.opts.DisableNetwork = false
 	var requests atomic.Int32
 	http.DefaultTransport = economyRoundTripper(func(request *http.Request) (*http.Response, error) {
+		if request.Method == http.MethodGet && request.URL.Path == "/api/station/128968675" {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(
+				`{"record":{"market_id":"128968675","system_name":"HIP 58832","name":"Rackham's Peak"}}`))}, nil
+		}
 		if request.Method != http.MethodPost || request.URL.Path != "/api/stations/search" {
 			return nil, fmt.Errorf("unexpected market request: %s %s", request.Method, request.URL.Path)
 		}
@@ -43,7 +47,7 @@ func TestCarrierTradeOpportunitiesUseDefaultHTTPClient(t *testing.T) {
 		}, nil
 	})
 
-	doOK(t, engine, "/api/carrier/trade", M{"action": "opportunities", "scenario": "custom"})
+	doOK(t, engine, "/api/carrier/trade", M{"action": "opportunities", "system": "Sol"})
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		search := v.Obj(v.At(engine.SnapshotForUI("carrier-trade"), "carrierTrade", "opportunities"))
@@ -170,8 +174,10 @@ func TestCarrierTradeAPIImportsSelectedCarrierCostsAndKeepsSquadronFuelIndepende
 	expectNumber(t, options["weeklyUpkeep"], 7250000) // excludes ten jump fees: those belong to the trade's route.
 	expectNumber(t, options["servicesTons"], 680)
 	expectNumber(t, options["carrierInvestment"], 5090000000)
-	expectNumber(t, options["tankTons"], 800)
-	expectNumber(t, options["cargoTritiumTons"], 130)
+	expectNumber(t, options["tankTons"], 1000)
+	if options["cargoTritiumTons"] != nil {
+		t.Fatal("import copied tritium from the live warehouse")
+	}
 
 	doOK(t, engine, "/api/carrier/trade", M{"options": M{"carrierType": "squadron", "tankTons": 321, "cargoTritiumTons": 55, "otherCargoTons": 222}, "legs": M{"return": M{"commodityKey": "wine", "quantity": 900}}})
 	doOK(t, engine, "/api/carrier/calculator", M{"carrierType": "squadron", "jumpsPerWeek": 15, "services": M{"repair": "active"}})

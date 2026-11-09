@@ -148,6 +148,12 @@ func (p *Planner) ApplyCAPI(result, commander M) {
 		lease := latestPending.Add(carrierStockMaxAge)
 		if str(previous["id"]) == str(stock["id"]) && value.Time(stock["receivedAt"]).Before(lease) && pendingCarrierStockDiffers(previous, stock) {
 			previous["awaitingConfirmation"] = true
+			// A complete response still supplies a recent location and a view
+			// of items unaffected by the conflicting journal movements.
+			if kind == "fleet" && value.Bool(stock["complete"]) && !value.Bool(stock["absent"]) &&
+				value.Time(stock["receivedAt"]).After(value.Time(value.At(previous, "provisional", "receivedAt"))) {
+				previous["provisional"] = stock
+			}
 			continue
 		}
 		if kind == "squadron" && str(stock["id"]) != "" && str(p.config["squadronWarehouseAccessCarrierID"]) != str(stock["id"]) {
@@ -218,6 +224,29 @@ func pendingCarrierStockDiffers(previous, incoming M) bool {
 		}
 	}
 	return false
+}
+
+func freshCarrierStock(now time.Time, raw any) bool {
+	at := value.Time(raw)
+	age := now.Sub(at)
+	return !at.IsZero() && age >= 0 && age <= carrierStockMaxAge
+}
+
+// A recent journal movement can inform the HUD after the original snapshot
+// expires. Keep its quantities separate from confirmed procurement stock.
+func provisionalFleetStock(stock M, now time.Time) (M, M) {
+	items, location := M{}, value.Obj(stock["location"])
+	observation := value.Obj(stock["provisional"])
+	if freshCarrierStock(now, observation["receivedAt"]) {
+		items = value.Copy(value.Obj(observation["items"]))
+		location = value.Obj(observation["location"])
+	}
+	for key, moved := range value.Obj(stock["pendingMovements"]) {
+		if freshCarrierStock(now, moved) {
+			items[key] = value.At(stock, "items", key)
+		}
+	}
+	return items, location
 }
 
 func (p *Planner) applyCarrierMovement(event, context M) {
@@ -301,13 +330,13 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 	combined := &stock{items: map[string]float64{}, complete: true, excluded: !enabled}
 	result, counted := []M{}, map[string]bool{}
 	fid := str(value.At(context, "commander", "fid"))
+	now := p.now()
 	for _, kind := range []string{"fleet", "squadron"} {
 		s := value.Obj(p.carrierStocks[kind])
 		if fid == "" || fid != p.carrierOwner {
 			s = M{}
 		}
-		age := p.now().Sub(value.Time(s["receivedAt"]))
-		known := fid != "" && fid == p.carrierOwner && value.Bool(s["complete"]) && age >= 0 && age <= carrierStockMaxAge
+		known := value.Bool(s["complete"]) && freshCarrierStock(now, s["receivedAt"])
 		included := enabled && (kind == "fleet" || squadronAccess)
 		reason := "Ожидается свежий снимок склада Frontier. После входа данные обновляются автоматически."
 		if known {
@@ -322,15 +351,21 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 		if kind == "squadron" && !squadronAccess {
 			reason = "Общий склад не учтён: подтвердите право вывоза груза."
 		}
+		items, location := value.Obj(s["items"]), value.Obj(s["location"])
+		estimated := false
+		if kind == "fleet" && included && !known && value.Bool(s["complete"]) {
+			items, location = provisionalFleetStock(s, now)
+			estimated = len(items) > 0
+		}
 		list, total := []M{}, float64(0)
-		if known {
+		if known || estimated {
 			keys := []string{}
-			for key := range value.Obj(s["items"]) {
+			for key := range items {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			for _, key := range keys {
-				amount := num(value.Obj(s["items"])[key])
+				amount := num(items[key])
 				list = append(list, M{"key": key, "count": amount})
 				total += amount
 			}
@@ -340,8 +375,8 @@ func (p *Planner) carrierWarehouses(context M) ([]M, *stock) {
 			knownTons = total
 		}
 		accessible := fid != "" && fid == p.carrierOwner && (kind == "fleet" || squadronAccess)
-		warehouse := M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "awaitingConfirmation": len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]), "knownTons": knownTons, "items": list, "reason": reason}
-		if location := value.Obj(s["location"]); known && len(location) != 0 {
+		warehouse := M{"kind": kind, "id": s["id"], "callsign": s["callsign"], "known": known, "estimated": estimated, "accessible": accessible, "included": included, "receivedAt": s["receivedAt"], "updatedAt": s["updatedAt"], "awaitingConfirmation": len(value.Obj(s["pendingMovements"])) > 0 || value.Bool(s["awaitingConfirmation"]), "knownTons": knownTons, "items": list, "reason": reason}
+		if (known || estimated) && len(location) != 0 {
 			warehouse["location"] = value.Copy(location)
 		}
 		result = append(result, warehouse)

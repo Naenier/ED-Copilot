@@ -6,8 +6,8 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 function fixture() {
- const leg=(id,key,quantity)=>({id,name:id==='outbound'?'Туда':'Обратно',commodityKey:key,commodityName:key==='wine'?'Вино':'Золото',quantity,effectiveQuantity:quantity,sourceSystem:'Synthetic Origin',destinationSystem:'Synthetic Destination',buyPrice:null,sellPrice:null,loadingMode:'self',unloadingMode:'self',loadRewardPerTon:0,unloadRewardPerTon:0,loadingHours:null,unloadingHours:null,jumps:null,tritiumTons:null,travelHours:null,buyMarket:{},sellMarket:{}});
- const C={tab:'carrier-trade',mode:'Рейс',state:{commander:{system:'Synthetic Origin'},resources:[{key:'gold',name:'Золото',kind:'commodity'},{key:'wine',name:'Вино',kind:'commodity'}],carrierTrade:{options:{preset:'custom',carrierType:'fleet',returnTrip:true,servicesTons:0,otherCargoTons:0,tankTons:1000,cargoTritiumTons:null,arrivalReserveTons:500,tritiumPrice:null,weeklyUpkeep:5000000,durationHours:null,extraCosts:0,carrierInvestment:5000000000,haulerPad:'M',haulerCapacity:400,maxQuoteAgeHours:24,demandRatio:4,holidayConfirmed:false},legs:[leg('outbound','gold',10000),leg('return','gold',0)],summary:{status:'needs-data',profit:null,workingCapital:null,availableCargoTons:null},issues:[],missing:['tritiumPrice'],notes:[],sources:[]},trading:{results:[],options:{}}}};
+ const leg=(id,key,quantity)=>({id,name:id==='outbound'?'Туда':'Обратно',commodityKey:key,commodityName:key==='wine'?'Вино':'Золото',quantity,effectiveQuantity:quantity,sourceSystem:id==='outbound'?'Synthetic Origin':'HIP 58832',destinationSystem:id==='outbound'?'HIP 58832':'Synthetic Origin',buyPrice:null,sellPrice:null,loadingMode:'self',unloadingMode:'self',loadRewardPerTon:0,unloadRewardPerTon:0,loadingHours:null,unloadingHours:null,jumps:null,tritiumTons:null,travelHours:null,buyMarket:{},sellMarket:{}});
+ const C={tab:'carrier-trade',mode:'Рейс',state:{commander:{system:'Synthetic Origin'},resources:[{key:'gold',name:'Золото',kind:'commodity'},{key:'wine',name:'Вино',kind:'commodity'}],carrierTrade:{options:{preset:'booze-cruise',carrierType:'fleet',returnTrip:true,servicesTons:0,otherCargoTons:0,tankTons:null,cargoTritiumTons:null,arrivalReserveTons:null,tritiumPrice:null,weeklyUpkeep:5000000,durationHours:null,extraCosts:0,carrierInvestment:5000000000,haulerPad:'M',haulerCapacity:400,maxQuoteAgeHours:24,demandRatio:4,holidayConfirmed:false},legs:[leg('outbound','wine',10000),leg('return','gold',0)],summary:{status:'needs-data',profit:null,workingCapital:null,availableCargoTons:null},issues:[],missing:['tritiumPrice'],notes:[],sources:[]},trading:{results:[],options:{}}}};
  const ctx={window:{},document:{addEventListener(){}},Intl,setTimeout,clearTimeout,Date};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'carrier-trade.js'),'utf8'),ctx);
  const calls=[],elements=[],filters=[],dialogs=[],toasts=[],boxes=new Map();
@@ -25,7 +25,9 @@ function fixture() {
 test('carrier trade separates the two legs and keeps unknown market prices blank',()=>{
  const {api,C,ui}=fixture();const html=api.render(C,ui);
  assert.match(html,/Рейс туда/);assert.match(html,/Возвращение/);assert.match(html,/Пустой перелёт тоже расходует топливо/);
- assert.equal((html.match(/data-trade-field="buyPrice"/g)||[]).length,2);
+ assert.equal((html.match(/data-trade-field="buyPrice"/g)||[]).length,1);
+ assert.match(html,/data-trade-leg="return" data-trade-field="tritiumTons"/);
+ assert.doesNotMatch(html,/data-trade-leg="return" data-trade-field="quantity"|data-trade-option="(?:otherCargoTons|tankTons|cargoTritiumTons|arrivalReserveTons)"/);
  assert.match(html,/data-trade-field="buyPrice"[^>]*placeholder="Неизвестно"/);
  assert.match(html,/Неизвестные расходы/);assert.match(html,/капитал|Капитал/);
  assert.doesNotMatch(html,/NaN|undefined|Infinity|onclick=/);
@@ -33,21 +35,25 @@ test('carrier trade separates the two legs and keeps unknown market prices blank
  C.mode='Проверки';assert.match(api.render(C,ui),/Укажите цены, объём, топливо и длительность рейса/);
 });
 
-test('default carrier trade view requests nearby opportunities once and opens an offer in the planner',async()=>{
+test('default carrier trade view requests Peak opportunities once and opens an offer in the planner',async()=>{
  const {api,C,ui,calls}=fixture();
  C.mode='';
  assert.match(api.render(C,ui),/Сравниваем цены и объёмы/);
+ assert.doesNotMatch(api.render(C,ui),/opportunity-scenario|Обычный рейс/);
  await api.init(C,ui);await api.init(C,ui);
  assert.equal(calls.filter(x=>x.params.values?.action==='opportunities').length,1);
+ assert.equal(calls[0].params.values.scenario,'booze-cruise');
  const updatedAt=new Date().toISOString();
- C.state.carrierTrade.opportunities={updatedAt,options:{scenario:'custom',system:''},results:[{
-  id:'offer',commodityName:'Золото',quantity:3000,
+ C.state.carrierTrade.opportunities={updatedAt,options:{scenario:'booze-cruise',system:''},results:[{
+  id:'offer',commodityName:'Вино',quantity:3000,
   buy:{station:'Seller',system:'Alpha',price:200,updatedAt,orders:[{station:'Seller',quantity:1000,price:190},{station:'Another',quantity:2000,price:205}]},
-  sell:{station:'Buyer',system:'Beta',price:3000,updatedAt},summary:{profit:123456,jumpCount:2,fuelTons:98},
-  route:{loaded:[{from:'Alpha',to:'Beta',distanceLy:50}]}
+  sell:{station:"Rackham's Peak",system:'HIP 58832',price:3000,updatedAt},summary:{profit:123456,jumpCount:18,fuelTons:988,servicesTons:1750,cargoTritiumTons:87,arrivalReserveTons:99},
+  fuelPurchaseTons:1087,fuelPurchaseCost:54350000,
+  route:{loaded:[{from:'Alpha',to:'HIP 58832',distanceLy:50}]}
  }]};
  const html=api.render(C,ui);
  assert.match(html,/Another/);assert.match(html,/Системы маршрута/);assert.match(html,/123456/);
+ assert.match(html,/Резерв трития \(10%\).*99 т/);assert.match(html,/54350000 кр\./);
  await api.handle('carrier-trade-use-opportunity',{dataset:{index:'0'}},C,ui);
  assert.equal(calls.at(-1).params.values.action,'apply-opportunity');
  assert.equal(calls.at(-1).params.values.id,'offer');
@@ -57,7 +63,7 @@ test('default carrier trade view requests nearby opportunities once and opens an
 test('expired quotes are hidden and force a replacement search',async()=>{
  const {api,C,ui,calls}=fixture();C.mode='Рейсы';
  await api.init(C,ui);
- C.state.carrierTrade.opportunities={updatedAt:new Date().toISOString(),options:{scenario:'custom',system:''},
+ C.state.carrierTrade.opportunities={updatedAt:new Date().toISOString(),options:{scenario:'booze-cruise',system:''},
   results:[{id:'old',commodityName:'Stale result',buy:{price:2,updatedAt:'2000-01-01T00:00:00Z'}}]};
  assert.doesNotMatch(api.render(C,ui),/Stale result/);
  await api.init(C,ui);await api.init(C,ui);
@@ -65,9 +71,39 @@ test('expired quotes are hidden and force a replacement search',async()=>{
  assert.equal(requests.length,2);assert.equal(requests[1].params.values.force,true);
 });
 
-test('Booze Cruise explains the M pad and never invents a holiday price',()=>{
- const {api,C,ui}=fixture();C.state.carrierTrade.options.preset='booze-cruise';
+test('Peak searches respond to service space but not existing cargo or fuel',async()=>{
+ const {api,C,ui,calls}=fixture();C.mode='Рейсы';
+ const carrier={owned:true,location:{system:'Sol'},space:{crewTons:1000,shipPacksTons:0,modulePacksTons:0,freeTons:5000},fuel:{tankTons:800,reserveTons:100}};
+ C.state.carrierTrade.context={carrier};
+ await api.init(C,ui);
+ carrier.space.freeTons=3000;
+ carrier.fuel.tankTons=1000;
+ carrier.fuel.reserveTons=500;
+ await api.init(C,ui);
+ assert.equal(calls.length,1);
+ carrier.space.crewTons=1200;
+ await api.init(C,ui);
+ assert.equal(calls.length,2);
+ assert.ok(calls.every(call=>call.params.values.scenario==='booze-cruise'));
+});
+
+test('Booze Cruise fixes the destination and commodity options and never invents a holiday price',()=>{
+ const {api,C,ui}=fixture();
  const html=api.render(C,ui);assert.match(html,/HIP 58832/);assert.match(html,/максимальная площадка M/);assert.match(html,/Праздник не подтверждён/);assert.match(html,/data-trade-option="holidayConfirmed"/);assert.doesNotMatch(html,/278.?000|270.?000|250.?000/);
+ assert.match(html,/value="HIP 58832" data-trade-leg="outbound" data-trade-field="destinationSystem" readonly/);
+ assert.match(html,/option value="liquor"/);assert.doesNotMatch(html,/option value="gold"|Обычный рейс/);
+});
+
+test('legacy regular plans are preserved until the user chooses the Peak template',async()=>{
+ const {api,C,ui,calls,dialogs}=fixture();
+ C.state.carrierTrade.options.preset='custom';
+ assert.match(api.render(C,ui),/Шаблон «Крыша мира»/);
+ assert.doesNotMatch(api.render(C,ui),/carrier-trade-form|Обычный рейс/);
+ await api.handle('carrier-trade-preset',null,C,ui);
+ assert.equal(calls.length,0);
+ assert.match(dialogs[0].footer,/Применить шаблон/);
+ await api.handle('carrier-trade-preset-apply',null,C,ui);
+ assert.deepEqual(calls[0].params.values,{action:'preset',preset:'booze-cruise',sourceSystem:'Synthetic Origin'});
 });
 
 test('escapes market, commodity, issue and source text from backend',()=>{
@@ -76,10 +112,15 @@ test('escapes market, commodity, issue and source text from backend',()=>{
  C.mode='Проверки';C.state.carrierTrade.issues=[{title:'<script>x</script>',detail:'<img>',level:'error'}];C.state.carrierTrade.sources=[{title:'<svg>',url:'https://example.test/" x="'}];html=api.render(C,ui);assert.match(html,/&lt;script&gt;/);assert.match(html,/&quot; x=&quot;/);assert.doesNotMatch(html,/<script|<img/);
 });
 
-test('save parses Russian input and sends unknowns as null, including zero balance values',async()=>{
- const {api,C,ui,calls,elements,node}=fixture();elements.push(node('50 000',{tradeOption:'tritiumPrice'}),node('24,5',{tradeOption:'durationHours'}),node('',{tradeOption:'cargoTritiumTons'}),node('12 000',{tradeLeg:'outbound',tradeField:'quantity'}),node('0',{tradeLeg:'outbound',tradeField:'buyPrice'}));
+test('save parses Russian input and leaves the fuel load to the backend',async()=>{
+ const {api,C,ui,calls,elements,node}=fixture();
+ C.state.carrierTrade.options.otherCargoTons=5000;
+ C.state.carrierTrade.legs[1].quantity=100;
+ elements.push(node('50 000',{tradeOption:'tritiumPrice'}),node('24,5',{tradeOption:'durationHours'}),node('12 000',{tradeLeg:'outbound',tradeField:'quantity'}),node('0',{tradeLeg:'outbound',tradeField:'buyPrice'}));
  await api.handle('carrier-trade-save',null,C,ui);const body=calls[0].params.values;
- assert.equal(body.action,'configure');assert.equal(body.options.tritiumPrice,50000);assert.equal(body.options.durationHours,24.5);assert.equal(body.options.cargoTritiumTons,null);assert.equal(body.legs.outbound.quantity,12000);assert.equal(body.legs.outbound.buyPrice,0);assert.equal(body.legs.outbound.sellPrice,null);assert.equal(body.legs.return.quantity,0);
+ assert.equal(body.action,'configure');assert.equal(body.options.tritiumPrice,50000);assert.equal(body.options.durationHours,24.5);
+ for(const key of ['tankTons','cargoTritiumTons','arrivalReserveTons'])assert.equal(Object.hasOwn(body.options,key),false);
+ assert.equal(body.options.otherCargoTons,0);assert.equal(body.legs.outbound.quantity,12000);assert.equal(body.legs.outbound.buyPrice,0);assert.equal(body.legs.outbound.sellPrice,null);assert.equal(body.legs.return.quantity,0);
 });
 
 test('invalid quantity is rejected before the bridge and remains visible in the draft',async()=>{
@@ -91,17 +132,17 @@ test('switching to squadron preserves a valid minimum upkeep and mandatory servi
  const {api,C,ui,calls,node}=fixture();await api.handleChange({target:node('squadron',{tradeOption:'carrierType'},{tagName:'SELECT'})},C,ui);await api.handle('carrier-trade-save',null,C,ui);
  assert.equal(calls[0].params.values.options.carrierType,'squadron');assert.equal(calls[0].params.values.options.weeklyUpkeep,10000000);assert.equal(calls[0].params.values.options.servicesTons,3000);assert.equal(calls[0].params.values.options.carrierInvestment,25000000000);
  assert.match(api.render(C,ui),/Расчёт Spansh поддерживает личный флотоносец/);
- assert.match(api.render(C,ui),/для эскадрильи укажите расход/);
+ assert.match(api.render(C,ui),/Расход трития эскадрильи нужно указать/);
 });
 
 test('changing commodity clears old prices and draft survives switching display modes',async()=>{
  const {api,C,ui,node}=fixture();C.state.carrierTrade.legs[0].buyPrice=1000;C.state.carrierTrade.legs[0].sellPrice=2000;
- await api.handleChange({target:node('wine',{tradeLeg:'outbound',tradeField:'commodityKey'},{tagName:'SELECT'})},C,ui);
- assert.equal(C.carrierTradeDraft.legs.outbound.buyPrice,null);assert.equal(C.carrierTradeDraft.legs.outbound.sellPrice,null);C.mode='Расходы';api.render(C,ui);C.mode='Рейс';assert.match(api.render(C,ui),/value="wine" selected/);assert.match(api.render(C,ui),/Есть несохранённые параметры/);
+ await api.handleChange({target:node('liquor',{tradeLeg:'outbound',tradeField:'commodityKey'},{tagName:'SELECT'})},C,ui);
+ assert.equal(C.carrierTradeDraft.legs.outbound.buyPrice,null);assert.equal(C.carrierTradeDraft.legs.outbound.sellPrice,null);C.mode='Расходы';api.render(C,ui);C.mode='Рейс';assert.match(api.render(C,ui),/value="liquor" selected/);assert.match(api.render(C,ui),/Есть несохранённые параметры/);
 });
 
 test('preset cancellation does not mutate the plan and imports address the selected leg',async()=>{
- const {api,C,ui,calls,dialogs}=fixture();await api.handle('carrier-trade-preset',{dataset:{id:'booze-cruise'}},C,ui);assert.equal(calls.length,0);assert.match(dialogs[0].footer,/close-dialog/);ui.closeLayer();
+ const {api,C,ui,calls,dialogs}=fixture();await api.handle('carrier-trade-preset',null,C,ui);assert.equal(calls.length,0);assert.match(dialogs[0].footer,/close-dialog/);ui.closeLayer();
  await api.handle('carrier-trade-import-route',{dataset:{leg:'return'}},C,ui);assert.deepEqual(calls[0],{op:'carrier-trade',params:{values:{action:'import-route',leg:'return'}}});
  await api.handle('carrier-trade-import-carrier',{dataset:{}},C,ui);assert.equal(calls[1].params.values.action,'import-carrier');
 });
@@ -113,16 +154,17 @@ test('a dirty plan is saved before importing or opening another calculation',asy
 
 test('market picker uses supply or demand, pad and freshness filters then applies the chosen quote',async()=>{
  const {api,C,ui,calls,filters,boxes,node}=fixture();
- C.state.trading={running:false,options:{mode:'sell',resourceKey:'gold'},results:[{station:'Synthetic Buyer',system:'B',pad:'M',ageHours:1,distanceLs:100,quotes:[{key:'gold',price:4000,demand:50000}]}]};
- await api.handle('carrier-trade-markets',{dataset:{leg:'outbound',side:'sell'}},C,ui);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/Synthetic Buyer/);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/Площадка/);
+ const peakQuote={station:"Rackham's Peak",system:'HIP 58832',pad:'M',ageHours:1,distanceLs:100,quotes:[{key:'wine',price:4000,demand:50000}]};
+ C.state.trading={running:false,options:{mode:'sell',resourceKey:'wine'},results:[{...peakQuote,station:'Other buyer',system:'B'},peakQuote]};
+ await api.handle('carrier-trade-markets',{dataset:{leg:'outbound',side:'sell'}},C,ui);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/Rackham/);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/Площадка/);assert.doesNotMatch(boxes.get('#carrier-trade-market-results').innerHTML,/Other buyer/);
  filters.push(node('B',{tradeFilter:'system'}),node('M',{tradeFilter:'minPad'}),node('100',{tradeFilter:'radiusLy'}),node('6',{tradeFilter:'maxAgeHours'}),node('40 000',{tradeFilter:'availability'}),node('1000',{tradeFilter:'maxArrivalLs'}));
- await api.handle('carrier-trade-market-search',null,C,ui);const search=calls.find(row=>row.op==='carrier-trade-markets').params.values;assert.equal(search.minDemand,40000);assert.equal(search.minSupply,0);assert.equal(search.maxAgeHours,6);assert.equal(search.minPad,'M');assert.equal(search.includeCarriers,false);
+ await api.handle('carrier-trade-market-search',null,C,ui);const search=calls.find(row=>row.op==='carrier-trade-markets').params.values;assert.equal(search.system,'HIP 58832');assert.equal(search.minDemand,40000);assert.equal(search.minSupply,0);assert.equal(search.maxAgeHours,6);assert.equal(search.minPad,'M');assert.equal(search.includeCarriers,false);
  await api.handle('carrier-trade-market-choose',{dataset:{index:'0'}},C,ui);const command=calls.at(-1).params.values;assert.equal(command.action,'market');assert.equal(command.leg,'outbound');assert.equal(command.side,'sell');assert.equal(C.state.carrierTrade.legs[0].sellPrice,4000);assert.equal(boxes.has('#carrier-trade-market-results'),false);
 });
 
 test('market picker does not show unrelated prior results and marks a too-large ship',async()=>{
  const {api,C,ui,boxes}=fixture();C.state.carrierTrade.options.haulerPad='L';C.state.trading={running:false,options:{mode:'sell',resourceKey:'wine'},results:[{station:'Stale wrong commodity',pad:'M'}]};await api.handle('carrier-trade-markets',{dataset:{leg:'outbound',side:'buy'}},C,ui);assert.doesNotMatch(boxes.get('#carrier-trade-market-results').innerHTML,/Stale wrong/);await api.handle('carrier-trade-market-close',null,C,ui);
- C.state.trading={running:false,options:{mode:'buy',resourceKey:'gold'},results:[{station:'M only',pad:'M',quotes:[{key:'gold',price:1000,supply:1}]}]};await api.handle('carrier-trade-markets',{dataset:{leg:'outbound',side:'buy'}},C,ui);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/disabled title="Корабль требует большую площадку"/);await api.handle('carrier-trade-market-close',null,C,ui);
+ C.state.trading={running:false,options:{mode:'buy',resourceKey:'wine'},results:[{station:'M only',pad:'M',quotes:[{key:'wine',price:1000,supply:1}]}]};await api.handle('carrier-trade-markets',{dataset:{leg:'outbound',side:'buy'}},C,ui);assert.match(boxes.get('#carrier-trade-market-results').innerHTML,/disabled title="Корабль требует большую площадку"/);await api.handle('carrier-trade-market-close',null,C,ui);
 });
 
 test('component smoke is mode independent and mutates nothing outside an isolated smoke host',async()=>{

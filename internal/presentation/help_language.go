@@ -74,11 +74,11 @@ Enter planned jumps per week, average tritium consumption, fuel price, planned c
 Compare purchase cost, occupied capacity, weekly upkeep and budget projections. The 30-day and 365-day estimates are proportional planning periods. Use Carrier Route for fuel on a specific journey. Calculator changes do not alter in-game services or finances.`,
 	"carrier-trade": `Carrier trading
 
-Plan the owner's complete trip: purchase, loading, outbound jumps, sale, unloading and any return leg. Enter actual commodity prices and quantities, service capacity, tritium requirements, jump maintenance, upkeep and hauler payments when used.
+Compare wine and liquor suppliers for Rackham's Peak in HIP 58832. The planner uses the built-in corridor from Sol and works out the connection from your departure system.
 
-Import a carrier configuration or a compatible planned route to avoid repeating known inputs. Search for actual purchase and sale markets, then check price age, supply, demand and landing-pad compatibility. Unknown inputs leave the relevant cost or profit unknown.
+Plan service space and the fuel for both directions. The cargo hold keeps enough tritium for the round trip plus 10%, after accounting for the separate tank. For a squadron carrier, enter the expected fuel burn in each direction.
 
-The Booze Cruise preset uses HIP 58832 and Rackham's Peak. The station has a medium pad; use a compatible hauler. Holiday prices must be confirmed in the game and are not guaranteed throughout the year.`,
+Check the quote age, supply, demand and landing pad before loading. Rackham's Peak takes small and medium ships. Confirm Public Holiday and carrier parking in the game.`,
 	"route": `Carrier route
 
 Enter the departure and destination systems, occupied capacity, tank and warehouse tritium, arrival reserve and timing assumptions. Waypoint and refuelling lists accept one system per line; autocomplete replaces only the line containing the caret.

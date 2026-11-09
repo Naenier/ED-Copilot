@@ -206,6 +206,51 @@ func TestHUDColonyStaleWarehouseProducesOnlyAnUpperPurchaseBound(t *testing.T) {
 	}
 }
 
+func TestHUDColonyShowsRecentJournalStockWhenFrontierLags(t *testing.T) {
+	required := []M{
+		{"Name": "steel", "RequiredAmount": 100, "ProvidedAmount": 0},
+		{"Name": "aluminium", "RequiredAmount": 40, "ProvidedAmount": 0},
+	}
+	p, context, now := hudStockPlanner(t, required, []M{}, []M{{"commodity": "steel", "qty": 30}}, nil)
+	hudEnableWarehouse(t, p)
+	*now = now.Add(22 * time.Minute)
+	p.Apply(M{"event": "CargoTransfer", "timestamp": v.ISO(*now), "CarrierID": "42",
+		"Transfers": []M{{"Type": "steel", "Count": 40, "Direction": "tocarrier"}}}, context)
+
+	// While the pilot is docked, the observed market identifies the carrier
+	// even though the previous Frontier location is too old to use.
+	commander := v.Obj(context["commander"])
+	commander["docked"], commander["marketId"] = true, "42"
+	state := hudStockState(p, context)
+	state["commander"] = commander
+	doc := BuildHUD(state, *now)
+	hudCheckAction(t, doc, "РАЗГРУЗИТЬ", "Сталь", "≈70 т")
+	hudCheckAction(t, doc, "КУПИТЬ", "Сталь", "≈30 т")
+
+	// A later Frontier response still has the old steel count. Its location
+	// and aluminum observation are useful, and the journal's steel estimate
+	// stays visible without becoming confirmed procurement stock.
+	*now = now.Add(time.Minute)
+	commander["docked"] = false
+	record := hudStockCarrier("42", M{"commodity": "steel", "qty": 30}, M{"commodity": "aluminium", "qty": 20})
+	p.ApplyCAPI(M{"status": M{"connected": true, "fid": "FHUD"}, "data": M{"carrier": record},
+		"metadata": M{"observedAt": M{"carrier": v.ISO(*now)}, "requestStartedAt": M{"carrier": v.ISO(now.Add(-time.Second))}}}, commander)
+	state = hudStockState(p, context)
+	doc = BuildHUD(state, *now)
+	hudCheckAction(t, doc, "РАЗГРУЗИТЬ", "Сталь", "≈70 т")
+	hudCheckAction(t, doc, "РАЗГРУЗИТЬ", "Алюминий", "≈20 т")
+	hudCheckAction(t, doc, "КУПИТЬ", "Сталь", "≈30 т")
+	if strings.Contains(hudProse(doc), "Склад ожидает") || v.Bool(v.At(v.Rows(v.At(state, "colonization", "carrierWarehouses"))[0], "known")) {
+		t.Fatal("estimated stock should be visible without claiming exact availability", doc)
+	}
+	*now = now.Add(16 * time.Minute)
+	doc = BuildHUD(hudStockState(p, context), *now)
+	hudCheckAction(t, doc, "КУПИТЬ", "Сталь", "≤100 т")
+	if hudSection(doc, "РАЗГРУЗИТЬ") != nil {
+		t.Fatal("expired projection stayed visible", doc)
+	}
+}
+
 func TestHUDColonyUnknownShipHoldBoundsKnownLocalCarrierAndPurchase(t *testing.T) {
 	p, context, now := hudStockPlanner(t, []M{{"Name": "steel", "RequiredAmount": 100, "ProvidedAmount": 0}}, nil, []M{{"commodity": "steel", "qty": 30}}, nil)
 	hudEnableWarehouse(t, p)

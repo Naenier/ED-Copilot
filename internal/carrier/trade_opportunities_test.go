@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -28,13 +30,6 @@ func (fixture opportunityMarkets) Do(req *http.Request) (*http.Response, error) 
 			x, id = 600, 103
 		}
 		reply["results"] = []M{{"name": system, "id64": id, "x": x, "y": 0, "z": 0}}
-	case "/api/fleetcarrier/route":
-		hop := func(name string, id, x, distance, used, tank int) M {
-			return M{"name": name, "id64": id, "x": x, "y": 0, "z": 0, "distance": distance,
-				"fuel_used": used, "fuel_in_tank": tank, "tritium_in_market": 0, "restock_amount": 0}
-		}
-		reply = M{"status": "ok", "result": M{"fuel_loaded": 100,
-			"jumps": []M{hop("Sol", 101, 0, 0, 0, 100), hop("Synthetic Transit", 102, 300, 300, 44, 56), hop(tradePeakSystem, 103, 600, 300, 43, 13)}}}
 	case "/api/station/" + tradePeakMarket:
 		// A real price can exist in an old observation. It must not
 		// appear as present-day revenue.
@@ -61,7 +56,7 @@ func (fixture opportunityMarkets) Do(req *http.Request) (*http.Response, error) 
 		switch {
 		case key == "wine" && buy:
 			rows = append(rows, market(1, "Synthetic Wine A", "Sol", 0, 100, 0, 9000, 0, fixture.at))
-			rows = append(rows, market(2, "Synthetic Wine B", "Sol", 0, 120, 0, 10000, 0, fixture.at))
+			rows = append(rows, market(2, "Synthetic Wine B", "Sol", 0, 120, 0, 17000, 0, fixture.at))
 		case key == "liquor" && buy && fixture.freshPeak:
 			rows = append(rows, market(7, "Synthetic Liquor", "Sol", 0, 550, 0, 20000, 0, fixture.at))
 		case key == "tritium":
@@ -88,27 +83,42 @@ func opportunityFixture() (M, M) {
 		"commander": M{"system": "Sol", "coordinates": []float64{0, 0, 0}, "ship": "Python", "cargoCapacity": 400},
 		"pilot":     M{"credits": 2e9},
 		"carrier": M{"owned": true, "location": M{"system": "Sol", "coordinates": []float64{0, 0, 0}},
-			"space": M{"capacityTons": 25000, "freeTons": 17000, "updatedAt": at},
+			"space": M{"capacityTons": 25000, "freeTons": 17000, "crewTons": 900, "modulePacksTons": 100, "updatedAt": at},
 			"fuel":  M{"tankTons": 1000, "reserveTons": 300, "updatedAt": at}, "warehouse": M{"updatedAt": at}},
 	}
 	return NewTradePlanner(nil).Snapshot(), state
 }
 
-func TestCarrierTradeOpportunitiesCompleteLocalTrip(t *testing.T) {
+func TestCarrierTradeOnlyPlansPeakAndIgnoresLiveCargoAndFuel(t *testing.T) {
 	trade, state := opportunityFixture()
-	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now())}, trade, state, M{"scenario": "custom"}, nil)
+	request := M{"scenario": "custom"}
+	contextBefore := TradeOpportunityContext(trade, state, request)
+	v.Obj(v.At(state, "carrier", "space"))["freeTons"] = 5
+	v.Obj(v.At(state, "carrier", "space"))["cargoTons"] = 23995
+	v.Obj(v.At(state, "carrier", "fuel"))["tankTons"] = 2
+	v.Obj(v.At(state, "carrier", "fuel"))["reserveTons"] = 2000
+	options := v.Obj(trade["options"])
+	options["otherCargoTons"], options["cargoTritiumTons"], options["arrivalReserveTons"] = 10000, 7000, 500
+	if !reflect.DeepEqual(contextBefore, TradeOpportunityContext(trade, state, request)) {
+		t.Fatal("unrelated inventory or legacy fuel settings changed the search")
+	}
+	result, err := FindTradeOpportunities(context.Background(), opportunityMarkets{at: v.ISO(time.Now())}, trade, state, request, nil)
 	rows := v.Rows(result["results"])
-	if err != nil || len(rows) != 1 {
-		t.Fatalf("local route search failed: %v (%d matches, %v)", err, len(rows), result["status"])
+	if err != nil || len(rows) == 0 {
+		t.Fatalf("Peak route search failed: %v (%d matches, %v)", err, len(rows), result["status"])
 	}
 	row := rows[0]
-	if v.Num(row["quantity"]) < 17000 || v.Num(v.At(row, "summary", "jumpCount")) != 2 ||
-		v.Num(v.At(row, "summary", "fuelTons")) <= 0 || v.Num(v.At(row, "summary", "profit")) <= 0 ||
-		v.Bool(row["estimatedCarrier"]) || v.At(row, "summary", "fuelFits") != true {
-		t.Fatalf("local trade did not use carrier data and an empty return: quantity %v, summary %v", row["quantity"], row["summary"])
+	summary := v.Obj(row["summary"])
+	fuel := v.Num(summary["fuelTons"])
+	reserve := v.Num(v.At(row, "options", "arrivalReserveTons"))
+	hold := v.Num(summary["cargoTritiumTons"])
+	if reserve != math.Ceil(fuel/10) || v.Num(row["fuelPurchaseTons"]) != fuel+reserve || v.Num(summary["servicesTons"]) != 1000 ||
+		v.Num(summary["availableCargoTons"]) != 25000-1000-hold || v.Num(row["quantity"]) != v.Num(summary["availableCargoTons"]) ||
+		v.Num(summary["jumpCount"]) != 36 || summary["fuelFits"] != true {
+		t.Fatalf("unexpected full-load calculation: %v", row)
 	}
-	if v.At(row, "buy", "station") != "Synthetic Mine" || v.At(row, "sell", "station") != "Synthetic Buyer" {
-		t.Fatal("station identity lost")
+	if v.At(result, "options", "scenario") != tradePeakScenario || row["commodityKey"] != "wine" || v.At(row, "sell", "station") != tradePeakPort {
+		t.Fatal("legacy ordinary search did not resolve to a Peak trade")
 	}
 }
 
@@ -121,15 +131,16 @@ func TestCarrierTradeBoozeCruiseCombinesSuppliersAndOmitsStaleProfit(t *testing.
 	}
 	best := rows[0]
 	orders := v.Rows(v.At(best, "buy", "orders"))
-	if v.Num(best["quantity"]) != 17000 || len(orders) != 2 || v.Num(orders[0]["quantity"]) != 9000 ||
-		v.Num(orders[1]["quantity"]) != 8000 || v.Num(best["purchaseCost"]) != 1860000 {
+	quantity := v.Num(best["quantity"])
+	if quantity <= 17000 || len(orders) != 2 || v.Num(orders[0]["quantity"]) != 9000 ||
+		v.Num(orders[1]["quantity"]) != quantity-9000 || v.Num(best["purchaseCost"]) != 900000+(quantity-9000)*120 {
 		t.Fatalf("purchase did not combine capacity and actual cost: %v", best["buy"])
 	}
 	if v.At(best, "summary", "profit") != nil || v.At(best, "sell", "price") != nil ||
-		v.At(best, "options", "holidayConfirmed") != false || v.Num(v.At(best, "summary", "jumpCount")) != 4 {
+		v.At(best, "options", "holidayConfirmed") != false || v.Num(v.At(best, "summary", "jumpCount")) != 36 {
 		t.Fatalf("stale Peak quote or incorrect route: %v", best["summary"])
 	}
-	if len(v.Rows(v.At(best, "route", "return"))) != 2 || v.Num(v.At(best, "summary", "fuelCost")) <= 0 {
+	if len(v.Rows(v.At(best, "route", "return"))) != 18 || v.Num(v.At(best, "summary", "fuelCost")) <= 0 {
 		t.Fatal("route does not include the fuel cost of the empty return")
 	}
 }

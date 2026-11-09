@@ -87,7 +87,7 @@ func hudColony(doc *HUDDocument, s M, now time.Time) {
 	if name := v.Str(project["name"]); name != "" && !hudEqual(name, label) {
 		label = name + " · " + label
 	}
-	actions, notes := hudColonyActions(colony, project, v.Obj(s["carrier"]), now)
+	actions, notes := hudColonyActions(colony, project, v.Obj(s["carrier"]), v.Obj(s["commander"]), now)
 	hudAddColonyActions(doc, actions, label)
 	task := v.Obj(project["nextTask"])
 	switch task["kind"] {

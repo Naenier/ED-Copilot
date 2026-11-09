@@ -42,6 +42,11 @@ func tradeRackham(market M) bool {
 
 func tradeSnapshot(options, legs M, now time.Time) M {
 	typeData, _ := calculatorCatalog(v.Str(options["carrierType"]))
+	peak := options["preset"] == tradePeakScenario
+	if peak {
+		options = v.Copy(options)
+		options["otherCargoTons"], options["returnTrip"] = 0, true
+	}
 	issues := []M{}
 	missing := []string{}
 	issue := func(level, code, title, detail, field string) {
@@ -55,6 +60,9 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 	for _, name := range []string{"outbound", "return"} {
 		leg := v.Copy(v.Obj(legs[name]))
 		active := name == "outbound" || v.Bool(options["returnTrip"])
+		if peak && name == "return" {
+			leg["quantity"] = 0
+		}
 		q := v.Num(leg["quantity"])
 		if !active {
 			q = 0
@@ -215,7 +223,18 @@ func tradeSnapshot(options, legs M, now time.Time) M {
 	}
 	fuelTons, totalJumps := tradeSum(fuels...), tradeSum(jumps...)
 	var hold any = options["cargoTritiumTons"]
-	if hold == nil && fuelTons != nil {
+	if peak {
+		hold = nil
+		options["tankTons"], options["arrivalReserveTons"] = nil, nil
+		if fuelTons != nil {
+			burn := v.Num(fuelTons)
+			reserve := math.Ceil(burn / 10)
+			tank := math.Min(TankCapacity, burn+reserve)
+			hold = burn + reserve - tank
+			options["tankTons"], options["arrivalReserveTons"] = tank, reserve
+		}
+		options["cargoTritiumTons"] = hold
+	} else if hold == nil && fuelTons != nil {
 		hold = math.Max(0, v.Num(fuelTons)+v.Num(options["arrivalReserveTons"])-v.Num(options["tankTons"]))
 	}
 	var capacity, over, fuelFits any

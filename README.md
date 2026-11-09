@@ -59,11 +59,11 @@ Select a route, set its buyer as the overlay destination or save a plan for a pa
 
 ## Fleet carrier trading: the whole journey in one calculation
 
-Plan loading, selling and the return journey, with either a return load or an empty repositioning flight. Account for tritium, jump maintenance, upkeep, loading and selling time, hauler payments and other expenses. Results include the owner's profit, profit per hour, capital required, return on investment, break-even figures and payback.
+Plan a wine or liquor run to Rackham’s Peak and the empty return. Copilot uses a built-in 18-jump corridor from Sol and plans only the connection to it. Cargo capacity accounts for services and the tritium needed for both directions, with a 10% fuel reserve.
 
 ![Fleet carrier trading plan](docs/screenshots/en/carrier-trade.png)
 
-The **Booze Cruise** preset helps plan a journey to Rackham’s Peak. The station's largest landing pad is **M**, so selling requires a small or medium ship. Holiday wine prices come only from a selected market quote or your own input; confirm Public Holiday in the game.
+Rackham’s Peak has a medium landing pad. The calculation uses a fresh market quote or a price you enter; confirm Public Holiday in the game.
 
 A separate calculator compares the purchase and running costs of personal and squadron fleet carriers.
 
@@ -151,4 +151,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new](docs/RELEASE-2.8.2.md) · [Build and delivery](docs/DELIVERY.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new](docs/RELEASE-2.8.3.md) · [Build and delivery](docs/DELIVERY.md)

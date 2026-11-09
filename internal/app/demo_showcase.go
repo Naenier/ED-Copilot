@@ -14,8 +14,8 @@ func (e *Engine) SeedDemoShowcase() error {
 	if !e.opts.DisableNetwork {
 		return errors.New("Демонстрационные данные доступны только в изолированном профиле без сети")
 	}
-	options := M{"servicesTons": 1000, "otherCargoTons": 500, "weeklyUpkeep": 7000000, "durationHours": 24, "extraCosts": 600000, "tritiumPrice": 50000, "carrierInvestment": 5000000000, "haulerPad": "M", "haulerCapacity": 400, "cargoTritiumTons": 500}
-	legs := M{"outbound": M{"sourceSystem": "Тестовая колония А", "destinationSystem": "Тестовая колония Б", "commodityKey": "gold", "quantity": 10000, "buyPrice": 1000, "sellPrice": 4000, "loadingMode": "haulers", "unloadingMode": "haulers", "loadRewardPerTon": 500, "unloadRewardPerTon": 700, "jumps": 2, "tritiumTons": 100}, "return": M{"sourceSystem": "Тестовая колония Б", "destinationSystem": "Тестовая колония А", "commodityKey": "gold", "quantity": 5000, "buyPrice": 2000, "sellPrice": 3000, "jumps": 2, "tritiumTons": 80}}
+	options := M{"preset": "booze-cruise", "servicesTons": 1000, "weeklyUpkeep": 7000000, "durationHours": 24, "extraCosts": 600000, "tritiumPrice": 50000, "carrierInvestment": 5000000000, "haulerPad": "M", "haulerCapacity": 400}
+	legs := M{"outbound": M{"sourceSystem": "Sol", "destinationSystem": "HIP 58832", "commodityKey": "wine", "quantity": 10000, "buyPrice": 1000, "sellPrice": 42000, "loadingMode": "haulers", "unloadingMode": "haulers", "loadRewardPerTon": 500, "unloadRewardPerTon": 700, "jumps": 18, "tritiumTons": 1900}, "return": M{"sourceSystem": "HIP 58832", "destinationSystem": "Sol", "jumps": 18, "tritiumTons": 1300}}
 	if err := e.CarrierTrade.Update(M{"action": "configure", "options": options, "legs": legs}); err != nil {
 		return err
 	}

@@ -39,7 +39,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.2"
+const Version = "2.8.3"
 
 type Options struct {
 	DataDir, JournalDir           string

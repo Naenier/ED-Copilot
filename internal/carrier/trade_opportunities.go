@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	tradePeakSystem = "HIP 58832"
-	tradePeakPort   = "Rackham's Peak"
-	tradePeakMarket = "128968675"
+	tradePeakSystem   = "HIP 58832"
+	tradePeakPort     = "Rackham's Peak"
+	tradePeakMarket   = "128968675"
+	tradePeakScenario = "booze-cruise"
 	// Allow time to load and sell each shuttle's cargo. The route has separate
 	// flight time. Both are estimates and can be edited in the imported plan.
 	tradeShuttleMinutes = 10
@@ -25,10 +26,11 @@ const (
 
 type tradeOpportunityInputs struct {
 	options, state, origin M
-	scenario, system       string
-	baseCargo, tank, hold  float64
+	system                 string
+	services               float64
 	capacity, budget       float64
 	estimatedCarrier       bool
+	manualFuel             []float64
 }
 
 type tradeHop struct {
@@ -36,45 +38,58 @@ type tradeHop struct {
 	distance float64
 }
 
-func tradeStockFresh(raw any, now time.Time) bool {
-	at := v.Time(raw)
-	return !at.IsZero() && !at.After(now.Add(10*time.Minute)) && now.Sub(at) <= 24*time.Hour
+func tradeServices(trade, carrier M) (float64, bool) {
+	if tons := v.Num(v.At(trade, "options", "servicesTons")); tons > 0 {
+		return tons, false
+	}
+	if v.At(trade, "options", "carrierType") == "fleet" && v.Bool(carrier["owned"]) {
+		if crew, known := v.Number(v.At(carrier, "space", "crewTons")); known {
+			return crew + v.Num(v.At(carrier, "space", "shipPacksTons")) + v.Num(v.At(carrier, "space", "modulePacksTons")), false
+		}
+	}
+	return 0, true
 }
 
 // TradeOpportunityContext is also the cache key. Moving the carrier or
-// changing its available space, fuel or the plan's constraints changes it.
+// changing service space or the plan's constraints changes it.
 func TradeOpportunityContext(trade, state M, request M) M {
-	now := time.Now()
 	options := v.Obj(trade["options"])
 	owned := v.Obj(state["carrier"])
 	commander := v.Obj(state["commander"])
-	scenario := v.Text(request["scenario"], "custom")
-	if scenario != "booze-cruise" {
-		scenario = "custom"
-	}
 	location := v.Obj(owned["location"])
 	system := tradeText(v.First(request["system"], location["system"], commander["system"]), 150)
 	if options["carrierType"] == "squadron" && v.Str(request["system"]) == "" {
 		system = tradeText(commander["system"], 150)
 	}
+	services, estimated := tradeServices(trade, owned)
 	out := M{
-		"scenario": scenario, "system": system, "carrierType": options["carrierType"],
+		"scenario": tradePeakScenario, "system": system, "carrierType": options["carrierType"],
 		"commanderSystem": commander["system"], "shipPad": options["haulerPad"],
 		"shipModel":    v.First(commander["shipModel"], commander["shipType"], commander["ship"]),
 		"shipCapacity": commander["cargoCapacity"],
 		"credits":      v.First(request["credits"], v.At(state, "pilot", "credits")),
-		"stock": M{"owned": owned["owned"], "capacity": v.At(owned, "space", "capacityTons"),
-			"free": v.At(owned, "space", "freeTons"), "tank": v.At(owned, "fuel", "tankTons"),
-			"hold": v.At(owned, "fuel", "reserveTons"), "needsRefresh": v.At(owned, "fuel", "needsRefresh"),
-			"spaceFresh": tradeStockFresh(v.At(owned, "space", "updatedAt"), now), "estimated": v.At(owned, "space", "estimated"),
-			"warehouseFresh": tradeStockFresh(v.At(owned, "warehouse", "updatedAt"), now),
-			"tankFresh":      tradeStockFresh(v.At(owned, "fuel", "updatedAt"), now)},
+		"servicesTons": services, "estimatedServices": estimated,
 	}
-	for _, key := range []string{"servicesTons", "otherCargoTons", "tankTons", "cargoTritiumTons", "arrivalReserveTons",
-		"tritiumPrice", "weeklyUpkeep", "durationHours", "extraCosts", "haulerCapacity", "maxQuoteAgeHours", "demandRatio", "holidayConfirmed"} {
+	for _, key := range []string{"tritiumPrice", "weeklyUpkeep", "durationHours", "extraCosts", "haulerCapacity", "maxQuoteAgeHours", "demandRatio", "holidayConfirmed"} {
 		out[key] = options[key]
 	}
+	if options["carrierType"] == "squadron" {
+		out["manualFuelTons"] = squadronTradeFuel(trade)
+	}
 	return out
+}
+
+func squadronTradeFuel(trade M) any {
+	legs := v.Rows(trade["legs"])
+	if len(legs) != 2 || v.At(trade, "options", "preset") != tradePeakScenario {
+		return nil
+	}
+	out, outKnown := v.Number(legs[0]["tritiumTons"])
+	back, backKnown := v.Number(legs[1]["tritiumTons"])
+	if !outKnown || !backKnown || out <= 0 || back <= 0 {
+		return nil
+	}
+	return []float64{out, back}
 }
 
 func observedHauler(commander M) (string, float64) {
@@ -99,9 +114,8 @@ func newTradeOpportunityInputs(trade, state, request M) (tradeOpportunityInputs,
 	key := TradeOpportunityContext(trade, state, request)
 	options := v.Copy(v.Obj(trade["options"]))
 	kind, ok := calculatorCatalog(v.Str(options["carrierType"]))
-	plan := tradeOpportunityInputs{options: options, state: state, scenario: v.Str(key["scenario"]), system: v.Str(key["system"]),
-		capacity: float64(kind.Capacity), baseCargo: v.Num(options["servicesTons"]) + v.Num(options["otherCargoTons"]),
-		tank: v.Num(options["tankTons"]), hold: v.Num(options["cargoTritiumTons"]), estimatedCarrier: true}
+	plan := tradeOpportunityInputs{options: options, state: state, system: v.Str(key["system"]),
+		capacity: float64(kind.Capacity), services: v.Num(key["servicesTons"]), estimatedCarrier: v.Bool(key["estimatedServices"])}
 	if !ok || plan.system == "" {
 		return plan, errors.New("Укажите систему отправления флотоносца.")
 	}
@@ -110,31 +124,15 @@ func newTradeOpportunityInputs(trade, state, request M) (tradeOpportunityInputs,
 		return plan, errors.New("Нужен известный баланс или бюджет на закупку.")
 	}
 	plan.budget = budget
-	stock := v.Obj(key["stock"])
-	if kind.Key == "fleet" && v.Bool(stock["owned"]) {
-		if free, freeKnown := v.Number(stock["free"]); freeKnown && free >= 0 && free <= plan.capacity {
-			occupied := plan.capacity - free
-			if hold, holdKnown := v.Number(stock["hold"]); holdKnown && hold >= 0 && hold <= occupied && v.Bool(stock["warehouseFresh"]) {
-				plan.hold = hold
-			} else {
-				plan.hold = 0
-			}
-			plan.baseCargo = occupied - plan.hold
-			plan.estimatedCarrier = !v.Bool(stock["spaceFresh"]) || !v.Bool(stock["warehouseFresh"]) || v.Bool(stock["estimated"])
-		}
-		if tank, tankKnown := v.Number(stock["tank"]); tankKnown && !v.Bool(stock["needsRefresh"]) && v.Bool(stock["tankFresh"]) {
-			plan.tank = tank
-		} else {
-			plan.tank = 0
-			plan.estimatedCarrier = true
-		}
+	plan.manualFuel, _ = key["manualFuelTons"].([]float64)
+	if kind.Key == "squadron" && len(plan.manualFuel) == 0 {
+		return plan, errors.New("Для флотоносца эскадрильи укажите расход трития туда и обратно в плане рейса.")
 	}
-	plan.options["servicesTons"] = math.Min(plan.baseCargo, v.Num(plan.options["servicesTons"]))
-	plan.options["otherCargoTons"] = math.Max(0, plan.baseCargo-v.Num(plan.options["servicesTons"]))
-	plan.options["tankTons"] = plan.tank
+	plan.options["servicesTons"] = plan.services
+	plan.options["otherCargoTons"] = 0
 	plan.options["returnTrip"] = true
-	plan.options["preset"] = plan.scenario
-	if v.At(trade, "options", "preset") != plan.scenario {
+	plan.options["preset"] = tradePeakScenario
+	if v.At(trade, "options", "preset") != tradePeakScenario {
 		plan.options["holidayConfirmed"] = false
 	}
 	observedPad, observedCapacity := observedHauler(v.Obj(state["commander"]))
@@ -143,11 +141,8 @@ func newTradeOpportunityInputs(trade, state, request M) (tradeOpportunityInputs,
 	if shipCapacity == 0 && (shipPad == "" || shipPad == observedPad) {
 		shipCapacity = observedCapacity
 	}
-	if plan.scenario == "booze-cruise" && (shipPad == "L" || shipPad == "") {
+	if shipPad == "L" || shipPad == "" {
 		shipPad, shipCapacity = "M", 280
-	}
-	if shipPad == "" {
-		shipPad = "L" // only large-pad stations when the ship type is unknown
 	}
 	if shipCapacity <= 0 {
 		shipCapacity = 280
@@ -163,6 +158,9 @@ func opportunitySearchState(state, origin M) M {
 }
 
 func knownOpportunityOrigin(state M, system string) M {
+	if known := knownTradePeakOrigin(system); known != nil {
+		return known
+	}
 	for _, candidate := range []M{v.Obj(v.At(state, "carrier", "location")), v.Obj(state["commander"])} {
 		if strings.EqualFold(v.Str(candidate["system"]), system) && len(trading.Coords(candidate["coordinates"])) == 3 {
 			return candidate
@@ -190,27 +188,10 @@ func reverseTradeHops(hops []tradeHop) []tradeHop {
 	return out
 }
 
-func tradePeakHops(ctx context.Context, route *RoutePlanner, source string) ([]tradeHop, error) {
-	if strings.EqualFold(source, tradePeakSystem) {
-		return nil, nil
-	}
-	result, err := route.Search(ctx, M{"sourceSystem": source, "destinationSystem": tradePeakSystem,
-		"usedCapacityTons": 0, "cargoTritiumTons": 0, "reserveTritiumTons": 0, "calculateStartingFuel": true}, nil)
-	if err != nil {
-		return nil, err
-	}
-	stops := v.Rows(v.At(result, "route", "stops"))
-	hops := make([]tradeHop, 0, len(stops)-1)
-	for i := 1; i < len(stops); i++ {
-		hops = append(hops, tradeHop{v.Str(stops[i-1]["name"]), v.Str(stops[i]["name"]), v.Num(stops[i]["distanceLy"])})
-	}
-	return hops, nil
-}
-
 type tradeFuelPlan struct {
-	tank, hold, acquired float64
-	outbound, inward     float64
-	valid                bool
+	tank, hold, acquired, reserve float64
+	outbound, inward              float64
+	valid                         bool
 }
 
 func tradeFuelConsumed(hops []tradeHop, usedCargo, remaining float64) float64 {
@@ -226,24 +207,27 @@ func tradeFuelConsumed(hops []tradeHop, usedCargo, remaining float64) float64 {
 }
 
 func (plan tradeOpportunityInputs) fuelForCargo(cargo float64, reposition, loaded, back []tradeHop) tradeFuelPlan {
-	initial := plan.tank + plan.hold
-	reserve := v.Num(plan.options["arrivalReserveTons"])
-	start := initial
-	for range 12 {
-		empty := tradeFuelConsumed(reposition, plan.baseCargo, start)
-		out := empty + tradeFuelConsumed(loaded, plan.baseCargo+cargo, start-empty)
-		in := tradeFuelConsumed(back, plan.baseCargo, start-out)
-		required := out + in + reserve
-		if start >= required {
-			// Fill the depot before loading cargo. Transfers from the hold
-			// leave the total tritium mass unchanged.
-			acquired := math.Max(0, start-initial)
-			tank := math.Min(TankCapacity, start)
-			hold := start - tank
-			return tradeFuelPlan{tank: tank, hold: hold, acquired: acquired, outbound: out, inward: in,
-				valid: plan.baseCargo+hold+cargo <= plan.capacity}
+	provision := func(out, in float64) tradeFuelPlan {
+		reserve := math.Ceil((out + in) / 10)
+		start := out + in + reserve
+		tank := math.Min(TankCapacity, start)
+		hold := start - tank
+		return tradeFuelPlan{tank: tank, hold: hold, acquired: start, reserve: reserve, outbound: out, inward: in,
+			valid: plan.services+hold+cargo <= plan.capacity}
+	}
+	if len(plan.manualFuel) == 2 {
+		return provision(plan.manualFuel[0], plan.manualFuel[1])
+	}
+	start := float64(0)
+	for range 24 {
+		empty := tradeFuelConsumed(reposition, plan.services, start)
+		out := empty + tradeFuelConsumed(loaded, plan.services+cargo, start-empty)
+		in := tradeFuelConsumed(back, plan.services, start-out)
+		fuel := provision(out, in)
+		if fuel.acquired == start {
+			return fuel
 		}
-		start = required
+		start = fuel.acquired
 	}
 	return tradeFuelPlan{}
 }
@@ -356,34 +340,27 @@ func (plan tradeOpportunityInputs) candidate(key string, buyOffers []M, sell M, 
 	if len(buyOffers) == 0 || v.Num(buyOffers[0]["price"]) <= 0 || limit <= 0 {
 		return nil
 	}
-	low, high := 0.0, math.Floor(math.Min(limit, plan.capacity-plan.baseCargo))
+	low, high := 0.0, math.Floor(math.Min(limit, plan.capacity-plan.services))
 	kind, _ := calculatorCatalog(v.Str(plan.options["carrierType"]))
-	squadron := kind.Key == "squadron"
-	if squadron {
-		// The 25,000 t Drake model does not establish squadron fuel use.
-		high = math.Min(high, math.Floor(plan.capacity-plan.baseCargo-plan.hold))
-	}
 	jumpCost := float64(len(reposition)+len(loaded)+len(back)) * float64(kind.JumpCost)
-	fuelFor := func(quantity float64) tradeFuelPlan {
-		if squadron {
-			return tradeFuelPlan{tank: plan.tank, hold: plan.hold, valid: true}
-		}
-		return plan.fuelForCargo(quantity, reposition, loaded, back)
-	}
+	var bestBuy, bestFuelMarket M
+	var bestFuel tradeFuelPlan
 	for low < high {
 		mid := math.Floor((low + high + 1) / 2)
 		buy := buyTradeCargo(buyOffers, mid)
-		fuel := fuelFor(mid)
+		fuel := plan.fuelForCargo(mid, reposition, loaded, back)
 		fuelMarket := fuelStation(fuelMarkets, fuel.acquired)
+		fuelPrice := v.First(fuelMarket["price"], plan.options["tritiumPrice"])
 		hours := v.Num(plan.options["durationHours"])
 		if plan.options["durationHours"] == nil {
 			hours = timeForTradeHops(reposition) + timeForTradeHops(loaded) + timeForTradeHops(back) +
 				tradeHandlingHours(buy, mid, fuel.acquired, v.Num(plan.options["haulerCapacity"]))
 		}
-		upkeep := hours * v.Num(plan.options["weeklyUpkeep"]) / 168
-		affordable := v.Num(buy["purchaseTotal"])+fuel.acquired*v.Num(fuelMarket["price"])+jumpCost+upkeep+v.Num(plan.options["extraCosts"]) <= plan.budget
-		if buy != nil && fuel.valid && affordable && (fuel.acquired == 0 || fuelMarket != nil) {
+		upkeep := math.Ceil(hours/168) * v.Num(plan.options["weeklyUpkeep"])
+		affordable := v.Num(buy["purchaseTotal"])+fuel.acquired*v.Num(fuelPrice)+jumpCost+upkeep+v.Num(plan.options["extraCosts"]) <= plan.budget
+		if buy != nil && fuel.valid && affordable && (fuel.acquired == 0 || fuelPrice != nil) {
 			low = mid
+			bestBuy, bestFuelMarket, bestFuel = buy, fuelMarket, fuel
 		} else {
 			high = mid - 1
 		}
@@ -391,10 +368,8 @@ func (plan tradeOpportunityInputs) candidate(key string, buyOffers []M, sell M, 
 	if low < 1 {
 		return nil
 	}
-	fuel := fuelFor(low)
-	fuelMarket := fuelStation(fuelMarkets, fuel.acquired)
-	fuelPrice := v.First(plan.options["tritiumPrice"], fuelMarket["price"])
-	return plan.makeCandidate(key, buyTradeCargo(buyOffers, low), sell, low, supply, reposition, loaded, back, fuel, fuelPrice, fuelMarket, now)
+	fuelPrice := v.First(plan.options["tritiumPrice"], bestFuelMarket["price"])
+	return plan.makeCandidate(key, bestBuy, sell, low, supply, reposition, loaded, back, bestFuel, fuelPrice, bestFuelMarket, now)
 }
 
 func tradeHandlingHours(buy M, cargo, fuel, haulerCapacity float64) float64 {
@@ -415,6 +390,7 @@ func (plan tradeOpportunityInputs) makeCandidate(key string, buy, sell M, quanti
 	}
 	options := v.Copy(plan.options)
 	options["tankTons"], options["cargoTritiumTons"], options["tritiumPrice"] = fuel.tank, fuel.hold, fuelPrice
+	options["arrivalReserveTons"] = fuel.reserve
 	_, legs := tradeDefaults()
 	source, destination := v.Str(buy["system"]), v.Str(sell["system"])
 	outbound := v.Obj(legs["outbound"])
@@ -429,24 +405,20 @@ func (plan tradeOpportunityInputs) makeCandidate(key string, buy, sell M, quanti
 	backLeg := v.Obj(legs["return"])
 	backLeg["sourceSystem"], backLeg["destinationSystem"] = destination, plan.system
 	backLeg["jumps"], backLeg["travelHours"] = len(back), timeForTradeHops(back)
-	if options["carrierType"] == "fleet" {
-		outbound["tritiumTons"], backLeg["tritiumTons"] = fuel.outbound, fuel.inward
-	}
+	outbound["tritiumTons"], backLeg["tritiumTons"] = fuel.outbound, fuel.inward
+	fuelPurchaseCost := tradeTimes(v.First(fuelMarket["price"], fuelPrice), fuel.acquired)
 	outbound["route"] = M{"sourceSystem": source, "destinationSystem": destination, "carrierType": options["carrierType"],
 		"quantity": quantity, "servicesTons": options["servicesTons"], "otherCargoTons": options["otherCargoTons"],
 		"positioningSource": plan.system, "reposition": tradeHopRows(reposition), "loaded": tradeHopRows(loaded),
-		"fuelPurchaseTons": fuel.acquired, "fuelMarket": fuelMarket}
+		"fuelPurchaseTons": fuel.acquired, "fuelPurchaseCost": fuelPurchaseCost, "fuelMarket": fuelMarket}
 	backLeg["route"] = M{"sourceSystem": destination, "destinationSystem": plan.system, "carrierType": options["carrierType"],
 		"quantity": 0, "servicesTons": options["servicesTons"], "otherCargoTons": options["otherCargoTons"], "return": tradeHopRows(back)}
 	result := tradeSnapshot(options, legs, now)
-	if profit, known := v.Number(v.At(result, "summary", "profit")); known && profit <= 0 && plan.scenario == "custom" {
-		return nil
-	}
 	result["purchaseCost"], result["supply"], result["quantity"] = buy["purchaseTotal"], supply, quantity
 	result["commodityKey"], result["commodityName"] = key, tradeCommodity(key)
 	result["buy"], result["sell"], result["fuelMarket"] = buy, sell, fuelMarket
 	result["fuelPurchaseTons"] = fuel.acquired
-	result["fuelPurchaseCost"] = fuel.acquired * v.Num(fuelMarket["price"])
+	result["fuelPurchaseCost"] = fuelPurchaseCost
 	result["route"] = M{"origin": plan.system, "reposition": tradeHopRows(reposition), "loaded": tradeHopRows(loaded), "return": tradeHopRows(back)}
 	result["estimatedCarrier"] = plan.estimatedCarrier
 	result["shuttleMinutes"] = tradeShuttleMinutes
@@ -484,9 +456,13 @@ func (plan tradeOpportunityInputs) peakCandidates(key string, markets []M, sell 
 		if !reachable {
 			return
 		}
-		// Leave the acquisition system loaded and join the verified corridor
-		// at the selected hub. The return is empty and follows those systems.
+		// Join the corridor straight from the supplier when reachable.
 		loaded := append(reverseTradeHops(reposition), corridor...)
+		if len(reposition) > 0 {
+			if direct, ok := directTradePeakCorridor(raw); ok && len(direct) <= len(loaded) {
+				loaded = direct
+			}
+		}
 		var supply float64
 		for _, quote := range buyOffers {
 			supply += v.Num(quote["supply"])
@@ -512,11 +488,10 @@ func (plan tradeOpportunityInputs) peakCandidates(key string, markets []M, sell 
 	return rows
 }
 
-// FindTradeOpportunities computes a bounded shortlist around the carrier. It
-// uses independent market requests and never replaces the commander’s saved
-// route or the existing trade plan.
+// FindTradeOpportunities combines nearby suppliers with the route to Rackham's Peak.
 func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade, state, request M, update func(M)) (M, error) {
 	now := time.Now()
+	request = v.Merge(M{}, request, M{"scenario": tradePeakScenario})
 	plan, err := newTradeOpportunityInputs(trade, state, request)
 	out := M{"options": request, "context": TradeOpportunityContext(trade, state, request), "results": []M{}, "updatedAt": v.ISO(now)}
 	if err != nil {
@@ -540,27 +515,21 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 		plan.origin = M{"system": resolved["name"], "coordinates": resolved["coordinates"], "systemAddress": resolved["id64"]}
 	}
 	plan.state = opportunitySearchState(state, plan.origin)
-	keys := []string{"gold", "silver", "agronomictreatment", "beryllium"}
-	if plan.scenario == "booze-cruise" {
-		keys = []string{"wine", "liquor"}
-	}
+	keys := []string{"wine", "liquor"}
 	age := v.Num(plan.options["maxQuoteAgeHours"])
 	pad := v.Str(plan.options["haulerPad"])
-	minVolume := math.Max(1, math.Floor((plan.capacity-plan.baseCargo-plan.hold)/20))
+	minVolume := math.Max(1, math.Floor((plan.capacity-plan.services)/20))
 	out["stage"] = "markets"
 	if update != nil {
 		update(v.Copy(out))
 	}
 	type query struct {
-		key, side, system string
-		radius, minimum   float64
+		key     string
+		minimum float64
 	}
-	queries := []query{{"tritium", "buy", plan.system, 100, 1}}
+	queries := []query{{"tritium", 1}}
 	for _, key := range keys {
-		queries = append(queries, query{key, "buy", plan.system, 100, minVolume})
-		if plan.scenario != "booze-cruise" {
-			queries = append(queries, query{key, "sell", plan.system, 100, minVolume})
-		}
+		queries = append(queries, query{key, minVolume})
 	}
 	type marketReply struct {
 		query query
@@ -568,17 +537,9 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 		err   error
 	}
 	responses := make(chan marketReply, len(queries))
-	throttle := make(chan struct{}, 3)
 	for _, q := range queries {
 		go func() {
-			select {
-			case throttle <- struct{}{}:
-				defer func() { <-throttle }()
-			case <-ctx.Done():
-				responses <- marketReply{query: q, err: ctx.Err()}
-				return
-			}
-			result, requestErr := marketInput(searcher, ctx, plan.state, q.system, q.key, q.side, pad, q.radius, age, q.minimum)
+			result, requestErr := marketInput(searcher, ctx, plan.state, plan.system, q.key, "buy", pad, 100, age, q.minimum)
 			responses <- marketReply{q, result, requestErr}
 		}()
 	}
@@ -592,14 +553,15 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 	}
 	peak := make(chan peakReply, 1)
 	peakMarket := make(chan quoteReply, 1)
-	if plan.scenario == "booze-cruise" {
-		go func() { hops, routeErr := tradePeakHops(ctx, route, plan.system); peak <- peakReply{hops, routeErr} }()
-		go func() {
-			quotes, quoteErr := peakTradeQuotes(ctx, searcher, now, age)
-			peakMarket <- quoteReply{quotes, quoteErr}
-		}()
-	}
-	markets := map[string]M{}
+	go func() {
+		hops, routeErr := tradePeakCorridor(ctx, route, plan.origin)
+		peak <- peakReply{hops, routeErr}
+	}()
+	go func() {
+		quotes, quoteErr := peakTradeQuotes(ctx, searcher, now, age)
+		peakMarket <- quoteReply{quotes, quoteErr}
+	}()
+	markets := map[string][]M{}
 	for range queries {
 		reply := <-responses
 		if reply.err != nil || v.Str(reply.data["error"]) != "" {
@@ -608,16 +570,13 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 		if v.Bool(reply.data["coverageLimited"]) {
 			out["limited"] = true
 		}
-		if markets[reply.query.key] == nil {
-			markets[reply.query.key] = M{}
-		}
-		markets[reply.query.key][reply.query.side] = reply.data["results"]
+		markets[reply.query.key] = v.Rows(reply.data["results"])
 	}
 	if err := ctx.Err(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return out, err
 	}
 	fuelMarkets := []M{}
-	for _, raw := range v.Rows(markets["tritium"]["buy"]) {
+	for _, raw := range markets["tritium"] {
 		quote := pickTradeQuote(raw, "tritium", now, age)
 		if quote != nil {
 			fuelMarkets = append(fuelMarkets, quote)
@@ -629,50 +588,20 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 		update(v.Copy(out))
 	}
 	rows := []M{}
-	if plan.scenario == "booze-cruise" {
-		corridor := <-peak
-		if corridor.err != nil {
-			out["status"] = "Маршрут до HIP 58832 недоступен."
-			return out, corridor.err
-		}
-		sale := <-peakMarket
-		if sale.err != nil {
-			out["partial"] = true
-		}
-		for _, key := range keys {
-			rows = append(rows, plan.peakCandidates(key, v.Rows(markets[key]["buy"]), sale.quotes[key], corridor.hops, fuelMarkets, now)...)
-		}
-	} else {
-		opts := trading.RouteOptions(M{"system": plan.system, "radiusLy": 100, "maxLegLy": 200, "maxAgeHours": age,
-			"cargoCapacity": plan.capacity, "credits": plan.budget, "orderBy": "profit", "minPad": pad,
-			"demandRatio": 1, "roundTrip": false}, v.Obj(state["commander"]))
-		opts["cargoCapacity"] = math.Max(0, plan.capacity-plan.baseCargo-plan.hold)
-		for _, key := range keys {
-			for _, pair := range trading.BuildRoutes(map[string]M{key: markets[key]}, opts) {
-				legs := v.Rows(pair["legs"])
-				if len(legs) == 0 {
-					continue
-				}
-				leg := legs[0]
-				rawBuy, rawSell := v.Obj(leg["buy"]), v.Obj(leg["sell"])
-				buy, sell := pickTradeQuote(rawBuy, key, now, age), pickTradeQuote(rawSell, key, now, age)
-				if buy == nil || sell == nil {
-					continue
-				}
-				reposition, startOK := tradeDirectHop(plan.origin, rawBuy)
-				loaded, loadOK := tradeDirectHop(rawBuy, rawSell)
-				back, endOK := tradeDirectHop(rawSell, plan.origin)
-				if !startOK || !loadOK || !endOK || v.Num(sell["demand"]) < math.Min(v.Num(plan.options["haulerCapacity"]), v.Num(leg["quantity"]))*v.Num(plan.options["demandRatio"]) {
-					continue
-				}
-				if row := plan.candidate(key, []M{buy}, sell, v.Num(buy["supply"]), v.Num(leg["quantity"]), reposition, loaded, back, fuelMarkets, now); row != nil {
-					rows = append(rows, row)
-				}
-			}
-		}
+	corridor := <-peak
+	if corridor.err != nil {
+		out["status"] = "Маршрут до HIP 58832 недоступен."
+		return out, corridor.err
+	}
+	sale := <-peakMarket
+	if sale.err != nil {
+		out["partial"] = true
+	}
+	for _, key := range keys {
+		rows = append(rows, plan.peakCandidates(key, markets[key], sale.quotes[key], corridor.hops, fuelMarkets, now)...)
 	}
 	sort.SliceStable(rows, func(i, j int) bool {
-		if plan.scenario == "booze-cruise" && v.Num(rows[i]["quantity"]) != v.Num(rows[j]["quantity"]) {
+		if v.Num(rows[i]["quantity"]) != v.Num(rows[j]["quantity"]) {
 			return v.Num(rows[i]["quantity"]) > v.Num(rows[j]["quantity"])
 		}
 		a, aKnown := v.Number(v.At(rows[i], "summary", "profit"))
@@ -683,15 +612,12 @@ func FindTradeOpportunities(ctx context.Context, client trading.HTTPDoer, trade,
 		if aKnown && a != b {
 			return a > b
 		}
-		if v.Num(rows[i]["quantity"]) != v.Num(rows[j]["quantity"]) {
-			return v.Num(rows[i]["quantity"]) > v.Num(rows[j]["quantity"])
-		}
 		if v.Num(rows[i]["purchaseCost"]) != v.Num(rows[j]["purchaseCost"]) {
 			return v.Num(rows[i]["purchaseCost"]) < v.Num(rows[j]["purchaseCost"])
 		}
 		return v.Str(rows[i]["id"]) < v.Str(rows[j]["id"])
 	})
-	if len(rows) > 8 && plan.scenario == "booze-cruise" {
+	if len(rows) > 8 {
 		counts := map[string]int{}
 		mixed, overflow := []M{}, []M{}
 		for _, row := range rows {
