@@ -5,7 +5,7 @@ const groups=[
  {id:'trade',title:'Торговля',icon:'arrow-left-right',tabs:['deals','sale','carrier-trade'],default:'deals'},
  {id:'colonization',title:'Колонизация',icon:'orbit',tabs:['colonization'],modes:[['Обзор','house'],['Выбор системы','search'],['Строительство','wrench'],['Снабжение','package'],['Бюджет','wallet']]},
  {id:'mining',title:'Добыча',icon:'pickaxe',tabs:['mining'],modes:[['Текущий заход','pickaxe'],['История','history'],['Снаряжение','package'],['План','target']]},
- {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['План','target'],['Материалы','package'],['Обмен','arrow-left-right'],['Инженеры','users']]},
+ {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['План','target'],['Материалы','package'],['Инженеры','users']]},
  {id:'exobiology',title:'Экзобиология',icon:'leaf',tabs:['exobiology'],modes:[['Обзор','house'],['Планеты','orbit'],['Образцы','leaf'],['Продажи','wallet'],['Находки','target'],['Места','map-pin'],['Статистика','chart-no-axes-combined']]},
  {id:'fleet',title:'Флотоносцы',icon:'ship',tabs:['carrier','route','carrier-calculator']},
  {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics']},
@@ -13,11 +13,14 @@ const groups=[
  {id:'commander',title:'Командир',icon:'users',tabs:['commander','ranks']},
 ];
 const commanderModes=[['Сводка','house'],['Ранги','shield-check'],['Финансы','wallet'],['Инвентарь','package'],['Имущество','layout-grid'],['Флот','ship'],['Статистика','chart-no-axes-combined'],['Журнал','history']];
-function groupFor(tab){return groups.find(group=>group.tabs.includes(tab))?.id||null;}
+function groupFor(tab,mode){return tab==='encyclopedia'&&mode==='Системы'?'galaxy':groups.find(group=>group.tabs.includes(tab))?.id||null;}
 function group(id){return groups.find(item=>item.id===id)||groups[0];}
 function entries(C,id){
  if(id==='commander')return commanderModes.map(([title,icon])=>({tab:title==='Ранги'?'ranks':'commander',mode:title==='Ранги'?'':title,title,icon}));
- if(id==='galaxy')return window.PoliticsUI?.navigationModes?.(C)||[['Политика','orbit'],['Цели сообщества','target'],['Пауэрплей','shield-check']].map(([title,icon])=>({tab:'politics',mode:title,title,icon}));
+ if(id==='galaxy'){
+  const politics=window.PoliticsUI?.navigationModes?.(C)||[['Политика','orbit'],['Цели сообщества','target'],['Пауэрплей','shield-check']].map(([title,icon])=>({tab:'politics',mode:title,title,icon}));
+  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...politics];
+ }
  const g=group(id);
  if(g.modes)return g.modes.map(([title,icon])=>({tab:g.tabs[0],mode:title,title,icon}));
  if(id==='trade')return g.tabs.filter(tab=>C.tabs.some(item=>item.ID===tab)).map(tab=>({tab,mode:'',title:C.tabs.find(item=>item.ID===tab).Title,icon:null}));

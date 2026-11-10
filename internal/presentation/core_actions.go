@@ -191,21 +191,28 @@ func coreActions(tab, mode string, state, selected, prefill M) []Action {
 					shopping = append(shopping, v.Str(r["name"])+": нужно "+Number(r["needed"])+", есть "+Number(r["owned"])+", не хватает "+Number(r["missing"]))
 				}
 			}
-			material := false
-			for _, r := range v.Rows(e["materials"]) {
-				if r["key"] == selected["key"] && r["tradeable"] != false {
-					material = true
-					break
+			trader := v.Obj(e["trader"])
+			target, amount := v.Str(trader["targetKey"]), v.Num(trader["targetAmount"])
+			var tradeable []Choice
+			for _, material := range v.Rows(catalog["materials"]) {
+				if material["tradeable"] != true {
+					continue
+				}
+				key := v.Str(material["key"])
+				tradeable = append(tradeable, Choice{key, v.Str(material["name"])})
+				if key == selected["key"] && key != target {
+					target, amount = key, v.Num(selected["missing"])
 				}
 			}
-			return []Action{{ID: "engineering.material-trade", Title: "Подобрать обмен для материала", Kind: "engineering-trade", Path: "/api/engineering", Payload: M{"action": "configure", "tradeTargetKey": selected["key"], "tradeTargetAmount": max(1, v.Num(selected["missing"]))}, Disabled: !material}, {ID: "engineering.copy-shopping", Title: "Копировать список материалов плана", Kind: "copy", Path: strings.Join(shopping, "\r\n"), Disabled: len(shopping) == 0}, export("engineering.materials", "Список материалов CSV", "/api/engineering/materials.csv"), {ID: "engineering.go-plan", Title: "Список улучшений", Kind: "navigate", Path: "engineering", Payload: M{"mode": "План"}}}
+			trade := newAction("engineering.trade", "Рассчитать обмен", "/api/engineering", M{"action": "configure"},
+				selectField("tradeTargetKey", "Нужный материал", target, tradeable),
+				numberField("tradeTargetAmount", "Нужно получить, ед.", max(1, amount), 1, 100000),
+				boolField("protectPlan", "Защитить материалы из плана улучшений", v.First(trader["protectPlan"], true)),
+				boolField("showAllTrades", "Показывать варианты даже при нехватке запаса", trader["showAllTrades"]))
+			return []Action{trade, {ID: "engineering.copy-shopping", Title: "Копировать список материалов плана", Kind: "copy", Path: strings.Join(shopping, "\r\n"), Disabled: len(shopping) == 0}, export("engineering.materials", "Список материалов CSV", "/api/engineering/materials.csv"), {ID: "engineering.go-plan", Title: "Список улучшений", Kind: "navigate", Path: "engineering", Payload: M{"mode": "План"}}}
 		}
 		if mode == "Инженеры" {
 			return []Action{{ID: "engineer.mark", Title: "Отметить доступ", Path: "/api/engineering", Payload: M{"action": "engineer", "key": selected["key"]}, Fields: []Field{boolField("unlocked", "Инженер доступен", selected["status"] == "unlocked")}, Disabled: !hasRow}, {ID: "engineer.reset", Title: "Вернуть статус из журнала", Path: "/api/engineering", Payload: M{"action": "engineer", "key": selected["key"], "unlocked": nil}, Disabled: !hasRow}, {ID: "engineer.guide", Title: "Открыть руководство", Kind: "url", Path: v.Str(selected["url"]), Disabled: v.Str(selected["url"]) == ""}, copySystem(selected["system"])}
-		}
-		if mode == "Обмен" {
-			trader := v.Obj(e["trader"])
-			return []Action{newAction("engineering.trade", "Рассчитать обмен", "/api/engineering", M{"action": "configure"}, selectField("tradeTargetKey", "Нужный материал", trader["targetKey"], choices(v.Rows(catalog["materials"]), "key", "name")), numberField("tradeTargetAmount", "Нужно получить, ед.", v.First(trader["targetAmount"], 1), 1, 100000), boolField("protectPlan", "Защитить материалы из плана улучшений", v.First(trader["protectPlan"], true)), boolField("showAllTrades", "Показывать варианты даже при нехватке запаса", trader["showAllTrades"]))}
 		}
 		fields := func(r M) []Field {
 			out := []Field{selectField("moduleKey", "Модуль", r["moduleKey"], choices(v.Rows(catalog["modules"]), "key", "name")), selectField("blueprintKey", "Чертёж", r["blueprintKey"], choices(v.Rows(catalog["blueprints"]), "key", "name")), numberField("quantity", "Количество модулей", v.First(r["quantity"], 1), 1, 100), textField("label", "Ваша пометка", r["label"])}

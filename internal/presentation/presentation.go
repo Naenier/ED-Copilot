@@ -458,12 +458,12 @@ func buildPage(tab, mode, query string, s M) Page {
 		p.Modes = EngineeringModes()
 		e := v.Obj(s["engineering"])
 		p.Summary = "Нужно материалов: " + Number(v.At(e, "shopping", "neededUnits")) + " · Не хватает: " + Number(v.At(e, "shopping", "missingUnits"))
-		switch mode {
+		switch EngineeringMode(mode) {
 		case "", EngineeringProgression:
 			p.Columns = nil
 			p.Summary = ""
 			p.Description = "Открытие инженеров, доступ к классам и материалы для выбранного улучшения."
-		case "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана":
+		case EngineeringMaterials, "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана":
 			p.Columns = []string{"Материал", "Категория", "Уровень", "Есть", "Нужно", "Не хватает"}
 			category, planOnly, _ := materialView(mode)
 			for _, r := range v.Rows(e["materials"]) {
@@ -471,11 +471,6 @@ func buildPage(tab, mode, query string, s M) Page {
 					continue
 				}
 				p.Rows = append(p.Rows, row(r, []string{v.Str(r["name"]), Label(r["category"]), "G" + Number(r["grade"]), Number(r["owned"]), Number(r["needed"]), Number(r["missing"])}, fields(r, "familyName", "Группа обмена", "capacity", "Вместимость", "updatedAt", "Снимок")))
-			}
-		case "Обмен":
-			p.Columns = []string{"Отдать", "Количество", "Получить", "Количество", "Хватает", "Помещается"}
-			for _, r := range v.Rows(v.At(e, "trader", "offers")) {
-				p.Rows = append(p.Rows, row(r, []string{v.Str(r["fromName"]), Number(r["requiredFrom"]), v.Str(r["toName"]), Number(r["received"]), Format(r["affordable"]), Format(r["storageFits"])}, fields(r, "available", "Доступно без резерва", "protectedCount", "Защищено планом", "maxGain", "Максимально можно получить")))
 			}
 		case "Инженеры":
 			p.Columns = []string{"Инженер", "Система", "База", "Доступ", "Ранг"}

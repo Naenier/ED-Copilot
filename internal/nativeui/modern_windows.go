@@ -686,7 +686,7 @@ func (m *modernShell) handleRequest(req webRequest) {
 		m.reply(req.ID, result, e)
 		return
 	}
-	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "exo.sites" || req.Op == "engineering-roadmap" {
+	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "galaxy.system" || req.Op == "galaxy.nearby" || req.Op == "exo.sites" || req.Op == "engineering-roadmap" {
 		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 		return
 	}

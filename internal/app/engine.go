@@ -8,6 +8,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/commander"
+	"github.com/Naenier/ED-Copilot/internal/edsm"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	"github.com/Naenier/ED-Copilot/internal/frontier"
@@ -39,7 +40,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.6"
+const Version = "2.8.7"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -74,6 +75,7 @@ type Engine struct {
 	clipboardSequence                               uint64
 	Mining                                          *mining.Service
 	Systems                                         *systems.Client
+	EDSM                                            *edsm.Client
 	Frontier                                        *frontier.Client
 	Inara                                           *inara.Manager
 	commander, game, settings, appearance, desktop  M
@@ -174,7 +176,12 @@ func New(o Options) (*Engine, error) {
 	}
 	x.Route.OnUpdate = func(M) { x.Notify() }
 	x.Mining = mining.New(v.Obj(saved["mining"]))
-	x.Systems = systems.NewClient(systems.Options{HTTPClient: o.HTTPClient})
+	systemOptions := systems.Options{HTTPClient: o.HTTPClient}
+	if !o.DisableNetwork {
+		x.EDSM = edsm.NewClient(o.HTTPClient)
+		systemOptions.EDSM = x.EDSM
+	}
+	x.Systems = systems.NewClient(systemOptions)
 	var cacheErr error
 	x.onlineCache, cacheErr = openOnlineCache(o.DataDir)
 	if cacheErr != nil {

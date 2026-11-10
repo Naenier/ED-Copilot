@@ -362,11 +362,6 @@ func (u *Window) runAction(action p.Action) {
 			u.runAction(actions[0])
 		}
 		return
-	case "engineering-trade":
-		u.execute(action, nil)
-		u.modes["engineering"] = "Обмен"
-		u.navigate("engineering")
-		return
 	case "import-plan":
 		u.importPlan(action)
 		return

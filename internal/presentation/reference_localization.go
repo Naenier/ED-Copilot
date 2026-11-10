@@ -80,6 +80,15 @@ func referenceCanonical(id string) string {
 		for _, row := range v.Rows(data.Array("encyclopedia-engineers.json")) {
 			put("engineer/"+v.Str(row["key"]), v.Str(row["english"]))
 		}
+		roadmap := data.Object("engineering-roadmap.json")
+		for _, row := range v.Rows(roadmap["odysseyMaterials"]) {
+			put("material/odyssey-"+v.Str(row["key"]), v.Str(row["english"]))
+		}
+		for _, row := range v.Rows(roadmap["odysseyRecipes"]) {
+			name := v.Str(row["english"])
+			put("blueprint/"+v.Str(row["key"]), name)
+			put("blueprint/odyssey-"+referenceSlug(name), name)
+		}
 		for _, row := range v.Rows(data.Object("catalog.json")["resources"]) {
 			if row["kind"] == "commodity" {
 				put("commodity/"+v.Str(row["key"]), v.Str(row["english"]))

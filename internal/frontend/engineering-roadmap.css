@@ -81,17 +81,20 @@
 .eng-materials thead th{font-weight:500;color:var(--muted)}
 .eng-materials tbody th{font-weight:500}
 .eng-materials .eng-shortage{color:var(--warn);font-weight:650}
-.eng-material-link{display:inline-flex;align-items:center;gap:5px;text-align:left;color:inherit}
-.eng-material-link:hover{text-decoration:underline}
-.eng-material-link .icon{width:12px;height:12px;flex:none}
+.eng-entity-link{display:inline-flex;align-items:center;gap:6px;text-align:left;color:inherit;font:inherit}
+.eng-entity-link:hover{text-decoration:underline}
+.eng-entity-link .icon{width:13px;height:13px;flex:none;color:var(--muted)}
+.eng-exchange{padding:17px 20px;margin-bottom:16px}
+.eng-exchange h2{font-size:15px;margin:0 0 8px}
+.eng-exchange p{margin:0 0 8px}
+.eng-exchange-scroll{max-height:18rem;overflow:auto}
+.eng-exchange th,.eng-exchange td{font-variant-numeric:tabular-nums}
 .eng-recipe,.eng-message{padding:14px 16px}
 .eng-recipe-heading{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px 20px}
 .eng-recipe-heading h2{margin-top:3px}
 .eng-recipe-heading p,.eng-observed,.eng-note,.eng-message p{margin:7px 0;color:var(--muted);font-size:13px;line-height:1.5}
 .eng-note{color:var(--warn)}
 .eng-recipe-notes{padding-left:18px;margin:7px 0;color:var(--muted);font-size:13px;line-height:1.55}
-.eng-reference-links{display:flex;flex-wrap:wrap;gap:5px}
-.eng-reference-links>.pill{padding:4px 6px}
 .eng-recipe-heading strong,.eng-observed strong{color:var(--text)}
 .eng-currencies{padding:7px 0;font-size:13px}
 .eng-currencies span{color:var(--muted);margin-right:5px}

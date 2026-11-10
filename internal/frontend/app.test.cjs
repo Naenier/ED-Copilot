@@ -409,11 +409,25 @@ test('statistics does not prompt to reset a period and engineering empty prompts
   api.C.actions = [{ id: 'stats.reset', title: 'Новый период учёта', fields: [] }];
   assert.match(api.renderEmptyState(), /Торговых сделок пока нет/);
   assert.doesNotMatch(api.renderEmptyState(), /data-action-id=/);
-  api.C.tab = 'engineering'; api.C.mode = 'Обмен'; api.C.actions = [{ id: 'engineering.trade', title: 'Рассчитать обмен', fields: [] }];
-  api.C.page={Rows:[],Columns:[],Modes:['Обмен']};
+  api.C.tab = 'engineering'; api.C.mode = 'Материалы'; api.C.actions = [{ id: 'engineering.trade', title: 'Рассчитать обмен', fields: [] }];
+  api.C.page={Rows:[],Columns:[],Modes:['Материалы']};
   assert.equal((api.renderGeneral().match(/data-action-id="engineering.trade"/g)||[]).length,1);
   assert.doesNotMatch(api.renderEmptyState(), /Добавьте улучшение/);
   api.C.mode = 'Материалы'; assert.doesNotMatch(api.renderEmptyState(),/data-mode="План"/);
+});
+
+test('materials display the exchange result and inventory links together with one calculator action', () => {
+  const {api}=fixture();
+  api.C.tab='engineering'; api.C.mode='Материалы'; api.C.inspector=false;
+  api.C.page={Title:'Материалы',Columns:['Материал'],Rows:[{ID:'carbon',Data:{key:'carbon'},Cells:['Углерод']}],Modes:['Материалы']};
+  api.C.state.engineeringTrade={targetKey:'carbon',targetName:'Углерод',targetAmount:10,offers:[{fromKey:'yttrium',fromName:'Иттрий',requiredFrom:1,available:4,received:27,affordable:true,storageFits:true}]};
+  api.C.actions=[{id:'engineering.trade',title:'Рассчитать обмен',fields:[]}];
+  const html=api.renderGeneral();
+  assert.equal((html.match(/data-action-id="engineering.trade"/g)||[]).length,1);
+  assert.match(html,/Результат обмена/);
+  assert.match(html,/data-reference-id="material\/yttrium"/);
+  assert.match(html,/data-row="carbon"/);
+  assert.doesNotMatch(html,/data-mode="Обмен"/);
 });
 
 

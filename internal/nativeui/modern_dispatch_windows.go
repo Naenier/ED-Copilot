@@ -21,6 +21,9 @@ import (
 // methods, API keys and arbitrary filesystem paths are not exposed to scripts.
 func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	tab, mode, query := v.Text(input["tab"], "overview"), v.Str(input["mode"]), v.Str(input["query"])
+	if tab == "engineering" {
+		mode = p.EngineeringMode(mode)
+	}
 	valid := false
 	for _, t := range p.Tabs {
 		if t.ID == tab {
@@ -80,6 +83,11 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/trading/search", v.Obj(input["values"]))
 	case "reference.markets":
 		return v.Obj(snapshotForWeb(backend, "reference")["trading"]), nil
+	case "galaxy.system", "galaxy.nearby":
+		if provider, ok := backend.(interface{ Galaxy(string, M) M }); ok {
+			return provider.Galaxy(op, input), nil
+		}
+		return M{"status": "disabled"}, nil
 	case "reference.list":
 		if input["category"] == "exobiology" {
 			limit := v.Int(input["limit"])
@@ -153,7 +161,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	}
 	if op == "view" && (tab == "encyclopedia" || (tab == "engineering" || tab == "targets") && mode == "Инженеры") {
 		state := snapshotForWeb(backend, "reference")
-		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты", "Экзобиология"}
+		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты", "Системы", "Экзобиология"}
 		if tab == "engineering" {
 			modes = p.EngineeringModes()
 		}
@@ -218,7 +226,11 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	actions := p.CoreActions(tab, mode, state, selected, v.Obj(input["prefill"]))
 	switch op {
 	case "view":
-		return M{"page": page, "actions": webActions(actions), "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}, nil
+		viewState := webState(state)
+		if tab == "engineering" && p.EngineeringMaterialMode(mode) {
+			viewState["engineeringTrade"] = v.Copy(v.Obj(v.At(state, "engineering", "trader")))
+		}
+		return M{"page": page, "actions": webActions(actions), "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}, nil
 	case "action":
 		if strings.HasPrefix(v.Str(input["actionId"]), "goal.") {
 			if expected, present := input["planWorkspace"]; present && expected != v.Str(v.At(state, "planWorkspace", "key")) {
@@ -266,12 +278,6 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 				return M{"export": a.Path, "projectId": a.Payload["projectId"]}, nil
 			case "folder", "import-plan":
 				return M{"native": a.Kind}, nil
-			case "engineering-trade":
-				result, e := backend.Do(a.Path, body)
-				if e != nil {
-					return nil, e
-				}
-				return v.Merge(v.Copy(result), M{"navigate": "engineering", "mode": "Обмен"}), nil
 			case "theme-import":
 				result, e := backend.Do(a.Path, body)
 				if e != nil {

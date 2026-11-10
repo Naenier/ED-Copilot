@@ -96,21 +96,21 @@ func TestWebBridgeNavigationHintsAndReadableDetails(t *testing.T) {
 	if err != nil || result["navigate"] != "engineering" || result["mode"] != "План" {
 		t.Fatal("lost navigation mode", result, err)
 	}
-	view, err := dispatchWeb(engine, "view", M{"tab": "engineering", "mode": "Материалы"})
+	view, err := dispatchWeb(engine, "view", M{"tab": "engineering", "mode": "Обмен"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	page := view["page"].(p.Page)
-	if len(page.Rows) == 0 {
+	if len(page.Rows) == 0 || v.At(view, "context", "mode") != p.EngineeringMaterials {
 		t.Fatal("no engineering materials")
 	}
-	selected := page.Rows[0].ID
-	result, err = dispatchWeb(engine, "action", M{"tab": "engineering", "mode": "Материалы", "selected": selected, "actionId": "engineering.material-trade"})
-	if err != nil || result["navigate"] != "engineering" || result["mode"] != "Обмен" {
-		t.Fatal("exchange navigation", result, err)
+	result, err = dispatchWeb(engine, "action", M{"tab": "engineering", "mode": "Материалы", "actionId": "engineering.trade", "values": M{"tradeTargetKey": "carbon", "tradeTargetAmount": 10, "showAllTrades": true}})
+	if err != nil || result["navigate"] != nil {
+		t.Fatal("exchange unexpectedly left the materials page", result, err)
 	}
-	if v.Str(v.At(engine.Snapshot(), "engineering", "options", "tradeTargetKey")) == "" {
-		t.Fatal("exchange target was not configured")
+	view, err = dispatchWeb(engine, "view", M{"tab": "engineering", "mode": "Материалы"})
+	if err != nil || v.At(view, "state", "engineeringTrade", "targetKey") != "carbon" || len(v.Rows(v.At(view, "state", "engineeringTrade", "offers"))) == 0 {
+		t.Fatal("exchange results were not loaded with inventory", err)
 	}
 	for _, tab := range p.Tabs {
 		candidate, err := dispatchWeb(engine, "view", M{"tab": tab.ID})

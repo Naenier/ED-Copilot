@@ -80,10 +80,18 @@ func TestEngineeringMaterialFiltersAndDirectExchange(t *testing.T) {
 		}
 	}
 	selected := Build("engineering", "Данные плана", "", s).Rows[0].Data
-	a := coreAction(t, "engineering", "Данные плана", "engineering.material-trade", s, selected, nil)
-	body, err := a.Body(nil)
-	if err != nil || a.Kind != "engineering-trade" || a.Disabled || body["tradeTargetKey"] != selected["key"] || v.Num(body["tradeTargetAmount"]) != 1 {
-		t.Fatal("quick exchange missing material/quantity", a, body, err)
+	a := coreAction(t, "engineering", "Данные плана", "engineering.trade", s, selected, nil)
+	if a.Disabled || len(a.Fields) < 2 || a.Fields[0].Default != selected["key"] || v.Num(a.Fields[1].Default) != 1 {
+		t.Fatal("exchange form missing selected material and quantity", a)
+	}
+	for _, item := range a.Fields[0].Choices {
+		if item.Value == "guardianpowercell" || item.Value == "mercenarycoin" {
+			t.Fatal("special material offered for exchange", item)
+		}
+	}
+	body, err := a.Body(M{"tradeTargetKey": a.Fields[0].Default, "tradeTargetAmount": a.Fields[1].Default})
+	if err != nil {
+		t.Fatal(err)
 	}
 	planner := engineering.New(nil)
 	if err = planner.Update(body); err != nil {
@@ -92,8 +100,8 @@ func TestEngineeringMaterialFiltersAndDirectExchange(t *testing.T) {
 	if v.At(planner.Snapshot(nil), "trader", "targetKey") != selected["key"] {
 		t.Fatal("exchange target did not update domain")
 	}
-	if !coreAction(t, "engineering", "Материалы", "engineering.material-trade", s, nil, nil).Disabled {
-		t.Fatal("exchange enabled without material")
+	if coreAction(t, "engineering", "Материалы", "engineering.trade", s, nil, nil).Disabled {
+		t.Fatal("exchange form cannot pick a target without a selected row")
 	}
 	copy := coreAction(t, "engineering", "Материалы плана", "engineering.copy-shopping", s, nil, nil)
 	if copy.Kind != "copy" || copy.Disabled || !strings.Contains(copy.Path, v.Str(selected["name"])) {

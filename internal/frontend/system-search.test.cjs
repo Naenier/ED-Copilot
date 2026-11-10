@@ -91,6 +91,16 @@ test('repeated init binds once, popup follows lifecycle, and unrelated fields cr
  const f=fixture();f.controller.bind();assert.equal(f.listeners.get('input').length,1);const node=f.input('Station',{name:'station'});assert.equal(f.controller.focus({target:node}),false);await f.tick();assert.equal(f.calls.length,0);
  const system=f.input('Sol');f.controller.focus({target:system});await f.tick();f.controller.close();assert.equal(f.controller.inspect().popup.hidden,true);
 });
+test('provider label follows EDSM fallback and an overbroad response asks the user to refine',async()=>{
+ const f=fixture(),node=f.input('Specific System');
+ f.setRPC(r=>({...r,source:'EDSM',status:'ready',suggestions:[{name:'Specific System'}]}));
+ f.controller.focus({target:node});await f.tick();
+ assert.match(f.controller.inspect().popup.innerHTML,/>EDSM</);assert.doesNotMatch(f.controller.inspect().popup.innerHTML,/>Spansh</);
+ f.setRPC(r=>({...r,source:'EDSM',status:'empty',limited:true,suggestions:[]}));
+ f.controller.schedule(node,true);await f.tick(0);
+ assert.match(f.controller.inspect().popup.innerHTML,/Уточните название системы/);
+ assert.doesNotMatch(f.controller.inspect().popup.innerHTML,/Подходящая система не найдена/);
+});
 test('a reloaded frontend uses a new request scope rather than inheriting backend cancellation high-water marks',async()=>{
  const first=fixture(),second=fixture();
  first.controller.focus({target:first.input('Sol')});second.controller.focus({target:second.input('Sol')});

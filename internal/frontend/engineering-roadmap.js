@@ -123,7 +123,7 @@ function materials(C,u,rows,{stock=true,combined=false}={}) {
   <th scope="col">${tr(u,"Материал")}</th>${combined?'':`<th scope="col">${tr(u,"Требуется")}</th>`}
   ${showDonated?`<th scope="col">${tr(u,"Передано")}</th>`:''}
   ${stock?`<th scope="col">${tr(u,"В наличии")}</th>${combined?'':`<th scope="col">${tr(u,"Не хватает")}</th>`}`:''}</tr></thead>
-  <tbody>${rows.map(row=>`<tr><th scope="row">${row.entryId ? `<button type="button" class="eng-material-link" data-engineering-action="open-material" data-entry-id="${u.esc(row.entryId)}">${u.esc(label(row,C,u))}${u.icon('arrow-up-right')}</button>` : u.esc(label(row,C,u))}</th>${combined?'':`<td>${number(row.count,u)}</td>`}
+  <tbody>${rows.map(row=>`<tr><th scope="row">${referenceLink(row.entryId,label(row,C,u),u)}</th>${combined?'':`<td>${number(row.count,u)}</td>`}
     ${showDonated?`<td>${number(row.donated,u)}</td>`:''}${stock?`<td>${number(row.owned,u)}</td>${combined?'':`<td class="${Number(row.missing)>0?'eng-shortage':''}">${number(row.missing,u)}</td>`}`:''}</tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -131,6 +131,14 @@ function location(row,u) {
   if (!row?.system && !row?.base) return '';
   return `<div class="eng-location">${u.icon('map-pin')}<span>${u.esc([row.system,row.base].filter(Boolean).join(' · '))}</span>
   ${row.system ? `<button type="button" class="icon-button" data-click="table-copy-system" data-system="${u.esc(row.system)}" aria-label="${tr(u,"Копировать систему ")}${u.esc(row.system)}" title="${tr(u,"Копировать систему")}">${u.icon('copy')}</button>` : ''}</div>`;
+}
+
+function entityLink(kind,key,name,u) {
+  return referenceLink(key ? `${kind}/${key}` : '',name,u);
+}
+
+function referenceLink(id,name,u) {
+  return id ? `<button type="button" class="eng-entity-link" data-reference-id="${u.esc(id)}">${u.esc(name)}${u.icon('arrow-up-right')}</button>` : u.esc(name);
 }
 
 function stepText(step,C,u) {
@@ -154,7 +162,7 @@ function stepDetails(C,u,step,row) {
     ${step.status&&step.status!=='pending'?statusTag(step.status,u):''}
     ${counted?`<span class="eng-step-counter">${number(step.current,u)} / ${number(step.target,u)}</span>`:''}
   </div><p>${u.esc(content)}</p>
-  ${prerequisite?`<div class="eng-step-location"><strong>${u.esc(prerequisite)}</strong>${location({system:step.engineerSystem,base:step.engineerBase},u)}</div>`:''}
+  ${prerequisite?`<div class="eng-step-location"><strong>${entityLink('engineer',step.engineerKey,prerequisite,u)}</strong>${location({system:step.engineerSystem,base:step.engineerBase},u)}</div>`:''}
   ${step.combined&&isKnown(step.target)?`<p class="eng-observed">${tr(u,"Всего передать: {count}",{count:number(step.target,u)})}${isKnown(step.missing)?' · '+tr(u,"Ещё собрать: {count}",{count:number(step.missing,u)}):''}</p>`:''}
   ${materials(C,u,step.items,{combined:step.combined===true})}
   ${reputation.length?`<ul class="eng-rank-methods">${reputation.map(item=>`<li>${u.esc(label(item,C,u,'text'))}</li>`).join('')}</ul>`:''}
@@ -193,7 +201,7 @@ function engineerCard(C,u,row,index) {
   const rank=kindOf(row)==='ship'&&Number(row.rank)>0?'G'+number(row.rank,u)+(Number(row.rank)<5&&isKnown(row.progress)?' · '+number(row.progress,u)+' %':''):'';
   return `<article class="eng-card" data-engineering-card="${u.esc(id)}">
   <div class="eng-card-top"><span class="eng-order" aria-hidden="true">${u.fmt(index+1)}</span>
-  <div><h3>${u.esc(label(row,C,u))}</h3>${location(row,u)}</div>
+  <div><h3>${entityLink('engineer',id,label(row,C,u),u)}</h3>${location(row,u)}</div>
   <div class="eng-card-badges">${row.dependency?`<span class="eng-status neutral">${tr(u,"Предшественник")}</span>`:''}${rank?`<span class="eng-status neutral">${u.esc(rank)}</span>`:''}${statusTag(row.status,u)}</div></div>
   ${first?`<p class="eng-next" data-engineering-preview ${open?'hidden':''}>${u.esc(stepText(first,C,u))}</p>`:''}
   ${steps.length ? `<details class="eng-engineer-steps" data-engineering-disclosure="steps" ${open?'open':''}>
@@ -228,8 +236,8 @@ function recipe(C,u,row,options) {
   const option=(rows,key)=>array(rows).find(item=>keyOf(item)===key);
   const ship=kindOf(row)==='ship', description=label(row,C,u,'description','descriptionEnglish');
   const names = [
-    label(option(options.modules,row.moduleKey),C,u) || row.moduleKey,
-    blueprintLabel(option(options.blueprints,row.blueprintKey),C,u) || row.blueprintKey,
+    entityLink('module',ship?row.moduleKey:'',label(option(options.modules,row.moduleKey),C,u)||row.moduleKey,u),
+    entityLink('blueprint',row.blueprintKey,blueprintLabel(option(options.blueprints,row.blueprintKey),C,u)||row.blueprintKey,u),
     ship&&Number(row.grade)>0?'G'+number(row.grade,u):''
   ].filter(Boolean);
   const effect=label(option(options.experimentals,row.experimentalKey),C,u);
@@ -241,14 +249,13 @@ function recipe(C,u,row,options) {
   const notes=array(row.conditions).filter(id=>conditions[id]);
   const equipmentGrades=array(row.equipmentGrades);
   return `<section class="eng-recipe" aria-label="${tr(u,"Расчёт улучшения")}">
-    <div class="eng-recipe-heading"><div><span class="eyebrow">${tr(u,"Расчёт улучшения")}</span><h2>${u.esc(names.join(' · '))}</h2>${effect?`<p>${u.esc(effect)} ${row.experimentalStatus==='done'?statusTag('done',u):''}</p>`:''}</div>
-    ${engineer?`<div><strong>${u.esc(label(engineer,C,u))}</strong>${location(engineer,u)}</div>`:''}</div>
+    <div class="eng-recipe-heading"><div><span class="eyebrow">${tr(u,"Расчёт улучшения")}</span><h2>${names.join(' · ')}</h2>${effect?`<p>${entityLink('experimental',row.experimentalKey,effect,u)} ${row.experimentalStatus==='done'?statusTag('done',u):''}</p>`:''}</div>
+    ${engineer?`<div><strong>${entityLink('engineer',engineer.key,label(engineer,C,u),u)}</strong>${location(engineer,u)}</div>`:''}</div>
     ${description?`<p class="eng-observed">${u.esc(description)}</p>`:''}
     ${effectDescription?`<p class="eng-observed">${u.esc(effectDescription)}</p>`:''}
-    ${row.current&&Number(row.current.grade)>0&&!row.current.planned?`<p class="eng-observed">${tr(u,"Установленная ступень")} <strong>G${number(row.current.grade,u)}</strong>${isKnown(row.current.quality)?` · ${number(Math.round(Number(row.current.quality)<=1?Number(row.current.quality)*100:Number(row.current.quality)),u)} %`:''}${installedBlueprint?' · '+u.esc(installedBlueprint):''}${installedBy?' · '+u.esc(installedBy):''}</p>`:''}
+    ${row.current&&Number(row.current.grade)>0&&!row.current.planned?`<p class="eng-observed">${tr(u,"Установленная ступень")} <strong>G${number(row.current.grade,u)}</strong>${isKnown(row.current.quality)?` · ${number(Math.round(Number(row.current.quality)<=1?Number(row.current.quality)*100:Number(row.current.quality)),u)} %`:''}${installedBlueprint?' · '+entityLink('blueprint',row.current.blueprintKey,installedBlueprint,u):''}${installedBy?' · '+entityLink('engineer',row.current.engineerKey,installedBy,u):''}</p>`:''}
     ${row.confidence&&row.confidence!=='exact'?`<p class="eng-note">${confidenceText(row.confidence,u)}</p>`:''}
     ${notes.length?`<ul class="eng-recipe-notes">${notes.map(id=>`<li>${tr(u,conditions[id])}</li>`).join('')}</ul>`:''}
-    ${ship&&(row.blueprintKey||row.experimentalKey)?`<div class="eng-reference-links">${row.blueprintKey?`<button type="button" class="pill quiet" data-reference-id="blueprint/${u.esc(row.blueprintKey)}">${tr(u,"Свойства чертежа")}</button>`:''}${row.experimentalKey?`<button type="button" class="pill quiet" data-reference-id="experimental/${u.esc(row.experimentalKey)}">${tr(u,"Свойства эффекта")}</button>`:''}</div>`:''}
     ${stock.length?materials(C,u,stock):''}
     ${row.currencies?.length?`<div class="eng-currencies"><span>${tr(u,"Валюта")}</span> ${row.currencies.map(item=>u.esc(label(item,C,u))+' × '+number(item.count,u)).join(' · ')}</div>`:''}
     ${isKnown(currency)&&Number(currency)>0?`<p class="eng-observed">${tr(u,"Кредиты")} <strong>${number(currency,u)}</strong></p>`:''}
@@ -380,7 +387,7 @@ function change(event,C,u) {
   }
 }
 
-async function activate(event,C,u) {
+function activate(event,C,u) {
   const button=event.target.closest?.('[data-engineering-action]');
   if (!button || button.disabled) return;
   const r=model(C),data=button.dataset;
@@ -388,12 +395,6 @@ async function activate(event,C,u) {
     case 'retry': fetchPlan(C,u,true);break;
     case 'clear-engineers': applyFilters(C,u,{engineerIDs:[]});break;
     case 'more': r.visible+=pageSize;paint(C,u);break;
-    case 'open-material':
-      if (data.entryId?.startsWith('material/') && window.ReferenceUI) {
-        await u.navigate('encyclopedia',{referenceCategory:'materials'});
-        await window.ReferenceUI.open(data.entryId,C,u);
-      }
-      break;
     case 'select-blueprint':
       applyFilters(C,u,{engineerIDs:data.engineer?[data.engineer]:[],moduleKey:data.module,blueprintKey:data.blueprint,grade:0,experimentalKey:'',equipmentKey:''});
       document.getElementById('eng-roadmap-moduleKey')?.focus();

@@ -1,5 +1,4 @@
-// Package systems supplies a bounded, ephemeral autocomplete over the public
-// Spansh name endpoint. It never downloads or persists a galaxy catalogue.
+// Package systems supplies bounded autocomplete using the Spansh and EDSM APIs.
 package systems
 
 import (
@@ -31,6 +30,7 @@ const (
 type Options struct {
 	HTTPClient  *http.Client
 	Endpoint    string
+	EDSM        EDSMSource
 	Now         func() time.Time
 	MinInterval time.Duration // Zero selects 400ms; negative disables spacing for tests.
 	TTL         time.Duration
@@ -86,6 +86,7 @@ type cached struct {
 type Client struct {
 	mu                        sync.Mutex
 	http                      *http.Client
+	edsm                      EDSMSource
 	endpoint                  string
 	now                       func() time.Time
 	spacing, ttl              time.Duration
@@ -125,7 +126,7 @@ func NewClient(o Options) *Client {
 	if o.CacheSize > 512 {
 		o.CacheSize = 512
 	}
-	return &Client{http: &copyHTTP, endpoint: o.Endpoint, now: o.Now, spacing: o.MinInterval, ttl: o.TTL, capacity: o.CacheSize, cache: map[string]*list.Element{}, lru: list.New(), scopes: map[string]*scope{}, gate: make(chan struct{}, 1)}
+	return &Client{http: &copyHTTP, edsm: o.EDSM, endpoint: o.Endpoint, now: o.Now, spacing: o.MinInterval, ttl: o.TTL, capacity: o.CacheSize, cache: map[string]*list.Element{}, lru: list.New(), scopes: map[string]*scope{}, gate: make(chan struct{}, 1)}
 }
 
 func normalize(q string) string { return strings.Join(strings.Fields(q), " ") }
@@ -318,8 +319,13 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 	}
 	deadline, cancel := context.WithTimeout(child, 8*time.Second)
 	defer cancel()
+	spanshBudget := 8 * time.Second
+	if c.edsm != nil {
+		spanshBudget = 5 * time.Second
+	}
+	spansh, cancelSpansh := context.WithTimeout(deadline, spanshBudget)
 	var names []Suggestion
-	names, result.Limited, err = c.fetch(deadline, result.Query)
+	names, result.Limited, err = c.fetch(spansh, result.Query)
 	if err == nil {
 		result.Suggestions = relevant(names, result.Query, false)
 		// A known spelling correction is only a lookup hint. The selected
@@ -327,11 +333,18 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 		if len(result.Suggestions) == 0 && correctionQuery(result.Query) != "" {
 			var extra []Suggestion
 			var capped bool
-			extra, capped, err = c.fetch(deadline, correctionQuery(result.Query))
+			extra, capped, err = c.fetch(spansh, correctionQuery(result.Query))
 			result.Limited = result.Limited || capped
 			if err == nil {
 				result.Suggestions = relevant(extra, result.Query, true)
 			}
+		}
+	}
+	cancelSpansh()
+	if err != nil || !hasPrefixMatch(result.Suggestions, result.Query) {
+		if alternative, found := c.edsmFallback(deadline, result); found {
+			c.putCached(result.Query, alternative)
+			return alternative, nil
 		}
 	}
 	if err != nil {

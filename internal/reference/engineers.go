@@ -18,8 +18,10 @@ func (s *Store) buildEngineers(engineers, mods []v.M, bps map[string]v.M) {
 	}
 	personalRecipes := map[string][]Item{}
 	for _, recipe := range v.Rows(catalogue["odysseyRecipes"]) {
+		recipeID := odysseyBlueprintID(recipe)
+		title, englishTitle := odysseyRecipeVariant(recipe)
 		for _, key := range stringArray(recipe["engineerKeys"]) {
-			personalRecipes[key] = append(personalRecipes[key], Item{Title: v.Str(recipe["name"]), EnglishTitle: v.Str(recipe["english"]), Text: v.Str(recipe["description"]), EnglishText: v.Str(recipe["descriptionEnglish"])})
+			personalRecipes[key] = append(personalRecipes[key], Item{Title: v.Str(recipe["name"]), EnglishTitle: v.Str(recipe["english"]), Text: title, EnglishText: englishTitle, EntryID: recipeID})
 		}
 	}
 	facts := map[string]v.M{}
@@ -73,8 +75,14 @@ func (s *Store) buildEngineers(engineers, mods []v.M, bps map[string]v.M) {
 		e := Entry{ID: "engineer/" + key, Category: "engineers", Group: group, Title: v.Str(raw["name"]), Subtitle: english, Description: description,
 			Properties: []Property{{Label: "Система", Value: system, EntryID: SystemID(system)}, {Label: "База", Value: base}, {Label: "Специализация", Value: "Корабельные модули"}}, Badges: []Badge{{Label: "Корабельный инженер"}}, Actions: engineerActions(key, system),
 			Sections: []Section{{ID: "unlock", Title: "Как получить доступ", Type: "requirements", Items: engineerRequirements(f, verified)},
-				{ID: "modifications", Title: "Чертежи и максимальные классы", Type: "table", Columns: []string{"Модуль", "Чертёж", "Максимум"}, Rows: rows, CellLinks: links},
-				{ID: "workshop", Title: "Работа с инженером", Type: "requirements", Items: []Item{{Title: "Репутация", Text: "Выполняйте модификации у инженера, чтобы открывать более высокие классы. Материалы за каждый ролл списываются отдельно."}, {Title: "Закреплённый чертёж", Text: "Можно закрепить один чертёж этого инженера для удалённой мастерской. Удалённая модификация не повышает репутацию у инженера."}, {Title: "Экспериментальный эффект", Text: "Для установки эффекта посетите совместимого инженера лично. Эффект требует отдельного рецепта материалов."}}}}}
+				{ID: "modifications", Title: "Чертежи и максимальные классы", Type: "table", Columns: []string{"Модуль", "Чертёж", "Максимум"}, Rows: rows, CellLinks: links}}}
+		reputation := Section{ID: "workshop", Title: "Как повысить доступ", EnglishTitle: "Raising workshop access", Type: "prose"}
+		for _, method := range v.Rows(verified["reputation"]) {
+			reputation.Items = append(reputation.Items, Item{Title: v.Str(method["text"]), EnglishTitle: v.Str(method["english"])})
+		}
+		if len(reputation.Items) != 0 {
+			e.Sections = append(e.Sections, reputation)
+		}
 		r := s.add(e, strings.Join(unique(modules), " "))
 		r.imageKey = "engineer-" + engineerImages[key]
 		r.relatedIDs = append(related, stringArray(f["related"])...)
@@ -93,7 +101,7 @@ func (s *Store) buildEngineers(engineers, mods []v.M, bps map[string]v.M) {
 		}
 		e := Entry{ID: "engineer/" + key, Category: "engineers", Group: v.Text(f["group"], "engineer-odyssey"), Title: v.Str(f["name"]), Subtitle: v.Str(f["english"]), Description: v.Str(f["description"]),
 			Properties: []Property{{Label: "Система", Value: system, EntryID: SystemID(system)}, {Label: "База", Value: base}, {Label: "Специализация", Value: "Костюмы и личное оружие"}}, Badges: []Badge{{Label: "Odyssey"}}, Actions: engineerActions(key, system),
-			Sections: []Section{{ID: "unlock", Title: "Открытие и рекомендация", Type: "requirements", Items: engineerRequirements(f, verified)}, {ID: "modifications", Title: "Модификации личного снаряжения", Type: "requirements", Items: modifications}, {ID: "workshop", Title: "Перед установкой", Type: "prose", Paragraphs: []string{"Модификации занимают открытые слоты костюма или оружия. Повышение класса снаряжения и установка модификаций — разные операции.", "Планируйте набор модификаций заранее: установленную модификацию личного снаряжения нельзя просто снять и заменить. Условия рекомендации следующему инженеру выполняются отдельно от открытия услуг текущего."}}}}
+			Sections: []Section{{ID: "unlock", Title: "Открытие и рекомендация", Type: "requirements", Items: engineerRequirements(f, verified)}, {ID: "modifications", Title: "Модификации личного снаряжения", Type: "requirements", Items: modifications}}}
 		r := s.add(e)
 		if image := v.Str(f["image"]); image != "" {
 			r.imageKey = "engineer-" + image
@@ -119,7 +127,11 @@ func engineerRequirements(f, verified v.M) []Item {
 		labels := map[string]string{"referral": "Узнать об инженере", "invitation": "Получить приглашение", "permit": "Получить разрешение", "unlock": "Открыть мастерскую"}
 		for _, requirement := range v.Rows(verified["requirements"]) {
 			if text := v.Str(requirement["text"]); text != "" {
-				out = append(out, Item{Title: v.Text(labels[v.Str(requirement["kind"])], "Условия доступа"), Text: text, EnglishText: v.Str(requirement["english"])})
+				item := Item{Title: v.Text(labels[v.Str(requirement["kind"])], "Условия доступа"), Text: text, EnglishText: v.Str(requirement["english"])}
+				if key := v.Str(requirement["engineerKey"]); key != "" {
+					item.EntryID = "engineer/" + key
+				}
+				out = append(out, item)
 			}
 		}
 		return out

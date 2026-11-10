@@ -205,6 +205,25 @@ test('untrusted entity text is escaped, external source text is omitted and only
   assert.doesNotMatch(html, /<script>|<img src=x|javascript:|https:\/\/|Не показывать|Скрытые ссылки|sourceURLs/);
 });
 
+test('internal material routes remain visible and open the linked article', async () => {
+  const f=fixture();
+  f.setRPC(async (_op,params) => ({entry:params.id==='material/arsenic'?{
+    id:params.id,category:'materials',title:'Мышьяк',sections:[
+      {id:'collection',type:'route',title:'Источники добычи',items:[{title:'На поверхности',text:'Проверьте посадочную точку'}]},
+      {id:'farming',type:'links',title:'Где найти материал',items:[{title:'Маршрут по HIP 29560',entryId:'article/farm-raw-nearby'}]},
+      {id:'external',type:'links',title:'Чужие ссылки',items:[{title:'Скрыть',url:'https://example.com'}]},
+    ],
+  }:{id:params.id,category:'articles',title:'Маршрут по HIP 29560',sections:[]}}));
+  await f.api.open('material/arsenic',f.C,f.ui);
+  const html=f.api.render(f.C,f.ui);
+  assert.match(html,/Источники добычи/);
+  assert.match(html,/data-id="article\/farm-raw-nearby"/);
+  assert.doesNotMatch(html,/Чужие ссылки|example\.com/);
+  await f.api.handleClick('reference-open',{dataset:{id:'article/farm-raw-nearby'}},f.C,f.ui);
+  assert.equal(f.calls.at(-1).params.id,'article/farm-raw-nearby');
+  assert.match(f.api.render(f.C,f.ui),/data-entry-id="article\/farm-raw-nearby"/);
+});
+
 test('grouped blueprint pages expose complete grade recipes with material and effect links', async () => {
   const f = fixture();
   f.setRPC(async () => ({ entry: { id: 'blueprint/long-range', category: 'blueprints', title: 'Увеличенная дальность', sections: [

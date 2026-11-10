@@ -31,7 +31,9 @@ Your avatar opens **Commander**: summary, ranks, finances, inventory, property, 
 
 ## Star system search
 
-Spansh suggestions are available in star system fields throughout the application. Type three characters, then select a name with the mouse or ↑/↓ and Enter. In multiline route stops, selecting a suggestion replaces only the current line. Results are limited to twenty suggestions, with no local galaxy database required. You can always enter a name manually.
+Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. Nearby results show their provider when the search falls back to Spansh.
+
+Star system fields offer up to twenty suggestions from Spansh and EDSM. Type three characters and select a name with the mouse or ↑/↓ and Enter. In multiline route stops, selecting a suggestion replaces only the current line. You can also enter a name manually.
 
 ## Exobiology
 

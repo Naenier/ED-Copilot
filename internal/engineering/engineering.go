@@ -155,7 +155,7 @@ func TradeOffer(from, to M, wanted int, available, targetOwned any, protected in
 			maxBatches = aff
 		}
 	}
-	r := M{"fromKey": from["key"], "toKey": to["key"], "fromName": from["name"], "toName": to["name"], "category": from["category"], "fromGrade": from["grade"], "toGrade": to["grade"], "sameFamily": from["family"] == to["family"], "cost": cost, "gain": gain, "requested": wanted, "batches": batches, "requiredFrom": batches * cost, "received": batches * gain, "available": available, "protectedCount": protected, "targetSpace": space, "stockKnown": available != nil, "targetStockKnown": targetOwned != nil}
+	r := M{"fromKey": from["key"], "toKey": to["key"], "fromName": from["name"], "fromEnglish": from["english"], "toName": to["name"], "category": from["category"], "fromGrade": from["grade"], "toGrade": to["grade"], "sameFamily": from["family"] == to["family"], "cost": cost, "gain": gain, "requested": wanted, "batches": batches, "requiredFrom": batches * cost, "received": batches * gain, "available": available, "protectedCount": protected, "targetSpace": space, "stockKnown": available != nil, "targetStockKnown": targetOwned != nil}
 	if available != nil {
 		r["affordable"] = v.Int(available) >= batches*cost
 	}
@@ -560,5 +560,5 @@ func (p *Planner) Snapshot(context M) M {
 	for key, value := range p.at {
 		updated[key] = value
 	}
-	return M{"catalog": catalog, "items": items, "materials": rows, "shopping": M{"neededUnits": neededUnits, "missingUnits": missing, "unknownMaterials": unknown, "inventoryKnown": unknown == 0, "complete": unknown == 0 && missingUnits == 0, "knownCategories": known, "updatedAt": updated}, "trader": M{"targetKey": p.options["tradeTargetKey"], "targetName": target["name"], "targetAmount": p.options["tradeTargetAmount"], "protectPlan": p.options["protectPlan"], "showAllTrades": p.options["showAllTrades"], "offers": offers}, "engineers": erows, "engineerSummary": M{"unlocked": unlocked, "total": len(erows)}, "options": v.Copy(p.options), "sources": catalog["sources"]}
+	return M{"catalog": catalog, "items": items, "materials": rows, "shopping": M{"neededUnits": neededUnits, "missingUnits": missing, "unknownMaterials": unknown, "inventoryKnown": unknown == 0, "complete": unknown == 0 && missingUnits == 0, "knownCategories": known, "updatedAt": updated}, "trader": M{"targetKey": p.options["tradeTargetKey"], "targetName": target["name"], "targetEnglish": target["english"], "targetAmount": p.options["tradeTargetAmount"], "protectPlan": p.options["protectPlan"], "showAllTrades": p.options["showAllTrades"], "offers": offers}, "engineers": erows, "engineerSummary": M{"unlocked": unlocked, "total": len(erows)}, "options": v.Copy(p.options), "sources": catalog["sources"]}
 }

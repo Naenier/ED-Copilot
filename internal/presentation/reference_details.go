@@ -25,8 +25,8 @@ func materialName(key any) string {
 
 func materialView(mode string) (category string, planOnly, ok bool) {
 	planOnly = strings.Contains(mode, "плана")
-	switch mode {
-	case "Материалы", "Материалы плана":
+	switch EngineeringMode(mode) {
+	case EngineeringMaterials, "Материалы плана":
 		return "", planOnly, true
 	case "Сырьё", "Сырьё плана":
 		return "raw", planOnly, true

@@ -142,6 +142,8 @@ func (s *Store) build() {
 	s.buildShips()
 	s.buildEngineering()
 	s.buildEngineeringFarming()
+	s.buildOdysseyRecipes()
+	s.linkMaterialRecipes()
 	s.buildCommodities()
 	s.buildSystems()
 	normalizedAliases := map[string]string{}

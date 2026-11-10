@@ -22,8 +22,8 @@ async function run(C,u){
    check(language+': settings appears once in navigation',u.$$('.rail [data-click="settings-nav"]').length===1&&u.$$('.sidebar [data-nav="settings"]').length===0);
    for(const group of window.NavigationUI.groups.filter(x=>x.id!=='commander')){
     const button=u.$('.rail [data-group="'+group.id+'"]');check(language+': group rail button '+group.id,!!button);button.click();
-    await wait(()=>C.group===group.id&&C.page&&window.NavigationUI.groupFor(C.tab)===group.id);
-    const expected=new Set(group.tabs);check(language+': sidebar contains only '+group.id,u.$$('.sidebar [data-nav]').every(node=>expected.has(node.dataset.nav)));
+    await wait(()=>C.group===group.id&&C.page&&window.NavigationUI.groupFor(C.tab,C.mode)===group.id);
+    check(language+': sidebar contains only '+group.id,u.$$('.sidebar [data-nav]').every(node=>window.NavigationUI.groupFor(node.dataset.nav,node.dataset.navMode)===group.id));
    }
    check(language+': status and overlay switch live in the rail',u.$$('#journal-indicator').length===1&&u.$$('.rail [data-click="overlay"]').length===1&&!u.$('#page-toolbar .status'));
    await u.navigate('settings');check(language+': connections are embedded in Settings',!!u.$('#inara-connection-form')&&!!u.$('.connections-settings')&&!window.NavigationUI.groupFor('account'));

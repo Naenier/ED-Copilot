@@ -17,7 +17,7 @@ import (
 
 func TestCatalogCoverage(t *testing.T) {
 	s := Catalog()
-	want := map[string]int{"articles": 115, "ships": 49, "engineers": 38, "modules": 49, "materials": 238, "blueprints": 39, "experimentals": 61, "commodities": 412, "systems": 38}
+	want := map[string]int{"articles": 115, "ships": 49, "engineers": 38, "modules": 49, "materials": 238, "blueprints": 64, "experimentals": 61, "commodities": 412, "systems": 38}
 	for _, category := range s.categories {
 		t.Logf("%s=%d", category.ID, category.Count)
 		if n, ok := want[category.ID]; ok && n != category.Count {

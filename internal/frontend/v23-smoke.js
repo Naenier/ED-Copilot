@@ -108,6 +108,14 @@ async function run(C,u){
   // Use a temporary reader session so an existing library/reading position is
   // not overwritten. Both requests use only the embedded reference catalogue.
   C.referenceSessions={};delete C.reference;
+  await visit('engineering',{mode:'Прокачка'});
+  const engineerLink='.eng-card h3 [data-reference-id^="engineer/"]';
+  const deadline=Date.now()+12000;
+  while(!u.$(engineerLink)&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,25));
+  const engineerName=u.$(engineerLink);
+  check('Прокачка: имя инженера содержит ссылку на его статью',!!engineerName);
+  await u.handleClick('reference-entity',engineerName);await ready();
+  check('Прокачка: ссылка открывает карточку выбранного инженера',C.reference.entry?.id===engineerName.dataset.referenceId);
   await visit('encyclopedia');
   const list=await u.call('reference.list',{category:'engineers',query:'Фарсир',limit:24});
   check('Справочник: встроенный каталог содержит инженера',!!list.entries?.[0]);
@@ -120,6 +128,23 @@ async function run(C,u){
   await click('[data-click="reference-back"]');await ready();
   await u.handleClick('reference-open',u.$('.ref-table [data-click="reference-open"][data-id^="blueprint/"]'));await ready();
   check('Инженер: ссылка чертежа открывает рецепты по уровням',C.reference.entry?.category==='blueprints'&&u.$$('.ref-grade').length>0);
+  await click('.ref-grade [data-click="reference-open"][data-id^="material/"]');await ready();
+  check('Чертёж: ссылка ингредиента открывает карточку материала',C.reference.entry?.category==='materials');
+  await click('[data-reference="entry"] [data-click="reference-open"][data-id^="article/farm-"]');await ready();
+  check('Материал: видимая ссылка открывает маршрут добычи',C.reference.entry?.id?.startsWith('article/farm-')&&!!u.$('.ref-farm-route'));
+
+  await visit('encyclopedia',{mode:'Системы'});
+  check('Галактика: каталог систем открыт через рабочее меню',C.group==='galaxy'&&!!u.$('.galaxy-directory #galaxy-exact-name')&&!!u.$('[data-nav="encyclopedia"][data-nav-mode="Системы"].selected'));
+  const exact=u.$('#galaxy-exact-name');
+  exact.value='Synthetic Galaxy Destination';
+  exact.dispatchEvent(new Event('input',{bubbles:true}));
+  u.$('#galaxy-exact').requestSubmit();
+  await ready();
+  check('Галактика: точный ввод открывает страницу системы',C.reference.entry?.title==='Synthetic Galaxy Destination'&&u.$$('.galaxy-tabs button').length===5);
+  await click('.galaxy-tabs [data-id="bodies"]');
+  check('Галактика: вкладки переключаются с отключённой сетью',u.$('.galaxy-tabs [data-id="bodies"]').getAttribute('aria-pressed')==='true'&&!!u.$('#galaxy-system-panel [role="status"]'));
+  await visit('encyclopedia',{mode:'Системы'});
+  check('Галактика: пункт меню возвращает из карточки в каталог',!!u.$('.galaxy-directory')&&!u.$('.galaxy-reader'));
  }catch(error){failure=error;}
  finally{
   const restore=async(name,work)=>{try{await work();}catch(error){cleanupErrors.push(name+': '+(error.message||error));}};

@@ -87,11 +87,16 @@ func (s *Store) buildEngineeringFarming() {
 			}
 		}
 	}
+	s.addShipMaterialAcquisition()
+	s.addOdysseyMaterialAcquisition()
+	s.addMaterialEngineerUnlocks()
 	for id, r := range s.records {
 		if r.entry.Category == "materials" {
 			routes := unique(append(specific[id], general[id]...))
 			if len(routes) > 0 {
-				r.entry.Sections = append(r.entry.Sections, s.farmingLinks(routes))
+				section := s.farmingLinks(routes)
+				section.Title, section.EnglishTitle = "Маршруты сбора", "Farming routes"
+				r.entry.Sections = append(r.entry.Sections, section)
 			}
 		}
 		if r.entry.Category != "engineers" {

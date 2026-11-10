@@ -7,7 +7,7 @@ const dictionary=JSON.parse(fs.readFileSync(path.join(__dirname,'../localization
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const blueprint={key:'LongRange',name:'Увеличенная дальность',english:'Increased Range',maxGrade:5};
 const moduleChoice={key:'fsd',name:'Рамочно-сдвиговый двигатель',english:'Frame Shift Drive'};
-const material={key:'arsenic',name:'Мышьяк',english:'Arsenic',count:4,owned:0,missing:4};
+const material={key:'arsenic',entryId:'material/arsenic',name:'Мышьяк',english:'Arsenic',count:4,owned:0,missing:4};
 const prerequisite={key:'first',kind:'ship',name:'Первый',english:'First engineer',status:'known',dependency:true,system:'A <System>',base:'Station & Base',
   steps:[{kind:'unlock',status:'pending',text:'Доставьте ресурс',english:'Deliver the commodity',current:0,target:5,items:[{...material,owned:null,missing:null}]}]};
 const engineer={key:'second',kind:'ship',name:'Второй',english:'Second engineer',status:'unlocked',rank:4,
@@ -41,16 +41,19 @@ test('roadmap renders dependency order, workshop links and localized estimated m
   assert.match(html,/Engineer progression/);
   assert.ok(html.indexOf('data-engineering-card="first"')<html.indexOf('data-engineering-card="second"'));
   assert.match(html,/First engineer/);
+  assert.match(html,/data-reference-id="engineer\/first">First engineer/);
+  assert.match(html,/data-reference-id="engineer\/second">Second engineer/);
   assert.match(html,/A &lt;System&gt; · Station &amp; Base/);
   assert.match(html,/data-system="A &lt;System&gt;"/);
   assert.match(html,/Prerequisite/);
   assert.match(html,/Deliver the commodity/);
   assert.match(html,/0 \/ 5/);
-  assert.match(html,/Frame Shift Drive · Increased Range · G5/);
+  assert.match(html,/data-reference-id="module\/fsd">Frame Shift Drive/);
+  assert.match(html,/data-reference-id="blueprint\/LongRange">Increased Range<\/button> · G5/);
   assert.match(html,/applications is estimated/);
   assert.match(html,/Applications: 4/);
-  assert.match(html,/Arsenic<\/th><td>4<\/td>\s*<td>0<\/td><td class="eng-shortage">4/);
-  assert.match(html,/Arsenic<\/th><td>4<\/td>\s*<td>—<\/td>/);
+  assert.match(html,/data-reference-id="material\/arsenic">Arsenic<\/button><\/th><td>4<\/td>\s*<td>0<\/td><td class="eng-shortage">4/);
+  assert.match(html,/Arsenic<\/button><\/th><td>4<\/td>\s*<td>—<\/td>/);
   C.state.settings.language='ru';html=api.render(C,u);
   assert.match(html,/Прокачка инженеров/);
   assert.match(html,/Первый/);

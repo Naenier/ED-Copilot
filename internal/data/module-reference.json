@@ -1,0 +1,1062 @@
+{
+  "am": {
+    "description": "Ремонтирует повреждённые внутренние модули в полёте. В экспедиции обычно нужен для FSD после разгона в струях нейтронных звёзд.",
+    "englishDescription": "Repairs damaged internal modules in flight. Explorers typically use it to restore FSD integrity after neutron-star boosts.",
+    "notes": [
+      {
+        "title": "Ремонт FSD",
+        "englishTitle": "Repairing the FSD",
+        "text": "Выйдите из суперкруиза, затем выберите ремонт FSD в панели модулей. AFMU выключает ремонтируемый модуль, поэтому ремонт двигателя в суперкруизе приведёт к аварийному выходу. Включите FSD после ремонта.",
+        "englishText": "Drop from supercruise before selecting the FSD for repair in the Modules panel. The AFMU powers down the module under repair, so starting an FSD repair in supercruise causes an emergency drop. Re-enable the FSD afterward.",
+        "entryId": "module/fsd"
+      },
+      {
+        "title": "Ремонтный запас",
+        "englishTitle": "Repair supply",
+        "text": "AFMU расходует собственные заряды, которые пополняются синтезом. Модуль может починить повреждённую, ещё герметичную кабину. Для корпуса нужны ремонтные дроны или станция. Силовая установка и сам работающий AFMU не подлежат ремонту этим устройством.",
+        "englishText": "The AFMU uses its own supply, which synthesis can replenish. It can repair a damaged but intact canopy. Hull repairs require a station or repair limpets. The unit cannot repair the power plant or itself."
+      },
+      {
+        "title": "Питание в экспедиции",
+        "englishTitle": "Expedition power",
+        "text": "Модуль можно держать выключенным в пути и включать для ремонта, когда выключен потребитель вроде FSD. Если несёте два AFMU, один может ремонтировать другой.",
+        "englishText": "Keep the unit off while travelling, then turn it on for repairs after shutting down a consumer such as the FSD. Two AFMUs can repair one another."
+      }
+    ]
+  },
+  "bh": {
+    "description": "Переборки задают базовую прочность и сопротивления корпуса. Каждое исполнение покупается для конкретной модели корабля.",
+    "englishDescription": "Bulkheads determine baseline hull integrity and resistances. Each armour variant is sold for a specific ship hull.",
+    "notes": [
+      {
+        "title": "Лёгкий сплав и Heavy Duty",
+        "englishTitle": "Lightweight Alloy and Heavy Duty",
+        "text": "Штатный лёгкий сплав имеет массу 0 т. Heavy Duty с Deep Plating увеличивает прочность корпуса без штрафа к массе этой детали. Для разведчика или перевозчика это способ усилить корпус, сохранив дальность прыжка.",
+        "englishText": "Stock Lightweight Alloy has a mass of 0 t. Heavy Duty with Deep Plating increases hull integrity without a mass penalty on that armour. An explorer or hauler can gain hull strength without shortening jump range.",
+        "entryId": "blueprint/heavy-duty"
+      },
+      {
+        "title": "Военный, зеркальный и реактивный композиты",
+        "englishTitle": "Military, Mirrored and Reactive composites",
+        "text": "Военный композит даёт большой запас корпуса и сохраняет профиль сопротивлений штатных переборок. Зеркальный лучше переносит тепловой урон, но хуже выдерживает кинетический. Реактивный сильнее против кинетического и взрывного урона, но уязвим для теплового.",
+        "englishText": "Military Grade Composite adds substantial hull while retaining the stock resistance profile. Mirrored Surface Composite trades kinetic protection for thermal resistance. Reactive Surface Composite improves kinetic and explosive protection but is vulnerable to thermal damage."
+      },
+      {
+        "title": "Усиление корпуса и модулей",
+        "englishTitle": "Hull and module reinforcement",
+        "text": "Сочетайте переборки с усилителями корпуса для дополнительной прочности или коррекции уязвимости. Защита внутренних модулей от пробитий рассчитывается отдельно. Для неё нужны усилители модулей.",
+        "englishText": "Combine bulkheads with hull reinforcement for more integrity or to offset a weakness. Protection against penetrating hits to internal modules is separate and requires a module reinforcement package.",
+        "entryId": "module/hr"
+      }
+    ]
+  },
+  "bl": {
+    "description": "Непрерывный лазер быстро снимает щит цели при устойчивом наведении, но сильно нагружает WEP и повышает температуру. У обычного 2D fixed луча спад урона начинается на 600 м при предельной дальности 3 км.",
+    "englishDescription": "A continuous beam strips shields quickly with steady aim, but is demanding on WEP and heat. A stock 2D fixed beam starts losing damage at 600 m and reaches 3 km.",
+    "notes": [
+      {
+        "title": "Длительная стрельба",
+        "englishTitle": "Sustained fire",
+        "text": "Efficient уменьшает расход WEP и нагрев, позволяя дольше держать луч. Long Range убирает ранний спад урона, если бой идёт далеко за пределами штатных 600 м.",
+        "englishText": "Efficient reduces WEP draw and heat, keeping the beam on longer. Long Range removes early falloff when fighting well beyond the stock 600 m.",
+        "entryId": "blueprint/efficient"
+      },
+      {
+        "title": "Отвод тепла",
+        "englishTitle": "Thermal Vent",
+        "text": "Охлаждает корабль, пока луч попадает в цель. Прерывайте огонь при потере наведения, поскольку промах вместо охлаждения усиливает нагрев.",
+        "englishText": "Cools the ship while the beam hits a target. Release the trigger when aim is lost because a miss increases heat instead.",
+        "entryId": "experimental/thermal-vent"
+      },
+      {
+        "title": "Плазменная конверсия",
+        "englishTitle": "Plasma Conversion",
+        "text": "Чертёж за Merc Coins переводит часть лазерного урона в плазменный ценой повышенного энергопотребления. Сравните его с обычными рецептами, если хватает мощности и охлаждения.",
+        "englishText": "A Merc Coin blueprint converts some laser damage to plasma at increased power draw. Compare it with standard recipes if the ship has spare power and cooling.",
+        "entryId": "blueprint/plasma-conversion"
+      }
+    ]
+  },
+  "c": {
+    "description": "Кинетическая пушка стреляет отдельными медленными снарядами. Попадание наносит крупный разовый урон и подходит для поражения модулей после снятия щита.",
+    "englishDescription": "A kinetic cannon fires individual slow projectiles. Each hit delivers a large impact and can target modules once shields are down.",
+    "notes": [
+      {
+        "title": "Выбор цели",
+        "englishTitle": "Choosing the target",
+        "text": "Держитесь ближе к маневрирующей цели, следите за маркером упреждения и сводите орудия на выбранной силовой установке. Против малых кораблей с резкими сменами курса многоствольное орудие обычно даёт больше попаданий.",
+        "englishText": "Stay close to evasive ships, follow the lead marker and converge your shots on a selected power plant. Multi-cannons usually land more hits against small ships changing course sharply.",
+        "entryId": "module/mc"
+      },
+      {
+        "title": "Скорость снаряда",
+        "englishTitle": "Projectile speed",
+        "text": "Long Range повышает скорость снаряда и облегчает упреждение. High Yield Shell распределяет внутренний урон по нескольким модулям ценой снижения урона самого попадания.",
+        "englishText": "Long Range increases projectile speed and makes leading easier. High Yield Shell spreads internal damage across multiple modules at the cost of impact damage.",
+        "entryId": "blueprint/long-range"
+      }
+    ]
+  },
+  "cc": {
+    "description": "Подбирает плавающие материалы, груз и фрагменты астероидов. Количество сборщиков ограничивает скорость добычи, если вокруг корабля накапливаются фрагменты.",
+    "englishDescription": "Collects floating materials, cargo and asteroid fragments. Collector count becomes the mining bottleneck when fragments pile up around the ship.",
+    "notes": [
+      {
+        "title": "Автосбор и одна цель",
+        "englishTitle": "Automatic collection and single target",
+        "text": "Запускайте дрон без выбранного фрагмента, чтобы он собирал несколько объектов до истечения срока работы. При запуске на выбранный фрагмент дрон подберёт только этот объект и завершит работу. Откройте грузовой ковш перед подбором.",
+        "englishText": "Launch without a collectible targeted for repeated pickups over the limpet’s lifetime. Launching with a fragment targeted fetches only that item and then expires. Open the cargo scoop before collection."
+      },
+      {
+        "title": "Контроллеры 1, 3, 5 и 7",
+        "englishTitle": "Class 1, 3, 5 and 7 controllers",
+        "text": "Один обычный контроллер этих классов поддерживает соответственно 1, 2, 3 и 4 дрона. Запас дронов занимает трюм, инженерные материалы поступают в отдельный инвентарь, а минеральные фрагменты передаются в очиститель.",
+        "englishText": "One dedicated controller in these classes supports 1, 2, 3 and 4 limpets respectively. Unused limpets occupy cargo space, engineering materials go into material storage, and ore fragments go to the refinery.",
+        "entryId": "module/rf"
+      },
+      {
+        "title": "Где пригодится",
+        "englishTitle": "Where it helps",
+        "text": "В сигнале High Grade Emissions остановитесь рядом с обломками и запустите несколько сборщиков без выбранной цели. В кольце подведите корабль ближе к фрагментам, чтобы сократить полёт дронов и избежать столкновений с астероидом.",
+        "englishText": "At High Grade Emissions, stop near the wreckage and launch several untargeted collectors. In a ring, reduce the distance to fragments to shorten limpet trips and avoid collisions with the asteroid.",
+        "entryId": "article/farm-manufactured-hge"
+      }
+    ]
+  },
+  "ch": {
+    "description": "На короткое время мешает сопровождению цели карданными и турельными орудиями. Неподвижное оружие продолжает стрелять туда, куда наведено.",
+    "englishDescription": "Temporarily disrupts target tracking for gimballed and turreted weapons. Fixed weapons continue firing where aimed.",
+    "notes": [
+      {
+        "title": "Когда выпускать помехи",
+        "englishTitle": "When to deploy chaff",
+        "text": "Запустите ловушки, когда противник уже ведёт огонь или занял позицию для залпа. Если помехи выпускает цель, можно снять захват и стрелять из карданных орудий вручную, когда их сведение подходит.",
+        "englishText": "Fire chaff when the opponent is already shooting or in position for a volley. If the target deploys it, deselect the target and aim gimballed guns manually when their convergence allows."
+      },
+      {
+        "title": "Длинный бой",
+        "englishTitle": "Long engagements",
+        "text": "Проверьте запас SYS и используйте Ammo Capacity, если нескольких вылетов подряд не хватает на штатном боезапасе. Против ракет и торпед нужна отдельная защита.",
+        "englishText": "Keep SYS supplied and use Ammo Capacity if stock ammunition falls short across several engagements. Fit a separate countermeasure for missiles and torpedoes.",
+        "entryId": "blueprint/ammo-capacity"
+      }
+    ]
+  },
+  "cs": {
+    "description": "Сканирует содержимое трюма выбранного корабля, пока цель находится в радиусе и секторе сканирования. Показывает груз до применения дрона взлома.",
+    "englishDescription": "Reads the selected ship’s hold while it remains in the scanner’s range and arc. Lets you inspect cargo before committing a hatch breaker.",
+    "notes": [
+      {
+        "title": "Проверка груза",
+        "englishTitle": "Checking cargo",
+        "text": "Назначьте сканер в группу огня, завершите сканирование и проверьте список товаров в панели цели. Если нужного товара нет, не тратьте дрон. Для подбора после взлома нужны свободный трюм и сборщик.",
+        "englishText": "Assign the scanner to a fire group, complete the scan and inspect the cargo list in the target panel. Save the limpet if the cargo is unsuitable. After extraction you need free hold space and a collector.",
+        "entryId": "module/hb"
+      },
+      {
+        "title": "Быстро уходящие цели",
+        "englishTitle": "Fast-moving targets",
+        "text": "Fast Scan сокращает время захвата. Wide Angle помогает, когда цель уходит с линии носа, и уменьшает рабочую дальность.",
+        "englishText": "Fast Scan cuts the time you must hold the target. Wide Angle helps when the ship moves off your nose and reduces working range.",
+        "entryId": "blueprint/fast-scan"
+      }
+    ]
+  },
+  "csl": {
+    "description": "Поглотитель снимает каустическое загрязнение в контакте с облаками и в среде Титана. Заполненный заряд нужно своевременно сбросить.",
+    "englishDescription": "A caustic sink absorbs contamination from clouds and Titan environments. Eject a saturated sink promptly.",
+    "notes": [
+      {
+        "title": "В каустическом облаке",
+        "englishTitle": "Inside a caustic cloud",
+        "text": "Добавьте установку в группу огня. Следите за индикатором насыщения, сбрасывайте полный заряд и учитывайте запас на обратный путь. Тепловая ловушка решает отдельную задачу охлаждения.",
+        "englishText": "Add the launcher to a fire group. Watch its saturation gauge, eject full sinks and leave spare charges for the return leg. A heat sink is separate equipment for cooling."
+      },
+      {
+        "title": "Подготовка к полёту у Титана",
+        "englishTitle": "Preparing for a Titan approach",
+        "text": "Установку продают на спасательных мегакораблях. Для активного Титана также подготовьте импульсный нейтрализатор и проверьте устойчивость модулей Стражей к его полю.",
+        "englishText": "Rescue megaships sell the launcher. For an active Titan, also prepare a pulse neutraliser and check Guardian equipment for resistance to its field.",
+        "entryId": "article/farm-thargoid-titans"
+      }
+    ]
+  },
+  "ec": {
+    "description": "Выпускает управляемый импульс помех против совместимых ракет, торпед и дронов взлома. Радиус растёт при удержании кнопки и достигает 3 км.",
+    "englishDescription": "Releases a controlled countermeasure pulse against compatible missiles, torpedoes and hatch-breaker limpets. Hold the trigger to increase the radius up to 3 km.",
+    "notes": [
+      {
+        "title": "Управление импульсом",
+        "englishTitle": "Timing the pulse",
+        "text": "Назначьте ECM в отдельную группу. Начните зарядку по предупреждению о боеприпасе и отпустите кнопку, когда цель вошла в радиус. Для повторного применения нужны восстановление и энергия SYS.",
+        "englishText": "Bind ECM separately. Start charging on the incoming ordnance warning and release once it is within the pulse radius. Reusing it requires a cooldown and SYS energy."
+      },
+      {
+        "title": "Защита без отдельной кнопки",
+        "englishTitle": "Hands-off protection",
+        "text": "Против одиночных угроз часто удобнее автоматическая точечная оборона при подходящем месте установки. ECM работает вокруг корабля и позволяет вручную выбрать момент импульса.",
+        "englishText": "Point defence is often more convenient against isolated threats if its mount has a clear view. ECM covers the area around the ship and lets the pilot time the pulse.",
+        "entryId": "module/po"
+      }
+    ]
+  },
+  "fc": {
+    "description": "Стреляет веером кинетических дробин. Большая часть залпа попадает только вблизи, особенно по малым целям. На средней дистанции часть дробин уходит мимо ещё до заметного спада урона.",
+    "englishDescription": "Fires a spread of kinetic pellets. Most of the volley lands only at close range, especially against small targets. At medium range, some pellets miss before falloff becomes significant.",
+    "notes": [
+      {
+        "title": "Короткий заход",
+        "englishTitle": "Close-range pass",
+        "text": "Дождитесь сближения и стреляйте, когда цель занимает большую часть прицела. Double Shot увеличивает число выстрелов в серии и быстрее расходует запас. High Capacity подходит для нескольких боёв без пополнения.",
+        "englishText": "Close in and fire when the target fills most of the reticle. Double Shot fires more shots per burst and uses the reserve faster. High Capacity suits several fights without restocking.",
+        "entryId": "blueprint/double-shot"
+      },
+      {
+        "title": "Один модуль поддержки",
+        "englishTitle": "One support mount",
+        "text": "Drag Munitions мешает цели поддерживать скорость. Если нужны урон по корпусу и усиление всей группы, можно оставить один ствол с Corrosive Shell и настроить остальные на собственный урон.",
+        "englishText": "Drag Munitions interferes with the target’s speed. To support hull damage across the group, fit Corrosive Shell on one mount and configure the rest for their own damage.",
+        "entryId": "experimental/drag-munitions"
+      }
+    ]
+  },
+  "fi": {
+    "description": "Выдёргивает выбранный корабль из суперкруиза в обычное пространство. Требует захватить цель сзади и выиграть перехват.",
+    "englishDescription": "Pulls a selected ship from supercruise into normal space. Requires acquiring it from behind and winning the interdiction contest.",
+    "notes": [
+      {
+        "title": "Положение при захвате",
+        "englishTitle": "Acquisition position",
+        "text": "Выберите корабль в суперкруизе, займите позицию позади него и включите перехватчик из группы огня. Удерживайте прицел на цели. Удалённость допустимого старта зависит от текущей скорости и предела захвата, который указывается в секундах, а не в километрах.",
+        "englishText": "Target the ship in supercruise, move behind it and activate the interdictor from a fire group. Keep the reticle on the target. Start distance depends on speed and the capture-range stat, which is expressed in seconds rather than kilometres."
+      },
+      {
+        "title": "Дальность или сектор захвата",
+        "englishTitle": "Range or capture arc",
+        "text": "Long Range позволяет начать попытку раньше, пока цель ещё далеко. Expanded Capture Arc позволяет захватить цель под более широким углом. Успешное принуждение к выходу и добровольная сдача цели дают разное время восстановления FSD, поэтому не рассчитывайте на одинаковое окно для сближения.",
+        "englishText": "Long Range lets you start sooner while the target is farther away. Expanded Capture Arc permits a wider acquisition angle. A forced drop and voluntary submission leave different FSD cooldowns, so the post-drop window is not the same.",
+        "entryId": "blueprint/expanded-capture-arc"
+      }
+    ]
+  },
+  "fs": {
+    "description": "Заправляет корабль от звезды в суперкруизе. Скорость сбора и температура определяют время заправки.",
+    "englishDescription": "Refuels a ship from a star while in supercruise. Scoop rate and temperature govern how long refuelling takes.",
+    "notes": [
+      {
+        "title": "Звёзды O B A F G K M",
+        "englishTitle": "O B A F G K M stars",
+        "text": "Топливо можно собирать у звёзд этих классов. Оставьте их в фильтре маршрута для дальнего перелёта. Подойдите к внешней стороне зоны сбора и удерживайте стабильную температуру, контролируя ограничительную линию звезды.",
+        "englishText": "These spectral classes can be scooped. Include them in the route filter for long journeys. Approach the outer edge of the scoop zone and settle at a stable heat level while watching the exclusion line."
+      },
+      {
+        "title": "Сколько времени займёт заправка",
+        "englishTitle": "Refuelling time",
+        "text": "Разделите недостающее топливо на фактическую скорость сбора. Для 4 т при 400 кг/с понадобится около 10 с на установившейся скорости. Сравнивайте крупный заборник с ценностью занятого отсека, а не с дальностью одного прыжка.",
+        "englishText": "Divide the fuel deficit by the actual scoop rate. At 400 kg/s, replacing 4 t takes about 10 seconds at steady rate. Weigh a larger scoop against the value of its optional slot rather than single-jump range."
+      },
+      {
+        "title": "Scoop Rate Enhanced",
+        "englishTitle": "Scoop Rate Enhanced",
+        "text": "Модификация из Operations увеличивает скорость сбора ценой потребления энергии. Полезна, если обычный заборник слишком долго возвращает топливо после каждого прыжка и у установки хватает мощности.",
+        "englishText": "The Operations blueprint increases scoop rate at the cost of power draw. It helps when the existing scoop takes too long to replace jump fuel and the plant has enough output.",
+        "entryId": "blueprint/scoop-rate-enhanced"
+      }
+    ]
+  },
+  "fsd": {
+    "description": "Гипердвигатель работает и для прыжков между системами, и для суперкруиза. Версия SCO добавляет короткий разгон в суперкруизе.",
+    "englishDescription": "The FSD drives hyperspace jumps and supercruise. The SCO variant adds a burst of acceleration in supercruise.",
+    "notes": [
+      {
+        "title": "Дальность с грузом",
+        "englishTitle": "Laden jump range",
+        "text": "Оцените дальность с обычным грузом и запасом топлива. Increased Range увеличивает оптимальную массу FSD, поэтому полезен и на тяжёлом корабле. Mass Manager повышает её дополнительно. Deep Charge увеличивает расход топлива на прыжок, поэтому сравнивайте результат на малых FSD в своей сборке.",
+        "englishText": "Check jump range with normal cargo and fuel aboard. Increased Range raises the FSD’s optimal mass and helps laden ships. Mass Manager raises it further. Deep Charge increases jump fuel use, so compare it on small drives with your actual build.",
+        "entryId": "blueprint/increased-range"
+      },
+      {
+        "title": "SCO и обычный FSD",
+        "englishTitle": "SCO and conventional FSDs",
+        "text": "SCO расходует топливо и быстро нагревает корабль, особенно если корпус под него не рассчитан. Используйте его короткими включениями и следите за топливом перед дальним переходом. Само наличие SCO не требует пользоваться разгоном при обычном полёте.",
+        "englishText": "SCO consumes fuel and rapidly generates heat, particularly on hulls without SCO optimization. Use short bursts and watch the fuel gauge before a long supercruise leg. An SCO drive can also fly normally with overcharge inactive."
+      },
+      {
+        "title": "Загрузка после отключения",
+        "englishTitle": "Restart after power loss",
+        "text": "Faster Boot Sequence сокращает запуск FSD после выключения или перерыва питания. Время зарядки гиперпрыжка и время восстановления после перехвата определяются отдельно.",
+        "englishText": "Faster Boot Sequence shortens FSD startup after shutdown or power loss. Hyperspace charging time and interdiction cooldown are separate mechanics.",
+        "entryId": "blueprint/faster-boot-sequence"
+      },
+      {
+        "title": "Дополнительная дальность",
+        "englishTitle": "Additional range",
+        "text": "Усилитель Стражей ставится в дополнительный отсек и добавляет фиксированную дальность к установленному FSD. Учитывайте его питание вместе с другими системами.",
+        "englishText": "The Guardian booster occupies an optional slot and adds a fixed range bonus to the fitted drive. Include its power draw in the build.",
+        "entryId": "module/guardian-fsd"
+      }
+    ]
+  },
+  "fx": {
+    "description": "Передаёт топливо из бака вашего корабля выбранной цели. Применяется при спасении кораблей с пустым баком.",
+    "englishDescription": "Transfers fuel from your ship’s tank to a target, allowing you to rescue ships that have run dry.",
+    "notes": [
+      {
+        "title": "Передача топлива",
+        "englishTitle": "Transferring fuel",
+        "text": "В нормальном пространстве выберите корабль, сблизьтесь и запустите дрон из группы огня. Один доставленный дрон передаёт 1 т топлива. Расходуются и сам дрон из трюма, и топливо из вашего бака.",
+        "englishText": "In normal space, select the recipient, get in range and launch a limpet from a fire group. One delivered limpet transfers 1 t. The process consumes both the cargo limpet and fuel from your tank."
+      },
+      {
+        "title": "Резерв для спасателя",
+        "englishTitle": "Rescuer’s fuel reserve",
+        "text": "Перед запуском проверьте собственный запас на обратный прыжок. Для нескольких передач удобнее пополнять бак у звезды и брать лишние дроны, чем уменьшать запас топлива ради дальности.",
+        "englishText": "Before launching, check your own return-jump reserve. For several transfers, carry extra limpets and keep the tank replenished at scoopable stars.",
+        "entryId": "module/fs"
+      }
+    ]
+  },
+  "guardian-fsd": {
+    "description": "Ставится во внутренний отсек и прибавляет к дальности гиперпрыжка фиксированное число световых лет. Установить можно один ускоритель, одновременно с любым совместимым FSD.",
+    "englishDescription": "Fits an optional internal slot and adds a flat number of light-years to jump range. One booster can be fitted alongside any compatible FSD.",
+    "notes": [
+      {
+        "title": "Прибавка по классам",
+        "englishTitle": "Range gain by class",
+        "text": "Классы 1–5 прибавляют соответственно 4, 6, 7,75, 9,25 и 10,5 св. л. Ускоритель 5H весит 1,3 т, требует 2,14 МВт и занимает отсек, который в экспедиции может понадобиться для топливозаборника.",
+        "englishText": "Classes 1–5 add 4, 6, 7.75, 9.25 and 10.5 ly respectively. A 5H weighs 1.3 t, draws 2.14 MW and occupies a slot an expedition ship might need for a fuel scoop.",
+        "entryId": "module/fs"
+      },
+      {
+        "title": "Чертёж и разблокировка",
+        "englishTitle": "Blueprint and unlock",
+        "text": "Сканируйте терминал на участке Стражей, выдающем чертежи модулей. После разблокировки у технологического брокера можно покупать ускорители всех размеров за кредиты.",
+        "englishText": "Scan the terminal at a Guardian site that awards module blueprints. After a technology broker unlock, all booster sizes can be purchased with credits.",
+        "entryId": "article/farm-guardian-blueprints"
+      }
+    ]
+  },
+  "guardian-gauss": {
+    "description": "Неподвижное противотаргоидное оружие заряжается перед мгновенным попаданием. У штатного орудия 2-го класса спад урона начинается на 1,5 км, а предельная дальность составляет 3 км.",
+    "englishDescription": "A fixed anti-xeno weapon that charges before a hitscan shot. A stock class 2 cannon starts losing damage at 1.5 km and reaches 3 km.",
+    "notes": [
+      {
+        "title": "Стрельба по сердцам",
+        "englishTitle": "Heart sniping",
+        "text": "Наведитесь на открытое сердце перехватчика и удерживайте прицел через задержку выстрела. Разделите несколько орудий по группам и чередуйте залпы под тепловой ловушкой, если одновременная стрельба перегревает корабль.",
+        "englishText": "Aim at an exposed Interceptor heart and keep it in sight through the charge delay. Split several guns into groups and alternate shots under a heat sink if firing together overheats the ship.",
+        "entryId": "module/hs"
+      },
+      {
+        "title": "Технологический брокер",
+        "englishTitle": "Technology broker",
+        "text": "Для стандартного орудия нужен чертёж оружия Стражей. Модифицированный вариант выпускает серию выстрелов. Для точечного попадания по сердцу сравните, сколько выстрелов серии реально попадает в цель.",
+        "englishText": "The standard gun needs a Guardian weapon blueprint. The modified variant fires a burst. For heart sniping, compare how many shots from its burst actually hit the target.",
+        "entryId": "article/farm-guardian-blueprints"
+      }
+    ]
+  },
+  "guardian-hr": {
+    "description": "Пакет добавляет прочность корпуса, 5% каустического и 2% теплового сопротивления на модуль. Он занимает внутренний отсек и требует питания. Версия 5D даёт 488 единиц корпуса при 16 т и 1,46 МВт.",
+    "englishDescription": "Adds hull integrity, 5% caustic resistance and 2% thermal resistance per package. It uses an optional internal slot and draws power. The 5D adds 488 hull for 16 t and 1.46 MW.",
+    "notes": [
+      {
+        "title": "Сборка против таргоидов",
+        "englishTitle": "Anti-xeno build",
+        "text": "Сравните выигрыш каустического сопротивления с потерей прочности относительно Heavy Duty. Пакет помогает против каустического урона, а накопленное загрязнение в облаке удаляет каустическая ловушка.",
+        "englishText": "Compare the caustic resistance gain with the hull lost relative to Heavy Duty. The package helps against caustic damage, while a caustic sink removes contamination accumulated in a cloud.",
+        "entryId": "module/csl"
+      },
+      {
+        "title": "Обычное усиление корпуса",
+        "englishTitle": "Human hull reinforcement",
+        "text": "Обычный пакет не требует питания. После Heavy Duty с Deep Plating он подходит для большего запаса корпуса, особенно против человеческого оружия.",
+        "englishText": "A human package needs no power. Heavy Duty with Deep Plating is a good way to build a larger hull pool, particularly against human weapons.",
+        "entryId": "module/hr"
+      }
+    ]
+  },
+  "guardian-mr": {
+    "description": "При пробитии корпуса принимает на себя часть урона, который получили бы внутренние модули. Пока пакет цел, 5D поглощает 60% такого урона и имеет запас 385 против 350 у обычного 5D.",
+    "englishDescription": "When hull is penetrated, takes a share of damage that would otherwise hit internal modules. While intact, a 5D absorbs 60% of that damage and has 385 integrity versus 350 for the human 5D.",
+    "notes": [
+      {
+        "title": "Расход прочности пакета",
+        "englishTitle": "Package integrity",
+        "text": "Пакет расходует собственную прочность на защиту. Для долгого боя добавьте второй пакет и следите за состоянием в панели модулей. При наличии AFMU повреждённый пакет можно восстановить.",
+        "englishText": "The package spends its own integrity protecting equipment. For extended combat, add a second package and monitor it in the modules panel. An AFMU can repair a damaged package.",
+        "entryId": "module/am"
+      },
+      {
+        "title": "Питание и поле",
+        "englishTitle": "Power and the field",
+        "text": "Гибридный пакет требует питания, обычный работает без него. Для активного поля, разрушающего гибридные модули, сравните обычный пакет с защищённым у Рам Таха.",
+        "englishText": "The hybrid package draws power, while the human version works without it. For an active field that degrades hybrid modules, compare a human package with one protected by Ram Tah.",
+        "entryId": "blueprint/anti-guardian-zone-resistance"
+      }
+    ]
+  },
+  "guardian-pd": {
+    "description": "Гибридный распределитель пополняет конденсаторы быстрее обычного A того же класса, но их ёмкость меньше. У 5A Стражей WEP вмещает 29 МДж и заряжается со скоростью до 6 МВт, у человеческого 5A — 41 МДж и 4,3 МВт.",
+    "englishDescription": "The hybrid distributor recharges faster than a stock A-rated distributor of the same class but has smaller capacitors. The Guardian 5A holds 29 MJ in WEP and recharges at up to 6 MW, compared with 41 MJ and 4.3 MW on the human 5A.",
+    "notes": [
+      {
+        "title": "Выбор для сборки",
+        "englishTitle": "Build choice",
+        "text": "Используйте как готовую замену до открытия инженера. Для добывающих лазеров сравните скорость зарядки WEP с человеческим A с Charge Enhanced и Super Conduits. Для серии форсажей сначала убедитесь, что ёмкости ENG хватает хотя бы на один.",
+        "englishText": "Use it as an off-the-shelf option before unlocking an engineer. For mining lasers, compare WEP recharge with a human A-rated Charge Enhanced and Super Conduits distributor. For repeated boosts, check first that ENG can hold enough for one.",
+        "entryId": "module/pd"
+      },
+      {
+        "title": "Открытие у брокера",
+        "englishTitle": "Broker unlock",
+        "text": "Для открытия у брокера Стражей потребуется чертёж модуля с терминала руин. После открытия последующие экземпляры покупаются за кредиты.",
+        "englishText": "The Guardian broker unlock requires a module blueprint from a site terminal. After unlocking, further units are bought with credits.",
+        "entryId": "article/farm-guardian-blueprints"
+      }
+    ]
+  },
+  "guardian-plasma": {
+    "description": "Орудие накапливает заряд при удержании спуска и выпускает летящий плазменный сгусток при отпускании. Чем дольше удержание до полного заряда, тем выше урон.",
+    "englishDescription": "Charges while the trigger is held and releases a travelling plasma bolt when it is released. Charging to full power increases the damage.",
+    "notes": [
+      {
+        "title": "Цель и упреждение",
+        "englishTitle": "Target and lead",
+        "text": "Заряжайте во время сближения и выпускайте с упреждением, когда перехватчик выровнялся. Против небольшого сердца на меняющей курс цели сравните с мгновенным попаданием Гаусса.",
+        "englishText": "Charge during approach and lead the shot when the Interceptor settles on course. Against a small heart on a turning target, compare with hitscan Gauss.",
+        "entryId": "module/guardian-gauss"
+      },
+      {
+        "title": "Модифицированный вариант",
+        "englishTitle": "Modified variant",
+        "text": "Модифицированный ускоритель имеет другие скорость снаряда и урон, приобретается у брокера за материалы на каждый экземпляр. Для активного антистражевого поля проверьте совместимость с доработкой Рам Таха, доступной штатным орудиям.",
+        "englishText": "The modified charger changes projectile speed and damage and costs materials for each copy. For an active anti-Guardian field, check compatibility with Ram Tah’s modification for stock guns.",
+        "entryId": "blueprint/anti-guardian-zone-resistance"
+      }
+    ]
+  },
+  "guardian-pp": {
+    "description": "Гибридная силовая установка Стражей даёт больше мегаватт, чем немодифицированная человеческая A того же класса, при худшей тепловой эффективности. Для 5A Стражей заявлено 26,9 МВт при коэффициенте нагрева 0,50.",
+    "englishDescription": "The Guardian hybrid plant delivers more MW than a stock human A-rated plant of the same class, at lower thermal efficiency. The Guardian 5A delivers 26.9 MW with a heat coefficient of 0.50.",
+    "notes": [
+      {
+        "title": "Когда пригодится",
+        "englishTitle": "When to fit it",
+        "text": "Подходит сборке с нехваткой питания, если нужный инженер ещё закрыт. Для заправки у звёзд, скрытности или непрерывной стрельбы сравните температуру с человеческой A и Armoured или Low Emissions.",
+        "englishText": "Useful for a power-starved build while the relevant engineer is locked. For scooping, stealth or sustained fire, compare heat with a human A-rated plant using Armoured or Low Emissions.",
+        "entryId": "module/pp"
+      },
+      {
+        "title": "Открытие у брокера",
+        "englishTitle": "Broker unlock",
+        "text": "Откройте установку у технологического брокера Стражей. Для открытия понадобится чертёж модуля, полученный с терминала руин.",
+        "englishText": "Unlock it with a Guardian technology broker. The unlock requires a module blueprint from a Guardian site terminal.",
+        "entryId": "article/farm-guardian-blueprints"
+      }
+    ]
+  },
+  "guardian-shard": {
+    "description": "Осколочное орудие выбрасывает веер снарядов. Штатный 2-й класс ограничен дальностью 1,7 км. Крупная близкая цель позволяет собрать больше осколков из залпа.",
+    "englishDescription": "A shard cannon fires a spread of projectiles. The stock class 2 reaches 1.7 km. A large target at close range takes more of the pellets in each shot.",
+    "notes": [
+      {
+        "title": "Ближний залп",
+        "englishTitle": "Close-range volley",
+        "text": "Сведите орудия по крупной части перехватчика и стреляйте с близкого прохода. Установки далеко друг от друга сложнее свести на открытом сердце. Для точечного выстрела сравните с Гауссом.",
+        "englishText": "Converge on a large part of the Interceptor and fire during a close pass. Widely separated mounts are harder to converge on an exposed heart. Compare with Gauss for precision shots.",
+        "entryId": "module/guardian-gauss"
+      },
+      {
+        "title": "Нагрев модифицированных орудий",
+        "englishTitle": "Heat on modified cannons",
+        "text": "Модифицированный вариант отличается дальностью и разбросом, но особенно сильно греет корабль при залпе нескольких стволов. Разделите стволы по группам, следите за WEP и используйте тепловые ловушки.",
+        "englishText": "The modified variant has different range and spread but produces substantial heat when several mounts fire together. Split the guns into groups, monitor WEP and use heat sinks.",
+        "entryId": "module/hs"
+      }
+    ]
+  },
+  "guardian-sr": {
+    "description": "Добавляет фиксированный запас МДж щиту и занимает внутренний отсек. 5D добавляет 215 МДж при 16 т и 1,26 МВт.",
+    "englishDescription": "Adds a flat amount of shield MJ and takes an optional internal slot. A 5D adds 215 MJ for 16 t and 1.26 MW.",
+    "notes": [
+      {
+        "title": "Когда лучше внешнего усилителя",
+        "englishTitle": "When to use it over a booster",
+        "text": "Фиксированная прибавка полезна при низком базовом запасе щита или когда внешние слоты нужны под защиту и сканеры. Для большого щита сравните её с процентным усилителем и его сопротивлениями.",
+        "englishText": "Flat MJ helps a shield with a small base pool or when utility mounts are reserved for defences and scanners. On a large shield, compare it with a percentage booster and its resistances.",
+        "entryId": "module/sb"
+      },
+      {
+        "title": "Питание при выдвинутом оружии",
+        "englishTitle": "Power with hardpoints deployed",
+        "text": "Проверьте энергобюджет с выдвинутыми орудиями. Пакет занимает отсек, в который можно поставить накопитель щита для повторного пополнения в бою.",
+        "englishText": "Check the power budget with hardpoints deployed. The package occupies a slot that could instead hold a shield cell bank for repeated refills in combat.",
+        "entryId": "module/scb"
+      }
+    ]
+  },
+  "hb": {
+    "description": "Вскрывает грузовой люк цели и выбрасывает часть содержимого в космос. Это первый этап захвата груза.",
+    "englishDescription": "Breaks into the target’s cargo hatch, ejecting some of the contents into space for recovery.",
+    "notes": [
+      {
+        "title": "Выбор груза",
+        "englishTitle": "Choosing a cargo target",
+        "text": "Сканер грузов заранее показывает, что есть в трюме. После успешного взлома контейнеры разлетаются вокруг цели. Подберите их ковшом или сборщиками, пока они не ушли из зоны подбора.",
+        "englishText": "Scan the manifest to see what is in the hold before launching. After a successful breach, canisters spill around the target. Scoop them or dispatch collectors before they drift out of reach.",
+        "entryId": "module/cs"
+      },
+      {
+        "title": "Противодействие дронам",
+        "englishTitle": "Limpet defences",
+        "text": "Точечная оборона может сбить дрон по пути к люку, а ECM — вывести его из строя в зоне импульса. Рассчитывайте запас дронов с учётом таких потерь. Несанкционированный взлом и подбор краденого могут привести к правовым последствиям в системе.",
+        "englishText": "Point Defence can shoot down a limpet approaching the hatch, while ECM can disable one within its pulse. Allow for losses when stocking limpets. Unauthorized hatch breaking and recovery of stolen goods can have legal consequences.",
+        "entryId": "module/po"
+      }
+    ]
+  },
+  "hr": {
+    "description": "Пакет усиления добавляет прочность корпуса и может менять сопротивления. Занимает внутренний отсек и увеличивает массу.",
+    "englishDescription": "A hull reinforcement package adds hull integrity and can alter resistances. It occupies an optional internal slot and adds mass.",
+    "notes": [
+      {
+        "title": "Основной прирост корпуса",
+        "englishTitle": "Main hull increase",
+        "text": "Heavy Duty с Deep Plating обычно ставят на крупные пакеты ради дополнительных единиц корпуса. Сравните итоговую массу с пределом маневровых двигателей и дальностью прыжка.",
+        "englishText": "Heavy Duty with Deep Plating is typically fitted to large packages for more raw hull. Compare the resulting mass with the thruster limit and jump range.",
+        "entryId": "blueprint/heavy-duty"
+      },
+      {
+        "title": "Закрытие слабого сопротивления",
+        "englishTitle": "Covering a weak resistance",
+        "text": "У Reactive Surface Composite уязвимость к тепловому урону. Один небольшой пакет с Thermal Resistant помогает выровнять сопротивления, оставляя крупные пакеты под Heavy Duty.",
+        "englishText": "Reactive Surface Composite is weak against thermal damage. One small Thermal Resistant package can balance resistances while large packages retain Heavy Duty.",
+        "entryId": "blueprint/thermal-resistant"
+      },
+      {
+        "title": "Защита оборудования",
+        "englishTitle": "Module protection",
+        "text": "Прочность корпуса и прочность оборудования считаются отдельно. Для защиты силовой установки и других модулей от пробитий используйте пакет защиты модулей.",
+        "englishText": "Hull and module integrity are tracked separately. Use a module reinforcement package to protect the power plant and other equipment from penetrating hits.",
+        "entryId": "module/guardian-mr"
+      }
+    ]
+  },
+  "hs": {
+    "description": "Сбрасывает ловушку, которая быстро поглощает тепло корабля. Полезна при работе накопителей щита, аварийном нагреве у звезды и для охлаждения в бою.",
+    "englishDescription": "Ejects a sink that rapidly absorbs ship heat. Useful for shield cell banks, stellar overheating and keeping cool in combat.",
+    "notes": [
+      {
+        "title": "Назначение клавиши",
+        "englishTitle": "Binding a heat sink",
+        "text": "Выведите запуск на отдельную клавишу, чтобы реагировать в полёте без смены группы огня. Планируйте запуск вокруг теплового пика, следите за зарядами и оставляйте энергию в SYS.",
+        "englishText": "Assign a dedicated key to react without switching fire groups. Time launches around heat spikes, track charges and keep energy in SYS."
+      },
+      {
+        "title": "Запас ловушек",
+        "englishTitle": "Heat sink reserves",
+        "text": "Ammo Capacity добавляет заряд обычной установке. Для маршрута вдали от станций проверьте в меню синтеза запасы материалов для пополнения.",
+        "englishText": "Ammo Capacity adds a charge to a standard launcher. For travel away from stations, check the synthesis panel for refill materials before leaving.",
+        "entryId": "blueprint/ammo-capacity"
+      }
+    ]
+  },
+  "kw": {
+    "description": "Активный сканер выявляет дополнительные награды за голову. Обычное пассивное сканирование выбранной цели уже показывает её статус в текущей юрисдикции.",
+    "englishDescription": "An active scan uncovers additional bounties. The ordinary passive target scan already shows the target’s status in the current jurisdiction.",
+    "notes": [
+      {
+        "title": "Охота за наградой",
+        "englishTitle": "Bounty hunting",
+        "text": "Привяжите сканер к группе огня, удерживайте цель в радиусе до завершения и проверьте статус Wanted или Warrant перед стрельбой. В охотничьем вылете сравните доход от дополнительных наград со временем на сканирование.",
+        "englishText": "Bind the scanner to a fire group, keep the target within range until the scan finishes and check for Wanted or Warrant before firing. On a hunting sortie, weigh extra bounties against the time spent scanning."
+      },
+      {
+        "title": "Модификация сканера",
+        "englishTitle": "Scanner engineering",
+        "text": "Fast Scan сокращает удержание цели, Long Range помогает начать раньше, но увеличивает массу и потребление. Для ближнего боя обычно важнее завершить сканирование до первой атаки.",
+        "englishText": "Fast Scan reduces tracking time. Long Range lets you start sooner at the cost of mass and power. In close combat, the priority is usually completing the scan before the first attack.",
+        "entryId": "blueprint/fast-scan"
+      }
+    ]
+  },
+  "ls": {
+    "description": "Подаёт кислород экипажу. После разрушения фонаря или отключения питания остаётся время аварийного запаса.",
+    "englishDescription": "Supplies the crew with oxygen. A breached canopy or power loss starts the emergency oxygen timer.",
+    "notes": [
+      {
+        "title": "Запас по рейтингу",
+        "englishTitle": "Oxygen reserve by rating",
+        "text": "Рейтинги E, D, C, B и A дают соответственно 5, 7,5, 10, 15 и 25 минут. D экономит массу, а A даёт время уйти из боя и состыковаться, когда фонарь уже разрушен.",
+        "englishText": "E, D, C, B and A ratings give 5, 7.5, 10, 15 and 25 minutes respectively. D saves mass, while A gives more time to disengage and dock after canopy failure."
+      },
+      {
+        "title": "Синтез аварийного кислорода",
+        "englishTitle": "Emergency oxygen synthesis",
+        "text": "Рецепт пополнения запаса требует 2 железа и 1 никель. Проверьте их остаток в панели синтеза заранее, особенно в экспедиции далеко от станции. Разбитый фонарь восстановит обслуживание на станции.",
+        "englishText": "One refill requires 2 Iron and 1 Nickel. Check the synthesis inventory before a long trip away from stations. Station repair restores a shattered canopy.",
+        "entryId": "material/iron"
+      }
+    ]
+  },
+  "mc": {
+    "description": "Скорострельное кинетическое оружие с небольшой нагрузкой на WEP. После снятия щита удерживайте огонь по корпусу или выбранному внутреннему модулю и следите за конечным запасом патронов.",
+    "englishDescription": "A rapid-fire kinetic weapon with low WEP draw. After shields go down, maintain fire on the hull or a selected module and watch the finite ammunition reserve.",
+    "notes": [
+      {
+        "title": "Стандартное и усовершенствованное",
+        "englishTitle": "Standard and advanced",
+        "text": "Стандартное выпускается в разных размерах и креплениях. Усовершенствованное — неподвижное, с увеличенным запасом патронов и возможностью синтезировать AX-боеприпасы. Обычные патроны остаются рассчитанными на человеческие корабли.",
+        "englishText": "Standard multi-cannons come in various sizes and mount types. Advanced ones are fixed, carry extra ammunition and can synthesise AX rounds. Their regular ammunition is for human ships."
+      },
+      {
+        "title": "Коррозионные снаряды",
+        "englishTitle": "Corrosive Shell",
+        "text": "Одно попадание ослабляет броню корпуса цели для всех атакующих, повторный эффект от второго орудия не складывается. Удобно поставить Corrosive Shell на небольшой ствол с High Capacity, сохранив крупные под Overcharged.",
+        "englishText": "A hit weakens the target’s hull for all attackers. A second gun’s effect does not stack. Put Corrosive Shell and High Capacity on a small mount and keep the large mounts for Overcharged.",
+        "entryId": "experimental/corrosive-shell"
+      }
+    ]
+  },
+  "ml": {
+    "description": "Выбрасывает мины, которые поражают корабль при сближении после взведения. Наиболее предсказуемая цель — преследователь, идущий прямо по вашему следу.",
+    "englishDescription": "Deploys proximity mines that strike ships after arming. The most predictable target is a pursuer flying directly in your wake.",
+    "notes": [
+      {
+        "title": "Рабочий заход",
+        "englishTitle": "Setting up a pass",
+        "text": "Сначала выведите преследователя на прямую и сбросьте мины на его линии сближения. Держите свою траекторию вне области взрыва. В перестрелке с подвижной целью, которая не преследует вас, проще попасть ракетой.",
+        "englishText": "First draw the pursuer onto a straight line, then lay mines across its approach. Keep your own flight path clear of the blast. A missile is easier to land on a manoeuvring target that is not chasing you.",
+        "entryId": "module/nl"
+      },
+      {
+        "title": "Ионное нарушение",
+        "englishTitle": "Ion Disruption",
+        "text": "Эффект Ion Disruption мешает работе двигателей цели при взрыве мины рядом с ней. Для атаки на генератор щита вместо него доступен Reverberating Cascade.",
+        "englishText": "Ion Disruption interferes with a target’s thrusters when a mine detonates nearby. Reverberating Cascade is available when the shield generator is the objective.",
+        "entryId": "experimental/ion-disruption"
+      }
+    ]
+  },
+  "mr": {
+    "description": "Неуправляемые ракеты летят по линии прицеливания без захвата. Взрыв полезен против внешних модулей незащищённого корабля, а конечный боезапас требует выбирать момент выстрела.",
+    "englishDescription": "Dumbfire missiles fly where aimed without a lock. The blast is useful against exposed external modules, and finite ammunition rewards well-timed shots.",
+    "notes": [
+      {
+        "title": "Обычные и усовершенствованные",
+        "englishTitle": "Standard and advanced",
+        "text": "Усовершенствованная установка имеет увеличенный запас и возможность синтеза AX-боеприпасов. Для обычного PvE берите High Capacity, если запас заканчивается раньше топлива и остального оружия.",
+        "englishText": "The advanced rack carries more ammunition and can synthesise AX rounds. For human PvE, choose High Capacity if missiles run out before fuel and your other weapons.",
+        "entryId": "blueprint/high-capacity"
+      },
+      {
+        "title": "Уходящая цель",
+        "englishTitle": "An escaping target",
+        "text": "Против мелких маневрирующих кораблей сравните с самонаводящимися ракетами. Пускайте по открытому корпусу или сбоку от точечной обороны, если её сектор вам виден.",
+        "englishText": "Against small evasive ships, compare with seekers. Fire at exposed hull or from outside point-defence coverage when you can see its firing arc.",
+        "entryId": "module/nl"
+      }
+    ]
+  },
+  "nl": {
+    "description": "Захватывает выбранный корабль и выпускает управляемую ракету. Взрыв особенно полезен против внешних модулей, когда щит цели уже снят.",
+    "englishDescription": "Locks onto the selected ship and fires a guided missile. Its blast is especially useful against exposed external modules after shields drop.",
+    "notes": [
+      {
+        "title": "Захват и пуск",
+        "englishTitle": "Lock and launch",
+        "text": "Держите цель в секторе до подтверждения захвата. Если противник отбивает первые ракеты точечной обороной или ECM, смените угол атаки и берегите запас. High Capacity увеличивает число попыток.",
+        "englishText": "Hold the target in the lock arc until confirmed. If it counters the first missiles with point defence or ECM, change your attack angle and conserve ammunition. High Capacity gives you more attempts.",
+        "entryId": "blueprint/high-capacity"
+      },
+      {
+        "title": "Неуправляемые ракеты",
+        "englishTitle": "Dumbfire missiles",
+        "text": "Подходят для прицельной стрельбы без захвата по предсказуемой цели. Для ускользающих малых кораблей проще удержать захват самонаводящейся ракеты, чем рассчитать упреждение.",
+        "englishText": "Suit unaided shots against predictable targets. Against escaping small ships, it is easier to hold a seeker lock than to lead manually.",
+        "entryId": "module/mr"
+      }
+    ]
+  },
+  "pa": {
+    "description": "Стреляет медленным плазменным сгустком и сильно нагружает WEP и охлаждение. У стандартного ускорителя урон состоит из 60% абсолютного, 20% теплового и 20% кинетического.",
+    "englishDescription": "Fires a slow plasma bolt with substantial WEP and cooling demands. A standard accelerator deals 60% absolute, 20% thermal and 20% kinetic damage.",
+    "notes": [
+      {
+        "title": "Положение для залпа",
+        "englishTitle": "Volley position",
+        "text": "Стреляйте по крупной цели на близком проходе или когда она выравнивает курс. Ведите по маркеру упреждения, дайте WEP восстановиться между залпами и сравните Efficient для меньшего нагрева и расхода.",
+        "englishText": "Shoot large ships on close passes or as they settle on course. Follow the lead marker, let WEP recover between volleys and consider Efficient for lower heat and draw.",
+        "entryId": "blueprint/efficient"
+      },
+      {
+        "title": "Топливо вместо боеприпасов",
+        "englishTitle": "Fuel instead of ammunition",
+        "text": "Plasma Slug расходует топливо и снижает урон. Подходит для долгого вылета с доступной дозаправкой. Перед очередным прыжком проверьте остаток в основном баке.",
+        "englishText": "Plasma Slug consumes fuel and reduces damage. It suits long sorties with reliable refuelling. Check the main tank before the next jump.",
+        "entryId": "experimental/plasma-slug"
+      }
+    ]
+  },
+  "pc": {
+    "description": "Показывает состав астероида, остаток фрагментов и доступные залежи. При лазерной добыче повышает число фрагментов.",
+    "englishDescription": "Shows asteroid composition, remaining fragments and deposits. During laser mining, it also increases fragment yield.",
+    "notes": [
+      {
+        "title": "A-рейтинг для лазерной добычи",
+        "englishTitle": "A-rating for laser mining",
+        "text": "По измерениям игроков, A-разведчик даёт примерно в 3,5 раза больше лазерных фрагментов, чем тот же астероид без разведки. D даёт примерно вдвое больше. Запускайте разведчик до начала стрельбы, чтобы получить бонус на все фрагменты.",
+        "englishText": "Player tests found that an A-rated prospector produces about 3.5 times as many laser fragments as an unprospected rock. D gives about twice as many. Attach the limpet before firing to apply the bonus to every fragment."
+      },
+      {
+        "title": "Размер контроллера",
+        "englishTitle": "Controller size",
+        "text": "У 1A тот же бонус выхода, что у более крупных обычных A-контроллеров. Крупный позволяет держать несколько разведчиков и проверять следующий астероид, пока работаете у текущего. При превышении лимита новый запуск завершит работу самого старого разведчика.",
+        "englishText": "A 1A gives the same yield bonus as larger dedicated A-rated controllers. A larger controller keeps multiple prospectors active so you can scout ahead. Launching at the active limit expires the oldest limpet."
+      },
+      {
+        "title": "Чтение контакта",
+        "englishTitle": "Reading the limpet",
+        "text": "Выберите закрепившегося разведчика, чтобы увидеть процент нужного минерала и остаток. Найденные поверхностные залежи, подповерхностные залежи и трещины требуют подходящего инструмента. Сборщики и очиститель понадобятся после отделения фрагментов.",
+        "englishText": "Target the attached prospector to see the desired mineral percentage and the remaining yield. Surface deposits, subsurface deposits and fissures require different tools. Collectors and a refinery handle the detached fragments.",
+        "entryId": "module/cc"
+      }
+    ]
+  },
+  "pd": {
+    "description": "Питает конденсаторы SYS, ENG и WEP. Ёмкость определяет, что вы можете включить прямо сейчас, а скорость зарядки — как быстро сможете повторить.",
+    "englishDescription": "Feeds the SYS, ENG and WEP capacitors. Capacity governs what can run immediately, while recharge governs how soon it can be used again.",
+    "notes": [
+      {
+        "title": "Распределение пипсов",
+        "englishTitle": "Pip management",
+        "text": "SYS даёт запас на восстановление щита и защитные устройства. Пипсы в SYS повышают стойкость работающего щита. ENG питает форсаж, а WEP поддерживает огонь. Если пипсы в WEP не позволяют удерживать лазерный огонь, проверьте потребление оружия и зарядку WEP.",
+        "englishText": "SYS feeds shield regeneration and defensive utilities. More SYS pips improve active shield resistance. ENG fuels boosts and WEP sustains fire. If your WEP allocation cannot sustain laser fire, compare weapon draw with WEP recharge."
+      },
+      {
+        "title": "Charge Enhanced или Engine Focused",
+        "englishTitle": "Charge Enhanced or Engine Focused",
+        "text": "Charge Enhanced ускоряет пополнение всех трёх конденсаторов, жертвуя их ёмкостью. Engine Focused помогает лёгким дальнолётным сборкам, когда уменьшенный распределитель иначе не накопит энергию для форсажа. После модификации проверьте, что ёмкости всё ещё хватает на нужные действия.",
+        "englishText": "Charge Enhanced raises recharge across all three capacitors at the cost of capacity. Engine Focused helps light explorer builds whose undersized distributor otherwise cannot store enough energy for a boost. Verify capacity after engineering.",
+        "entryId": "blueprint/charge-enhanced"
+      },
+      {
+        "title": "Отличие от силовой установки",
+        "englishTitle": "Difference from the power plant",
+        "text": "Мегаватты установки обеспечивают питание включённых модулей. Замена установки сама по себе не устранит разряд WEP или нехватку ёмкости ENG.",
+        "englishText": "The power plant supplies megawatts to active modules. Upgrading the plant alone does not solve a drained WEP capacitor or insufficient ENG capacity.",
+        "entryId": "module/pp"
+      }
+    ]
+  },
+  "pl": {
+    "description": "Импульсный лазер снимает щиты термическим уроном без расхода боезапаса. У штатного 2E fixed лазера спад начинается на 500 м, а предельная дальность составляет 3 км.",
+    "englishDescription": "A pulse laser deals thermal shield damage without ammunition. A stock 2E fixed laser starts losing damage at 500 m and reaches 3 km.",
+    "notes": [
+      {
+        "title": "Выносливость",
+        "englishTitle": "Endurance",
+        "text": "Начните с импульсных лазеров, если конденсатор WEP быстро истощается от лучевых. Efficient снижает расход энергии и нагрев для длинных боёв, а Long Range помогает на дистанции, где стандартный лазер теряет урон.",
+        "englishText": "Start with pulses if beams drain the WEP capacitor too fast. Efficient cuts draw and heat for long engagements, while Long Range helps at distances where a stock pulse loses damage.",
+        "entryId": "blueprint/efficient"
+      },
+      {
+        "title": "Случайные сбои модулей",
+        "englishTitle": "Random module malfunctions",
+        "text": "Scramble Spectrum при попаданиях по незащищённому корпусу может вызвать сбой случайного модуля цели. Для поддержки группы достаточно одного такого лазера, остальные можно настроить на урон.",
+        "englishText": "Scramble Spectrum can cause random module malfunctions when hitting exposed hull. One such laser is enough for wing support, leaving other lasers available for damage.",
+        "entryId": "experimental/scramble-spectrum"
+      }
+    ]
+  },
+  "po": {
+    "description": "Турель автоматически стреляет по совместимым ракетам, минам и дронам взлома, пока они находятся в пределах дальности и линии огня.",
+    "englishDescription": "A turret automatically fires at compatible missiles, mines and hatch breakers within its range and line of sight.",
+    "notes": [
+      {
+        "title": "Место установки",
+        "englishTitle": "Mount placement",
+        "text": "Для защиты трюма ставьте турель с обзором грузового люка. Для работы на руинах Стражей ставьте её сверху, с открытым обзором неба, и паркуйте корабль рядом с участком, чтобы она могла сбивать ракеты стражей.",
+        "englishText": "For cargo protection use a mount that covers the hatch. At Guardian ruins, use an unobstructed top mount and park nearby so the turret can intercept Sentinel missiles.",
+        "entryId": "article/farm-guardian"
+      },
+      {
+        "title": "Боезапас",
+        "englishTitle": "Ammunition",
+        "text": "Турель не требует ручного запуска, но может израсходовать боекомплект. Для более долгой защиты используйте Ammo Capacity или возьмите ECM для ручных импульсов.",
+        "englishText": "The turret is automatic but can run out of ammunition. For longer protection, use Ammo Capacity or bring an ECM for manually timed pulses.",
+        "entryId": "blueprint/ammo-capacity"
+      }
+    ]
+  },
+  "pp": {
+    "description": "Питает все включённые модули и определяет, сколько тепла корабль выделяет при заданном потреблении.",
+    "englishDescription": "Supplies power to active modules and determines the heat generated at a given power draw.",
+    "notes": [
+      {
+        "title": "Потребление с выпущенным оружием",
+        "englishTitle": "Power with hardpoints deployed",
+        "text": "Сверяйте расход отдельно для убранных и выпущенных стволов. При перегрузке первыми выключаются группы с большими номерами. Назначьте двигателям и FSD приоритет выше, чем топливозаборнику и AFMU, чтобы сохранить возможность уйти при повреждении установки.",
+        "englishText": "Check retracted and deployed power draw separately. Higher-numbered groups switch off first when demand exceeds output. Prioritize thrusters and FSD above the fuel scoop and AFMU to retain escape capability with a damaged plant.",
+        "entryId": "module/pd"
+      },
+      {
+        "title": "Armoured, Low Emissions и Overcharged",
+        "englishTitle": "Armoured, Low Emissions and Overcharged",
+        "text": "Armoured увеличивает прочность и немного выработку, улучшает охлаждение, но добавляет массу. Low Emissions снижает тепловую нагрузку ценой мощности и массы. Overcharged помогает, когда не хватает мегаватт, но ухудшает охлаждение и прочность.",
+        "englishText": "Armoured improves integrity and heat efficiency with a modest output increase at the cost of mass. Low Emissions improves cooling in exchange for output and mass. Overcharged solves an output shortfall but increases heat and reduces integrity.",
+        "entryId": "blueprint/armoured"
+      },
+      {
+        "title": "Проверка перед вылетом",
+        "englishTitle": "Pre-flight check",
+        "text": "Уменьшая класс установки ради дальности, сравните итоговую температуру и питание модулей. У A-рейтинга лучше тепловая эффективность, чем у D того же класса, а цифра класса определяет доступную мощность и массу.",
+        "englishText": "When downsizing for jump range, compare heat and available power in the whole build. An A-rated plant has better heat efficiency than a D-rated plant of the same class, while class affects output and mass."
+      }
+    ]
+  },
+  "rf": {
+    "description": "Превращает доли руды из подобранных фрагментов в тонны товара. Раздельные бункеры позволяют перерабатывать несколько минералов одновременно.",
+    "englishDescription": "Turns ore content from collected fragments into tonnes of commodities. Separate bins allow several minerals to be processed at once.",
+    "notes": [
+      {
+        "title": "Одна тонна на 100%",
+        "englishTitle": "One tonne at 100%",
+        "text": "Процент минерала из фрагмента добавляется в соответствующий бункер. Когда бункер достигает 100% и в трюме есть место, появляется 1 т товара. Материалы для инженеров при подборе идут напрямую в отдельный запас.",
+        "englishText": "The fragment’s mineral percentage fills the corresponding bin. At 100%, the refinery outputs 1 t if cargo space is available. Engineering materials collected in space go directly into their own inventory."
+      },
+      {
+        "title": "Бункеры и фильтр подбора",
+        "englishTitle": "Bins and collection filters",
+        "text": "У класса 4A десять бункеров, а у 1A четыре. Если собираете один дорогой минерал, небольшой очиститель освобождает место для груза. Ненужные минералы добавьте в список игнорирования, чтобы они не занимали бункеры и время сборщиков.",
+        "englishText": "A 4A refinery has ten bins and a 1A has four. For a single valuable mineral, a small refinery frees a slot for cargo. Add unwanted minerals to the ignore list so they do not fill bins or consume collector time.",
+        "entryId": "module/cc"
+      }
+    ]
+  },
+  "rg": {
+    "description": "Орудие заряжается перед выстрелом и затем попадает мгновенно при точном наведении. Штатный рельсотрон начинает терять урон после 1 км и имеет дальность до 3 км.",
+    "englishDescription": "Charges before firing and then hits instantly if aimed correctly. A standard rail gun begins losing damage at 1 km and reaches up to 3 km.",
+    "notes": [
+      {
+        "title": "Срыв зарядки щита",
+        "englishTitle": "Interrupting a shield cell",
+        "text": "Feedback Cascade снижает объём восстановления, если попасть в цель во время раскрутки её накопителя. Super Penetrator применяют по корпусу, чтобы одним попаданием поражать внутренние модули по траектории.",
+        "englishText": "Feedback Cascade reduces the refill when a shot lands during a target’s cell spin-up. Use Super Penetrator against hull to damage internal modules along the shot path.",
+        "entryId": "experimental/feedback-cascade"
+      },
+      {
+        "title": "Выстрелы с дистанции",
+        "englishTitle": "Shots at range",
+        "text": "Long Range убирает ранний спад урона. Сохраняйте прицел через задержку выстрела и контролируйте нагрев при одновременной стрельбе из нескольких стволов.",
+        "englishText": "Long Range removes early damage falloff. Hold aim through the firing delay and watch heat when shooting several rails together.",
+        "entryId": "blueprint/long-range"
+      }
+    ]
+  },
+  "s": {
+    "description": "Определяют дальность обнаружения контактов в обычном пространстве. Заметность цели зависит и от её тепловой сигнатуры.",
+    "englishDescription": "Determine contact detection range in normal space. A target’s thermal signature also affects how easily it can be detected.",
+    "notes": [
+      {
+        "title": "Слабые контакты",
+        "englishTitle": "Weak contacts",
+        "text": "Холодный или удалённый корабль может отображаться как неразрешённый контакт. Сблизьтесь до устойчивого захвата. Модуль влияет на дальность и захват, а специализированные сканеры добавляют данные о трюме, ордерах или следах FSD.",
+        "englishText": "A cold or distant ship may appear as an unresolved contact. Close until it can be locked. Sensors govern detection and acquisition, while specialist scanners add cargo, warrant or wake information.",
+        "entryId": "module/kw"
+      },
+      {
+        "title": "Дальность или масса",
+        "englishTitle": "Range or mass",
+        "text": "Long Range увеличивает дальность ценой массы. Lightweight уменьшает массу ценой дальности и целостности. Для исследовательской сборки важно сохранить дальность прыжка, а для поиска целей в бою проверьте, видны ли они на вашей рабочей дистанции.",
+        "englishText": "Long Range trades mass for detection range. Lightweight reduces mass at the cost of range and integrity. Explorers can prioritize jump range, while combat builds should check contact acquisition at their working distance.",
+        "entryId": "blueprint/long-range"
+      }
+    ]
+  },
+  "sb": {
+    "description": "Устанавливается во внешний слот и повышает прочность активного щита на процент от его базовых МДж. Несколько усилителей можно комбинировать.",
+    "englishDescription": "Fits a utility mount and adds a percentage of the generator’s base shield MJ. Multiple boosters can be combined.",
+    "notes": [
+      {
+        "title": "Абсолютные МДж",
+        "englishTitle": "Raw shield MJ",
+        "text": "Heavy Duty и Super Capacitors увеличивают номинальную ёмкость. Усилитель A подходит при запасе питания, а E после доработки берут для экономии массы и энергии.",
+        "englishText": "Heavy Duty with Super Capacitors boosts raw capacity. An A-rated booster suits ships with power to spare, while a modified E-rated one saves weight and power.",
+        "entryId": "blueprint/heavy-duty"
+      },
+      {
+        "title": "Эффективный запас щита",
+        "englishTitle": "Effective shield strength",
+        "text": "Resistance Augmented уменьшает долю входящего урона нескольких типов. При нескольких таких усилителях прирост сопротивления снижается. Сравните МДж против теплового и кинетического урона всей сборки, а не только число МДж в оснащении.",
+        "englishText": "Resistance Augmented reduces incoming damage across multiple types. Stacking them brings diminishing gains. Compare the build’s effective shield MJ against thermal and kinetic damage as well as the raw total.",
+        "entryId": "blueprint/resistance-augmented"
+      },
+      {
+        "title": "Усиление щита Стражей",
+        "englishTitle": "Guardian shield reinforcement",
+        "text": "Добавляет фиксированные МДж и использует внутренний отсек. Может освободить внешний слот для тепловой ловушки или другой защиты.",
+        "englishText": "Adds flat MJ and uses an optional internal slot. It can free a utility mount for a heat sink or other defensive equipment.",
+        "entryId": "module/guardian-sr"
+      }
+    ]
+  },
+  "scb": {
+    "description": "Расходует заряд для пополнения действующего щита после раскрутки. Выстрелить зарядом после падения щита нельзя.",
+    "englishDescription": "Spends a charge to replenish an active shield after a spin-up delay. A charge cannot restore a collapsed shield.",
+    "notes": [
+      {
+        "title": "Момент активации",
+        "englishTitle": "When to fire a cell",
+        "text": "Дайте щиту потерять достаточно МДж, чтобы заряд поместился, и активируйте его до критического падения. Тепловая ловушка на пике нагрева защищает от повреждений при активации.",
+        "englishText": "Let the shield lose enough MJ to fit the cell, then fire it before collapse becomes imminent. Use a heat sink during the heat spike to avoid damage.",
+        "entryId": "module/hs"
+      },
+      {
+        "title": "Быстрая зарядка",
+        "englishTitle": "Rapid Charge",
+        "text": "Сокращает окно раскрутки и время, в которое попадание рельсотрона с Feedback Cascade может сорвать пополнение. Specialised снижает тепловую нагрузку и удобен для затяжного PvE.",
+        "englishText": "Shortens spin-up and the window during which a Feedback Cascade rail hit can disrupt the refill. Specialised reduces thermal load and suits sustained PvE.",
+        "entryId": "blueprint/rapid-charge"
+      }
+    ]
+  },
+  "sg": {
+    "description": "Щит поглощает урон, пока остаётся активен. Для совместимости генератора проверьте предельную массу корпуса, а для боя сравните запас МДж и время восстановления после отключения.",
+    "englishDescription": "A shield absorbs damage while active. Check the generator’s maximum supported hull mass for fit, then compare shield MJ and recovery time for combat.",
+    "notes": [
+      {
+        "title": "Стандартный, би-плетёный и призматический",
+        "englishTitle": "Standard, bi-weave and prismatic",
+        "text": "Стандартный A — универсальный вариант. Би-плетёный C восстанавливается быстрее, но держит меньше урона за один заход. Призматический даёт больше МДж при большей массе и потреблении, восстанавливается медленнее и открывается через Powerplay.",
+        "englishText": "A standard A-rated shield is an all-rounder. A C-rated bi-weave recovers faster but absorbs less damage per engagement. A prismatic has more MJ, greater mass and power draw, slower recovery, and a Powerplay unlock."
+      },
+      {
+        "title": "Термическая устойчивость",
+        "englishTitle": "Thermal Resistant",
+        "text": "Исправляет тепловую уязвимость базового щита. Для би-плетёного добавьте Fast Charge, если распределитель успевает пополнять SYS. Для большого запаса МДж сравните Reinforced с Hi-Cap, а перед залпом переведите энергию в SYS.",
+        "englishText": "Corrects the base shield’s thermal weakness. Pair a bi-weave with Fast Charge if the distributor can keep SYS supplied. For a large shield pool, compare Reinforced with Hi-Cap, and move pips to SYS before taking a volley.",
+        "entryId": "blueprint/thermal-resistant"
+      },
+      {
+        "title": "Накопители щита",
+        "englishTitle": "Shield cell banks",
+        "text": "Используйте их для щита, который должен пережить один длительный бой. После полного падения щита заряды не помогут.",
+        "englishText": "Use banks when a shield must last through one sustained fight. Charges cannot recover a collapsed shield.",
+        "entryId": "module/scb"
+      }
+    ]
+  },
+  "ss": {
+    "description": "Стреляет зондами для картографирования планет и колец. Карта открывает сведения о поверхностных сигналах и горячих точках добычи.",
+    "englishDescription": "Fires probes to map planets and rings, revealing surface signals and mining hotspots.",
+    "notes": [
+      {
+        "title": "Планеты и эффективность",
+        "englishTitle": "Planets and efficiency",
+        "text": "В суперкруизе снизьте скорость, подлетите к телу и включите сканер в режиме анализа. Зонды огибают планету. Разносите точки попадания между видимой и обратной сторонами. Лимит зондов на экране — цель для бонуса эффективности, а не запас боеприпасов.",
+        "englishText": "In supercruise, slow down near the body and open the scanner in Analysis Mode. Probes arc around the planet. Spread hits across the near and far sides. The probe target on screen is an efficiency goal rather than an ammunition limit."
+      },
+      {
+        "title": "Горячие точки в кольце",
+        "englishTitle": "Ring hotspots",
+        "text": "Направьте зонд в нужное кольцо, чтобы на карте появились его горячие точки. Для выбора цели важны и минерал, и тип кольца. При подлёте ориентируйтесь по точкам в режиме анализа.",
+        "englishText": "Fire into the intended ring to reveal its hotspots. Both the target mineral and ring type matter. Use Analysis Mode to identify the hotspots during approach."
+      },
+      {
+        "title": "Радиус покрытия",
+        "englishTitle": "Coverage radius",
+        "text": "Expanded Probe Scanning Radius увеличивает покрытие одного зонда. Это позволяет чаще уложиться в лимит эффективности, особенно на крупных телах. Вариант из Operations тоже расширяет радиус, но требует больше мощности и добавляет массу.",
+        "englishText": "Expanded Probe Scanning Radius increases coverage per probe. It helps meet efficiency targets, especially on larger bodies. The Operations variant also increases radius, with a higher mass and power draw.",
+        "entryId": "blueprint/expanded-probe-scanning-radius"
+      }
+    ]
+  },
+  "t": {
+    "description": "Задают скорость, разгон и управляемость в обычном пространстве. Характеристики меняются с полной массой корабля.",
+    "englishDescription": "Determine normal-space speed, acceleration and handling. Performance changes with the ship's loaded mass.",
+    "notes": [
+      {
+        "title": "Проверка с полным трюмом",
+        "englishTitle": "Checking a laden build",
+        "text": "Сравнивайте полную массу с максимальной массой двигателей и смотрите скорость с грузом. Характеристики зависят от отношения массы корабля к кривой двигателя. Максимальная масса определяет совместимость, а оптимальная участвует в расчёте тяги.",
+        "englishText": "Check laden mass against the thrusters’ maximum mass and compare speed with cargo aboard. Performance depends on the ship’s mass relative to the thruster curve. Maximum mass limits fit, while optimal mass helps determine thrust."
+      },
+      {
+        "title": "Dirty и Drag Drives",
+        "englishTitle": "Dirty and Drag Drives",
+        "text": "Dirty повышает скоростные характеристики за счёт тепла, расхода энергии и прочности. Drag Drives ещё усиливает результат. Для лёгкого корабля с Enhanced Performance Thrusters сравните в сборщике вариант Drive Distributors, который меняет оптимальную массу.",
+        "englishText": "Dirty boosts speed at the cost of heat, power and integrity. Drag Drives improves performance further. For a lightweight ship with Enhanced Performance Thrusters, compare Drive Distributors, which changes optimal mass.",
+        "entryId": "blueprint/dirty"
+      },
+      {
+        "title": "Двигатели и форсаж",
+        "englishTitle": "Thrusters and boost",
+        "text": "Скорость форсажа задают двигатели и масса. Для самого включения форсажа нужна достаточная ёмкость ENG, а частота повторов зависит от скорости пополнения распределителя.",
+        "englishText": "Thrusters and ship mass determine boost speed. Initiating a boost requires sufficient ENG capacity, and the recharge rate controls how often it can be repeated.",
+        "entryId": "module/pd"
+      }
+    ]
+  },
+  "tp": {
+    "description": "Торпедный аппарат выпускает медленную управляемую торпеду. Боезапас мал, а после пуска боеприпасу нужно время на взведение.",
+    "englishDescription": "A torpedo pylon launches a slow guided torpedo. Ammunition is limited, and the torpedo needs time to arm after launch.",
+    "notes": [
+      {
+        "title": "Атака на генератор",
+        "englishTitle": "Attacking the shield generator",
+        "text": "Reverberating Cascade повреждает генератор сквозь действующий щит. Выбирайте крупную медленную цель и угол, где защита не успеет перехватить торпеду. Пуск в упор может не оставить времени на взведение.",
+        "englishText": "Reverberating Cascade damages a generator through its active shield. Choose a large, slow target and an angle that makes interception difficult. A point-blank launch may not allow time for arming.",
+        "entryId": "experimental/reverberating-cascade"
+      },
+      {
+        "title": "Ответ на пуск",
+        "englishTitle": "Countering a launch",
+        "text": "При предупреждении о торпеде разорвите дистанцию, если корабль достаточно быстр. Если уйти не удаётся, подготовьте ECM и отпустите импульс в пределах досягаемости.",
+        "englishText": "On a torpedo warning, open distance if your ship is fast enough. If you cannot get away, charge ECM and release when the torpedo is in range.",
+        "entryId": "module/ec"
+      }
+    ]
+  },
+  "ul": {
+    "description": "Лазер выпускает три импульса за нажатие и расходует больше энергии за серию, чем обычный импульсный лазер за выстрел. У штатного 2E fixed исполнения спад начинается с 500 м, предел — 3 км.",
+    "englishDescription": "Fires three laser pulses per burst and spends more energy per burst than a pulse laser per shot. A stock 2E fixed mount starts losing damage at 500 m and reaches 3 km.",
+    "notes": [
+      {
+        "title": "Удержание цели",
+        "englishTitle": "Keeping a target in sight",
+        "text": "На коротком проходе задержите прицел на цели до конца серии. Если WEP регулярно пустеет, используйте Efficient или сравните фактический огонь с импульсным лазером.",
+        "englishText": "Keep aim on the target through the full burst during a short firing pass. If WEP regularly empties, use Efficient or compare actual uptime with a pulse laser.",
+        "entryId": "blueprint/efficient"
+      },
+      {
+        "title": "Внутреннее воздействие",
+        "englishTitle": "Inertial Impact",
+        "text": "Переводит часть урона в кинетический и сильно увеличивает разброс. Имеет смысл в упор по крупным кораблям. На дистанции потеря попаданий обычно перевешивает прирост урона.",
+        "englishText": "Converts some damage to kinetic and adds substantial jitter. Use it at point-blank range against large ships. Farther away, missed shots usually outweigh the damage gain.",
+        "entryId": "experimental/inertial-impact"
+      }
+    ]
+  },
+  "ws": {
+    "description": "Сканирует высокоэнергетический след гиперпрыжка, показывает систему назначения и может выдать закодированные материалы.",
+    "englishDescription": "Scans a high-energy hyperspace wake to reveal the destination system and potentially obtain encoded materials.",
+    "notes": [
+      {
+        "title": "Сканирование у станции",
+        "englishTitle": "Scanning near a station",
+        "text": "В обычном пространстве выберите High Energy Wake в контактах, подлетите на дальность сканера и удерживайте кнопку до завершения. Long Range сокращает перелёты между следами, а Fast Scan сокращает время одного сканирования.",
+        "englishText": "In normal space select a High Energy Wake from contacts, approach within scanner range and hold the trigger to finish. Long Range cuts travel between wakes and Fast Scan shortens each scan.",
+        "entryId": "blueprint/long-range"
+      },
+      {
+        "title": "Когда нужен материал",
+        "englishTitle": "When you need materials",
+        "text": "Для данных о следах сканируйте корабли, покидающие загруженный порт. Если нужен большой запас для чертежей, сравните прямой сбор с обменом данных у торговца.",
+        "englishText": "To collect wake data, scan departures from a busy port. For a large engineering stock, compare direct scanning with material trading.",
+        "entryId": "article/farm-encoded-direct"
+      }
+    ]
+  }
+}

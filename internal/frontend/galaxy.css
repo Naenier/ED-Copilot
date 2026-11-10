@@ -1,0 +1,43 @@
+.galaxy-directory {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 34px;
+  padding: 23px;
+  border: 1px solid var(--ref-line);
+  border-radius: 13px;
+  background: var(--ref-surface);
+}
+.galaxy-nearby-card { min-width: 0; padding-top: 19px; border-top: 1px solid var(--ref-line); }
+.galaxy-nearby-card h3 { margin: 0 0 14px; font-size: 15px; font-weight: 550; }
+.galaxy-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; max-width: 710px; }
+.galaxy-radius-form { grid-template-columns: minmax(0, 1fr) minmax(95px, 130px) auto; }
+.galaxy-form label, .galaxy-filters label { display: grid; gap: 6px; min-width: 0; font-size: 11px; color: var(--ref-quiet); }
+.galaxy-form input, .galaxy-filters select { width: 100%; min-width: 0; font-size: 12px; }
+.galaxy-form .pill { align-self: end; min-height: 36px; white-space: nowrap; }
+.galaxy-reader { display: grid; gap: 14px; margin-bottom: 30px; }
+.galaxy-tabs { width: fit-content; max-width: 100%; overflow-x: auto; }
+.galaxy-tabs button { white-space: nowrap; }
+.galaxy-filters { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+.galaxy-filters label { min-width: min(130px, 100%); flex: 1 1 130px; max-width: 220px; }
+.galaxy-table { margin-top: 9px; }
+.galaxy-table .ref-table { min-width: 550px; }
+.galaxy-table td { overflow-wrap: anywhere; }
+.galaxy-table td small { display: block; margin-top: 3px; color: var(--ref-quiet); line-height: 1.4; }
+.galaxy-facts { padding: 17px; border: 1px solid var(--ref-line); border-radius: 9px; background: var(--ref-surface); }
+.galaxy-note, .galaxy-notice { margin: 10px 0; color: var(--ref-quiet); font-size: 12px; line-height: 1.6; }
+.galaxy-notice { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 15px; border: 1px solid var(--ref-line); border-radius: 8px; }
+.galaxy-details summary { color: var(--text); cursor: pointer; }
+.galaxy-details .galaxy-facts { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px 14px; margin-top: 8px; padding: 0; border: 0; background: none; }
+.galaxy-details h4 { margin: 12px 0 5px; color: var(--ref-quiet); font-size: 11px; }
+.galaxy-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.galaxy-tags > span { padding: 2px 6px; border: 1px solid var(--ref-line); border-radius: 5px; font-size: 11px; }
+.galaxy-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; color: var(--ref-quiet); font-size: 11px; }
+
+@media (max-width: 650px) {
+  .galaxy-directory { padding: 15px; }
+  .galaxy-form { grid-template-columns: minmax(0, 1fr); }
+  .galaxy-radius-form { grid-template-columns: minmax(0, 1fr) minmax(80px, 100px); }
+  .galaxy-radius-form .pill { grid-column: 1 / -1; }
+  .galaxy-form .pill { justify-self: start; }
+  .galaxy-tabs button { flex-shrink: 0; }
+}

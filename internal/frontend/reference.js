@@ -9,7 +9,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     ['modules', 'Модули', 'wrench'], ['materials', 'Материалы', 'layers'],
     ['blueprints', 'Чертежи', 'target'], ['experimentals', 'Эффекты', 'compass'], ['systems', 'Системы', 'compass'], ['exobiology', 'Экзобиология', 'orbit'],
   ];
-  const modeCategory = { 'Статьи': 'articles', 'Корабли': 'ships', 'Инженеры': 'engineers', 'Товары': 'commodities', 'Модули': 'modules', 'Материалы': 'materials', 'Чертежи': 'blueprints', 'Эффекты': 'experimentals', 'Экзобиология':'exobiology' };
+  const modeCategory = { 'Статьи': 'articles', 'Корабли': 'ships', 'Инженеры': 'engineers', 'Товары': 'commodities', 'Модули': 'modules', 'Материалы': 'materials', 'Чертежи': 'blueprints', 'Эффекты': 'experimentals', 'Системы': 'systems', 'Экзобиология':'exobiology' };
   const bindings = new WeakSet();
   const active = C => C.tab === 'encyclopedia' || (['engineering', 'targets'].includes(C.tab) && C.mode === 'Инженеры');
   const scope = C => ['engineering', 'targets'].includes(C.tab) ? 'engineers' : 'library';
@@ -104,10 +104,12 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   function errorPanel(message, ui, entry = false) {
     return `<section class="ref-message ref-error" role="alert">${ui.icon('circle-help')}<div><h2>${entry ? t("Не удалось открыть страницу") : t("Не удалось загрузить справочник")}</h2><p>${text(ui, message || t("Попробуйте ещё раз."))}</p>${ui.btn(t("Повторить"), entry ? 'reference-retry-entry' : 'reference-retry', 'refresh-cw', 'primary')}</div></section>`;
   }
-  function catalogue(r, ui) {
+  function catalogue(r, ui, C) {
     const list = r.list || {}, entries = list.entries || [], total = Math.max(0, Number(list.total) || 0);
-    const title = r.scope === 'engineers' ? t("Инженеры") : t("Энциклопедия");
+    const galaxy = r.category === 'systems' && window.GalaxyUI;
+    const title = galaxy ? t("Системы") : r.scope === 'engineers' ? t("Инженеры") : t("Энциклопедия");
     const intro = r.scope === 'engineers' ? t("Условия знакомства, доступные улучшения и всё необходимое для следующего визита.") : t("Знакомьтесь с кораблями, находите нужные материалы и разбирайтесь в устройстве галактики.");
+    const resultsTitle = galaxy ? t("Системы из справочника") : categoryTitle(r, r.category);
     const groups = [...(list.groups || [])];
     if (r.group && !groups.some(group => group.id === r.group)) groups.unshift({ id: r.group, title: r.groupName || t("Выбранная группа") });
     const toolbar = `<div class="ref-catalog-toolbar"><label class="ref-search" for="reference-query">${ui.icon('search')}<input id="reference-query" type="search" placeholder="${r.scope === 'engineers' ? t("Найти инженера, систему или улучшение") : t("Поиск в выбранном разделе")}" value="${ui.esc(r.query)}" autocomplete="off"><span class="ref-search-key">${text(ui, categoryTitle(r, r.category))}</span></label>${groups.length ? `<label class="ref-group-label"><span>${th("Группа")}</span><select id="reference-group" aria-label="${th("Группа справочника")}"><option value="">${th("Все группы")}</option>${groups.filter(group => group.id).map(group => `<option value="${ui.esc(group.id)}" ${r.group === group.id ? 'selected' : ''}>${text(ui, group.title)}${group.count === undefined ? '' : ' · ' + text(ui, ui.fmt(group.count))}</option>`).join('')}</select></label>` : ''}</div>`;
@@ -115,12 +117,15 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (r.error) body = errorPanel(r.error, ui);
     else if (r.loading && !r.list) body = skeleton(ui);
     else if (!entries.length) body = `<section class="ref-message ref-empty">${ui.icon('search')}<div><h2>${r.query || r.group ? t("Ничего не найдено") : t("Здесь пока нет записей")}</h2><p>${r.query || r.group ? t("Попробуйте другой запрос или вернитесь ко всему разделу.") : t("Выберите соседний раздел или обновите справочник.")}</p>${ui.btn(r.query || r.group ? t("Сбросить поиск и фильтры") : t("Обновить"), r.query || r.group ? 'reference-clear' : 'reference-retry', r.query || r.group ? 'x' : 'refresh-cw', 'quiet')}</div></section>`;
-    else body = `<div class="ref-results-heading"><h2>${text(ui, categoryTitle(r, r.category))}</h2><span>${r.loading ? `<span class="ref-inline-loading">${th("Обновляем список…")}</span>` : text(ui, ui.fmt(total) + t(" записей"))}</span></div><div class="ref-grid ref-grid-${ui.esc(r.category)} ${r.loading ? 'is-updating' : ''}" aria-busy="${r.loading}">${entries.map(entry => card(entry, r, ui)).join('')}</div>${total > pageSize(r) ? `<nav class="ref-pagination" aria-label="${th("Страницы справочника")}">${ui.btn(t("Назад"), 'reference-prev', 'arrow-left', 'quiet', `type="button" ${r.offset <= 0 || r.loading ? 'disabled' : ''}`)}<span>${text(ui, ui.fmt(r.offset + 1))}–${text(ui, ui.fmt(Math.min(r.offset + entries.length, total)))} <span class="muted">${th("из ")}${text(ui, ui.fmt(total))}</span></span>${ui.btn(t("Далее"), 'reference-next', 'arrow-right', 'quiet', `type="button" ${r.offset + pageSize(r) >= total || r.loading ? 'disabled' : ''}`)}</nav>` : ''}`;
-    return `<section class="reference-root ref-library" data-reference="catalog"><header class="ref-library-heading"><div class="eyebrow">${r.scope === 'engineers' ? t("Мастерские галактики") : t("Бортовая библиотека")}</div><h1>${title}</h1><p>${intro}</p></header>${r.scope === 'engineers' && ui.renderModes ? ui.renderModes(true) : ''}${categoryNavigation(r, ui)}${toolbar}<div class="ref-results" aria-live="polite">${body}</div></section>`;
+    else body = `<div class="ref-results-heading"><h2>${text(ui, resultsTitle)}</h2><span>${r.loading ? `<span class="ref-inline-loading">${th("Обновляем список…")}</span>` : text(ui, ui.fmt(total) + t(" записей"))}</span></div><div class="ref-grid ref-grid-${ui.esc(r.category)} ${r.loading ? 'is-updating' : ''}" aria-busy="${r.loading}">${entries.map(entry => card(entry, r, ui)).join('')}</div>${total > pageSize(r) ? `<nav class="ref-pagination" aria-label="${th("Страницы справочника")}">${ui.btn(t("Назад"), 'reference-prev', 'arrow-left', 'quiet', `type="button" ${r.offset <= 0 || r.loading ? 'disabled' : ''}`)}<span>${text(ui, ui.fmt(r.offset + 1))}–${text(ui, ui.fmt(Math.min(r.offset + entries.length, total)))} <span class="muted">${th("из ")}${text(ui, ui.fmt(total))}</span></span>${ui.btn(t("Далее"), 'reference-next', 'arrow-right', 'quiet', `type="button" ${r.offset + pageSize(r) >= total || r.loading ? 'disabled' : ''}`)}</nav>` : ''}`;
+    const directory = galaxy ? galaxy.renderDirectory(C, r, ui) : '';
+    return `<section class="reference-root ref-library" data-reference="catalog"><header class="ref-library-heading"><div class="eyebrow">${galaxy ? 'EDSM' : r.scope === 'engineers' ? t("Мастерские галактики") : t("Бортовая библиотека")}</div><h1>${title}</h1>${galaxy ? '' : `<p>${intro}</p>`}</header>${r.scope === 'engineers' && ui.renderModes ? ui.renderModes(true) : ''}${categoryNavigation(r, ui)}${directory}${galaxy ? '' : toolbar}<div class="ref-results" aria-live="polite">${body}</div></section>`;
   }
 
   function sectionIsVisible(section) {
-    return !/^(?:sources?|references?|links?)$/i.test(section.type || '') && !/^(?:sources?|references?|links?)$/i.test(section.id || '') && !/(?:источники|ссылки на источники|внешние ссылки)/i.test(section.title || '');
+    if (/^(?:sources?|references?)$/i.test(section.type || '') || /^(?:sources?|references?)$/i.test(section.id || '')) return false;
+    if (/^(?:links?)$/i.test(section.type || '') || /^(?:links?)$/i.test(section.id || '')) return section.items?.some(item => validID(item?.entryId));
+    return !/^(?:источники|ссылки на источники|внешние ссылки)$/i.test(section.title || '');
   }
   function engineerRoadmap(entry,ui) {
     const index=entry.actions?.findIndex(item=>item.type==='engineering-roadmap'&&item.engineerKey)??-1;
@@ -139,7 +144,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     return `<div class="ref-table-wrap"><table class="ref-table"><thead><tr>${columns.map(column => `<th scope="col">${text(ui, typeof column === 'object' ? column.label || column.title : column)}</th>`).join('')}</tr></thead><tbody>${rows.map((row, rowIndex) => `<tr>${(Array.isArray(row) ? row : columns.map(column => row[column.key])).map((cell, columnIndex) => { const linked = cell && typeof cell === 'object' && cell.entryId ? cell : section.cellLinks?.[rowIndex]?.[columnIndex] ? { entryId: section.cellLinks[rowIndex][columnIndex], title: valueText(cell, ui) } : null; return `<td>${linked ? internalLink(linked, ui) : text(ui, valueText(cell, ui))}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
   function grades(section, ui, r) {
-    return `<div class="ref-grade-list">${(section.grades || []).map((grade, index) => `<details class="ref-grade" ${index === 0 ? 'open' : ''}><summary><span class="ref-grade-number">${Number(grade.grade) > 0 ? text(ui, grade.grade) : ui.icon('wrench')}</span><span><strong>${text(ui, grade.title || (Number(grade.grade) > 0 ? t("Улучшение уровня ") + grade.grade : t("Установка эффекта")))}</strong><small>${text(ui, (grade.materials || []).map(item => (item.name || item.title) + ' × ' + valueText(item.count, ui)).join(' · '))}</small></span>${ui.icon('chevron-down')}</summary><div class="ref-grade-body">${grade.effects?.length ? facts(grade.effects, ui, 'ref-grade-effects') : ''}<h3>${th("Потребуется на одну попытку")}</h3><div class="ref-materials">${(grade.materials || []).map(material => {
+    return `<div class="ref-grade-list">${(section.grades || []).map((grade, index) => `<details class="ref-grade" ${index === 0 ? 'open' : ''}><summary><span class="ref-grade-number">${Number(grade.grade) > 0 ? text(ui, grade.grade) : ui.icon('wrench')}</span><span><strong>${text(ui, grade.title || (Number(grade.grade) > 0 ? t("Улучшение уровня ") + grade.grade : t("Установка эффекта")))}</strong><small>${text(ui, (grade.materials || []).map(item => (item.name || item.title) + ' × ' + valueText(item.count, ui)).join(' · '))}</small></span>${ui.icon('chevron-down')}</summary><div class="ref-grade-body">${grade.effects?.length ? facts(grade.effects, ui, 'ref-grade-effects') : ''}<h3>${th(Number(grade.grade) > 0 ? "Потребуется на одну попытку" : "Материалы для установки")}</h3><div class="ref-materials">${(grade.materials || []).map(material => {
       const stock = personalItem(r, { id: material.entryId, key: material.key }, 'materials'), known = stock?.owned !== undefined && stock?.owned !== null;
       return `<div class="ref-material ${known && Number(stock.owned) >= Number(material.count) ? 'is-enough' : ''}">${ui.icon('layers')}<span>${material.entryId ? internalLink({ ...material, title: material.name || material.title }, ui) : text(ui, material.name || material.title)}${known ? `<small>${th("Есть ")}${text(ui, ui.fmt(stock.owned))}</small>` : ''}</span><strong>× ${text(ui, valueText(material.count, ui))}</strong></div>`;
     }).join('')}</div></div></details>`).join('')}</div>`;
@@ -195,13 +200,18 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (r.entryError) return `<section class="reference-root ref-reader">${back}${errorPanel(r.entryError, ui, true)}</section>`;
     if (r.entryLoading || !r.entry) return `<section class="reference-root ref-reader" aria-busy="true">${back}${skeleton(ui, true)}</section>`;
     const entry = r.entry, article = entry.category === 'articles';
-    const sections = (entry.sections || []).filter(sectionIsVisible);
-    const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${imageSource(entry.image) ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${entry.description || entry.summary ? `<p class="ref-entry-lead">${text(ui, entry.description || entry.summary)}</p>` : ''}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${imageSource(entry.image) ? imageHTML(entry, ui, true) : ''}</header>`;
+    const galaxy = entry.category === 'systems' && window.GalaxyUI;
+    const showReferenceContent = !galaxy || galaxy.isOverview(r);
+    const sections = (entry.sections || []).filter(section => sectionIsVisible(section) && (!galaxy || section.id !== 'next'));
+    const description = (!galaxy || showReferenceContent && sections.length) && (entry.description || entry.summary);
+    const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${imageSource(entry.image) ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${description ? `<p class="ref-entry-lead">${text(ui, description)}</p>` : ''}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${imageSource(entry.image) ? imageHTML(entry, ui, true) : ''}</header>`;
     const related = (entry.related || []).filter(item => validID(item.id || item.entryId));
-    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${entry.properties?.length ? facts(entry.properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}${engineerRoadmap(entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div></section>`;
+    const properties = galaxy ? (entry.properties || []).filter(item => item.value !== entry.title) : entry.properties;
+    const referenceContent = showReferenceContent ? `${properties?.length ? facts(properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}${engineerRoadmap(entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div>` : '';
+    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${galaxy ? galaxy.renderReader(r, ui) : ''}${referenceContent}</section>`;
   }
 
-  function render(C, ui) { const r = state(C); return r.entryId ? entity(r, ui) : catalogue(r, ui); }
+  function render(C, ui) { const r = state(C); return r.entryId ? entity(r, ui) : catalogue(r, ui, C); }
   function redraw(C, ui, r) {
     if (!active(C) || state(C) !== r) return;
     const input = ui.$('#reference-query'), focused = input?.matches?.(':focus');
@@ -291,6 +301,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   async function handleClick(action, button, C, ui) {
     if (!action?.startsWith('reference-')) return false;
     const r = state(C), id = button?.dataset?.id;
+    if (action.startsWith('reference-galaxy-')) return window.GalaxyUI?.handleClick(action.slice('reference-galaxy-'.length), button, C, r, ui) || false;
     if (action === 'reference-open') return open(C, ui, id);
     if (action === 'reference-category') return setCategory(C, ui, id);
     if (action === 'reference-engineering-roadmap') {
@@ -352,6 +363,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     return false;
   }
   function handleInput(event, C, ui) {
+    if (event.target?.id?.startsWith('galaxy-') && active(C) && window.GalaxyUI?.handleInput(event.target, C, state(C))) return true;
     if (['reference-market-system', 'reference-market-quantity', 'reference-market-radius'].includes(event.target?.id)) {
       const r = state(C), key = { 'reference-market-system': 'system', 'reference-market-quantity': 'quantity', 'reference-market-radius': 'radius' }[event.target.id];
       if (r.market) r.market[key] = String(event.target.value || '').slice(0, key === 'system' ? 128 : 24);
@@ -363,6 +375,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     return true;
   }
   async function handleChange(event, C, ui) {
+    if (event.target?.dataset?.galaxyFilter && active(C) && window.GalaxyUI?.handleChange(event.target, C, state(C), ui)) return true;
     if (event.target?.id !== 'reference-group') return false;
     const r = state(C); clearTimeout(r.searchTimer); r.group = String(event.target.value || '').slice(0, 128); r.groupName = r.list?.groups?.find(group => group.id === r.group)?.title || ''; r.offset = 0;
     await loadList(C, ui); return true;
@@ -372,6 +385,9 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const r = state(C), host = ui.$('#page-scroll');
     if (host && !bindings.has(host)) {
       bindings.add(host);
+      host.addEventListener('submit', event => {
+        if (active(C)) window.GalaxyUI?.submitForm(event, C, state(C), ui, id => open(C, ui, id));
+      });
       host.addEventListener('error', event => {
         if (!event.target?.matches?.('[data-reference-image]')) return;
         event.target.hidden = true;
@@ -380,6 +396,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
       }, true);
     }
     if (r.restoreScroll !== null && host) { host.scrollTop = r.restoreScroll; r.restoreScroll = null; }
+    window.GalaxyUI?.init(C, r, ui);
     if (r.entry?.category === 'commodities' && r.market && (r.market.needsRefresh || (r.market.searching && r.market.polls < 65)) && !r.market.starting && !r.market.pollTimer && !r.market.inFlightToken) refreshMarkets(C, ui, r);
     if (r.entryId) return r.entry || r.entryLoading || r.entryError ? r.entryPromise?.catch(() => null) : loadEntry(C, ui);
     if (r.error && r.requestKey === listKey(r)) return null;
@@ -428,7 +445,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     for (const r of Object.values(C.referenceSessions || {})) { clearTimeout(r.searchTimer); stopMarkets(r); }
     if (id !== 'encyclopedia') return;
     const r = state(C), category = opts?.referenceCategory || modeCategory[opts?.mode];
-    if (category && category !== r.category) { r.category = category; r.query = ''; r.group = ''; r.offset = 0; r.listToken++; r.entryToken++; r.entryId = ''; r.entry = null; r.history = []; }
+    if (category && (category !== r.category || opts?.mode === 'Системы' && r.entryId)) { r.category = category; r.query = ''; r.group = ''; r.offset = 0; r.listToken++; r.entryToken++; r.entryId = ''; r.entry = null; r.history = []; }
   }
   // open(id,C,ui) is the public deep-link contract. Accept the original
   // C-first order as well for capture/smoke callers created during integration.

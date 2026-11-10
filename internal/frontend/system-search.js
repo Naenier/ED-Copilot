@@ -1,4 +1,4 @@
-/* Bounded remote system-name combobox. Names and input values are never translated. */
+/* System-name combobox for the bounded Spansh and EDSM lookup. */
 (() => {
   'use strict';
   const singleNames = new Set(['system','sourceSystem','destinationSystem','originSystem','targetSystem']);
@@ -90,6 +90,7 @@
       if (status === 'rate-limited') return text('Сервис временно ограничил запросы. Повторите через {count} с.','The service has temporarily limited requests. Try again in {count}s.',{count:Math.max(1,Math.ceil(Number(result?.retryAfterMs || 30000)/1000))});
       if (status === 'disabled') return text('Сетевой поиск отключён. Название можно ввести вручную.','Online search is disabled. You can enter the name manually.');
       if (status === 'error') return text('Не удалось получить подсказки. Можно повторить поиск или ввести название вручную.','Suggestions could not be loaded. Retry or enter the name manually.');
+      if (status === 'empty' && result?.limited) return text('Уточните название системы.','Refine the system name.');
       if (status === 'empty') return text('Подходящая система не найдена. Проверьте написание или уточните название.','No matching system was found. Check the spelling or refine the name.');
       return text('Найдено вариантов: {count}','Suggestions found: {count}',{count:suggestions.length});
     }
@@ -97,7 +98,13 @@
       if (!connected(node)) { close(); return; }
       mount(); popup.hidden = false; node.setAttribute('aria-expanded','true');
       const retry = status === 'error' || status === 'rate-limited';
-      popup.innerHTML = `<div class="system-search-status ${status === 'error' ? 'is-error' : ''}" id="${popupID}-status" role="status" aria-live="polite">${esc(message())}${retry?`<button type="button" data-system-retry>${esc(text('Повторить','Retry'))}</button>`:''}</div><div class="system-search-list" id="${popupID}-list" role="listbox" aria-label="${esc(text('Звёздные системы','Star systems'))}">${suggestions.map((item,i)=>`<div class="system-search-option ${i===selected?'is-selected':''}" role="option" aria-selected="${i===selected}" id="${popupID}-option-${i}" data-system-option="${i}"><strong>${esc(item.name)}</strong>${item.match==='correction'?`<span>${esc(text('Возможно, вы имели в виду','Did you mean'))}</span>`:''}</div>`).join('')}</div><div class="system-search-footer"><span>${esc(result?.limited?text('Выдача API ограничена. Уточните название.','The API result list is limited. Refine the name.'):fieldMode(node)==='lines'?text('Выбор заменит только текущую строку.','Selection replaces only the current line.'):text('Enter — выбрать · Esc — закрыть','Enter to select · Esc to close'))}</span><span>Spansh</span></div>`;
+      const source = result?.source === 'EDSM' ? 'EDSM' : result ? 'Spansh' : '';
+      const hint = result?.limited
+        ? (status === 'empty' ? '' : text('Выдача API ограничена. Уточните название.','The API result list is limited. Refine the name.'))
+        : fieldMode(node)==='lines'
+          ? text('Выбор заменит только текущую строку.','Selection replaces only the current line.')
+          : text('Enter — выбрать · Esc — закрыть','Enter to select · Esc to close');
+      popup.innerHTML = `<div class="system-search-status ${status === 'error' ? 'is-error' : ''}" id="${popupID}-status" role="status" aria-live="polite">${esc(message())}${retry?`<button type="button" data-system-retry>${esc(text('Повторить','Retry'))}</button>`:''}</div><div class="system-search-list" id="${popupID}-list" role="listbox" aria-label="${esc(text('Звёздные системы','Star systems'))}">${suggestions.map((item,i)=>`<div class="system-search-option ${i===selected?'is-selected':''}" role="option" aria-selected="${i===selected}" id="${popupID}-option-${i}" data-system-option="${i}"><strong>${esc(item.name)}</strong>${item.match==='correction'?`<span>${esc(text('Возможно, вы имели в виду','Did you mean'))}</span>`:''}</div>`).join('')}</div><div class="system-search-footer"><span>${esc(hint)}</span><span>${source}</span></div>`;
       if (selected >= 0) node.setAttribute('aria-activedescendant',popupID+'-option-'+selected); else node.removeAttribute('aria-activedescendant');
       position(); if (selected >= 0) popup.querySelector?.('[data-system-option="'+selected+'"]')?.scrollIntoView?.({block:'nearest'});
     }

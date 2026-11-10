@@ -78,7 +78,7 @@ async function selectGroup(id){
  const navigation=window.NavigationUI;if(!navigation?.groups.some(group=>group.id===id))return;
  const previous=C.group;C.group=id;C.focus=false;document.querySelector('.workspace')?.classList.remove('reading-focus');C.collapsed=false;storage.set('sidebar-collapsed',false);$('.sidebar')?.classList.remove('collapsed');
  renderNavigation();
- if(previous!==id||navigation.groupFor(C.tab)!==id){
+ if(previous!==id||navigation.groupFor(C.tab,C.mode)!==id){
   const entries=navigation.entries(C,id),remembered=C.groupLast?.[id],item=entries.find(item=>item.tab===remembered?.tab&&item.mode===(remembered?.mode||''))||(id==='trade'?entries[0]:entries.find(item=>C.nav.includes(item.tab)))||entries[0];
   if(item)await navigate(item.tab,{mode:item.mode});
  }
@@ -87,7 +87,7 @@ async function selectGroup(id){
 function rendererKind(){if(C.tab==='help'||C.tab==='statistics'&&C.mode==='Торговля')return 'custom';if(C.tab==='commander')return 'commander';if(C.tab==='exobiology')return 'exobiology';if(referenceActive())return 'reference';if(window.EngineeringRoadmapUI?.active(C))return 'engineering-roadmap';if(C.tab==='overview'&&(!C.mode||C.mode==="Обзор"))return 'overview';if(['learning','carrier-calculator','carrier-trade','deals','ranks','politics'].includes(C.tab))return C.tab;return C.tab==='settings'?'settings':'table';}
 function breadcrumbHtml(){
  const group=C.tab==='settings'?t('Приложение'):t(window.NavigationUI?.group(C.group)?.title||'Рабочее место');
- const names=[group,navTitle(C.tab)];
+ const names=[group,C.tab==='encyclopedia'&&C.mode==='Системы'?t(C.mode):navTitle(C.tab)];
  if(C.tab==='commander'&&C.mode&&C.mode!=='Сводка')names.push(t(C.mode));
  if(C.mode&&window.NavigationUI?.usesSidebarModes(C.tab)&&C.tab!=='commander')names.push(t(C.mode));
  if(C.tab==='learning'&&C.lesson)names.push(t('Урок'));
@@ -164,6 +164,19 @@ function referenceCell(row,column,text){
  const link=id?`<button type="button" class="table-entity-link" data-click="reference-entity" data-reference-id="${esc(id)}">${esc(text)}</button>`:esc(text);return system?`<span class="table-entity-actions">${link}<button type="button" class="icon-button" data-click="table-copy-system" data-system="${esc(system)}" title="${th("Копировать систему")}" aria-label="${th("Копировать систему ")}${esc(system)}">${icon("copy")}</button></span>`:link;
 }
 function colonyBudgetActive(){return C.tab==='colonization'&&C.mode==='Бюджет';}
+function renderEngineeringExchange(){
+ const trade=C.state.engineeringTrade;
+ if(C.tab!=='engineering'||!trade?.targetName)return '';
+ const en=currentLanguage()==='en', rows=trade.offers||[];
+ const link=(key,name)=>`<button type="button" class="table-entity-link" data-reference-id="material/${esc(key)}">${esc(name)}</button>`;
+ const target=link(trade.targetKey,en&&trade.targetEnglish||trade.targetName);
+ const columns=['Отдать','Количество','Доступно без резерва','Получить','Статус'];
+ const offers=rows.map(row=>{
+  const status=row.storageFits===false?'Мало места для материала':row.affordable===false?'Не хватает запаса':row.affordable===true&&row.storageFits===true?'Можно обменять':'Запас не подтверждён';
+  return `<tr><td>${link(row.fromKey,en&&row.fromEnglish||row.fromName)}</td><td>${esc(fmt(row.requiredFrom))}</td><td>${row.available==null?'—':esc(fmt(row.available))}</td><td>${esc(fmt(row.received))}</td><td>${th(status)}</td></tr>`;
+ }).join('');
+ return `<section class="panel eng-exchange" aria-label="${th('Результат обмена')}"><h2>${th('Результат обмена')}</h2><p>${target} × ${esc(fmt(trade.targetAmount))}</p>${rows.length?`<div class="eng-exchange-scroll"><table><thead><tr>${columns.map(label=>`<th scope="col">${th(label)}</th>`).join('')}</tr></thead><tbody>${offers}</tbody></table></div>`:`<p>${th('Нет подходящих вариантов обмена для текущего запаса.')}</p>`}</section>`;
+}
 function renderGeneral(){
  const page=C.page,table=tableWindow(),budgetMode=colonyBudgetActive();
  const colony=C.tab==='colonization',colonyOverview=colony&&(!C.mode||C.mode==='Обзор'),colonySearch=colony&&C.mode==='Выбор системы',colonyLog=colony&&C.mode==='Снабжение';
@@ -174,7 +187,7 @@ function renderGeneral(){
  const scoped=window.NavigationUI?.usesSidebarModes(C.tab), title=scoped&&C.mode?t(C.mode):page.Title;
  const intro=heading(title,'')+renderModes(!page.Rows.length&&(C.tab==='route'||colony))+(C.tab==='route'?(window.RouteWorkspaceUI?.renderSummary(C,uiContext())||''):colony?(window.ColonyWorkspaceUI?.render(C,uiContext())||''):'')+(C.tab==='route'?'<label class="route-clipboard-option"><input id="route-auto-copy" type="checkbox" '+(C.state.settings?.routeAutoCopyNext!==false?'checked':'')+`><span>${th("Копировать следующую систему после прыжка")}<small>${th("В карте галактики нажмите Ctrl+V.")}</small></span></label>`:'')+actions+(!budgetMode&&!colonyLog&&page.Summary?`<div class="summary-note">${esc(page.Summary)}</div>`:'');
  if(!page.Rows.length&&((C.tab==='route'&&C.mode!=='Итоги')||colonySearch))return intro;
- return intro+`<div class="data-split"><div class="table-panel"><div class="table-scroll"><table><thead><tr>${page.Columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${table.rows.map(r=>`<tr data-row="${esc(r.ID)}" class="${r.ID===C.selected?'selected':''}" tabindex="0" aria-selected="${r.ID===C.selected}">${r.Cells.map((c,index)=>`<td>${referenceCell(r,page.Columns[index],c)}</td>`).join('')}</tr>`).join('')}</tbody></table>${page.Rows.length?'':renderEmptyState()}</div>${renderTablePager(table)}</div>${C.inspector&&page.Rows.length&&!budgetMode&&!colonyLog?renderInspector():''}</div>`+(colony&&C.mode==='Строительство'?(window.ColonyWorkspaceUI?.renderBuilding(C,uiContext())||''):'');
+ return intro+renderEngineeringExchange()+`<div class="data-split"><div class="table-panel"><div class="table-scroll"><table><thead><tr>${page.Columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${table.rows.map(r=>`<tr data-row="${esc(r.ID)}" class="${r.ID===C.selected?'selected':''}" tabindex="0" aria-selected="${r.ID===C.selected}">${r.Cells.map((c,index)=>`<td>${referenceCell(r,page.Columns[index],c)}</td>`).join('')}</tr>`).join('')}</tbody></table>${page.Rows.length?'':renderEmptyState()}</div>${renderTablePager(table)}</div>${C.inspector&&page.Rows.length&&!budgetMode&&!colonyLog?renderInspector():''}</div>`+(colony&&C.mode==='Строительство'?(window.ColonyWorkspaceUI?.renderBuilding(C,uiContext())||''):'');
 }
 function tableWindow(){
  const rows=C.page?.Rows||[],key=[C.tab,C.mode,C.query].join('\u0000'),size=100;
@@ -197,7 +210,6 @@ function emptyStateInfo(){
  }
  if(C.tab==='engineering'){
   if(["План",''].includes(mode))return {title:t("План улучшений пуст"),hint:t("Добавьте модуль и чертёж."),actionId:'engineering.add'};
-  if(mode==='Обмен')return {title:t("Обмен не рассчитан"),hint:t("Укажите материал и количество."),actionId:'engineering.trade'};
   if(mode.includes('плана'))return {title:t("Для плана пока нет материалов"),hint:t("Добавьте улучшение в план или проверьте выбранную категорию материалов."),mode:'План',label:t("К плану улучшений")};
   return {title:mode==='Инженеры'?t("Инженеры не найдены"):t("Материалы пока не отображаются"),hint:t("Проверьте категорию и подключение журналов.")};
  }
@@ -283,7 +295,7 @@ async function loadView(quiet=false,{smokeProbe=false}={}){
 }
 function beginNavigation(){window.EngineeringRoadmapUI?.leave(C);window.SystemSearchUI?.close?.();++viewEpoch;C.page=null;C.actions=[];C.help='';const page=$('#page');if(page){page.innerHTML='<div class="page-loading" role="status">'+icon('refresh-cw')+`<span>${th("Открываю раздел…")}</span></div>`;page.setAttribute?.('aria-busy','true');}}
 const history=[];
-async function navigate(id,opts={}){if(['account','integrations'].includes(id))id='settings';if(id==='overview'&&['Планы','Состояние'].includes(opts.mode))opts={...opts,mode:'Обзор'};if(id==='commander'&&opts.mode==='Репутация')opts={...opts,mode:'Сводка'};if(id==='colonization'&&['Очередь снабжения','Поставки'].includes(opts.mode))opts={...opts,mode:opts.mode==='Поставки'?'Снабжение':'Строительство'};if(!C.tabs.some(t=>t.ID===id))return;if(!opts.back)history.push({tab:C.tab,mode:C.mode});C.tab=id;C.mode=opts.mode||window.NavigationUI?.group(window.NavigationUI?.groupFor(id))?.modes?.[0]?.[0]||'';const group=window.NavigationUI?.groupFor(id);if(group){C.group=group;C.groupLast[group]={tab:id,mode:C.mode};}C.query='';C.selected='';if(id!=='learning'){C.lesson='';C.course='';C.focus=false;}if(window.ReferenceUI?.navigate)window.ReferenceUI.navigate(id,opts,C);C.prefill=opts.prefill||{};beginNavigation();if(!C.nav.includes(id)&&['work','fleet','knowledge'].includes(group)&&id!=='help'){C.nav.push(id);await saveNavigation();}renderNavigation();renderChrome();$('#page-scroll').scrollTop=0;await loadView();}
+async function navigate(id,opts={}){if(['account','integrations'].includes(id))id='settings';if(id==='overview'&&['Планы','Состояние'].includes(opts.mode))opts={...opts,mode:'Обзор'};if(id==='commander'&&opts.mode==='Репутация')opts={...opts,mode:'Сводка'};if(id==='colonization'&&['Очередь снабжения','Поставки'].includes(opts.mode))opts={...opts,mode:opts.mode==='Поставки'?'Снабжение':'Строительство'};if(!C.tabs.some(t=>t.ID===id))return;if(!opts.back)history.push({tab:C.tab,mode:C.mode});C.tab=id;C.mode=opts.mode||window.NavigationUI?.group(window.NavigationUI?.groupFor(id))?.modes?.[0]?.[0]||'';const group=window.NavigationUI?.groupFor(id,C.mode);if(group){C.group=group;C.groupLast[group]={tab:id,mode:C.mode};}C.query='';C.selected='';if(id!=='learning'){C.lesson='';C.course='';C.focus=false;}if(window.ReferenceUI?.navigate)window.ReferenceUI.navigate(id,opts,C);C.prefill=opts.prefill||{};beginNavigation();if(!C.nav.includes(id)&&['work','fleet','knowledge'].includes(group)&&id!=='help'){C.nav.push(id);await saveNavigation();}renderNavigation();renderChrome();$('#page-scroll').scrollTop=0;await loadView();}
 async function saveNavigation(){await call('navigation',{tabs:C.nav});}
 function closeLayer(){window.SystemSearchUI?.close?.();$('#layers').innerHTML='';C.layer=false;C.themePreview=null;if(C.pendingLanguage)applyLanguage(true);}
 function dialog(title,body,footer='',wide=false){C.layer=true;$('#layers').innerHTML=`<div class="overlay-backdrop"><section class="dialog ${wide?'wide':''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header class="dialog-head"><h2>${esc(title)}</h2><span class="spacer"></span>${iconBtn('x','close-dialog',t("Закрыть"))}</header><div class="dialog-body">${body}</div>${footer?`<footer class="dialog-foot">${footer}</footer>`:''}</section></div>`;window.SystemSearchUI?.init?.(C,uiContext());const panel=$('#layers .dialog');setTimeout(()=>{if(!C.layer||!panel||panel!==$('#layers .dialog')||panel.contains(document.activeElement))return;const first=$('.dialog-body input:not([type=checkbox]):not([type=hidden]):not([disabled]),.dialog-body select:not([disabled]),.dialog-body textarea:not([disabled])',panel)||$('.dialog-foot button:not([disabled])',panel)||$('.dialog-head button',panel);first?.focus();},30);}
@@ -295,6 +307,7 @@ function filterCommand(query){
   const group=nav?.groupFor(tab.ID),modes=nav?.usesSidebarModes(tab.ID)?nav.entries(C,group).filter(item=>item.tab===tab.ID&&item.mode):[];
   return modes.length?modes.map(item=>({...item,section:tab.Title,subsection:item.title})):[{tab:tab.ID,title:tab.Title,icon:tabIcons[tab.ID]}];
  });
+ if(C.tabs.some(tab=>tab.ID==='encyclopedia'))items.push({tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'});
  const label=item=>item.subsection?(item.section===item.subsection?t(item.section):t(item.section)+' · '+t(item.subsection)):t(item.title);
  $('#command-results').innerHTML=items.filter(item=>norm(label(item)).includes(q)).map(item=>'<button class="command-item" data-nav="'+esc(item.tab)+'"'+(item.mode?' data-nav-mode="'+esc(item.mode)+'"':'')+'>'+icon(item.icon)+esc(label(item))+'<span class="spacer"></span>'+icon('arrow-right')+'</button>').join('')||'<div class="empty-state">'+th("Разделов с таким названием нет")+'</div>';
 }
@@ -333,7 +346,7 @@ async function submitAction(id,values){
  if(result?.themePreview){previewTheme(result.themePreview);return;}
  if(result&&'details' in result){dialog(result.title||t("Подробности"),`<div class="prose-small">${esc(result.details)}</div>`,btn(t("Закрыть"),'close-dialog'));return;}
  if(result?.help){dialog(t("Помощь · ")+navTitle(C.tab),`<div class="prose-small">${esc(result.help)}</div>`);return;}
- let message=result?.result?.started||result?.started?t("Поиск запущен"):t("Изменения сохранены"),nativeResult=null;
+ let message=id==='engineering.trade'?t("Обмен рассчитан"):result?.result?.started||result?.started?t("Поиск запущен"):t("Изменения сохранены"),nativeResult=null;
  if(result?.url){nativeResult=await call('native',{action:'open',url:result.url});message=t("Ссылка открыта в браузере");}
  if(result&&'copy' in result){nativeResult=await call('native',{action:'copy',text:result.copy});message=t("Скопировано в буфер обмена");}
  if(result?.native){nativeResult=await call('native',{action:result.native});message=result.native==='folder'?t("Папка журналов выбрана"):t("План импортирован");}
