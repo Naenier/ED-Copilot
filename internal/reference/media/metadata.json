@@ -1,771 +1,771 @@
 [
   {
     "file": "ship-sidewinder.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_sidewinder_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9TaWRld2luZGVyX1B1bHNlXzA2X1JlZEdpYW50XzE5MjAuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
     "width": 640,
     "height": 360,
-    "bytes": 30894,
-    "sha256": "0adb8e35394805cb3557ff14353d1f1d4206924089756a0bb7a9242da00ed3a7"
+    "bytes": 19607,
+    "sha256": "bf2c92a9e4cfa2cc8db49bc23ea93d009e27c9d7603e5ac4cdeda64ef7fe212e"
   },
   {
     "file": "thumb-ship-sidewinder.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_sidewinder_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2802,
-    "sha256": "79f8f7cb2e8bcd9c42cf72abbd264e9536801530841f13017015f2d0801fa85e"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/SideWinder/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7199,
+    "sha256": "d37709251d3926500e7cb93e72467226976d06c5e0a58e456940f8a726091dc1"
   },
   {
     "file": "ship-eagle.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_eagle_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9FYWdsZV9QdWxzZV8wNl9SZWRHaWFudF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
     "width": 640,
     "height": 360,
-    "bytes": 27940,
-    "sha256": "709f0b59244a3978db78f495997afdf6b1fbd142652ccb0aba20361a6c7b19a4"
+    "bytes": 18460,
+    "sha256": "2245430dade7b7bab503971a7caa3b35a9e4e115f42349f24e69ee92075e297d"
   },
   {
     "file": "thumb-ship-eagle.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_eagle_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2483,
-    "sha256": "c6d3f2280a028339fa507f69d69de4b27ac44d9ed0221e289f1c5f2c7d182579"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Eagle/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7764,
+    "sha256": "b201347261474b5e076c753e9bbf95032067e860b45b361b13ad4c9ecaee2a05"
   },
   {
     "file": "ship-hauler.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_hauler_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9oYXVsZXJfMTAxNS0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
     "width": 640,
     "height": 360,
-    "bytes": 30636,
-    "sha256": "b1d637cf2962245d338243d0795f0222068354981755065d3bbbee32f187a7bd"
+    "bytes": 22457,
+    "sha256": "e1b73f0894e42a33c40fae2e7b0d5343adc3d5ff10179100dc074012c080807e"
   },
   {
     "file": "thumb-ship-hauler.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_hauler_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2666,
-    "sha256": "88eb47f2c894184b692ea19fe62f70e42f39440479dc5bde27f7777767f479d6"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Hauler/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 5400,
+    "sha256": "105e11cb6e1fdc3c382e75c496411389a4229bdae060c89836e663ad8edae18a"
   },
   {
     "file": "ship-adder.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_adder_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9BZGRlcl9QdWxzZV8wNl9SZWRHaWFudF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
     "width": 640,
     "height": 360,
-    "bytes": 30398,
-    "sha256": "c07b5e8f9a516e2b269eb3ba80e45515f5cfc8d8a51fb31923b36c5ccafe7253"
+    "bytes": 21443,
+    "sha256": "74bfe5b39f92c0f34b32c541ea7ec22a621d5a5ef41ced086bcf7576996ba198"
   },
   {
     "file": "thumb-ship-adder.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_adder_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2734,
-    "sha256": "c03ab7212a2e0948eab69193e74e09668d4ffa651fe079055530db41cb8fdc80"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Adder/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7914,
+    "sha256": "c9ba63d3529527b50ee616e556a49c989bfe111d63adc83206ff879867089add"
   },
   {
     "file": "ship-viper.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vipermk3_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl92aXBlcl8xMDM3LTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
     "width": 640,
     "height": 360,
-    "bytes": 33504,
-    "sha256": "c97ab766ebd5497bc9f48258546dbb42727ffd08835b7d8c719f6d7fa94e0ee2"
+    "bytes": 22442,
+    "sha256": "374dc5373539a2291eab809cfe6638e6f1f9504c0bcba544e974a35289e8eb6a"
   },
   {
     "file": "thumb-ship-viper.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vipermk3_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2899,
-    "sha256": "fa981b0cbc19f723f24ecf9e8c6dd19f258469dfc8b4568fdb2ba427de4952bd"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Viper/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6610,
+    "sha256": "d4b5dc5f60ec7ea9d4a0bcc4ad8a1a603d0a19936fad90b8f60dcbe7772790a5"
   },
   {
     "file": "ship-cobramkiii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_cobramk3_shipyard.jpg",
+    "url": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359320/ss_0d7c36b878ae21f14ac0bfbf21b96f746a3be254.1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 27038,
-    "sha256": "84039b349294060392c71d54d7bc29db47dd5af341b62e85c9000943fed5d30d"
+    "bytes": 46792,
+    "sha256": "df569cdfa40b8da0b1bc2918f114c0f47e64d120634f44ef0f5856038efdb1dd"
   },
   {
     "file": "thumb-ship-cobramkiii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_cobramk3_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2505,
-    "sha256": "79c8d9b1da6960bd9f4794fc146a1f948d3f682174cd8512aa81ff6bfa8a2e5a"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/CobraMkIII/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6719,
+    "sha256": "8688d02f9cd01671d2c4fc3d190b4c9bca4050e25c8b68ea79f6493148433f38"
   },
   {
     "file": "ship-type6.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type6_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl90eXBlNl8xMDIyLTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
     "width": 640,
     "height": 360,
-    "bytes": 29097,
-    "sha256": "0415a9eac19ca15af830cdc078afbf31d45fdafd680ae518d2144911a2aba70e"
+    "bytes": 34610,
+    "sha256": "a50804941fcebe0c0fef935680ac893b0f316db8f75c90a2afe6635694e3472f"
   },
   {
     "file": "thumb-ship-type6.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type6_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2629,
-    "sha256": "56cc6653cf2b7c010dde2ef59073c564081ea1268adeb8f51c1e6d9006334dcd"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Type6/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7709,
+    "sha256": "70ce5b9dd86323500ec9e18cdab7ba4fe3e214acb0cf3fea35f3e908f3412a60"
   },
   {
     "file": "ship-dolphin.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_dolphin_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9kb2xwaGluXzEwOTItMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
     "width": 640,
     "height": 360,
-    "bytes": 31609,
-    "sha256": "948f6bacdfb5af3dc123af89fc3551043a53c8d48f942921c89840c1551387df"
+    "bytes": 17855,
+    "sha256": "42e670452b7c8c9ed54a1d542749d4f9ee394805a76fcf9452a6f6467f5ad556"
   },
   {
     "file": "thumb-ship-dolphin.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_dolphin_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2902,
-    "sha256": "25183543634dbf24b9fface4e7fb29550f2149ac9448df15a94bf5733403a9ff"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Dolphin/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6917,
+    "sha256": "d46ca42266701ccf6ddfeed47ffcce836969b6dbdfe8d77c9af5b03b855dcda2"
   },
   {
     "file": "ship-type7.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type7_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3QvdS90dXJidWxlbmNlXzAyX2ZvcmNfZmRldl92X3R5cGU3XzEwNDNfc3RhcnNfMTkyMC5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
     "width": 640,
     "height": 360,
-    "bytes": 30913,
-    "sha256": "11b016515cf43451e2845e7e7cacf3e15ff982f8dc70a27ecb6b1e588a7e319e"
+    "bytes": 34484,
+    "sha256": "3485f1cd8b0db37a8f80093b28b73454b69bfe1fc114366f67dfc44b7c516d6e"
   },
   {
     "file": "thumb-ship-type7.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type7_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2689,
-    "sha256": "3c6287c1d48c261e9aec368d58561956b2af1f444955a68e6babd046a6ca4f47"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Type7/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7524,
+    "sha256": "685722831e643231ff7cf1afc00d11d9444b95383f2bbe0d8e1ae18d45516593"
   },
   {
     "file": "ship-asp.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_asp_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9BU1BfMTE4OC0xLUlmbUlRUm9SLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
     "width": 640,
     "height": 360,
-    "bytes": 29196,
-    "sha256": "28360a43e620e2668d7adc8df241b88d39cd6dc4069a94e2246689503839914b"
+    "bytes": 28023,
+    "sha256": "adb1f50ca4f41195dd9aa67e383eb99dd159f063f74c49a1ae551d123db472c2"
   },
   {
     "file": "thumb-ship-asp.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_asp_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2552,
-    "sha256": "1da56eeb373e4d543b604d6ac110fc3e51762b84b15ae164904cce6cb0aa62d4"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Asp/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 5915,
+    "sha256": "f1eb1c944a9ac17ea59f4622cbd03d5567d270dcbd2aca3d455ef38a832c760a"
   },
   {
     "file": "ship-vulture.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vulture_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 33194,
-    "sha256": "8024e52c4ff9977f5af8277354f783ee3593535f78821d20652ffe6ad043ba65"
-  },
-  {
-    "file": "thumb-ship-vulture.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vulture_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2892,
-    "sha256": "8f37eab48ccb47bc976f33a577d6614f06b0e5c9bc8c3520409f635a846737b2"
-  },
-  {
-    "file": "ship-empiretrader.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_clipper_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 23551,
-    "sha256": "269737e5880f46c90bad06ba564c5bcb2c06eebd38c90eb24ef190a748fece27"
-  },
-  {
-    "file": "thumb-ship-empiretrader.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_clipper_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2292,
-    "sha256": "6e0d0891c7775ea5e2ff40c4ea8133eabe284793c89a6cee72613ccbbd1e4a44"
-  },
-  {
-    "file": "ship-federationdropship.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_feddrop_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29685,
-    "sha256": "5783986d3eab92a8133a4d510470b4c94e1bda7d5248e9337a2c6005bb99f914"
-  },
-  {
-    "file": "thumb-ship-federationdropship.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_feddrop_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2576,
-    "sha256": "9ec3104c053cf6ab9456b96181e749dfea1cce08480109e61bb0321399ca6fbb"
-  },
-  {
-    "file": "ship-orca.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_orca_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 31734,
-    "sha256": "e6c2994392c3842407635d671a634b14aa8ef497d645005684081a73e7fd0206"
-  },
-  {
-    "file": "thumb-ship-orca.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_orca_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3056,
-    "sha256": "96867e245f9e3439da8da2507f7dec6fc93a14f693f3857f257cc79761dae117"
-  },
-  {
-    "file": "ship-type9.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type9_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 33234,
-    "sha256": "b76ad3912e5da2ee89059f9229ad229b208806de1bf2615c79656aed5d22ab62"
-  },
-  {
-    "file": "thumb-ship-type9.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type9_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2694,
-    "sha256": "bf346a1187bf8e4dc4f80a52c512a554bc5e029b103a262eaba29450ad9f9765"
-  },
-  {
-    "file": "ship-python.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_python_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 31711,
-    "sha256": "d8340ba1c983475f4e2a4608e79554d66cca50da4a9e9aba43b243603c852329"
-  },
-  {
-    "file": "thumb-ship-python.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_python_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2809,
-    "sha256": "5be0dd9929c7ce1d2a256cb0b75614e4928b18a110643205f26391dfb3e8e6ff"
-  },
-  {
-    "file": "ship-belugaliner.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_beluga_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29792,
-    "sha256": "0f0bf84a9f6bd5a4a29ea930694a5c5cbeb0198bd01a15c4eac8f1c32a593c27"
-  },
-  {
-    "file": "thumb-ship-belugaliner.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_beluga_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2923,
-    "sha256": "5aafe9dc95442b733a3b68d13a98c6877a70b9bce7127e25df328a562c527c0e"
-  },
-  {
-    "file": "ship-ferdelance.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_ferdelance_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 32578,
-    "sha256": "75730b2dcad2b9387b435ebb330c56f96bbba67e0c40d2df4e37e188c4ff4748"
-  },
-  {
-    "file": "thumb-ship-ferdelance.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_ferdelance_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2934,
-    "sha256": "a8202147493486ce19ef7651b447ed6bb3848a83a7f0735ff3046de8e14a16bb"
-  },
-  {
-    "file": "ship-anaconda.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_anaconda_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 30233,
-    "sha256": "54bd2958bf7d1bc6fcc0d553d1585a8cf3982fa6478053ebebac16a4643bb966"
-  },
-  {
-    "file": "thumb-ship-anaconda.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_anaconda_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2661,
-    "sha256": "5aeb90435b4f3f7c5fa88118d0fc943be4660e35ddacc8e1e16d702419052086"
-  },
-  {
-    "file": "ship-federationcorvette.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedcorvette_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 32791,
-    "sha256": "967217d65d7609207a10dd710a8cd579a24bc1998845c8b9f4eb3bc98ee7ab12"
-  },
-  {
-    "file": "thumb-ship-federationcorvette.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedcorvette_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2807,
-    "sha256": "00e289edac5d77e764925a5f453ae9d29bcf0382a960e66aa2df582025d45536"
-  },
-  {
-    "file": "ship-cutter.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_cutter_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 33863,
-    "sha256": "e3b1ddbea7b935583c6525b4a0910b09cae3311cb3656c54d7062105fc63bed4"
-  },
-  {
-    "file": "thumb-ship-cutter.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_cutter_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3014,
-    "sha256": "b551a13a290e80a493e1ffba39e082fe0f6ccb89bd1628ff4fa5507588bd79c7"
-  },
-  {
-    "file": "ship-diamondback.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_diamondback_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 30997,
-    "sha256": "344f1510a0bbb4d293738688e7354da5d63a665a7dfd3a11336b5ce423f2c769"
-  },
-  {
-    "file": "thumb-ship-diamondback.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_diamondback_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2649,
-    "sha256": "dff7afd6e2b6ee16ed968a0d27ec674a5f53217bb6d289d75dfa36099f76f514"
-  },
-  {
-    "file": "ship-empirecourier.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_courier_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 32275,
-    "sha256": "0e5c8ab408e7532c43855759f73e54e9c577e5e328adc6a64e74276d4937e060"
-  },
-  {
-    "file": "thumb-ship-empirecourier.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_courier_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2983,
-    "sha256": "7a588842973d9c5ca1e37982c7251942a5096839f25caa586121bba807a1a49a"
-  },
-  {
-    "file": "ship-diamondbackxl.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_diamondbackxl_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 34678,
-    "sha256": "85cccd21bdff046612f8f2971fcf33e45a890e901e7699c6b96eb732200f9ad6"
-  },
-  {
-    "file": "thumb-ship-diamondbackxl.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_diamondbackxl_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2925,
-    "sha256": "72f7f3733bbaa382d1c2d6b73e4def8d8bfedfc7d0624d7949a6d430ecce12eb"
-  },
-  {
-    "file": "ship-empireeagle.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_imperial_eagle_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29670,
-    "sha256": "b7e2aeaa2af4a3c1a5ac1eece5501316be8ad1b0794fba78c80e104e4a68c399"
-  },
-  {
-    "file": "thumb-ship-empireeagle.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_imperial_eagle_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2683,
-    "sha256": "1379296dc9600963d2fca6afcd977940c5aee4f7551cc653c06877048d3b71fb"
-  },
-  {
-    "file": "ship-federationdropshipmkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedassault_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 28124,
-    "sha256": "e64ab58c584c8e53dbd3ffbb6bcd63b5de88b4927eb49c9813a222c7f88793af"
-  },
-  {
-    "file": "thumb-ship-federationdropshipmkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedassault_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2477,
-    "sha256": "fcc640e08f0fa17c95a9c9a0a74b0a5d5bdcdd304368fa33bc96904d903db757"
-  },
-  {
-    "file": "ship-federationgunship.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedgun_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 31429,
-    "sha256": "1d06358cf2b4cf00acc9f8bef42456f01e24e54b1c2a02f9744c44c5d5435303"
-  },
-  {
-    "file": "thumb-ship-federationgunship.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_fedgun_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2761,
-    "sha256": "8096631a169d7b0dd58879c4aae0bfd716c0b4d5c4404a9611cb04d39206db23"
-  },
-  {
-    "file": "ship-vipermkiv.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vipermk4_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 37574,
-    "sha256": "74ce277dbf342597182ea250d749701f78ac4ced682d61a8af833d1f82dfeaff"
-  },
-  {
-    "file": "thumb-ship-vipermkiv.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_vipermk4_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3161,
-    "sha256": "60f8372da34dd59a29a7d9f2999423276a3e9c3a2c613adce5f1b2b8be83ec25"
-  },
-  {
-    "file": "ship-independanttrader.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_keelback_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29544,
-    "sha256": "845d2487632870b72803a9df858c6cf1372820cc914b8cbc9a44771e1995ba52"
-  },
-  {
-    "file": "thumb-ship-independanttrader.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_keelback_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2727,
-    "sha256": "7118f982d172a41f26b651661706554cf0a8d67e661042cc52aed827b9e62f49"
-  },
-  {
-    "file": "ship-aspscout.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_aspscout_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29425,
-    "sha256": "28125da43862786e2d28990c48e9c4a699a50733ea11015dba75608b008260fc"
-  },
-  {
-    "file": "thumb-ship-aspscout.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_aspscout_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2589,
-    "sha256": "bfad85dd77153c00bb253f46d03bcb53d6a33cf448abfde21f751fd109745a4a"
-  },
-  {
-    "file": "ship-type9military.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type10_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 33783,
-    "sha256": "c03e392efd5cc5eb4babeb28c384203a98e2f299db14626e9a9c31dfb662decd"
-  },
-  {
-    "file": "thumb-ship-type9military.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_type10_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2823,
-    "sha256": "7317b5c214c9873098b326e06d2fef770d9d0632162a644d89e4283e9e042f61"
-  },
-  {
-    "file": "ship-kraitmkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_kraitmk2_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29480,
-    "sha256": "d9087db62df8b1391402b507932e5c717064c3580d8bbbb860eeff44c8fae557"
-  },
-  {
-    "file": "thumb-ship-kraitmkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_kraitmk2_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2557,
-    "sha256": "fc744ec0c93432f8c3f03f2392a463bcaeb00ff745cbb89014cec8932b6485e2"
-  },
-  {
-    "file": "ship-typex.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_chieftan_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 29894,
-    "sha256": "693782240f8270a6d42297020ee3cf96e0286f9863aa7d5274190fbb1a07c34b"
-  },
-  {
-    "file": "thumb-ship-typex.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-03/ed_chieftan_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2631,
-    "sha256": "c68f6eeabb70ef292a22d58e3b5e1f982f7b512158332645d2729aefa5dcfb53"
-  },
-  {
-    "file": "ship-typex2.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_crusader_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 28234,
-    "sha256": "ef60d9f81e388f8546b9eb5dfda679adebcf83ca3a08a497d59a9edc4584a29c"
-  },
-  {
-    "file": "thumb-ship-typex2.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_crusader_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2476,
-    "sha256": "a65280dfd0bd1e2111cd40aacac58c5de8bec67f813d98a725b893b142580f6b"
-  },
-  {
-    "file": "ship-typex3.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_challenger_shipyard.jpg",
-    "width": 640,
-    "height": 360,
-    "bytes": 28885,
-    "sha256": "27bbc3d2b694d58b24781f6f39f64a9c907eae9751b4b1c99b4ad0f35537080a"
-  },
-  {
-    "file": "thumb-ship-typex3.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_challenger_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2565,
-    "sha256": "86be6446e274fe1093dd6a6ba27e199ebe064ee151fb100f4ec45bd0a3c65a11"
-  },
-  {
-    "file": "ship-kraitlight.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_kraitphantom_shipyard.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3MvYS9zYWx2YWdlXzAzX3dlYnN0b3JlXzE5MjAucG5nIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
     "width": 640,
     "height": 360,
     "bytes": 27402,
-    "sha256": "6661c3fddaa1b8871f06bf6ab9f2f481329b22640fa82fb391a03c559d34e198"
+    "sha256": "3cc2b29c641dc7daaeb5e54c0671359ae713ed06297f7d3c53d870d8c17b01f8"
+  },
+  {
+    "file": "thumb-ship-vulture.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Vulture/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7014,
+    "sha256": "c571dabd2f3ebfa428d3bf5850fdf69b28d463ba45b1dddf88bb7498d0bb86b7"
+  },
+  {
+    "file": "ship-empiretrader.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9FbXBpcmVUcmFkZXJfRXhwcmVzc3dheV8wNl8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 54907,
+    "sha256": "b18c7610b3924759f3a5511018e8ab400462503cb358fdd25c0ab9cc55db104b"
+  },
+  {
+    "file": "thumb-ship-empiretrader.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Empire_Trader/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7815,
+    "sha256": "3db7c055614ec2d6047f0d775996f967bd20cbe561394166135caabe2f0b1811"
+  },
+  {
+    "file": "ship-federationdropship.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRkcm9wXzEwMTAtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 21565,
+    "sha256": "c4080efcd553a01c8f0ed29369d439261e870a2514f941dd63341f0a53ca2bc3"
+  },
+  {
+    "file": "thumb-ship-federationdropship.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Federation_Dropship/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6853,
+    "sha256": "b5141353df9788bef1b45ff75f3adea76b4fedc3ddbd13f4cc92e75b9a3428ef"
+  },
+  {
+    "file": "ship-orca.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9PcmNhX0V4cHJlc3N3YXlfMDZfRnVsbF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 42040,
+    "sha256": "9de59a7716d0fa1970d30bc0ee845155e788bcb0654595a6004d7ea1646fbe4f"
+  },
+  {
+    "file": "thumb-ship-orca.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Orca/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7346,
+    "sha256": "d9c12f4714d7a0739251ffe044c38f1d07a8d3d38cdacef163c1d12235a0ead8"
+  },
+  {
+    "file": "ship-type9.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl90eXBlOV8xMDkxLTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "width": 640,
+    "height": 360,
+    "bytes": 24323,
+    "sha256": "11fae57612a7362a092e09b3d6540bb6ab952fc15a65ed58d6519dd83cf06fe3"
+  },
+  {
+    "file": "thumb-ship-type9.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Type9/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 5573,
+    "sha256": "dc9944a7b91a1e703607f74ba4a7a5f0dd54a8fb07180ce12395f524a55d4ba9"
+  },
+  {
+    "file": "ship-python.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9weXRob25fYnVuZGxlXzAwMi1CYXNlLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 30893,
+    "sha256": "88fddb83f8b4cafc77c52e401874f6e8231c1a8b1886ac4d993f3a21f11e2338"
+  },
+  {
+    "file": "thumb-ship-python.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Python/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6770,
+    "sha256": "bba49b7797ab1671a323efc5471b257ff4cbcf8e8f94c41857489e1473c57f08"
+  },
+  {
+    "file": "ship-belugaliner.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9CRUxVR0FfMTA2NS0xLUxPelNyVk5aLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 20812,
+    "sha256": "067f18258db873c3f6161a516eba18af02ca030f571490405f696d5bce98c7a3"
+  },
+  {
+    "file": "thumb-ship-belugaliner.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/BelugaLiner/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7299,
+    "sha256": "715725f7b416af8e2f431cd5a4155ad83f41fcb64f9bb1525736240659f4829e"
+  },
+  {
+    "file": "ship-ferdelance.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZXJkZWxhbmNlXzEwMDktMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 26813,
+    "sha256": "f9c84c2d3d44f8549f5ce1a7e10953e85657b9ca33c6103fc02abaf7638662d2"
+  },
+  {
+    "file": "thumb-ship-ferdelance.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/FerDeLance/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6577,
+    "sha256": "87bbbd78f0ceddace9dea69b646887e2d0175fc3e9bf8e3c355756892a578838"
+  },
+  {
+    "file": "ship-anaconda.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L24vYS9uYXZhbF8wNl9mb3JjX2ZkZXZfdl9hbmFjb25kYV8xMTkwX3N0YXJzXzE5MjAucG5nIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "width": 640,
+    "height": 360,
+    "bytes": 22120,
+    "sha256": "1246481415727beb9269172ccb105a20e05ebeaaf124cf8c16d161e4970ce2e8"
+  },
+  {
+    "file": "thumb-ship-anaconda.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Anaconda/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7406,
+    "sha256": "9897a65da86ed29a363f98e0dcabe73816ccdc00b2a6f35601b6267446b7500a"
+  },
+  {
+    "file": "ship-federationcorvette.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRlcmFsX2NvcnZldHRlXzEwMTEtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 31583,
+    "sha256": "abf9cd997647307e3c798cf9aebc9f004bf454ab98c0607f53abbd62928bf356"
+  },
+  {
+    "file": "thumb-ship-federationcorvette.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Federation_Corvette/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7746,
+    "sha256": "3227f6d3bfafe84c5f542fcb37d0b14365c39eeda13ece00a1b10a37e1e606e8"
+  },
+  {
+    "file": "ship-cutter.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9pbXBlcmlhbF9jdXR0ZXJfMTAxMS0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 20483,
+    "sha256": "968dc2fee1f9af824f189d1aefbd81a3b7b59f48bc12edef03d6a923de5069bf"
+  },
+  {
+    "file": "thumb-ship-cutter.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Cutter/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6982,
+    "sha256": "017849f04094141104c294aefc40653570eaae0db4d338f04305a6b144bdbab9"
+  },
+  {
+    "file": "ship-diamondback.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9ESUFNT05EX1NDT1VUXzEwNDQtMS02NEl6ZmxaMy5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 35375,
+    "sha256": "4cc2208a21d75d491cd8789b072f368be20e917e6e31db434f5811261b65fb64"
+  },
+  {
+    "file": "thumb-ship-diamondback.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/DiamondBack/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7880,
+    "sha256": "b8a4939512f65e2dfeed6363736b85e59e9706ac2ba3d13992081294914dd121"
+  },
+  {
+    "file": "ship-empirecourier.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9JTVBFUklBTF9DT1VSSUVSXzEwNTItMS11eUp5blhWeS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 26310,
+    "sha256": "f5463abf2c7b57a8f39b7425d1e219d65cf908984f9e0127ce5df2a8713446f4"
+  },
+  {
+    "file": "thumb-ship-empirecourier.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Empire_Courier/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6983,
+    "sha256": "fb1538d964026562897be148a834af1b402385640def40135995dbca85edf380"
+  },
+  {
+    "file": "ship-diamondbackxl.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9kaWFtb25kX2V4cGxvcmVyXzEwNjMtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 37153,
+    "sha256": "fac2815d3a8a6c63203de379ab059ddbb429458f93bae7f2f009fffefca6aab8"
+  },
+  {
+    "file": "thumb-ship-diamondbackxl.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/DiamondBackXL/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6774,
+    "sha256": "065ab9fde420ad92e33287ef5a6005d97e81c0e1f838bb5ba23e6b096a211d29"
+  },
+  {
+    "file": "ship-empireeagle.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9pbXBlcmlhbF9lYWdsZV8xMDc3LWJhc2UuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "width": 640,
+    "height": 360,
+    "bytes": 18868,
+    "sha256": "2d70363884657fff4fbd731e4e7811a826f088a076592da465cd4e3022bf1071"
+  },
+  {
+    "file": "thumb-ship-empireeagle.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Empire_Eagle/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 5265,
+    "sha256": "06396c0bac21c73467d288a03ef2a655b02b9debe6835fc9e976d5c3b62f889e"
+  },
+  {
+    "file": "ship-federationdropshipmkii.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRlcmFsX2Fzc2F1bHRfMTA0Ni0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 32913,
+    "sha256": "e53a976310926c49f853d287d236957455ad4eeae3acf349257e225f9e29a44b"
+  },
+  {
+    "file": "thumb-ship-federationdropshipmkii.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Federation_Dropship_MkII/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7815,
+    "sha256": "ee6f6dde6015ff9904ed1416f3ef51cf982f71b5c88816e7b9277d4af91cd847"
+  },
+  {
+    "file": "ship-federationgunship.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9GRURFUkFMX0dVTlNISVBfMTA1MC0xLXJ1c0lmT01zLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 25785,
+    "sha256": "fb704a64a009a1ceb5ba967ca7eaf4cd403739b8f2ed1cadaaf451adbcad1a95"
+  },
+  {
+    "file": "thumb-ship-federationgunship.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Federation_Gunship/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7361,
+    "sha256": "7d371a65dfb9808a2ac6e74504125664e11908cf8ce40ba74a15787f16806921"
+  },
+  {
+    "file": "ship-vipermkiv.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl92aXBlcl8xMDU2LTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "width": 640,
+    "height": 360,
+    "bytes": 27780,
+    "sha256": "9ec501efdaa8b15240d5d30f5528b4a6c0ba1a93b47b26d58be169b7c520889f"
+  },
+  {
+    "file": "thumb-ship-vipermkiv.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Viper_MkIV/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6788,
+    "sha256": "ddf153923e3f986d16c377a9d6832b9dbc5c6bd09892ea02f9ce918dd418f416"
+  },
+  {
+    "file": "ship-independanttrader.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3QvdS90dXJidWxlbmNlXzAyX2ZvcmNfZmRldl92X2tlZWxiYWNrXzEwNjFfc3RhcnNfMTkyMC5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 37443,
+    "sha256": "cb06eca6adb1ebe9c5c9361af8662b2731e1bfdaad9db28128043192c812b950"
+  },
+  {
+    "file": "thumb-ship-independanttrader.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Independant_Trader/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6902,
+    "sha256": "9fb98da74e4040244da19e4259265773223a8d3d6b21cb4fb62c70346c424abc"
+  },
+  {
+    "file": "ship-aspscout.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9BU1BfU0NPVVRfMTAxNC0xLXFySm1VTTZjLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "width": 640,
+    "height": 360,
+    "bytes": 25374,
+    "sha256": "ece30fd7e9d4a6ac34a58b31ee2eed191ef0f0033e5d0dbd3681f4aec063ed8a"
+  },
+  {
+    "file": "thumb-ship-aspscout.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Asp_Scout/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6590,
+    "sha256": "2bdb0d257108241c0dafece0dde97db1addcc746f844aa9ccdeeb7f317dc4500"
+  },
+  {
+    "file": "ship-type9military.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9tYW1tb3RoXzEwMTEtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 23796,
+    "sha256": "5a4a6c0f59f648603d4036cc1a5145135f4175f689507add643b7df0d7abc06c"
+  },
+  {
+    "file": "thumb-ship-type9military.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Type9_Military/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6240,
+    "sha256": "98d34e18b0ad59e457edc1f185ec568fe668249622dcd63fa1012a47d4900538"
+  },
+  {
+    "file": "ship-kraitmkii.jpg",
+    "url": "https://elitedangerous2016.wordpress.com/wp-content/uploads/2018/06/krait_mkii_hangar_3_4k.jpg",
+    "width": 640,
+    "height": 360,
+    "bytes": 42522,
+    "sha256": "c29f6801d47716f180bd73cbb99ff6648bd86aa6e2f9174dee539bf067b454d9"
+  },
+  {
+    "file": "thumb-ship-kraitmkii.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Krait_MkII/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6270,
+    "sha256": "e78a8326f1025b0c41d4fc3bc66ea83063be5bec396fdf67320f05424f195c74"
+  },
+  {
+    "file": "ship-typex.jpg",
+    "url": "https://cdn.mos.cms.futurecdn.net/hrAEjZy9L6wsiLWwMmNnGX.png",
+    "width": 640,
+    "height": 360,
+    "bytes": 30525,
+    "sha256": "fac487449355f0832e27c4e4b824e8a38c640062fd3ae6e71556d9f25e0ceae8"
+  },
+  {
+    "file": "thumb-ship-typex.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/TypeX/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6708,
+    "sha256": "5e19ccab9538bae103e1a5faeb619b8df0952780f5fd94ee0d245e2b00922b8e"
+  },
+  {
+    "file": "ship-typex2.jpg",
+    "url": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/clans/8337594/42cbfbd95777fd2c9a8772f690372dbaa3dc88d6.jpg",
+    "width": 640,
+    "height": 360,
+    "bytes": 21527,
+    "sha256": "d9874956fcf05fcaf4385624c5a1684036f32ce5404a35547cfcb06ec2e3a9b9"
+  },
+  {
+    "file": "thumb-ship-typex2.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/TypeX_2/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6744,
+    "sha256": "511e6c59c44c8acac9beb10d78d2b1d19770b29a2c0c12b7a62e900607aa962b"
+  },
+  {
+    "file": "ship-typex3.jpg",
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9jaGFsbGVuZ2VyXzEwMjktMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "width": 640,
+    "height": 360,
+    "bytes": 25303,
+    "sha256": "db56c686bf7a862550a76a29ffedddbe13a752aeb56d5efe5e301abc61f71379"
+  },
+  {
+    "file": "thumb-ship-typex3.jpg",
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/TypeX_3/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6835,
+    "sha256": "48bf4eb4f1abfdf8427ef74873ec7a2aa5d1c7ceabc0b43ea317954e595b29a5"
+  },
+  {
+    "file": "ship-kraitlight.jpg",
+    "url": "https://bleedingcool.com/wp-content/uploads/2018/11/Elite-Dangerous-Beyond-Krait.jpg",
+    "width": 640,
+    "height": 360,
+    "bytes": 29378,
+    "sha256": "67540202b32725467254ec7835a9314e35af63a37de1fc3a5889a1fbf6af7036"
   },
   {
     "file": "thumb-ship-kraitlight.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_kraitphantom_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2376,
-    "sha256": "2e4b9e46d050383e0bc94916299b0161080015d0abdd0f44afdbddcb8170e83b"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Krait_Light/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6233,
+    "sha256": "98160400a1c1ac9e75aeb0d1c8ff917381c58be6c50a8a3bcfed797b2d2f016e"
   },
   {
     "file": "ship-mamba.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_mamba_shipyard.jpg",
+    "url": "https://bleedingcool.com/wp-content/uploads/2018/11/Elite-Dangerous-Beyond-Mamba.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 29122,
-    "sha256": "8cf2a6073cdbd024169b2410f035714d7ff9053b0e5b5d3fa97d8d41f99bddaa"
+    "bytes": 47123,
+    "sha256": "5a6ce36de74b943cea96529d761c4630e0576b50968b12039a89ac3adbd9ec7e"
   },
   {
     "file": "thumb-ship-mamba.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_mamba_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2856,
-    "sha256": "363659a79195b57a0537b10db01a43bc68bd6cdf14680a69d8b20485cafb1f6f"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Mamba/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7474,
+    "sha256": "e63710bb6366952984a4433f00f5d7944ad0475e3726490b490be6cf9745a6ee"
   },
   {
     "file": "ship-pythonnx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_python-mk-ii_shipyard.jpg",
+    "url": "https://cms-cdn.zaonce.net/2024-04/ed-python-ii-base_02.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 37973,
-    "sha256": "88f480ac564151dbffa7c4197282efce4bed3118803d54c06fb54aa875009782"
+    "bytes": 30310,
+    "sha256": "11968350ba4f74e7c61df4a0ab5e381958c787a7e686776928b966adcc9a0747"
   },
   {
     "file": "thumb-ship-pythonnx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-04/ed_python-mk-ii_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3040,
-    "sha256": "8f129cc81350c862da0f1641142815b03d9f85cb060a5619099fbecb72a1d5f9"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Python_NX/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7493,
+    "sha256": "031c1fe64b315519d759c2690ec0988e421d5e4d71acfa6847ab3c6b84e66b23"
   },
   {
     "file": "ship-type8.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-07/ed_type-8_shipyard.jpg",
+    "url": "https://cms-cdn.zaonce.net/2024-07/ed-type8-advanced-bundle-main_1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 43326,
-    "sha256": "866fb693b9b04641029c05c4e1db669e60f3c321a4aea18e26273c571b42acf7"
+    "bytes": 31175,
+    "sha256": "d91f6386a8d0fec0cbc8334fcd183b7ef46676f5a3b4aaacd6168170724975ea"
   },
   {
     "file": "thumb-ship-type8.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-07/ed_type-8_shipyard.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3565,
-    "sha256": "98a4f463dbc971536292c5ceb30da54f9fba04efacf376300f4dda4f98549617"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Type8/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7442,
+    "sha256": "2d04da47b8a64622693e1baf6512a4041600828b91b76adfc75b8c59739d6821"
   },
   {
     "file": "ship-mandalay.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-10/ed-mandalay.jpg",
+    "url": "https://cms-cdn.zaonce.net/2024-10/ed-mandalay_screenshot-1.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 49227,
-    "sha256": "f19456eb78177c709f6a94fb35e31e90da1f142e940ffb9fefa0ed40b76bb433"
+    "bytes": 33717,
+    "sha256": "e440accff6fbbe2f7abb9d21933a711ba607df7b5097773f7eb7661eb51b8366"
   },
   {
     "file": "thumb-ship-mandalay.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-10/ed-mandalay.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3954,
-    "sha256": "f9ffb97358f6dc47341c724c30eeef3f9e3182251a287a058ac3400215f9d04d"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Mandalay/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7219,
+    "sha256": "309bfc9d171991fd87ecd9b2f3591cd261c430647de0416bda3995df97ffdd73"
   },
   {
     "file": "ship-cobramkv.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-11/ed-cobra-mk-v.jpg",
+    "url": "https://cms-cdn.zaonce.net/2024-11/ed-cobra-mk-v_stellar-planar-red-kit.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 29143,
-    "sha256": "d5378dc694043d666454c2a98a3da90cdf31baf92b25a3ba191660576e577688"
+    "bytes": 27280,
+    "sha256": "ffe480a84ac77d0c937baec1caf184d998e3dc7b053b6c63b8c92cd2e36d8477"
   },
   {
     "file": "thumb-ship-cobramkv.jpg",
-    "url": "https://cms-cdn.zaonce.net/2024-11/ed-cobra-mk-v.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2793,
-    "sha256": "4dabc20b46412fd8b68911b16830a15a8917822b323c695a03a8f4624c8b6c26"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/CobraMkV/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7548,
+    "sha256": "227785a79e7fefbc4e7a846da4808a1bfa2caac1d9fe69e67038e8bded205c0c"
   },
   {
     "file": "ship-corsair.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-04/ed-corsair_v2.jpg",
+    "url": "https://cms-cdn.zaonce.net/2025-04/ed_corsair_base_beauty_shot_1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 29487,
-    "sha256": "a366e532ce610859d525569962342201686a4dbe9104559e7ba815febac7c89d"
+    "bytes": 46083,
+    "sha256": "691edb382c34ea1d981c2a8879c029dd11df43d202fdd3b339d047b37c3c090a"
   },
   {
     "file": "thumb-ship-corsair.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-04/ed-corsair_v2.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2555,
-    "sha256": "f3421186a712f90b3acfab4045f2549a578345b79100ba056177c53e8181a7d4"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Corsair/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 5623,
+    "sha256": "74a526232b6756f4126b75c6bef9809be041e8ecbd87f6966a9c8b076fc6cac0"
   },
   {
     "file": "ship-panthermkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-07/ed_panther_clipper_mk_ii_ship_stats_1920x1080.jpg",
+    "url": "https://cms-cdn.zaonce.net/2025-07/ed_panther_clipper_flying_1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 48298,
-    "sha256": "149f6d39c55b8cd05a9ec7c9b6ac2cbea0806b97bbb1dfaf59967a4db36d020f"
+    "bytes": 45330,
+    "sha256": "43ea47c46d2070e7623084b6620c2e95a42b6554343afddc4b86ef67977491b0"
   },
   {
     "file": "thumb-ship-panthermkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-07/ed_panther_clipper_mk_ii_ship_stats_1920x1080.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3686,
-    "sha256": "66b4698eaff158405d925c2f26f9a71bd2f751990528656e78bcb16b2bca531f"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/PantherMkII/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7861,
+    "sha256": "0381c5b14ccf14773d6612fac14585498447a780669734bb4750d655d6cfa6af"
   },
   {
     "file": "ship-lakonminer.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-09/lakon-spaceways-type-11-prospector-shipyard_1920x1080.jpg",
+    "url": "https://cms-cdn.zaonce.net/2025-09/ed_propecrtor_stellar_1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 44957,
-    "sha256": "88873af1a779ce55c1177e6e2e6caf325f214078fef6a9ad7c2a47bfcec35151"
+    "bytes": 36769,
+    "sha256": "da7451c80dad6de48c39ef7b020a826a5f6e612278c111e00806a7c0e0837f08"
   },
   {
     "file": "thumb-ship-lakonminer.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-09/lakon-spaceways-type-11-prospector-shipyard_1920x1080.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3581,
-    "sha256": "0b7f44948a12efa94486c4ada211502b82d373109357d5dccbc29ee34d3bd9a3"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/LakonMiner/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7506,
+    "sha256": "3b1e363fc08882207d7a354c022de5502a849b7c82957982c9a6f9bc0177362e"
   },
   {
     "file": "ship-explorernx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-11/ed-caspian-dock-image-1920x1080.jpg",
+    "url": "https://cms-cdn.zaonce.net/2025-11/ed-caspian-standard-screenshot-1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 36317,
-    "sha256": "43238800701cabf7f04c4308364e0fc46560365ec574147d14a2190bd42c51e6"
+    "bytes": 48661,
+    "sha256": "2e577915ac760fdcb9919645619e3e266d168d8bf2fd142579c4de4801200092"
   },
   {
     "file": "thumb-ship-explorernx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2025-11/ed-caspian-dock-image-1920x1080.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2945,
-    "sha256": "021fe56e5982231a0bcb2b7ea0f31e5bc7ba294f1f7e620176475ed6db7ca8c7"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/Explorer_NX/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7642,
+    "sha256": "3990eb80044eefc1a8a8cc857708f69f1481a32b839ba82ebbdd0db5ec5b331c"
   },
   {
     "file": "ship-smallcombat01nx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-02/kestrel-mk-ii-shipyard-1920x1080.jpg",
+    "url": "https://cms-cdn.zaonce.net/2026-02/kestrel-mk-ii-stellar-1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 35543,
-    "sha256": "c11477a8528b797538f72b12df19b466550404910bf876dc88a2076bface8019"
+    "bytes": 23431,
+    "sha256": "f3bcb8a665a330dd64df680919c863305780d4dc9933f26d1cf028808ab6aeec"
   },
   {
     "file": "thumb-ship-smallcombat01nx.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-02/kestrel-mk-ii-shipyard-1920x1080.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3010,
-    "sha256": "b026e38080bacdfbd7017a78ecf79e4ec89b08a8ae6c863942409773fea16917"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/SmallCombat01_NX/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6638,
+    "sha256": "a1d30039020f2277d8e25f8860509ecf4feccb6f28b4c5e76a0de00b60d8601d"
   },
   {
     "file": "ship-mediumtransport01.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-04/ed-lynxhighliner-landing-pad-1920x1080.jpg",
+    "url": "https://cms-cdn.zaonce.net/2026-04/ed-lynxhighliner-ka-clean-1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 38191,
-    "sha256": "3e25a0ac95f92aa6005ba86560ef181bfc94cd707c15dd103d972b02c4397217"
+    "bytes": 30349,
+    "sha256": "d60e70e08620e4ef7bd14a10bea5c9e9f5d5af97ac3db176400209b9ae2657fe"
   },
   {
     "file": "thumb-ship-mediumtransport01.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-04/ed-lynxhighliner-landing-pad-1920x1080.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 3093,
-    "sha256": "a7a6e61351735ed8071c43e2213e4fa1d08420922895ab5e4151957ebc719d2d"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/MediumTransport01/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7039,
+    "sha256": "76af5c15a7962819e4aab792392a4b6da58bf31c430bfb0001af9a30b39267b1"
   },
   {
     "file": "ship-anacondamkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-10/landing-pad-shot.jpg",
+    "url": "https://cms-cdn.zaonce.net/2026-10/ed-anaconda-mk-ii-standard-1920x1080.jpg",
     "width": 640,
     "height": 360,
-    "bytes": 34705,
-    "sha256": "7d51fe7f498586ca57f21ae62acf4dc79a0951ff6487d53d1b54f21e76add4c5"
+    "bytes": 21794,
+    "sha256": "d6ebb0e0adb24010889344bf89f300d62b12c63125dd3449878e88942e36f568"
   },
   {
     "file": "thumb-ship-anacondamkii.jpg",
-    "url": "https://cms-cdn.zaonce.net/2026-10/landing-pad-shot.jpg",
-    "width": 160,
-    "height": 90,
-    "bytes": 2851,
-    "sha256": "54f380f50bce3c96216c9005560a27dc6b44caa191a34ea5d35ae149f00278ce"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/AnacondaMkII/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 7357,
+    "sha256": "fc0760a33d4b585bb3dae5048192680bc0d09f8c0898f73a35d248252039395d"
   },
   {
     "file": "engineer-bill_turner.jpg",
@@ -1267,16 +1267,16 @@
     "file": "ship-cobramkiv.jpg",
     "url": "https://d393fwdi1vc8it.cloudfront.net/Screenshot_EliteDangerous_01_CobraMkIVExclusive.jpg",
     "width": 640,
-    "height": 400,
-    "bytes": 50594,
-    "sha256": "999e7cb708707a20818b0fdb79eeee80bf17a0ed920a4ccd85d8d08d861be800"
+    "height": 360,
+    "bytes": 47491,
+    "sha256": "4857b51515a3cf2e1c8d86f0ea82951020ab7211dcfd4d8bf255e00fa4a3c0cf"
   },
   {
     "file": "thumb-ship-cobramkiv.jpg",
-    "url": "https://d393fwdi1vc8it.cloudfront.net/Screenshot_EliteDangerous_01_CobraMkIVExclusive.jpg",
-    "width": 160,
-    "height": 100,
-    "bytes": 4116,
-    "sha256": "a598d987553298c15a3e8405e6c75020d335d24342f923856b267d7d3ffe4181"
+    "url": "https://raw.githubusercontent.com/Elite-Dangerous-Almanac/Almanac-Core/42e874ed8f8b2ad89f99b9a21cc575851415f646/assets/ships/CobraMkIV/schematic-top.svg",
+    "width": 320,
+    "height": 180,
+    "bytes": 6882,
+    "sha256": "5a61427227a01a0d63677f2da357624b0ada958444a576b1eb7f7108b9af3bee"
   }
 ]

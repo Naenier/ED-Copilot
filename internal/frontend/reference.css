@@ -42,6 +42,9 @@
 .ref-section-figure figcaption{padding:10px 14px;color:var(--muted);font-size:12px;line-height:1.6}
 
 .ref-ship-reader{max-width:1040px}
+.ref-card-ships .ref-art-ships{background:#101820}
+.ref-card-ships .ref-art-ships:after{content:none}
+.ref-card-ships .ref-art-ships img{padding:0}
 .ref-ship-reader .ref-entry-hero{padding:9px 0 19px}
 .ref-ship-reader .ref-entry-subtitle{margin-bottom:10px}
 .ref-ship-reader .ref-entry-badges{margin-top:12px}

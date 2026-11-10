@@ -86,14 +86,15 @@
       "file": "ships.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "31d71454f4efd44f580267b74451a04efa0e30f1b78ee6e1dd3cf6d15d22ee01"
+      "sha256": "c0df07e7b4312461023b19be4d542ae492250cf612ad7ab724225ed4af2f724c",
+      "applicationVersion": "2.8.11"
     },
     {
       "file": "ship.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "44363558207a0fff959a5552b80fce78e1aaf718fefbbd97c8aaa8bef373510d",
-      "applicationVersion": "2.8.10"
+      "sha256": "d97627344828b82e127a663ffdda1a7ddcdee00fa07fbb95b5138578a1e4f158",
+      "applicationVersion": "2.8.11"
     },
     {
       "file": "engineer.png",

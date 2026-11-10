@@ -3,6 +3,7 @@
 // Set SHIP_ATLAS_TOOLS to that directory, then run node scripts/build-ship-atlas.mjs.
 // Pass ship keys as arguments to regenerate a subset.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -41,59 +42,62 @@ async function download(url, key) {
   return bytes
 }
 
-async function shipPhoto(key, url) {
-  if (url) {
-    try {
-      const photo = await download(url, `${key}-photo`)
-      await sharp(photo).metadata()
-      return photo
-    } catch (error) {
-      console.warn(`${key}: using bundled photograph (${error.message})`)
-    }
-  }
-  return readFile(join(media, `ship-${key}.jpg`))
+async function shipPhoto(key, source) {
+  const urlHash = createHash('sha256').update(source.url).digest('hex').slice(0, 16)
+  return download(source.url, `${key}-${urlHash}-photo`)
 }
 
-// Weight bright ship surfaces so the original camera composition can be kept
-// while giving the hull room on both sides of the wider plate.
-async function photoFocus(photo) {
-  const { data, info } = await sharp(photo).resize({ width: 96 }).greyscale().raw()
-    .toBuffer({ resolveWithObject: true })
-  let total = 0
-  let weightedX = 0
-  for (let y = 0; y < info.height; y += 1) {
-    for (let x = 0; x < info.width; x += 1) {
-      const strength = Math.max(0, data[y * info.width + x] - 30) ** 2
-      weightedX += strength * (x + 0.5)
-      total += strength
-    }
-  }
-  return total ? weightedX / total / info.width : 0.5
+function anchoredCrop(width, height, targetWidth, targetHeight, [x, y] = [0.5, 0.5]) {
+  const cropWidth = Math.min(width, Math.round(height * targetWidth / targetHeight))
+  const cropHeight = Math.min(height, Math.round(width * targetHeight / targetWidth))
+  const left = Math.max(0, Math.min(width - cropWidth, Math.round(x * width - cropWidth / 2)))
+  const top = Math.max(0, Math.min(height - cropHeight, Math.round(y * height - cropHeight / 2)))
+  return { left, top, width: cropWidth, height: cropHeight }
 }
 
-async function renderHero(photo) {
-  const focus = await photoFocus(photo)
-  const { data, info } = await sharp(photo).resize({ height: hero.height, width: hero.width, fit: 'inside' })
-    .png().toBuffer({ resolveWithObject: true })
-  const photoLeft = Math.max(0, Math.min(hero.width - info.width, Math.round(hero.width / 2 - focus * info.width)))
-  const photoTop = Math.floor((hero.height - info.height) / 2)
-  const edge = Math.min(34, info.width / 12)
-  const mask = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${info.width}" height="${info.height}">
-    <defs><linearGradient id="edge" x1="0" x2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${edge / info.width}" stop-color="#fff"/>
-      <stop offset="${1 - edge / info.width}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-    </linearGradient></defs><rect width="100%" height="100%" fill="url(#edge)"/>
-  </svg>`)
-  const foreground = await sharp(data).ensureAlpha().composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer()
-  const backdrop = await sharp(data).extend({
-    left: photoLeft, right: hero.width - photoLeft - info.width,
-    top: photoTop, bottom: hero.height - photoTop - info.height, extendWith: 'mirror',
-  }).png().toBuffer()
-  const toned = await sharp(backdrop).blur(28)
-    .modulate({ brightness: 0.24, saturation: 0.58 }).png().toBuffer()
-  const assembled = await sharp(toned).composite([{ input: foreground, left: photoLeft, top: photoTop }]).png().toBuffer()
+async function framePhoto(photo, source, width, height) {
+  const original = sharp(photo)
+  const { width: sourceWidth, height: sourceHeight } = await original.metadata()
+  const background = source.background || '#0c1117'
+  if (source.crop) {
+    const [x, y, w, h] = source.crop
+    const left = Math.round(x * sourceWidth)
+    const top = Math.round(y * sourceHeight)
+    original.extract({ left, top, width: Math.round((x + w) * sourceWidth) - left, height: Math.round((y + h) * sourceHeight) - top })
+  } else if (source.fit !== 'contain') {
+    original.extract(anchoredCrop(sourceWidth, sourceHeight, width, height, source.focus))
+  }
+  if (source.fit === 'contain' && source.background) {
+    // Studio images have an empty backdrop at the edges. Continue that color
+    // into the panorama while preserving the original ship silhouette.
+    const { data, info } = await original.resize({ width, height, fit: 'inside' })
+      .flatten({ background }).png().toBuffer({ resolveWithObject: true })
+    const left = Math.floor((width - info.width) / 2)
+    const top = Math.floor((height - info.height) / 2)
+    return sharp(data).extend({ left, top, right: width - info.width - left,
+      bottom: height - info.height - top, extendWith: 'copy' })
+  }
+  return original.resize({ width, height, fit: source.fit || 'cover', background })
+    .flatten({ background })
+}
+
+async function renderHero(photo, source) {
+  const framed = await framePhoto(photo, source, hero.width, hero.height)
+  const assembled = await framed.png().toBuffer()
   const corners = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${hero.width}" height="${hero.height}"><rect width="100%" height="100%" rx="10" fill="#fff"/></svg>`)
   return sharp(assembled).ensureAlpha().composite([{ input: corners, blend: 'dest-in' }]).png().toBuffer()
+}
+
+async function writeJPEG(raster, file, url, width, height, limit) {
+  for (const quality of [86, 76, 66, 56]) {
+    const output = await raster.clone().jpeg({ quality, mozjpeg: true }).toBuffer()
+    if (output.length <= limit) {
+      await writeFile(join(media, file), output)
+      return { file, url, width, height, bytes: output.length,
+        sha256: createHash('sha256').update(output).digest('hex') }
+    }
+  }
+  throw new Error(`${file}: image exceeds the ${limit}-byte image budget`)
 }
 
 function plateFrame() {
@@ -126,11 +130,26 @@ async function renderSchematic(image, rotate, scale) {
     : { data: resized, info: dimensions }
 }
 
-async function buildPlate(ship, photoURL) {
+async function writeTopPreview(key, url, top, rotate) {
+  const width = 320, height = 180
+  const w = rotate ? top.info.height : top.info.width
+  const h = rotate ? top.info.width : top.info.height
+  const schematic = await renderSchematic(top, rotate, Math.min(282 / w, 144 / h))
+  const grid = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <defs><pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M0 15V0h15" fill="none" stroke="#263945" stroke-opacity=".45"/></pattern></defs>
+    <rect width="100%" height="100%" fill="#101820"/><rect width="100%" height="100%" fill="url(#grid)"/>
+  </svg>`)
+  const raster = sharp(grid).composite([{ input: schematic.data,
+    left: Math.floor((width - schematic.info.width) / 2),
+    top: Math.floor((height - schematic.info.height) / 2) }])
+  return writeJPEG(raster, `thumb-ship-${key}.jpg`, url, width, height, 8_000)
+}
+
+async function buildPlate(ship, source) {
   const { key, symbol } = ship
   const svgURL = `${upstream}/${encodeURIComponent(symbol)}`
   const [photo, top, bottom] = await Promise.all([
-    shipPhoto(key, photoURL),
+    shipPhoto(key, source),
     download(`${svgURL}/schematic-top.svg`, `${key}-top.svg`).then(prepareSchematic),
     download(`${svgURL}/schematic-bottom.svg`, `${key}-bottom.svg`).then(prepareSchematic),
   ])
@@ -139,7 +158,7 @@ async function buildPlate(ship, photoURL) {
   const maxHeight = Math.max(top.info.height, bottom.info.height)
   const scale = Math.min((panel.width - 60) / (rotate ? maxHeight : maxWidth), (panel.height - 46) / (rotate ? maxWidth : maxHeight))
   const [heroRaster, ...projections] = await Promise.all([
-    renderHero(photo),
+    renderHero(photo, source),
     renderSchematic(top, rotate, scale),
     renderSchematic(bottom, rotate, scale),
   ])
@@ -157,7 +176,11 @@ async function buildPlate(ship, photoURL) {
     if (output.length <= maxSize) {
       await writeFile(join(media, `ship-atlas-${key}.jpg`), output)
       console.log(`${key}: ${(output.length / 1000).toFixed(1)} KB`)
-      return
+      const photoOnly = await framePhoto(photo, { ...source, crop: undefined }, 640, 360)
+      return Promise.all([
+        writeJPEG(photoOnly, `ship-${key}.jpg`, source.url, 640, 360, 150_000),
+        writeTopPreview(key, `${svgURL}/schematic-top.svg`, top, rotate),
+      ])
     }
   }
   throw new Error(`${key}: plate exceeds the ${maxSize}-byte image budget`)
@@ -165,12 +188,19 @@ async function buildPlate(ship, photoURL) {
 
 const catalogue = JSON.parse(await readFile(join(root, 'internal/data/encyclopedia-ships.json'), 'utf8'))
 const metadata = JSON.parse(await readFile(join(media, 'metadata.json'), 'utf8'))
-const originals = new Map(metadata.map(({ file, url }) => [file, url]))
+const photos = JSON.parse(await readFile(join(root, 'docs/ship-photo-sources.json'), 'utf8'))
 const requested = new Set(process.argv.slice(2))
 const ships = requested.size ? catalogue.filter(({ key }) => requested.has(key)) : catalogue
 if (!ships.length || (requested.size && requested.size !== ships.length)) throw new Error('Unknown ship key')
+for (const { key } of ships) {
+  if (!photos[key]?.url || !photos[key]?.source) throw new Error(`Missing curated photo: ${key}`)
+}
 await mkdir(cache, { recursive: true })
 const batchSize = 4
+const updated = new Map()
 for (let offset = 0; offset < ships.length; offset += batchSize) {
-  await Promise.all(ships.slice(offset, offset + batchSize).map((ship) => buildPlate(ship, originals.get(`ship-${ship.key}.jpg`))))
+  const rows = await Promise.all(ships.slice(offset, offset + batchSize).map(ship => buildPlate(ship, photos[ship.key])))
+  for (const row of rows.flat()) updated.set(row.file, row)
 }
+const records = metadata.map(record => updated.get(record.file) || record)
+await writeFile(join(media, 'metadata.json'), JSON.stringify(records, null, 2) + '\n')

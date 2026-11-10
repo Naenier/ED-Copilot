@@ -96,7 +96,7 @@ After a confirmed arrival, the next system can be copied to the clipboard automa
 
 Browse by category, search by name and narrow results by group. Ships and engineers have illustrated catalogue cards; each entry opens a full page with properties, requirements and related entries.
 
-All 49 ship pages have a color render and top and bottom schematics. [Ship artwork credits](docs/SHIP-ARTWORK.md)
+The catalogue cards show top-view schematics. All 49 ship pages pair a Frontier screenshot or render with top and bottom schematics. [Ship artwork credits](docs/SHIP-ARTWORK.md)
 
 Search for **Solo Thargoid hunting** for an illustrated AX guide with heart targeting, copyable hunting systems, ship fits, Guardian unlocks and ammunition synthesis.
 

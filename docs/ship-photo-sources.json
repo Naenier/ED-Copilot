@@ -1,0 +1,368 @@
+{
+  "sidewinder": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9TaWRld2luZGVyX1B1bHNlXzA2X1JlZEdpYW50XzE5MjAuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/sidewinder-pulse-white",
+    "focus": [
+      0.56,
+      0.48
+    ]
+  },
+  "eagle": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9FYWdsZV9QdWxzZV8wNl9SZWRHaWFudF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/eagle-pulse-white",
+    "focus": [
+      0.56,
+      0.5
+    ]
+  },
+  "hauler": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9oYXVsZXJfMTAxNS0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/hauler-tactical-ice",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "adder": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9BZGRlcl9QdWxzZV8wNl9SZWRHaWFudF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/adder-pulse-white",
+    "focus": [
+      0.54,
+      0.5
+    ]
+  },
+  "viper": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl92aXBlcl8xMDM3LTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/viper-tactical-ice",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "cobramkiii": {
+    "url": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/359320/ss_0d7c36b878ae21f14ac0bfbf21b96f746a3be254.1920x1080.jpg",
+    "source": "https://store.steampowered.com/app/359320/Elite_Dangerous/",
+    "focus": [
+      0.5,
+      0.49
+    ]
+  },
+  "type6": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl90eXBlNl8xMDIyLTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/type-6-turbulence-white-red",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "dolphin": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9kb2xwaGluXzEwOTItMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/dolphin-sheer-line-01",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "type7": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3QvdS90dXJidWxlbmNlXzAyX2ZvcmNfZmRldl92X3R5cGU3XzEwNDNfc3RhcnNfMTkyMC5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/type-7-turbulence-white-red",
+    "fit": "contain",
+    "background": "#060508"
+  },
+  "asp": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9BU1BfMTE4OC0xLUlmbUlRUm9SLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/asp-explorer-osiris-white-red",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "vulture": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3MvYS9zYWx2YWdlXzAzX3dlYnN0b3JlXzE5MjAucG5nIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/vulture-salvage-white",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "empiretrader": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9FbXBpcmVUcmFkZXJfRXhwcmVzc3dheV8wNl8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/imperial-clipper-expressway-venture",
+    "focus": [
+      0.54,
+      0.53
+    ]
+  },
+  "federationdropship": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRkcm9wXzEwMTAtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/federal-dropship-tactical-ice",
+    "fit": "contain",
+    "background": "#2e2e2e"
+  },
+  "orca": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L1AvYS9QYWludEpvYl9PcmNhX0V4cHJlc3N3YXlfMDZfRnVsbF8xOTIwLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/orca-expressway-venture",
+    "focus": [
+      0.51,
+      0.56
+    ]
+  },
+  "type9": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl90eXBlOV8xMDkxLTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/type-9-lakon-metallic-white",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "python": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9weXRob25fYnVuZGxlXzAwMi1CYXNlLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/python-core-mining-jumpstart",
+    "focus": [
+      0.52,
+      0.57
+    ]
+  },
+  "belugaliner": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9CRUxVR0FfMTA2NS0xLUxPelNyVk5aLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/beluga-liner-messenger-blue",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "ferdelance": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZXJkZWxhbmNlXzEwMDktMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/fer-de-lance-tactical-ice",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "anaconda": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L24vYS9uYXZhbF8wNl9mb3JjX2ZkZXZfdl9hbmFjb25kYV8xMTkwX3N0YXJzXzE5MjAucG5nIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/anaconda-sheer-line-06",
+    "fit": "contain",
+    "background": "#060508"
+  },
+  "federationcorvette": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRlcmFsX2NvcnZldHRlXzEwMTEtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/federal-corvette-tactical-ice",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "cutter": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9pbXBlcmlhbF9jdXR0ZXJfMTAxMS0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/imperial-cutter-tactical-ice",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "diamondback": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9ESUFNT05EX1NDT1VUXzEwNDQtMS02NEl6ZmxaMy5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/diamondback-scout-salvage-white",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "empirecourier": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9JTVBFUklBTF9DT1VSSUVSXzEwNTItMS11eUp5blhWeS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/imperial-courier-messenger-blue",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "diamondbackxl": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9kaWFtb25kX2V4cGxvcmVyXzEwNjMtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/diamondback-explorer-apollo-white",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "empireeagle": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9pbXBlcmlhbF9lYWdsZV8xMDc3LWJhc2UuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/imperial-eagle-empire-elegance",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "federationdropshipmkii": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9mZWRlcmFsX2Fzc2F1bHRfMTA0Ni0xLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/federal-assault-ship-icarus-red",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "federationgunship": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9GRURFUkFMX0dVTlNISVBfMTA1MC0xLXJ1c0lmT01zLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/federal-gunship-stygian-blue",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "vipermkiv": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl92aXBlcl8xMDU2LTEuanBnIiwiZWRpdHMiOnsid2VicCI6eyJxdWFsaXR5Ijo5Mn0sInRvRm9ybWF0Ijoid2VicCIsInJlc2l6ZSI6eyJ3aWR0aCI6MTkyMCwiZml0IjoiY29udGFpbiJ9fX0=",
+    "source": "https://www.elitedangerous.com/store/product/viper-mk-iv-squadron-6",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "cobramkiv": {
+    "url": "https://d393fwdi1vc8it.cloudfront.net/Screenshot_EliteDangerous_01_CobraMkIVExclusive.jpg",
+    "source": "https://frontier-drupal.s3-eu-west-1.amazonaws.com/production/frontier-corp/s3fs-public/151216%20pressrelease_horizonslaunch.pdf",
+    "focus": [
+      0.54,
+      0.6
+    ]
+  },
+  "independanttrader": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L3QvdS90dXJidWxlbmNlXzAyX2ZvcmNfZmRldl92X2tlZWxiYWNrXzEwNjFfc3RhcnNfMTkyMC5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/keelback-turbulence-white-red",
+    "fit": "contain",
+    "background": "#060508"
+  },
+  "aspscout": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L0YvTy9GT1JDX0ZERVZfVl9BU1BfU0NPVVRfMTAxNC0xLXFySm1VTTZjLmpwZyIsImVkaXRzIjp7IndlYnAiOnsicXVhbGl0eSI6OTJ9LCJ0b0Zvcm1hdCI6IndlYnAiLCJyZXNpemUiOnsid2lkdGgiOjE5MjAsImZpdCI6ImNvbnRhaW4ifX19",
+    "source": "https://www.elitedangerous.com/store/product/asp-scout-stygian-blue",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "type9military": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9tYW1tb3RoXzEwMTEtMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/mammoth-tactical-white",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "kraitmkii": {
+    "url": "https://elitedangerous2016.wordpress.com/wp-content/uploads/2018/06/krait_mkii_hangar_3_4k.jpg",
+    "source": "https://elitedangerous2016.wordpress.com/beyond-chapters-2-3/",
+    "focus": [
+      0.5,
+      0.46
+    ],
+    "credit": "Frontier Developments"
+  },
+  "typex": {
+    "url": "https://cdn.mos.cms.futurecdn.net/hrAEjZy9L6wsiLWwMmNnGX.png",
+    "source": "https://www.pcgamer.com/from-rough-sketch-to-final-model-heres-how-frontier-designs-the-ships-of-elite-dangerous/",
+    "fit": "contain",
+    "credit": "Frontier Developments"
+  },
+  "typex2": {
+    "url": "https://cdn.fastly.steamstatic.com/steamcommunity/public/images/clans/8337594/42cbfbd95777fd2c9a8772f690372dbaa3dc88d6.jpg",
+    "source": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1535544000&feed=steam_community_announcements#post_2444779293787113265",
+    "fit": "contain",
+    "credit": "Frontier Developments"
+  },
+  "typex3": {
+    "url": "https://image-service.zaonce.net/eyJidWNrZXQiOiJmcm9udGllci1zdG9yZS1tZWRpYS1zeW5jLXByb2R1Y3Rpb24iLCJrZXkiOiJwcm9kdWN0L2Yvby9mb3JjX2ZkZXZfdl9jaGFsbGVuZ2VyXzEwMjktMS5qcGciLCJlZGl0cyI6eyJ3ZWJwIjp7InF1YWxpdHkiOjkyfSwidG9Gb3JtYXQiOiJ3ZWJwIiwicmVzaXplIjp7IndpZHRoIjoxOTIwLCJmaXQiOiJjb250YWluIn19fQ==",
+    "source": "https://www.elitedangerous.com/store/product/alliance-challenger-precision-yellow",
+    "fit": "contain",
+    "background": "#2d2d2d"
+  },
+  "kraitlight": {
+    "url": "https://bleedingcool.com/wp-content/uploads/2018/11/Elite-Dangerous-Beyond-Krait.jpg",
+    "source": "https://bleedingcool.com/games/elite-dangerous-beyond-just-received-two-new-ships/",
+    "fit": "contain",
+    "credit": "Frontier Developments"
+  },
+  "mamba": {
+    "url": "https://bleedingcool.com/wp-content/uploads/2018/11/Elite-Dangerous-Beyond-Mamba.jpg",
+    "source": "https://bleedingcool.com/games/elite-dangerous-beyond-just-received-two-new-ships/",
+    "focus": [
+      0.5,
+      0.44
+    ],
+    "credit": "Frontier Developments"
+  },
+  "pythonnx": {
+    "url": "https://cms-cdn.zaonce.net/2024-04/ed-python-ii-base_02.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/python-mk-ii",
+    "focus": [
+      0.5,
+      0.49
+    ],
+    "fit": "contain",
+    "crop": [
+      0,
+      0.12,
+      1,
+      0.75
+    ]
+  },
+  "type8": {
+    "url": "https://cms-cdn.zaonce.net/2024-07/ed-type8-advanced-bundle-main_1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/type-8-transporter",
+    "focus": [
+      0.5,
+      0.55
+    ]
+  },
+  "mandalay": {
+    "url": "https://cms-cdn.zaonce.net/2024-10/ed-mandalay_screenshot-1.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/mandalay",
+    "focus": [
+      0.5,
+      0.48
+    ]
+  },
+  "cobramkv": {
+    "url": "https://cms-cdn.zaonce.net/2024-11/ed-cobra-mk-v_stellar-planar-red-kit.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/cobra-mk-v",
+    "focus": [
+      0.5,
+      0.47
+    ],
+    "fit": "contain",
+    "crop": [
+      0,
+      0.1,
+      1,
+      0.76
+    ]
+  },
+  "corsair": {
+    "url": "https://cms-cdn.zaonce.net/2025-04/ed_corsair_base_beauty_shot_1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/corsair",
+    "focus": [
+      0.5,
+      0.5
+    ]
+  },
+  "panthermkii": {
+    "url": "https://cms-cdn.zaonce.net/2025-07/ed_panther_clipper_flying_1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/store/ships/panther-clipper-mk-ii",
+    "focus": [
+      0.5,
+      0.49
+    ]
+  },
+  "lakonminer": {
+    "url": "https://cms-cdn.zaonce.net/2025-09/ed_propecrtor_stellar_1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/news/type-11-prospector-available-now-arx-early-access",
+    "focus": [
+      0.5,
+      0.55
+    ],
+    "fit": "contain",
+    "crop": [
+      0,
+      0.12,
+      1,
+      0.83
+    ]
+  },
+  "explorernx": {
+    "url": "https://cms-cdn.zaonce.net/2025-11/ed-caspian-standard-screenshot-1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/news/caspian-explorer-available-now-arx-early-access",
+    "focus": [
+      0.5,
+      0.55
+    ]
+  },
+  "smallcombat01nx": {
+    "url": "https://cms-cdn.zaonce.net/2026-02/kestrel-mk-ii-stellar-1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/news/kestrel-mk-ii-available-now-arx-early-access",
+    "focus": [
+      0.5,
+      0.49
+    ],
+    "fit": "contain",
+    "crop": [
+      0,
+      0.13,
+      1,
+      0.77
+    ]
+  },
+  "mediumtransport01": {
+    "url": "https://cms-cdn.zaonce.net/2026-04/ed-lynxhighliner-ka-clean-1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/news/lynx-highliner-available-now",
+    "focus": [
+      0.5,
+      0.55
+    ]
+  },
+  "anacondamkii": {
+    "url": "https://cms-cdn.zaonce.net/2026-10/ed-anaconda-mk-ii-standard-1920x1080.jpg",
+    "source": "https://www.elitedangerous.com/news/anaconda-mk-ii-available-now-arx-early-access",
+    "focus": [
+      0.5,
+      0.54
+    ]
+  }
+}

@@ -257,13 +257,13 @@ func TestSummaryPayloadAndOfflineMedia(t *testing.T) {
 		if len(raw) > 300000 {
 			t.Fatalf("list payload too big: %s %d", category, len(raw))
 		}
-		maxWidth, maxHeight := 160, 120
+		maxWidth, maxHeight, maxBytes := 320, 180, 8000
 		if category == "engineers" {
-			maxWidth, maxHeight = 220, 160
+			maxWidth, maxHeight, maxBytes = 220, 160, 12000
 		}
 		for _, e := range list.Entries {
 			if e.Image != nil {
-				checkJPEG(t, e.Image, maxWidth, maxHeight, 12000)
+				checkJPEG(t, e.Image, maxWidth, maxHeight, maxBytes)
 			}
 		}
 	}
