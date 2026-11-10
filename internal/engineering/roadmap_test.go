@@ -72,6 +72,25 @@ func TestRoadmapOrdersDependenciesAndReportsActualUnlockEvidence(t *testing.T) {
 	}
 }
 
+func TestBlueprintFilterBeforeChoosingAModule(t *testing.T) {
+	const id = "FSD_LongRange"
+	p := New(nil)
+	all := roadmapForTest(t, p, nil, nil)
+	global := findRoadmapRow(v.At(all, "filters", "blueprints"), id)
+	if !contains(global["moduleKeys"], "fsd") {
+		t.Fatal("the blueprint filter must show its compatible modules before a module is selected", global)
+	}
+	byBlueprint := roadmapForTest(t, p, M{"blueprintKey": id}, nil)
+	if len(v.Rows(byBlueprint["engineers"])) == 0 || len(v.Rows(byBlueprint["engineers"])) >= len(v.Rows(all["engineers"])) ||
+		len(v.Obj(byBlueprint["recipe"])) != 0 {
+		t.Fatal("a blueprint alone must narrow the roster without assuming which module to upgrade")
+	}
+	selected := roadmapForTest(t, p, M{"blueprintKey": id, "moduleKey": "fsd"}, nil)
+	if v.At(selected, "recipe", "blueprintKey") != id || len(v.Rows(v.At(selected, "recipe", "grades"))) == 0 {
+		t.Fatal("choosing a compatible module must allow the recipe to be calculated")
+	}
+}
+
 func TestShipRecipeUsesSelectedEquipmentAndKeepsEstimateHonest(t *testing.T) {
 	p := New(nil)
 	p.Apply(M{"event": "EngineerProgress", "EngineerID": 300100, "Progress": "Unlocked", "Rank": 5}, nil)

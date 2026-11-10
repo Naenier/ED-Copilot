@@ -128,13 +128,17 @@ func TestHUDCarrierArrivalAndUnknownFuel(t *testing.T) {
 	}
 }
 
-func TestHUDTradeUsesDomainMarginAndPreservesQuoteWarnings(t *testing.T) {
-	s := M{"settings": M{"activity": "trade"}, "tradePlan": M{"key": "gold", "name": "Золото", "quantity": 40, "grossMargin": 1200000}, "trading": M{"destination": M{"station": "Market", "system": "Sol", "expired": true, "cargoChanged": true, "bulkTaxRisk": true, "quotes": []M{{"name": "Золото", "price": 100000, "demand": 20}}}}}
-	text := hudProse(BuildHUD(s, time.Now()))
-	for _, want := range []string{"Плановая маржа: 1 200 000 кр.", "Котировка устарела", "Состав груза изменился", "Низкий спрос"} {
+func TestHUDTradeUsesDomainMarginAndShowsQuoteAge(t *testing.T) {
+	now := time.Now()
+	s := M{"settings": M{"activity": "trade"}, "tradePlan": M{"key": "gold", "name": "Золото", "quantity": 40, "grossMargin": 1200000}, "trading": M{"destination": M{"station": "Market", "system": "Sol", "expired": true, "updatedAt": now.Add(-48 * time.Hour).Format(time.RFC3339), "cargoChanged": true, "bulkTaxRisk": true, "quotes": []M{{"name": "Золото", "price": 100000, "demand": 20}}}}}
+	text := hudProse(BuildHUD(s, now))
+	for _, want := range []string{"Плановая маржа: 1 200 000 кр.", "Котировка: " + Age(now.Add(-48*time.Hour).Format(time.RFC3339), now), "Состав груза изменился", "Низкий спрос"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q: %s", want, text)
 		}
+	}
+	if strings.Contains(text, "устарела") {
+		t.Fatal(text)
 	}
 	v.Obj(s["settings"])["activity"] = "raw"
 	s["engineering"] = M{"items": []M{{"moduleName": "FSD"}}, "materials": []M{{"key": "polonium", "name": "Полоний", "category": "raw", "needed": 10, "owned": nil, "missing": nil}}, "shopping": M{"knownCategories": M{"raw": false}}}

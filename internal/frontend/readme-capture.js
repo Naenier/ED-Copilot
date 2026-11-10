@@ -47,6 +47,11 @@ async function run(C,u){
   try{if(!C.collapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));check('Compact navigation collapses only the sidebar',C.collapsed===true);await capture('readme-navigation-compact');}
   finally{if(C.collapsed!==wasCollapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));}
   await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
+  u.$('.deals-search').open=true;
+  const commodityFilter=await visible('[data-deals-filter="resourceFilter"]');
+  if(!commodityFilter.checked)commodityFilter.click();
+  (await visible('#deals-commodity-picker')).open=true;
+  await capture('readme-deals-filters');
   await u.navigate('carrier-trade',{mode:'Рейс'});await capture('readme-carrier-trade');
   await u.navigate('route');await capture('route-details');
   await u.navigate('encyclopedia',{mode:'Системы'});await ready();
@@ -65,6 +70,10 @@ async function run(C,u){
   await entry('engineers','Felicity Farseer');await capture('readme-engineer');
   await u.navigate('engineering',{mode:'Прокачка'});
   await visible('.eng-card h3 [data-reference-id^="engineer/"]');
+  const blueprint=await visible('#eng-roadmap-blueprintKey');
+  blueprint.value='FSD_LongRange';
+  blueprint.dispatchEvent(new Event('change',{bubbles:true}));
+  await visible('.eng-card h3 [data-reference-id^="engineer/"]');
   await capture('readme-engineering');
   await u.navigate('engineering',{mode:'Материалы'});
   await visible('[data-action-id="engineering.trade"]');
@@ -78,7 +87,10 @@ async function run(C,u){
   await category('materials');await window.ReferenceUI.open('material/carbon',C,u);await ready();
   await capture('readme-material');
   await entry('articles',language==='en'?'Tritium':'Тритий');await capture('readme-article');
-  await category('articles');await window.ReferenceUI.open('article/farm-guardian',C,u);await ready();
+  await category('articles');
+  await window.ReferenceUI.handleClick('reference-farming',null,C,u);await ready();
+  await capture('readme-farming-catalog');
+  await window.ReferenceUI.open('article/farm-guardian',C,u);await ready();
   check('Farming route has a diagram and a copyable destination',!!u.$('.ref-farm-route button[data-system]')&&!!u.$('[data-reference="entry"] [data-reference-image]'));
   await capture('readme-farming');
   await u.navigate('colonization',{mode:'Строительство'});await capture('readme-colonization');
@@ -86,6 +98,9 @@ async function run(C,u){
   await u.navigate('exobiology',{mode:'Обзор'});
   for(const alert of C.state.exobiology?.alerts||[])await u.call('exobiology',{values:{action:'dismiss-alert',id:alert.id}});
   await u.loadView();await capture('exobiology');
+  await u.navigate('exobiology',{mode:'Планеты'});await capture('readme-exo-planets');
+  await u.navigate('exobiology',{mode:'Образцы'});await capture('readme-exo-samples');
+  await u.navigate('politics',{mode:'Политика'});await capture('readme-politics');
   await u.call('smoke-result',{ok:problems.length===0,scenarios,pages,problems,documentation:true,language});
  }catch(error){await u.call('smoke-result',{ok:false,scenarios,pages,problems:[...problems,error.message],documentation:true,language});}
 }

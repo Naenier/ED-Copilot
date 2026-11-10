@@ -97,7 +97,7 @@ func SendBatch(ctx context.Context, o SendOptions) (BatchResult, error) {
 	outbound := []v.M{}
 	indexes := []int{}
 	for i, event := range o.Events {
-		result.Results[i] = Outcome{Index: i, Status: 410, Message: "Событие устарело или не поддерживается API Inara."}
+		result.Results[i] = Outcome{Index: i, Status: 410, Message: "Дата или тип события не подходят для Inara."}
 		if !Supported[event.Name] || !validTime(event.Timestamp, o.Now()) || event.Data == nil {
 			continue
 		}

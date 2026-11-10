@@ -1,8 +1,6 @@
 (() => {
 'use strict';
 const labels = {
-  fresh:['Current','Актуально'], stale:['Outdated','Устарело'],
-  undated:['Age unknown','Возраст неизвестен'], unknown:['Unavailable','Нет данных'],
   partial:['Incomplete','Неполные данные'], empty:['Empty result','Пустой результат'],
 };
 const reasons = {
@@ -23,16 +21,15 @@ function formatDate(value,lang) {
   return Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString(lang,{dateStyle:'medium',timeStyle:'short'}) : '';
 }
 function observation(quality,lang,esc) {
-  if (!quality || !labels[quality.state]) return '';
-  const state = quality.state, coverage = quality.coverage;
-  const main = state === 'fresh' && labels[coverage] ? coverage : state;
+  if (!quality) return '';
   const lines = [];
   for (const [field,name] of [['observedAt',['Observed','Наблюдение']],['fetchedAt',['Retrieved','Получение']]]) {
     const stamp = formatDate(quality[field],lang);
     if (stamp) lines.push([pick(name,lang),stamp]);
   }
-  if (main !== coverage && labels[coverage]) lines.push([pick(['Coverage','Полнота'],lang),pick(labels[coverage],lang)]);
-  return details(pick(labels[main],lang),lines,esc,state !== 'fresh' || coverage === 'partial');
+  const coverage = labels[quality.coverage];
+  if (!coverage && !lines.length) return '';
+  return details(pick(coverage || ['Data dates','Даты данных'],lang),lines,esc,quality.coverage === 'partial');
 }
 window.FreshnessUI = {details,formatDate,observation,reason};
 })();

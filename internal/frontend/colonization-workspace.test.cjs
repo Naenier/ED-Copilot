@@ -38,6 +38,27 @@ test('initial colony workflow explains station discovery without an empty factio
  f.C.tab='overview';assert.equal(f.api.render(f.C,f.ui),'');
 });
 
+test('candidate search separates an empty result, a text filter, cancellation and incomplete data',()=>{
+ const f=fixture(),search=f.origin();
+ f.C.page={Rows:[]};search.results=[{availability:'unavailable'},{availability:'unknown'}];
+ search.status='complete';search.completeness={complete:true};
+ assert.match(f.api.render(f.C,f.ui),/Подходящих систем в радиусе 15 св\. л\. не найдено\./);
+ search.results.push({availability:'candidate'});
+ assert.match(f.api.render(f.C,f.ui),/Нет совпадений/);
+ f.C.page.Rows.push({ID:'eligible'});
+ assert.doesNotMatch(f.api.render(f.C,f.ui),/colony-search-status/);
+ f.C.page.Rows=[];
+ search.completeness.complete=false;
+ assert.match(f.api.render(f.C,f.ui),/Поиск завершён не полностью/);
+ search.status='cancelled';
+ assert.match(f.api.render(f.C,f.ui),/Поиск отменён/);
+ search.status='error';search.error='Сетевой сбой';
+ assert.match(f.api.render(f.C,f.ui),/Сетевой сбой/);
+ assert.doesNotMatch(f.api.render(f.C,f.ui),/Подходящих систем/);
+ search.error='';search.status='searching';search.running=true;
+ assert.match(f.api.render(f.C,f.ui),/Ищем системы для колонизации/);
+});
+
 test('the first phase explicitly clears a saved faction and cannot accidentally act on a selected row or colony',async()=>{
  const f=fixture();f.C.state.colonization.config={originSystem:'Saved origin',faction:'Old faction'};
  f.api.render(f.C,f.ui);f.api.handleInput({target:{id:'colony-workspace-origin',value:' New origin '}},f.C,f.ui);
@@ -119,7 +140,7 @@ test('overview presents every colony once; separate construction uses the select
  const next=[];f.ui.navigate=async(...args)=>next.push(args);
  await f.api.handleClick('colony-workspace-open',{dataset:{project:'b'}},f.C,f.ui);
  assert.equal(f.calls[0].params.id,'b');assert.deepEqual(clone(next[0]),['colonization',{mode:'Строительство'}]);
- for(const mode of ['Строительство','Снабжение']){f.C.mode=mode;assert.equal(f.api.render(f.C,f.ui),'');}
+ for(const mode of ['Строительство','Журнал снабжения']){f.C.mode=mode;assert.equal(f.api.render(f.C,f.ui),'');}
 });
 
 test('primary deadline is shown only while active and later construction keeps its supply preview',()=>{
@@ -292,7 +313,8 @@ test('budget unknown totals remain lower bounds and a bounded purchase estimate 
  assert.match(html,/Полная смета ресурсов<\/span><strong>Не менее 5000 кр\./);assert.match(html,/Осталось доставить<\/span><strong>Неизвестно/);
  assert.match(html,/Нужно закупить<\/span><strong>Не более 7000 кр\./);assert.match(html,/Неизвестных смет: 1/);
  assert.match(html,/class="freshness-detail is-warning"><summary>Неполная оценка<\/summary>/);
- assert.match(html,/Цен старше 7 дней<\/dt><dd>1<\/dd>/);
+ assert.match(html,/Дата самой старой цены/);
+ assert.doesNotMatch(html,/Цен старше 7 дней|Устаревшая оценка/);
  assert.match(html,/Товаров без средней цены<\/dt><dd>2<\/dd>/);
  assert.doesNotMatch(html,/Неполные оценки помечены границами/);
  p.costSummary.toBuy=costMetric(0);html=f.api.render(f.C,f.ui);assert.match(html,/Нужно закупить<\/span><strong>0 кр\./);assert.doesNotMatch(html,/Нужно закупить<\/span><strong>Не более/);
@@ -305,7 +327,8 @@ test('budget renders fully in English without translating user records and never
  f.window.CopilotI18n={t:key=>dictionary[key]??key,locale:()=> 'en-GB'};
  const html=f.api.render(f.C,f.ui),budget=html.split('<section class="colony-budget"')[1]||'';
  assert.match(html,/Личная колония/);assert.match(budget,/Colony resource budget/);assert.match(budget,/Full resource bill/);assert.match(budget,/Procurement budget/);
- assert.match(budget,/<summary>Outdated estimate<\/summary>/);
+ assert.match(budget,/<summary>Price dates<\/summary>/);
+ assert.doesNotMatch(budget,/Outdated estimate/);
  assert.doesNotMatch(budget,/[\p{Script=Cyrillic}]/u);assert.equal(f.calls.length,0);
 });
 

@@ -112,13 +112,13 @@ func TestEngineeringMaterialFiltersAndDirectExchange(t *testing.T) {
 	}
 }
 
-func TestMarketWarningsAndExpiredQuoteRemainVisible(t *testing.T) {
+func TestMarketWarningsAndQuoteObservationDateRemainVisible(t *testing.T) {
 	s := presentationState(t)
 	market := v.Rows(v.At(s, "trading", "results"))[0]
 	market["expired"] = true
 	market["warnings"] = []any{"Спрос ниже объёма груза", M{"text": "Флотоносец мог переместиться"}}
 	page := Build("sale", "Продать", "", s)
-	if !strings.HasPrefix(page.Rows[0].Cells[6], "Устарела") || !strings.Contains(page.Rows[0].Details, "Спрос ниже объёма груза") || !strings.Contains(page.Rows[0].Details, "Флотоносец мог переместиться") || !strings.Contains(page.Rows[0].Details, "повторите поиск") {
+	if page.Rows[0].Cells[6] != Date(market["updatedAt"]) || !strings.Contains(page.Rows[0].Details, "Спрос ниже объёма груза") || !strings.Contains(page.Rows[0].Details, "Флотоносец мог переместиться") || strings.Contains(page.Rows[0].Details, "устарела") {
 		t.Fatal("market risk suppressed", page.Rows[0])
 	}
 }

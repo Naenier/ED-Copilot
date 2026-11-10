@@ -636,7 +636,7 @@ func (m *Manager) Sync(ctx context.Context) error {
 	now := m.opts.Now()
 	for _, row := range append([]QueueRow(nil), m.queue...) {
 		if !validTime(row.Timestamp, now) {
-			m.finishLocked(row, false, "Наблюдение устарело и не отправлено.")
+			m.finishLocked(row, false, "Срок отправки события в Inara истёк.")
 		}
 	}
 	if m.service.RetryAt > now.UnixMilli() {

@@ -321,9 +321,6 @@ func buildPage(tab, mode, query string, s M) Page {
 				q = quotes[0]
 			}
 			observed := Date(r["updatedAt"])
-			if v.Bool(r["expired"]) {
-				observed = "Устарела · " + observed
-			}
 			pad := map[string]string{"L": "L · Большая", "M": "M · Средняя", "S": "S · Малая"}[v.Str(r["pad"])]
 			if pad == "" {
 				pad = "Неизвестна"
@@ -386,7 +383,7 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Rows = append(p.Rows, row(stop, []string{Number(stop["index"]), v.Text(stop["name"], stop["system"]), Number(v.First(stop["distanceLy"], stop["distance"])), Number(stop["fuelUsedTons"]), Number(v.First(stop["tankTons"], stop["tankAfterTons"], stop["fuelRemainingTons"])), Number(stop["restockTons"]), Format(stop["visited"])}, fields(stop, "cargoTritiumTons", "Тритий в грузе, т", "elapsedMinutes", "Время от начала, мин", "refuelMinutes", "Дозаправка, мин", "estimatedArrival", "Прибытие", "estimatedDeparture", "Отправление", "estimatedReady", "Готовность")+"\r\n"+joinStrings(r["warnings"])+"\r\n"+joinStrings(r["assumptions"])))
 		}
 	case "colonization":
-		p.Modes = []string{"Обзор", "Выбор системы", "Строительство", "Снабжение", "Бюджет"}
+		p.Modes = []string{"Обзор", "Выбор системы", "Строительство", colonySupplyLog, "Бюджет"}
 		c := v.Obj(s["colonization"])
 		project := v.Obj(c["activeProject"])
 		p.Summary = v.Text(project["name"], project["targetSystem"], "Создайте или выберите колонию") + " · " + Label(project["status"])
@@ -424,9 +421,9 @@ func buildPage(tab, mode, query string, s M) Page {
 		case "Бюджет":
 			p.Columns = []string{"Товар", "Полная потребность, т", "Осталось, т", "Средняя по галактике, кр./т", "Полная стоимость, кр.", "Стоимость остатка, кр.", "Закупить, кр.", "Цена получена"}
 			for _, r := range v.Rows(project["supplies"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), colonyEstimatePrice(r), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), Number(r["galacticAveragePrice"]), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
 			}
-		case "Снабжение", "Поставки":
+		case colonySupplyLog, "Снабжение", "Поставки", "supplies":
 			p.Columns = []string{"Время", "Товар", "Объём, т"}
 			deliveries := append(append([]M{}, v.Rows(project["manualDeliveries"])...), v.Rows(project["journalDeliveries"])...)
 			sort.SliceStable(deliveries, func(i, j int) bool {
@@ -447,11 +444,13 @@ func buildPage(tab, mode, query string, s M) Page {
 				}
 			}
 		default:
-			p.Columns = []string{"Система", "От исходной, св. л.", "Проверка", "Население", "Разрешение", "Уже заселена", "Идёт колонизация", "Станций", "Наблюдение"}
-			search := v.Obj(c["search"])
-			p.Summary = v.Text(search["error"], v.At(search, "completeness", "reason"), p.Summary)
-			for _, r := range v.Rows(search["results"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["system"], r["name"]), Number(r["distanceLy"]), Label(r["availability"]), Number(r["population"]), Format(r["permit"]), Format(r["isColonised"]), Format(r["isBeingColonised"]), Number(r["permanentStationCount"]), Date(v.First(r["updatedAt"], r["checkedAt"]))}, joinStrings(r["reasons"])+"\r\nДоступность заявки окончательно подтверждается в игре."))
+			p.Summary = ""
+			p.Columns = []string{"Система", "От исходной, св. л.", "Наблюдение"}
+			for _, r := range v.Rows(v.At(c, "search", "results")) {
+				if r["availability"] != "candidate" {
+					continue
+				}
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["system"], r["name"]), Number(r["distanceLy"]), Date(r["updatedAt"])}, "Доступность заявки окончательно подтверждается в игре."))
 			}
 		}
 	case "engineering":
@@ -594,9 +593,6 @@ func detailsTarget(r M) string {
 }
 func marketDetails(r M) string {
 	out := fields(r, "system", "Система", "station", "Станция", "distanceLs", "От звезды, св. с.", "pad", "Площадка", "estimatedTotal", "Сумма сделки, кр.", "coveredTons", "Учтено груза, т", "missingTons", "Без котировки, т", "updatedAt", "Наблюдение", "source", "Источник")
-	if v.Bool(r["expired"]) {
-		out += "\r\nКотировка устарела: повторите поиск перед закупкой или продажей."
-	}
 	for _, warning := range v.Arr(r["warnings"]) {
 		text := v.Text(v.Obj(warning)["text"], warning)
 		if text != "" {

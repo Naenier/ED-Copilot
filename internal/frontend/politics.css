@@ -15,9 +15,9 @@
 .pol-section-heading{align-items:baseline;margin-top:24px}
 .pol-panel h2,.pol-goal h2,.pol-section-heading h2{font-size:17px;line-height:1.45;margin:0;overflow-wrap:anywhere}
 .pol-timestamp{color:var(--muted);font-size:11px;line-height:1.5;flex-shrink:0}
-.pol-stale{color:var(--warn,#d8ab66)}
 .pol-status,.pol-empty{font-size:13px;color:var(--muted);margin:16px 0}
 .pol-status.notice{padding:12px 16px}
+.pol-page-status{margin:12px 0 0}
 .pol-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
 .pol-facts{margin:0;display:grid;gap:0}
 .pol-facts>div{display:flex;align-items:baseline;justify-content:space-between;gap:18px;border-bottom:1px solid var(--border);padding:9px 0;font-size:13px}

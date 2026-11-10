@@ -277,7 +277,7 @@ func (e *Engine) applyCarrierTradeOpportunityLocked(id string, trade, snapshot M
 			for _, side := range []string{"buy", "sell", "fuelMarket"} {
 				quote := v.Obj(result[side])
 				if quote["price"] != nil && time.Since(v.Time(quote["updatedAt"])).Hours() > maxAge {
-					return nil, errors.New("Котировки рейса устарели. Список рейсов обновится автоматически.")
+					return nil, errors.New("Условия рейса изменились. Список рейсов обновится автоматически.")
 				}
 			}
 			legs := M{}

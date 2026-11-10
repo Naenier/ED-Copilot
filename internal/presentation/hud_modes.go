@@ -499,33 +499,17 @@ func hudDestination(doc *HUDDocument, s M, now time.Time) {
 	}
 	at := v.First(d["sourceUpdatedAt"], d["updatedAt"], d["timestamp"])
 	date := v.Time(at)
-	expired := v.Bool(d["expired"]) || date.IsZero() || date.After(now.Add(10*time.Minute))
-	if !date.IsZero() {
-		limit := 24.0
-		if v.Bool(d["carrier"]) {
-			limit = 6
-		}
-		if n, ok := v.Number(v.At(d, "quoteOptions", map[bool]string{false: "maxAgeHours", true: "carrierMaxAgeHours"}[v.Bool(d["carrier"])])); ok {
-			limit = n
-		}
-		expired = expired || now.Sub(date).Hours() > limit
-	}
 	flags := []string{}
-	if expired {
-		if v.Bool(d["expired"]) || !date.IsZero() && !date.After(now.Add(10*time.Minute)) {
-			flags = append(flags, "Котировка устарела")
-		} else {
-			flags = append(flags, "Время цены неизвестно")
-		}
+	if date.IsZero() || date.After(now.Add(10*time.Minute)) {
+		flags = append(flags, "Время цены неизвестно")
+	} else {
+		rows = append(rows, hudValue("Котировка", Age(at, now), "muted"))
 	}
 	if v.Bool(d["cargoChanged"]) {
 		flags = append(flags, "Состав груза изменился")
 	}
 	if v.Bool(d["bulkTaxRisk"]) {
 		flags = append(flags, "Низкий спрос")
-	}
-	if !expired {
-		rows = append(rows, hudValue("Котировка", Age(at, now), "muted"))
 	}
 	if len(flags) > 0 {
 		rows = append(rows, hudWarn(strings.Join(flags, " · ")))

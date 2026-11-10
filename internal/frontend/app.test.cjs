@@ -368,16 +368,27 @@ test('system selection reserves its inline search when two colonies already exis
   ];
   const html = api.renderGeneral();
   assert.match(html,/id="colony-workspace-search-form"/);
-  assert.doesNotMatch(html,/data-action-id="colony.search"|data-action-id="colony.select"|Добавьте колонию/);
+  assert.doesNotMatch(html,/<table\b|data-action-id="colony.search"|data-action-id="colony.select"|Добавьте колонию/);
+  api.C.query = 'A system that did not match';
+  assert.match(api.renderGeneral(),/class="page-heading search-heading"[^]*id="table-query"/);
+});
+
+test('standalone search shares the title row while carrier search remains in its toolbar', () => {
+  const {api}=fixture();
+  api.C.tab='carrier';api.C.mode='Склад';
+  api.C.page={Title:'Флотоносец',Rows:[],Columns:[],Modes:['Состояние','Склад']};
+  assert.match(api.renderGeneral(),/class="filters"[^]*class="segmented"[^]*id="table-query"/);
+  api.C.tab='mining';api.C.mode='История';api.C.page.Modes=['Текущий заход','История'];
+  assert.match(api.renderGeneral(),/class="page-heading search-heading"[^]*id="table-query"/);
 });
 
 test('construction shows one add action and supply only reports its empty delivery journal', () => {
   const { api } = fixture(); api.C.tab = 'colonization';
-  api.C.page={Title:'Колонизация',Rows:[],Modes:['Строительство','Снабжение'],Columns:[]};
+  api.C.page={Title:'Колонизация',Rows:[],Modes:['Строительство','Журнал снабжения'],Columns:[]};
   api.C.state.colonization = { activeProject: { id: 'alpha', buildings: [] } };
   api.C.actions = ['colony.select', 'colony.add-building', 'colony.resource-upsert'].map(id => ({ id, title: id, fields: [] }));
   api.C.mode = 'Строительство'; assert.equal((api.renderGeneral().match(/data-action-id="colony.add-building"/g)||[]).length,1);
-  api.C.mode = 'Снабжение';
+  api.C.mode = 'Журнал снабжения';
   assert.match(api.renderGeneral(),/Поставок этой колонии пока нет/);
   assert.doesNotMatch(api.renderGeneral(),/data-action-id=|data-mode="Строительство"/);
   api.C.state.colonization.activeProject.buildings = [{ id: 'port' }];
@@ -395,13 +406,13 @@ test('generic empty states use a compact factual status and preserve relevant re
 
 test('an unmatched query offers only clearing the query and keeps the selected mode', async () => {
   const { api } = fixture(); let loads = 0;
-  api.C.tab = 'colonization'; api.C.mode = 'Снабжение'; api.C.query = '<нет совпадений>';
+  api.C.tab = 'colonization'; api.C.mode = 'Журнал снабжения'; api.C.query = '<нет совпадений>';
   api.C.actions = [{ id: 'colony.select', title: 'Выбрать колонию', fields: [] }];
   const html = api.renderEmptyState();
   assert.match(html, /Нет совпадений/); assert.match(html, /data-click="clear-query"/);
   assert.match(html, /&lt;нет совпадений&gt;/); assert.doesNotMatch(html, /data-action-id=/);
   api.setLoad(async () => { loads++; }); await api.handleClick('clear-query', null);
-  assert.equal(api.C.query, ''); assert.equal(api.C.mode, 'Снабжение'); assert.equal(loads, 1);
+  assert.equal(api.C.query, ''); assert.equal(api.C.mode, 'Журнал снабжения'); assert.equal(loads, 1);
 });
 
 test('statistics does not prompt to reset a period and engineering empty prompts match the current mode', () => {
@@ -499,7 +510,7 @@ test('the actual toolbar offers details only for the renderer that can display a
   ['settings','','settings',true],['overview','','overview',false],['overview','Обзор','overview',false],['overview','Корабль и груз','table',true],
   ['encyclopedia','Корабли','reference',false],['engineering','Инженеры','reference',false],['targets','Инженеры','reference',false],['engineering','План','table',true],
   ['learning','','learning',false],['carrier-calculator','','carrier-calculator',false],['carrier-trade','','carrier-trade',false],['deals','Поиск','deals',false],
-  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['colonization','Снабжение','table',false],['colonization','Бюджет','table',false],['sale','Продать','table',true],
+  ['route','Маршрут','table',true],['colonization','Строительство','table',true],['colonization','Журнал снабжения','table',false],['colonization','Бюджет','table',false],['sale','Продать','table',true],
  ]){
   api.C.tab=tab;api.C.mode=mode;api.renderChrome();
   assert.equal(api.rendererKind(),kind,tab+' / '+mode);
@@ -513,7 +524,7 @@ test('Budget devotes the table width to prices and offers procurement without ch
  const f=fixture();mountedPage(f);const {api}=f;
  f.window.ColonyWorkspaceUI={render:()=>'<div class="colony-budget-workspace"></div>',renderBuilding:()=>''};
  api.C.tab='colonization';api.C.mode='Бюджет';api.C.inspector=true;api.C.selected='steel';api.C.state={settings:{overlayEnabled:false}};
- api.C.page={Title:'Колонизация',Description:'Description',Summary:'Repeated context',Modes:['Бюджет','Снабжение'],Columns:['Товар'],Rows:[{ID:'steel',Cells:['Steel'],Data:{},Details:'More detail'}]};
+ api.C.page={Title:'Колонизация',Description:'Description',Summary:'Repeated context',Modes:['Бюджет','Журнал снабжения'],Columns:['Товар'],Rows:[{ID:'steel',Cells:['Steel'],Data:{},Details:'More detail'}]};
  api.C.actions=['colony.carrier-stock','colony.select','colony.create','colony.export-csv','colony.resource-upsert','colony.purchase'].map(id=>({id,title:id}));
  let html=api.renderGeneral();
  assert.doesNotMatch(html,/<aside class="inspector"|class="summary-note"|data-action-id="colony.carrier-stock"|data-action-id="colony.select"|data-action-id="colony.create"/);
@@ -521,7 +532,7 @@ test('Budget devotes the table width to prices and offers procurement without ch
  assert.ok(html.indexOf('data-action-id="colony.resource-upsert"')<html.indexOf('data-action-id="colony.export-csv"'));
  api.renderChrome();assert.doesNotMatch(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);
  assert.equal(api.C.inspector,true);
- api.C.mode='Снабжение';html=api.renderGeneral();assert.doesNotMatch(html,/<aside class="inspector"/);
+ api.C.mode='Журнал снабжения';html=api.renderGeneral();assert.doesNotMatch(html,/<aside class="inspector"/);
  api.C.mode='Строительство';html=api.renderGeneral();assert.match(html,/<aside class="inspector"/);
  api.renderChrome();assert.match(f.nodes.get('page-toolbar').innerHTML,/data-click="inspector"/);assert.equal(api.C.inspector,true);
 });

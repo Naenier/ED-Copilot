@@ -93,15 +93,16 @@ function engineerPicker(C,u,engineers) {
 function filterMarkup(C,u) {
   const r=model(C), f=r.filters, options=catalogue(C);
   const choices = (rows,title=item=>label(item,C,u)) => array(rows).map(item => ({value:keyOf(item), text:title(item)})).sort((a,b)=>a.text.localeCompare(b.text,lang(C)));
-  const blueprint = array(options.blueprints).find(item=>keyOf(item)===f.blueprintKey);
-  const maxGrade = ['suit','weapon'].includes(f.moduleKey)?0:Math.min(5, Math.max(0, Number(blueprint?.maxGrade)||0));
+  const blueprintOptions = array(options.blueprints).filter(item=>!f.moduleKey||array(item.moduleKeys).includes(f.moduleKey));
+  const blueprint = blueprintOptions.find(item=>keyOf(item)===f.blueprintKey);
+  const maxGrade = !f.moduleKey||blueprint?.kind==='odyssey'?0:Math.min(5, Math.max(0, Number(blueprint?.maxGrade)||0));
   const grades = Array.from({length:maxGrade}, (_,i) => ({value:String(i+1),text:'G'+(i+1)}));
   const equipment = array(options.equipment);
   const experiments = array(options.experimentals);
   return `<div class="eng-filters-primary">
     ${engineerPicker(C,u,array(options.engineers))}
     ${select(u,'moduleKey','Модуль или снаряжение',choices(options.modules),f.moduleKey,'Все модули')}
-    ${select(u,'blueprintKey','Чертёж',choices(options.blueprints,item=>blueprintLabel(item,C,u)),f.blueprintKey,'Все чертежи',!f.moduleKey || !options.blueprints?.length)}
+    ${select(u,'blueprintKey','Чертёж',choices(blueprintOptions,item=>blueprintLabel(item,C,u)),f.blueprintKey,'Все чертежи',!blueprintOptions.length)}
     ${grades.length?select(u,'grade','Целевая ступень',grades,f.grade,'Максимальная ступень'):''}
   </div>${f.moduleKey&&(equipment.length||experiments.length) ? `<div class="eng-filters-secondary">
     ${equipment.length?select(u,'equipmentKey','Экземпляр снаряжения',choices(equipment,item=>equipmentLabel(item,C,u)),f.equipmentKey,'Новый экземпляр'):''}
@@ -379,7 +380,11 @@ function change(event,C,u) {
     return;
   }
   switch (d.engineeringFilter) {
-    case 'moduleKey': applyFilters(C,u,{moduleKey:input.value,blueprintKey:'',experimentalKey:'',equipmentKey:'',grade:0});break;
+    case 'moduleKey': {
+      const blueprint=array(catalogue(C).blueprints).find(item=>keyOf(item)===r.filters.blueprintKey);
+      const compatible=!input.value||array(blueprint?.moduleKeys).includes(input.value);
+      applyFilters(C,u,{moduleKey:input.value,blueprintKey:compatible?r.filters.blueprintKey:'',experimentalKey:'',equipmentKey:'',grade:0});break;
+    }
     case 'blueprintKey': applyFilters(C,u,{blueprintKey:input.value,grade:0});break;
     case 'grade': applyFilters(C,u,{grade:Number(input.value)||0});break;
     case 'experimentalKey': applyFilters(C,u,{experimentalKey:input.value});break;
@@ -503,10 +508,12 @@ async function smoke(C,u) {
     const engineerCard=u.$$('[data-engineering-card]').find(card=>card.dataset.engineeringCard===id);
     add('Engineering progression filters a commander plan and renders workshop location',filtered&&model(C).filters.engineerIDs.join()===id&&engineerCard?.textContent.includes(engineer.system)&&engineerCard?.textContent.includes(engineer.base));
     const capability=engineer.capabilities.find(item=>item.moduleKey&&item.blueprintKey&&Number(item.maxGrade)>1);
-    const moduleChanged=choose('moduleKey',capability.moduleKey);
-    const moduleLoaded=moduleChanged&&await wait(()=>array(current(C)?.filters?.blueprints).some(item=>keyOf(item)===capability.blueprintKey));
-    const blueprintChanged=moduleLoaded&&choose('blueprintKey',capability.blueprintKey);
-    const recipeLoaded=blueprintChanged&&await wait(()=>current(C)?.recipe?.blueprintKey===capability.blueprintKey);
+    const blueprintField=document.getElementById('eng-roadmap-blueprintKey');
+    const blueprintChanged=blueprintField&&!blueprintField.disabled&&choose('blueprintKey',capability.blueprintKey);
+    const blueprintLoaded=blueprintChanged&&await wait(()=>!!current(C));
+    add('Engineering progression accepts a blueprint before selecting a module',blueprintLoaded&&model(C).filters.moduleKey===''&&array(current(C)?.engineers).some(row=>array(row.capabilities).some(item=>item.blueprintKey===capability.blueprintKey)));
+    const moduleChanged=blueprintLoaded&&choose('moduleKey',capability.moduleKey);
+    const recipeLoaded=moduleChanged&&await wait(()=>current(C)?.recipe?.blueprintKey===capability.blueprintKey);
     const shown=u.$('.eng-recipe');
     add('Engineering progression calculates real materials for a selected blueprint',recipeLoaded&&!!shown?.querySelector('.eng-materials tbody tr'));
   } catch(error) {

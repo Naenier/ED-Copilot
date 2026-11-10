@@ -17,7 +17,7 @@ function fixture(){
 }
 test('renders both complete legs, systems and stations, price, stock, demand, age and arrival',()=>{
  const {api,C,u,leg}=fixture(),html=api.render(C,u);
- for(const text of ['Alpha','Beta','Source Port','Buyer Port','Золото','Серебро','Запас','Спрос','От звезды','Туда','Обратно','Начальный капитал','по вашему времени','Назначить покупателя','Сохранить план плеча','Сохранить весь рейс'])assert.ok(html.includes(text),text);
+ for(const text of ['Alpha','Beta','Source Port','Buyer Port','Золото','Серебро','Запас','Спрос','От звезды','Туда','Обратно','Начальный капитал','по вашему времени','Назначить покупателя','Сохранить план перевозки','Сохранить весь рейс'])assert.ok(html.includes(text),text);
  assert.equal((html.match(/data-copy="system"/g)||[]).length,4);assert.equal((html.match(/data-copy="station"/g)||[]).length,4);assert.ok(html.includes('datetime="'+leg.buy.observedAt+'"'));assert.doesNotMatch(html,/NaN|undefined|onclick=/);
 });
 test('uses known free hold and real pilot balance while preserving unknown and zero',()=>{
@@ -25,9 +25,30 @@ test('uses known free hold and real pilot balance while preserving unknown and z
  C.dealsUI=null;C.state.commander.cargoCapacity=null;C.state.pilot.credits=null;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value=""/);assert.match(html,/data-deals-filter="credits" value=""/);
  C.dealsUI=null;C.state.commander.cargoCapacity=0;C.state.pilot.credits=0;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value="0"/);assert.match(html,/data-deals-filter="credits" value="0"/);
 });
-test('search sends the actual normalized filters, six resources, and Russian numeric input',async()=>{
- const {api,C,u,calls,inputs,input}=fixture();inputs.push(input('cargoCapacity','120'),input('credits','12 500,5'),input('marketType','carriers'),input('resource0','gold'),input('resource1','gold'),input('resource2',''),input('minDemand','2 000'));
- await api.handle('deals-search',null,C,u);const body=calls[0].params.values;assert.equal(calls[0].op,'deals-search');assert.equal(body.credits,12500.5);assert.equal(body.cargoCapacity,120);assert.equal(body.includeCarriers,true);assert.equal(body.minDemand,2000);assert.equal(body.resourceKeys.filter(key=>key==='gold').length,1);assert.equal(body.resourceKeys.includes(''),false);
+test('search sends an optional commodity filter and minimum net profit in normalized numbers',async()=>{
+ const {api,C,u,calls,inputs,input}=fixture();
+ const html=api.render(C,u);
+ assert.match(html,/id="deals-commodity-picker" class="deals-commodity-picker" hidden/);
+ assert.doesNotMatch(html,/data-deals-filter="resource\d/);
+ inputs.push(input('cargoCapacity','120'),input('credits','12 500,5'),input('marketType','carriers'),input('minDemand','2 000'),input('minNetProfit','42 000'));
+ await api.handle('deals-search',null,C,u);
+ assert.equal(calls[0].params.values.resourceFilter,false);
+ assert.deepEqual(calls[0].params.values.resourceKeys,[]);
+ const toggle=checked=>({target:input('resourceFilter','',{type:'checkbox',checked})});
+ api.handleInput(toggle(true),C,u);
+ await assert.rejects(api.handle('deals-search',null,C,u),/Выберите хотя бы один товар/);
+ for(const commodity of ['gold','gold','silver','water','tea','titanium','wine','liquor']) api.handleInput({target:{dataset:{dealsCommodity:commodity},checked:true}},C,u);
+ await api.handle('deals-search',null,C,u);
+ const body=calls[1].params.values;
+ assert.equal(body.credits,12500.5);
+ assert.equal(body.cargoCapacity,120);
+ assert.equal(body.includeCarriers,true);
+ assert.equal(body.minDemand,2000);
+ assert.equal(body.minNetProfit,42000);
+ assert.deepEqual(body.resourceKeys,['gold','silver','water','tea','titanium','wine','liquor']);
+ api.handleInput(toggle(false),C,u);
+ await api.handle('deals-search',null,C,u);
+ assert.deepEqual(calls[2].params.values.resourceKeys,[]);
 });
 test('invalid or unknown finance prevents any external search and gives a field error',async()=>{
  const {api,C,u,calls,inputs,input,error}=fixture();inputs.push(input('credits',''));await assert.rejects(api.handle('deals-search',null,C,u),/Бюджет/);assert.equal(calls.length,0);assert.match(error.textContent,/укажите число/);
@@ -86,6 +107,8 @@ test('opening trade finds routes automatically using confirmed hold, credits and
  assert.equal(values.cargoCapacity,80);
  assert.equal(values.credits,100000);
  assert.equal(values.minPad,'M');
+ assert.equal(values.resourceFilter,false);
+ assert.deepEqual(values.resourceKeys,[]);
  C.state.tradeRoutes={options:values,updatedAt:new Date().toISOString(),results:[]};
  await api.init(C,u);
  assert.equal(calls.length,1);
@@ -147,8 +170,8 @@ test('unknown costs and capital remain unknown and a missing leg result never ha
  leg.operatingCost=0;leg.netEstimate=0;assert.match(api.render(C,u),/Расходы: <b>0 кр\.<\/b>/);
 });
 
-test('price age never treats missing timestamps or a future observation as a fresh zero-hour quote',()=>{
- const {api,C,u,leg,route}=fixture();leg.buy.observedAt=null;leg.buy.updatedAt=null;leg.buy.ageHours=0;let html=api.render(C,u);assert.match(html,/Время цены неизвестно/);assert.match(html,/deals-observed stale/);
- leg.buy.observedAt=new Date(Date.now()+48*3600000).toISOString();html=api.render(C,u);assert.match(html,/Время котировки в будущем/);assert.match(html,/Проверьте перед рейсом/);
- leg.buy.observedAt=new Date(Date.now()-30*3600000).toISOString();route.options={maxAgeHours:24,carrierMaxAgeHours:6};html=api.render(C,u);assert.match(html,/30 ч назад/);assert.match(html,/местное время/);assert.match(html,/deals-observed stale/);
+test('quote timestamps stay visible without a stale badge',()=>{
+ const {api,C,u,leg,route}=fixture();leg.buy.observedAt=null;leg.buy.updatedAt=null;leg.buy.ageHours=0;let html=api.render(C,u);assert.match(html,/Время цены неизвестно/);
+ leg.buy.observedAt=new Date(Date.now()+48*3600000).toISOString();html=api.render(C,u);assert.match(html,/Время котировки в будущем/);
+ leg.buy.observedAt=new Date(Date.now()-30*3600000).toISOString();route.options={maxAgeHours:24,carrierMaxAgeHours:6};html=api.render(C,u);assert.match(html,/30 ч назад/);assert.match(html,/местное время/);assert.doesNotMatch(html,/deals-observed stale|Проверьте перед рейсом/);
 });

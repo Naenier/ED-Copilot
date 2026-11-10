@@ -24,6 +24,6 @@ test('trade opens its ready routes first and shows the related tools together',(
 });
 test('colony tools appear as five sidebar views without duplicate supply screens',()=>{
  const C={tab:'colonization',mode:'Строительство',tabs:[],nav:[]};
- assert.deepEqual(Array.from(nav.entries(C,'colonization'),item=>item.mode),['Обзор','Выбор системы','Строительство','Снабжение','Бюджет']);
+ assert.deepEqual(Array.from(nav.entries(C,'colonization'),item=>item.mode),['Обзор','Выбор системы','Строительство','Журнал снабжения','Бюджет']);
  assert.equal(nav.entries(C,'colonization').filter(item=>nav.selected(C,item)).length,1);
 });

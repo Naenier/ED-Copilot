@@ -11,8 +11,13 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
+const colonySupplyLog = "Журнал снабжения"
+
 // ColonyActions describes native controls and maps them to the domain contract.
 func ColonyActions(mode string, state M, selected M) []Action {
+	if mode == "Снабжение" || mode == "supplies" {
+		mode = colonySupplyLog
+	}
 	c := v.Obj(state["colonization"])
 	project := v.Obj(c["activeProject"])
 	projectID := v.Str(project["id"])
@@ -247,7 +252,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 		}
 		actions = append(actions, post("colony.link-depot", "Связать со стройплощадкой из журнала", "link-depot", M{"buildingId": buildingID}, Field{Key: "marketId", Label: "Строительная площадка", Kind: "select", Choices: depots, Default: v.Str(selectedBuild["marketId"]), Help: "Здесь только площадки этой системы. Требования обновятся по журналу."}), Action{ID: "colony.delete-building", Title: "Убрать выбранный объект из плана", Path: "/api/colonization", Payload: M{"action": "remove-building", "projectId": projectID, "id": buildingID}, Confirm: "Удалить этап «" + v.Text(selectedBuild["name"], selectedBuild["typeId"]) + "» и его личные отметки? Это не отменяет строительство в игре."})
 	}
-	if len(buildings) > 0 && (mode == "Снабжение" || mode == "supplies" || mode == "Бюджет" || mode == "Строительство" || mode == "construction" || mode == "Очередь снабжения" || mode == "Поставки") {
+	if len(buildings) > 0 && (mode == colonySupplyLog || mode == "Бюджет" || mode == "Строительство" || mode == "construction" || mode == "Очередь снабжения" || mode == "Поставки") {
 		goods := colonyGoods(state, project)
 		commodity := v.Text(selected["commodity"], selected["key"])
 		required := selected["required"]
@@ -272,7 +277,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 		sourceDefault := selectedBuild["sourceNote"]
 		resource := Action{ID: "colony.resource-upsert", Title: "Плановая потребность в товаре", Path: "/colonization/resource-row", Payload: M{"projectId": projectID}, Fields: []Field{{Key: "buildingId", Label: "Объект этой колонии", Kind: "select", Choices: buildChoices, Default: defaultBuilding, Required: true}, {Key: "commodity", Label: "Товар", Kind: "combo", Choices: goods, Default: commodity, Required: true}, colonyInteger("required", "Нужно всего, т", required, true, 1, 1e9), {Key: "sourceNote", Label: "Основание плановой оценки", Kind: "text", Default: sourceDefault, Required: true, Help: "Это ручная оценка. Точный список игрового склада имеет приоритет."}}, Transform: colonyResourceBody}
 		actions = append(actions, resource)
-		if mode == "Снабжение" || mode == "supplies" || mode == "Бюджет" {
+		if mode == colonySupplyLog || mode == "Бюджет" {
 			manualBuildings := []Choice{}
 			manualGoods := []Choice{}
 			seen := map[string]bool{}
@@ -310,7 +315,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 				actions = append(actions, Action{ID: "colony.purchase", Title: "Найти, где купить выбранный товар", Kind: "purchase", Path: "sale", Disabled: exact && need <= 0, Payload: M{"resourceKey": commodity, "quantity": quantity, "system": v.Text(commander["system"], project["originSystem"])}, Fields: []Field{colonyInteger("quantity", "Найти объём, т", quantity, true, 1, 1e9), {Key: "system", Label: "Искать рядом с системой", Kind: "text", Default: v.Text(commander["system"], project["originSystem"]), Required: true}}})
 			}
 		}
-		if mode == "Поставки" || mode == "Снабжение" || mode == "supplies" || mode == "Строительство" || mode == "construction" {
+		if mode == "Поставки" || mode == colonySupplyLog || mode == "Строительство" || mode == "construction" {
 			delivery := post("colony.delivery-add", "Отметить личную поставку", "record-delivery", nil, Field{Key: "buildingId", Label: "Объект этой колонии", Kind: "select", Choices: buildChoices, Default: defaultBuilding, Required: true}, Field{Key: "commodity", Label: "Товар", Kind: "combo", Choices: goods, Default: commodity, Required: true}, colonyInteger("count", "Передано, т", nil, true, 1, 1e9), Field{Key: "notes", Label: "Примечание", Kind: "multiline", Help: "Личная отметка не прибавляется повторно к принятому объёму игрового склада."})
 			delivery.Transform = func(body M) (M, error) {
 				n, e := colonyOptionalInteger(body["count"], 1, 1e9)
@@ -327,7 +332,7 @@ func ColonyActions(mode string, state M, selected M) []Action {
 			actions = append(actions, delivery)
 		}
 	}
-	if (mode == "Поставки" || mode == "Снабжение") && v.Str(selected["source"]) == "manual" && v.Str(selected["id"]) != "" {
+	if (mode == "Поставки" || mode == colonySupplyLog) && v.Str(selected["source"]) == "manual" && v.Str(selected["id"]) != "" {
 		actions = append(actions, Action{ID: "colony.delivery-remove", Title: "Удалить выбранную личную отметку", Path: "/api/colonization", Payload: M{"action": "remove-delivery", "projectId": projectID, "id": selected["id"]}, Confirm: "Удалить личную отметку доставки? События журнала игры останутся."})
 	}
 	return actions

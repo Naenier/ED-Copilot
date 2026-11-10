@@ -84,7 +84,7 @@ test('Opening each Galaxy view automatically requests missing data for its scope
     delete C.state.politics.communityGoals;
     delete C.state.politics.search;
     const r = runtime(C);
-    assert.match(r.api.render(C,r.u),/Обновляем данные/);
+    assert.match(r.api.render(C,r.u),mode === 'Пауэрплей' ? /Загружаем страницу 1/ : /Обновляем данные/);
     r.api.init(C,r.u);
     r.api.init(C,r.u);
     await flush();
@@ -172,6 +172,68 @@ test('Powerplay opens cached figures, auto-applies filters and bounds pagination
   assert.deepEqual(requests(r)[1],{kind:'powerplay',power:'Power A',state:'Fortified',page:2});
 });
 
+test('Powerplay keeps the displayed table while the next page is loading', async () => {
+  const r = runtime();
+  r.C.mode = 'Пауэрплей';
+  const p = r.C.state.politics;
+  const previous = p.search;
+  let release;
+  const call = r.u.call;
+  r.u.call = async (op,body) => {
+    await call(op,body);
+    if (op === 'politics-refresh') await new Promise(resolve => {release = resolve;});
+  };
+  assert.match(r.api.render(r.C,r.u),/Public result/);
+  await r.api.handleClick('politics-page',{dataset:{page:'2'}},r.C,r.u);
+  await flush();
+  let html = r.api.render(r.C,r.u);
+  assert.match(html,/aria-busy="true"><table/);
+  assert.match(html,/Public result/);
+  assert.match(html,/Page 2/);
+  assert.match(html,/Loading page 3/);
+  assert.match(html,/data-page="2" disabled/);
+  assert.deepEqual(requests(r),[{kind:'powerplay',power:'Power A',state:'Contested',page:2}]);
+
+  r.C.state.politicsNetwork = {running:true,options:requests(r)[0]};
+  release();
+  await flush();
+  html = r.api.render(r.C,r.u);
+  assert.match(html,/aria-busy="true"><table/);
+  assert.match(html,/Public result/);
+
+  p.search = {...previous,page:2,entries:[{name:'Third page system',powerplay:{}}]};
+  r.C.state.politicsNetwork.running = false;
+  await r.u.loadView(true);
+  html = r.api.render(r.C,r.u);
+  assert.match(html,/aria-busy="false"><table/);
+  assert.match(html,/Page 3/);
+  assert.match(html,/Third page system/);
+  assert.doesNotMatch(html,/Public result|Loading page/);
+});
+
+test('politics refresh waits for visibility and runs when the focused view ages', async () => {
+  const r = runtime();
+  const scheduled = [];
+  r.window.setTimeout = callback => scheduled.push(callback);
+  r.document.hidden = true;
+  r.C.state.politics.limits = {cacheMinutes:5};
+  r.C.state.politics.activeSystem.detailsFetchedAt = new Date(Date.now()-301000).toISOString();
+  r.api.init(r.C,r.u);
+  await flush();
+  assert.deepEqual(requests(r),[]);
+  assert.equal(scheduled.length,1);
+  r.document.hidden = false;
+  scheduled.shift()();
+  await flush();
+  assert.deepEqual(requests(r),[{kind:'system',system:'Fixture',keepSelection:true}]);
+  scheduled.shift()();
+  await flush();
+  assert.equal(requests(r).length,1);
+  r.C.tab = 'overview';
+  scheduled.shift()();
+  assert.equal(scheduled.length,0);
+});
+
 test('faction influence and exact conflict pairings appear as separate cards', () => {
   const r = runtime();
   r.C.mode = 'Фракции и конфликты';
@@ -234,7 +296,8 @@ test('Politics distinguishes provider failure, empty results and partial cached 
   p.status = {kind:'goals',parameters:{language:'en'},reason:'rate-limited',retryAt:new Date(Date.now()+60000).toISOString()};
   let html = r.api.render(r.C,r.u);
   assert.match(html,/provider is limiting requests/);
-  assert.match(html,/<summary>Outdated<\/summary>/);
+  assert.match(html,/<summary>Incomplete<\/summary>/);
+  assert.doesNotMatch(html,/Outdated|Устарело/);
   assert.match(html,/<dt>Observed<\/dt>/);
   assert.match(html,/<dt>Retrieved<\/dt>/);
   assert.match(html,/No usable community goals/);
@@ -250,6 +313,17 @@ test('Politics distinguishes provider failure, empty results and partial cached 
   assert.match(html,/Нет соединения с источником данных/);
   assert.match(html,/<summary>Пустой результат<\/summary>/);
   assert.match(html,/В последнем обновлении нет активных целей/);
+});
+
+test('Politics shows observed and retrieved dates without judging their age', () => {
+  const r = runtime(fixture('ru'));
+  const data = r.C.state.politics.activeSystem.info;
+  data.quality = {state:'stale',coverage:'complete',observedAt:'2025-01-01',fetchedAt:'2025-01-02'};
+  const html = r.api.render(r.C,r.u);
+  assert.match(html,/<summary>Даты данных<\/summary>/);
+  assert.match(html,/<dt>Наблюдение<\/dt>/);
+  assert.match(html,/<dt>Получение<\/dt>/);
+  assert.doesNotMatch(html,/Устарело|Актуально|is-warning/);
 });
 
 test('canonical and legacy government and security labels follow the interface language', () => {

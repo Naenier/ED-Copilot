@@ -113,7 +113,7 @@ First check an inhabited origin system, choose an eligible station and its contr
 
 Overview lists your colonies. Open Construction to add facilities, see their resource bills and change construction order or supply priority. Visiting a depot loads its observed bill; manual bills remain estimates.
 
-Supplies is the delivery log: date, commodity and quantity. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. It combines all planned and active structures in the selected colony.
+Supply log shows the date, commodity and quantity of each delivery. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. It combines all planned and active structures in the selected colony.
 
 The overlay groups cargo to deliver, stock to unload and goods to buy. With carrier accounting enabled, the unload card requires fresh, accessible stock and a confirmed carrier location in the colony system. Long lists show how many rows remain. Journal-observed transfers update a known warehouse immediately.
 

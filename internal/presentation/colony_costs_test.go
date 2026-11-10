@@ -34,9 +34,30 @@ func TestColonyDeliveryLogListsJournalResourcesWithoutProvenanceColumns(t *testi
 	s := M{"colonization": M{"activeProject": M{"id": "test", "journalDeliveries": []M{
 		{"timestamp": "2031-01-01T10:00:00Z", "resources": []M{{"name": "Сталь", "count": 30}, {"name": "Алюминий", "count": 20}}},
 	}, "manualDeliveries": []M{{"timestamp": "2031-01-01T09:00:00Z", "name": "Медь", "count": 7}}}}}
-	p := Build("colonization", "Снабжение", "", s)
-	if len(p.Rows) != 3 || len(p.Columns) != 3 || p.Rows[0].Cells[1] != "Сталь" || p.Rows[2].Cells[2] != "7" || p.Rows[0].ID == p.Rows[1].ID {
-		t.Fatalf("wrong delivery ordering, identity or columns: %v %v", p.Columns, p.Rows)
+	for _, mode := range []string{colonySupplyLog, "Снабжение", "Поставки", "supplies"} {
+		p := Build("colonization", mode, "", s)
+		if len(p.Rows) != 3 || len(p.Columns) != 3 || p.Rows[0].Cells[1] != "Сталь" || p.Rows[2].Cells[2] != "7" || p.Rows[0].ID == p.Rows[1].ID {
+			t.Fatalf("%s: wrong delivery ordering, identity or columns: %v %v", mode, p.Columns, p.Rows)
+		}
+	}
+}
+
+func TestColonySystemSelectionShowsOnlySuitableCandidates(t *testing.T) {
+	results := []M{
+		{"id": "blocked", "name": "Occupied", "availability": "unavailable", "distanceLy": 4},
+		{"id": "unknown", "name": "Unverified", "availability": "unknown", "distanceLy": 5},
+		{"id": "candidate", "name": "Suitable", "availability": "candidate", "distanceLy": 7},
+	}
+	search := M{"results": results}
+	s := M{"colonization": M{"search": search}}
+	p := Build("colonization", "Выбор системы", "", s)
+	if len(p.Rows) != 1 || p.Rows[0].ID != "candidate" || p.Rows[0].Cells[0] != "Suitable" || p.Rows[0].Cells[1] != "7" {
+		t.Fatal("only a suitable system should be selectable", p.Rows)
+	}
+	search["results"] = results[:2]
+	p = Build("colonization", "Выбор системы", "", s)
+	if len(p.Rows) != 0 || p.Summary != "" {
+		t.Fatal("an empty search must not present unsuitable rows or a generic summary", p)
 	}
 }
 
@@ -52,12 +73,12 @@ func TestColonyBudgetEnglishColumnsAndDetailKeepPriceSourceClear(t *testing.T) {
 	}
 }
 
-func TestColonyBudgetMarksStaleEstimateInBothLanguages(t *testing.T) {
-	for language, label := range map[string]string{"ru": "Устаревшая оценка", "en": "Outdated estimate"} {
+func TestColonyBudgetShowsPriceWithoutAgeWarning(t *testing.T) {
+	for _, language := range []string{"ru", "en"} {
 		row := M{"commodity": "steel", "galacticAveragePrice": 50, "priceQuality": freshness.Observation{State: freshness.Stale, FetchedAt: "2026-11-01T12:00:00Z"}}
 		state := M{"settings": M{"language": language}, "colonization": M{"activeProject": M{"id": "selected", "supplies": []M{row}}}}
 		page := Build("colonization", "Бюджет", "", state)
-		if !strings.Contains(page.Rows[0].Cells[3], "50 · "+label) {
+		if page.Rows[0].Cells[3] != "50" || !strings.Contains(page.Rows[0].Details, "2026") {
 			t.Fatal(language, page.Rows[0])
 		}
 	}

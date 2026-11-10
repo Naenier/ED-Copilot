@@ -54,8 +54,10 @@ var modernPreviewNames = map[string]bool{
 	"readme-deals": true, "settings-details": true, "route-details": true,
 	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
 	"readme-commander": true, "readme-ranks": true, "readme-fleet": true, "readme-inventory": true, "readme-navigation": true, "readme-navigation-compact": true,
-	"readme-farming": true,
-	"readme-galaxy":  true, "readme-system": true, "readme-engineering": true, "readme-material-exchange": true, "readme-material": true,
+	"readme-farming":       true,
+	"readme-deals-filters": true, "readme-farming-catalog": true, "readme-politics": true,
+	"readme-exo-planets": true, "readme-exo-samples": true,
+	"readme-galaxy": true, "readme-system": true, "readme-engineering": true, "readme-material-exchange": true, "readme-material": true,
 }
 
 type modernPreviewCapture struct {
@@ -208,6 +210,8 @@ func (m *modernShell) smokeVisualState(report M) {
 			"readme-galaxy", "readme-system", "readme-ships", "readme-ship", "readme-engineer",
 			"readme-engineering", "readme-material-exchange", "readme-material", "readme-article",
 			"readme-colonization", "readme-academy", "exobiology",
+			"readme-deals-filters", "readme-farming-catalog", "readme-politics",
+			"readme-exo-planets", "readme-exo-samples",
 		}
 	}
 	for _, name := range required {

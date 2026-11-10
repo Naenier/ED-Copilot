@@ -67,19 +67,16 @@ function warehouseTime(item,u){
  if(item.awaitingConfirmation&&item.updatedAt&&item.updatedAt!==item.receivedAt)text+=' · '+th('Скорректировано по журналу ')+u.esc(date(item.updatedAt));
  return text;
 }
-function budgetPriceQuality(C,cost,u){
+function budgetPriceDetails(C,cost,u){
  const freshness=window.FreshnessUI;
  if(!freshness||!cost.commodityCount)return '';
- const stale=Number(cost.stalePriceCount)||0,undated=Number(cost.undatedPriceCount)||0;
  const missing=Math.max(0,Number(cost.commodityCount)-(Number(cost.pricedCommodityCount)||0));
  const language=C.state?.settings?.language==='ru'?'ru':'en';
  const lines=[];
- if(stale)lines.push([t('Цен старше 7 дней'),u.fmt(stale)]);
- if(undated)lines.push([t('Цен неизвестного возраста'),u.fmt(undated)]);
  if(missing)lines.push([t('Товаров без средней цены'),u.fmt(missing)]);
  const oldest=freshness.formatDate(cost.oldestPriceAt,language);
  if(oldest)lines.push([t('Дата самой старой цены'),oldest]);
- return freshness.details(t(missing?'Неполная оценка':stale?'Устаревшая оценка':undated?'Возраст цен неизвестен':'Даты цен'),lines,u.esc,!!(stale||undated||missing));
+ return lines.length?freshness.details(t(missing?'Неполная оценка':'Даты цен'),lines,u.esc,missing>0):'';
 }
 function budget(C,u){
  const project=C.state?.colonization?.activeProject,cost=project?.costSummary;
@@ -89,7 +86,7 @@ function budget(C,u){
  if(unknownBills)warnings.push(t('Неизвестных смет: ')+u.fmt(unknownBills));
  if(manualBills)warnings.push(t('Ручных смет: ')+u.fmt(manualBills));
  const covered=[metric(t('Принято стройками'),budgetValue(cost.delivered,u),t('Стоимость уже принятых ресурсов по тем же ценам'),u),metric(t('Покрыто грузом корабля'),budgetValue(cost.cargoCovered,u),t('Груз ещё нужно передать на стройку'),u),metric(t('Покрыто складом флотоносца'),budgetValue(cost.carrierCovered,u),t('В пределах потребности и включённого учёта'),u)].join('');
- return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><div class="colony-budget-basis"><span>'+th('По средним ценам галактики')+'</span>'+budgetPriceQuality(C,cost,u)+'</div><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ')+'</p></details></section>';
+ return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><div class="colony-budget-basis"><span>'+th('По средним ценам галактики')+'</span>'+budgetPriceDetails(C,cost,u)+'</div><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ')+'</p></details></section>';
 }
 function warehouseOptions(C,u){
  const colony=C.state?.colonization||{},r=state(C),enabled=colony.includeCarrierWarehouse===true,canConfirm=!!stockAccessScope(C);
@@ -100,10 +97,22 @@ function budgetContext(C,u){
  if(!project?.id)return summary(C,u);
  return '<header class="colony-budget-context" data-colony-id="'+u.esc(project.id)+'"><div><span class="eyebrow">'+th('Выбранная колония')+'</span><h2>'+u.esc(project.name||project.targetSystem)+'</h2><div class="colony-overview-meta">'+(!same(project.name,project.targetSystem)?'<span>'+u.icon('orbit')+u.esc(project.targetSystem||t('Система не задана'))+'</span>':'')+u.badge(t(statusNames[project.status]||'Статус не задан'))+'</div></div><div class="colony-overview-actions">'+(project.targetSystem?u.btn(t('Копировать систему'),'colony-workspace-copy','copy','quiet','type="button" data-project="'+u.esc(project.id)+'"'):'')+'</div></header>';
 }
+function searchStatus(C){
+ const {r,search}=source(C);
+ let message='';
+ if(r.pending||search.running)message='Ищем системы для колонизации';
+ else if(search.status==='cancelled')message='Поиск отменён.';
+ else if(search.status==='complete'&&search.completeness?.complete!==true)message='Поиск завершён не полностью. Повторите поиск.';
+ else if(search.status==='complete'&&!C.page?.Rows?.length){
+  const filtered=C.query?.trim()&&search.results?.some(result=>result.availability==='candidate');
+  message=filtered?'Нет совпадений':'Подходящих систем в радиусе 15 св. л. не найдено.';
+ }
+ return message?`<p class="colony-search-status" role="status">${th(message)}</p>`:'';
+}
 function render(C,u){
  if(!active(C))return '';
  if(C.mode==='Бюджет')return '<div data-colony-workspace class="colony-budget-workspace">'+budgetContext(C,u)+budget(C,u)+'<details class="colony-budget-stock"><summary>'+th('Запасы и учёт')+'</summary>'+warehouseOptions(C,u)+'</details></div>';
- if(selectionMode(C)&&C.mode)return '<div data-colony-workspace>'+originSearch(C,u)+action(C,u,'colony.create',t('Добавить колонию вручную'),'plus')+'</div>';
+ if(selectionMode(C)&&C.mode)return '<div data-colony-workspace>'+originSearch(C,u)+action(C,u,'colony.create',t('Добавить колонию вручную'),'plus')+searchStatus(C)+'</div>';
  if(!C.mode||C.mode==='Обзор'){
   const colony=C.state?.colonization||{},projects=colony.projects?.length?colony.projects:colony.activeProject?.id?[colony.activeProject]:[];
   return '<div data-colony-workspace class="colony-overview-list">'+(projects.length?projects.map(project=>summary(C,u,project)).join(''):summary(C,u,null))+

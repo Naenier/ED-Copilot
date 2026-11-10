@@ -45,6 +45,15 @@ Choose planets by their biological signals, environmental conditions and the val
 
 ![Exobiology workspace](docs/screenshots/en/exobiology.png)
 
+<details>
+<summary>Planet search and sample tracking</summary>
+
+![Search for survey planets by system or body name](docs/screenshots/en/exo-planets.png)
+
+![Sample progress and data ready to sell](docs/screenshots/en/exo-samples.png)
+
+</details>
+
 The reference catalogue includes 126 species across 25 genera, habitat conditions, variants and 101 photographs. Planet bookmarks, surface waypoints, a public observation index and expedition statistics help organise your research. First footfall status, estimated payouts and unknown coordinates are identified separately. [Exobiology guide (RU)](docs/EXOBIOLOGY.md).
 
 ## Trading and mining
@@ -57,9 +66,11 @@ Mining tools help you find valuable rings and planets, filter suitable targets, 
 
 The route screen presents both stations on a wide card, including their systems, landing pads, arrival distances, buy and sell prices, supply, demand and observation times. A return load on an A → B → A route has its own commodity and calculation. Copy each system or station name independently, then paste it into the game.
 
-Search takes available cargo space, your known credit balance, market volume, costs and personal limits into account. Profit per hour uses the leg duration you enter; travel to the first station is excluded. Unknown cargo capacity and budgets are requested explicitly, while a known zero remains zero.
+Search takes available cargo space, your known credit balance, market volume, costs and personal limits into account. By default it compares all goods on the markets it checks. Enable **Filter by commodity** to pick specific goods, or set a minimum net profit for the complete trip, including any return load. Profit per hour uses the journey time you enter for one direction. Travel to the first station is excluded.
 
 ![A two-leg trade route](docs/screenshots/en/deals.png)
+
+![Trade route search with the optional commodity picker and minimum net profit](docs/screenshots/en/deals-filters.png)
 
 Select a route, set its buyer as the overlay destination or save a plan for a particular leg. Keep up to 40 complete routes, including both market quotes, in Saved. These are observation snapshots: run a new search before repeating a route to check current prices and available volume.
 
@@ -97,11 +108,15 @@ Read articles in a spacious layout with a table of contents. Commodity pages off
 
 ![Reference article](docs/screenshots/en/article.png)
 
+Use **Material farming** to find routes for collecting raw materials, manufactured components, encoded data, and Guardian components.
+
+![Material farming articles in the reference catalogue](docs/screenshots/en/farming-catalog.png)
+
 ## Colonies
 
 Manage multiple colonies independently. Choose a system using your preferred starting faction, plan the construction order and supply queue, then compare bills of materials with accepted deliveries. The overlay shows the next task for the selected colony.
 
-Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
+Start with an origin system and its stations, then select the station and controlling faction. The results include systems that pass the available eligibility checks. **Supply log** records accepted deliveries, and **Construction** shows the selected project's materials directly below the build queue.
 
 Enable **Include carrier warehouse** to include known personal carrier cargo. Enable **Squadron cargo is available to me** if you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
 
@@ -111,7 +126,7 @@ The **Budget** view values every commodity at its latest observed galactic avera
 
 ## Engineering
 
-Use **Engineering → Progression** to follow unlock steps and filter engineers by module, blueprint, or experimental effect. The plan links each requirement to the corresponding reference page and compares recipe costs with known inventory. **Engineering → Plan** combines requirements for multiple upgrades.
+Use **Engineering → Progression** to follow unlock steps and filter engineers by module, blueprint, or experimental effect. You can start with a blueprint, then pick a compatible module to calculate its requirements. The plan links requirements to their reference pages and compares recipe costs with known inventory. **Engineering → Plan** combines requirements for multiple upgrades.
 
 ![Engineering progression and links to upgrade requirements](docs/screenshots/en/engineering.png)
 
@@ -129,7 +144,9 @@ Career cards use the emblem for your observed rank, while naval cards use their 
 
 ![Commander ranks and practical unlocks](docs/screenshots/en/ranks.png)
 
-Politics brings together public community goals, your recorded contribution, Powerplay powers and indexed systems, local faction influence and conflicts, and reported Thargoid states. Search a system or filter political observations, inspect timestamps and copy a destination into the galaxy map. Cached observations remain available offline.
+Politics brings together public community goals, your recorded contribution, Powerplay powers and indexed systems, local faction influence and conflicts, and reported Thargoid states. Open observations refresh automatically, and the Powerplay table stays visible while a new page loads. Search for a system, inspect observation dates, or copy a destination into the galaxy map. Cached observations remain available offline.
+
+![System politics with ruling faction, power control and local influence](docs/screenshots/en/politics.png)
 
 ## Academy
 

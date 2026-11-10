@@ -1,0 +1,23 @@
+{
+  "Минимальная чистая прибыль за рейс, кр.": "Minimum net profit per trip, Cr",
+  "Макс. расстояние между станциями, св. л.": "Max distance between stations, ly",
+  "Цены товаров на станциях не старше, ч": "Station commodity prices no older than, h",
+  "Цены товаров на флотоносцах не старше, ч": "Carrier commodity prices no older than, h",
+  "Время рейса в одну сторону с торговлей, мин": "One-way trip including trading, min",
+  "Расходы в одну сторону, кр.": "One-way expenses, Cr",
+  "В одну сторону": "One way",
+  "Подобрать груз на обратный путь": "Find cargo for the return trip",
+  "Фильтр по товарам": "Filter by commodity",
+  "Выбрать товары": "Select commodities",
+  "Поиск по товарам": "Search commodities",
+  "Время не включает перелёт до станции закупки.": "Trip time excludes travel to the first station.",
+  "Сохранить план перевозки": "Save shipment plan",
+  "За вычетом расходов": "After expenses",
+  "Рейс туда и обратно": "Round trip",
+  "Рейс в одну сторону": "One-way trip",
+  "Прибыль за полный рейс": "Round-trip profit",
+  "Убрать перевозку из текущих задач.": "Remove the shipment from current tasks.",
+  "Выберите участок рейса.": "Choose a leg of the trip.",
+  "План перевозки сохранён": "Shipment plan saved",
+  "Проверено ближайших рынков: {count}": "Nearby markets checked: {count}"
+}

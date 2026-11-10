@@ -145,6 +145,10 @@ func Quote(raw, requested M, mode, timestamp string, now time.Time) M {
 	if normalized != v.Str(requested["key"]) && resource["key"] != requested["key"] && normalized != v.Key(requested["english"]) {
 		return nil
 	}
+	return marketQuote(raw, requested, mode, timestamp, now)
+}
+
+func marketQuote(raw, requested M, mode, timestamp string, now time.Time) M {
 	field, availableField := "sell_price", "demand"
 	if mode == "buy" {
 		field = "buy_price"
@@ -158,7 +162,7 @@ func Quote(raw, requested M, mode, timestamp string, now time.Time) M {
 	quantity := math.Min(n(requested, "quantity"), math.Floor(available))
 	return M{"key": requested["key"], "name": requested["name"], "price": price, "demand": raw["demand"], "supply": raw["supply"], "requestedQuantity": requested["quantity"], "quantity": quantity, "subtotal": quantity * price, "updatedAt": timestamp, "ageHours": math.Max(0, now.Sub(v.Time(timestamp)).Hours())}
 }
-func StationResult(station M, basket []M, options M, now time.Time, reference any) M {
+func marketStation(station, options M, now time.Time, reference any) M {
 	timestamp := v.Str(station["market_updated_at"])
 	updated := v.Time(timestamp)
 	if updated.IsZero() || updated.After(now.Add(10*time.Minute)) {
@@ -197,6 +201,20 @@ func StationResult(station M, basket []M, options M, now time.Time, reference an
 	if rank[pad] < rank[v.Str(options["minPad"])] {
 		return nil
 	}
+	marketID := v.Text(station["market_id"], station["id"])
+	id := "market:" + marketID
+	if marketID == "" {
+		id = "station:" + v.Str(station["system_name"]) + ":" + v.Str(station["name"])
+	}
+	return M{"id": id, "marketId": marketID, "station": v.Str(station["name"]), "system": v.Str(station["system_name"]), "systemAddress": station["system_id64"], "type": station["type"], "carrier": carrier, "pad": pad, "planetary": planetary, "coordinates": coords, "distanceLy": distance, "distanceLs": v.Nullable(arrival, aok), "updatedAt": timestamp, "sourceUpdatedAt": timestamp, "ageHours": age, "source": "Spansh", "sourceUrl": "https://spansh.co.uk/station/" + url.PathEscape(marketID)}
+}
+
+func StationResult(station M, basket []M, options M, now time.Time, reference any) M {
+	result := marketStation(station, options, now, reference)
+	if result == nil {
+		return nil
+	}
+	timestamp, carrier := v.Str(result["updatedAt"]), v.Bool(result["carrier"])
 	quotes := []M{}
 	bulk := false
 	covered, total, requested := float64(0), float64(0), float64(0)
@@ -223,7 +241,6 @@ func StationResult(station M, basket []M, options M, now time.Time, reference an
 	if len(quotes) == 0 {
 		return nil
 	}
-	marketID := v.Text(station["market_id"], station["id"])
 	warnings := []string{}
 	if bulk {
 		warnings = append(warnings, "Спрос ниже выбранного запаса к объёму груза. Цена при продаже может снизиться.")
@@ -234,17 +251,17 @@ func StationResult(station M, basket []M, options M, now time.Time, reference an
 	if covered < requested {
 		warnings = append(warnings, "Известный спрос или запас покрывает только часть груза.")
 	}
-	if pad == "" {
+	if result["pad"] == "" {
 		warnings = append(warnings, "Размер площадки не подтверждён.")
 	}
-	if !aok {
+	if result["distanceLs"] == nil {
 		warnings = append(warnings, "Расстояние от звезды неизвестно.")
 	}
-	id := "market:" + marketID
-	if marketID == "" {
-		id = "station:" + v.Str(station["system_name"]) + ":" + v.Str(station["name"])
-	}
-	return M{"id": id, "marketId": marketID, "station": v.Str(station["name"]), "system": v.Str(station["system_name"]), "systemAddress": station["system_id64"], "type": station["type"], "carrier": carrier, "pad": pad, "planetary": planetary, "coordinates": coords, "distanceLy": distance, "distanceLs": v.Nullable(arrival, aok), "updatedAt": timestamp, "sourceUpdatedAt": timestamp, "ageHours": age, "quotes": quotes, "estimatedTotal": total, "requestedTons": requested, "coveredTons": covered, "missingTons": math.Max(0, requested-covered), "coverageComplete": covered >= requested, "demandSafe": !bulk, "bulkTaxRisk": bulk, "averagePrice": total / covered, "warnings": warnings, "source": "Spansh", "sourceUrl": "https://spansh.co.uk/station/" + url.PathEscape(marketID)}
+	result["quotes"], result["warnings"] = quotes, warnings
+	result["estimatedTotal"], result["requestedTons"], result["coveredTons"] = total, requested, covered
+	result["missingTons"], result["coverageComplete"] = math.Max(0, requested-covered), covered >= requested
+	result["demandSafe"], result["bulkTaxRisk"], result["averagePrice"] = !bulk, bulk, total/covered
+	return result
 }
 func RankResults(rows []M, mode string) []M {
 	sort.SliceStable(rows, func(i, j int) bool {
@@ -309,8 +326,21 @@ func SearchPayload(resource, options M, reference []float64, page int, now time.
 		sortField = "market_buy_price"
 		direction = "asc"
 	}
-	since := now.Add(-time.Duration(math.Max(n(options, "maxAgeHours"), n(options, "carrierMaxAgeHours")) * float64(time.Hour)))
-	filters := M{"has_market": M{"value": true}, "market": []M{{"name": v.First(resource["marketName"], resource["english"]), availability: M{"value": []string{fmt.Sprint(minimum), "999999999999"}, "comparison": "<=>"}}}, "market_updated_at": M{"value": []string{v.ISO(since), v.ISO(now.Add(10 * time.Minute))}, "comparison": "<=>"}, "distance": M{"min": 0, "max": options["radiusLy"]}}
+	filters := stationSearchFilters(options, now)
+	name := v.First(resource["marketName"], resource["english"])
+	filters["market"] = []M{{"name": name, availability: M{"value": []string{fmt.Sprint(minimum), "999999999999"}, "comparison": "<=>"}}}
+	return stationSearchPayload(filters, []M{{sortField: []M{{"name": name, "direction": direction}}}, {"distance": M{"direction": "asc"}}}, reference, page, 60)
+}
+
+func stationSearchFilters(options M, now time.Time) M {
+	maxAge := n(options, "maxAgeHours")
+	if options["marketType"] == "carriers" {
+		maxAge = n(options, "carrierMaxAgeHours")
+	} else if v.Bool(options["includeCarriers"]) {
+		maxAge = math.Max(maxAge, n(options, "carrierMaxAgeHours"))
+	}
+	since := now.Add(-time.Duration(maxAge * float64(time.Hour)))
+	filters := M{"has_market": M{"value": true}, "market_updated_at": M{"value": []string{v.ISO(since), v.ISO(now.Add(10 * time.Minute))}, "comparison": "<=>"}, "distance": M{"min": 0, "max": options["radiusLy"]}}
 	// Apply the scope before selecting the most competitive pages. Otherwise
 	// excluded carrier or surface quotes can crowd out qualifying stations.
 	const carrierType = "Drake-Class Carrier"
@@ -335,7 +365,11 @@ func SearchPayload(resource, options M, reference []float64, page int, now time.
 	if n(options, "maxArrivalLs") > 0 {
 		filters["distance_to_arrival"] = M{"value": []any{0, options["maxArrivalLs"]}, "comparison": "<=>"}
 	}
-	return M{"filters": filters, "sort": []M{{sortField: []M{{"name": v.First(resource["marketName"], resource["english"]), "direction": direction}}}, {"distance": M{"direction": "asc"}}}, "size": 60, "page": page, "reference_coords": M{"x": reference[0], "y": reference[1], "z": reference[2]}}
+	return filters
+}
+
+func stationSearchPayload(filters M, order []M, reference []float64, page, size int) M {
+	return M{"filters": filters, "sort": order, "size": size, "page": page, "reference_coords": M{"x": reference[0], "y": reference[1], "z": reference[2]}}
 }
 func (s *Searcher) request(ctx context.Context, method, endpoint string, payload any) (M, error) {
 	result, err := FetchJSON(ctx, s.Client, method, endpoint, payload)

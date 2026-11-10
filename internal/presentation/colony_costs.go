@@ -11,20 +11,7 @@ func colonyPriceQuality(row M) freshness.Observation {
 	}
 	quality := v.Obj(row["priceQuality"])
 	return freshness.Observation{
-		State:      freshness.State(v.Str(quality["state"])),
 		ObservedAt: v.Str(quality["observedAt"]), FetchedAt: v.Str(quality["fetchedAt"]),
-	}
-}
-
-func colonyEstimatePrice(row M) string {
-	price := Number(row["galacticAveragePrice"])
-	switch colonyPriceQuality(row).State {
-	case freshness.Stale:
-		return price + " · Устаревшая оценка"
-	case freshness.Undated:
-		return price + " · Возраст цены неизвестен"
-	default:
-		return price
 	}
 }
 

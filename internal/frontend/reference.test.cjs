@@ -53,6 +53,23 @@ function fixture(options = {}) {
   };
 }
 
+test('material farming shortcut loads only farming guides and toggles back to all articles', async () => {
+  const f=fixture({autoInit:true});
+  f.setRPC(async (_op,params)=>catalogue(params.group ? [
+    {id:'article/farm-raw',category:'articles',title:'Фарм сырья',group:'article-engineering-farming'}
+  ] : [{id:'article/travel',category:'articles',title:'Перелёты'}]));
+  await f.api.init(f.C,f.ui);
+  assert.match(f.html,/data-click="reference-farming" aria-pressed="false"/);
+  await f.api.handleClick('reference-farming',{},f.C,f.ui);
+  assert.deepEqual(f.calls.at(-1).params,{category:'articles',group:'article-engineering-farming',query:'',offset:0,limit:24});
+  assert.match(f.html,/data-click="reference-farming" aria-pressed="true"/);
+  assert.match(f.html,/Фарм сырья/);
+  assert.doesNotMatch(f.html,/data-id="article\/travel"/);
+  await f.api.handleClick('reference-farming',{},f.C,f.ui);
+  assert.equal(f.calls.at(-1).params.group,'');
+  assert.match(f.html,/data-id="article\/travel"/);
+});
+
 test('an engineer card opens the progression screen with its stable engineer key', async () => {
   const f=fixture(), seen=[];
   f.window.EngineeringRoadmapUI={preselect(C,key){assert.equal(C,f.C);seen.push(key);}};

@@ -37,6 +37,14 @@ async function run(C,u){
    const started=performance.now();await visit('exobiology',{mode});
    check('English exobiology screen renders: '+mode,u.$('[data-exobiology]')?.dataset.exobiology===mode&&u.$('[data-exobiology] h1')?.textContent==='Exobiology');
    check('screen remains responsive: '+mode,performance.now()-started<10000);
+   if(mode==='Образцы'){
+    const trackerCard=u.$('.exo-samples .exo-tracker'),pendingCard=u.$('.exo-samples .exo-records');
+    check('sample and unsold-data cards are visibly separated',trackerCard&&pendingCard&&pendingCard.getBoundingClientRect().top-trackerCard.getBoundingClientRect().bottom>=16);
+   }
+   if(mode==='Планеты'){
+    const search=u.$('.exo-section-heading [data-exo-query]'),title=search?.closest('.exo-section-heading')?.querySelector('h2');
+    check('planet search sits next to its section heading',search&&title&&(innerWidth<1100||Math.abs((search.getBoundingClientRect().top+search.getBoundingClientRect().bottom)-(title.getBoundingClientRect().top+title.getBoundingClientRect().bottom))<12));
+   }
   }
   await visit('exobiology',{mode:'Обзор'});
   check('sample tracker exposes all three distinct steps',u.$$('[data-exo-tracker] .exo-sample-steps li').length===3&&u.$$('[data-exo-tracker] .exo-sample-steps li.complete').length===2);

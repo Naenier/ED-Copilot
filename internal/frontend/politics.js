@@ -62,8 +62,8 @@ function timestamp(C,u,data={}) {
   if (data.quality && window.FreshnessUI) return window.FreshnessUI.observation(data.quality,language(C),u.esc);
   const value = date(C,u,data.observedAt || data.fetchedAt);
   if (!value) return '';
-  const title = data.observedAt ? label(C,u,'Observed','Наблюдение') : label(C,u,'Updated','Обновлено');
-  return `<div class="pol-timestamp${data.stale?' pol-stale':''}">${title} · ${value}</div>`;
+  const title = data.observedAt ? label(C,u,'Observed','Наблюдение') : label(C,u,'Retrieved','Получение');
+  return `<div class="pol-timestamp">${title} · ${value}</div>`;
 }
 function panel(C,u,title,body,data={},classes='') {
   return `<section class="panel pol-panel ${classes}"><header class="pol-panel-head"><h2>${esc(u,title)}</h2>${timestamp(C,u,data)}</header>${body}</section>`;
@@ -184,7 +184,7 @@ function overview(C,u) {
     .sort((a,b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''))).slice(0,8);
   const summary = [politics,power ? panel(C,u,text(C,'Power control','Контроль державы'),power,p) : '',factionsCard].filter(Boolean).join('');
   const overviewEmpty = !summary && !loading(C) ? empty(C,u,system.name?'No political observations for this system.':'Choose a star system.',system.name?'Для этой системы нет политических данных.':'Выберите звёздную систему.') : '';
-  return searchForm(C,u) + notice(C,u) + `<div class="pol-overview">${summary}</div>` + overviewEmpty +
+  return searchForm(C,u) + notice(C,u,!summary) + `<div class="pol-overview">${summary}</div>` + overviewEmpty +
     (recent.length ? panel(C,u,text(C,'Recent systems','Недавние системы'),`<div class="pol-system-list">${recent.map(row => systemButton(u,row.name)).join('')}</div>`) : '');
 }
 function goalCards(C,u,goals,personal) {
@@ -230,7 +230,7 @@ function goals(C,u) {
       empty(C,u,'No active community goals in the latest update.','В последнем обновлении нет активных целей.')) :
     loading(C) ? '' : empty(C,u,'No public community goal data.','Данных о целях сообщества пока нет.');
   const joinedHTML = joined.length ? `<div class="pol-section-heading"><h2>${label(C,u,'Your community goals','Ваши цели')}</h2>${timestamp(C,u,m.personalGoals)}</div>${goalCards(C,u,joined,true)}` : '';
-  return notice(C,u) + publicHTML + joinedHTML;
+  return notice(C,u,!m.communityGoals?.known) + publicHTML + joinedHTML;
 }
 function factions(C,u) {
   const system = model(C).activeSystem || {};
@@ -248,10 +248,14 @@ function factions(C,u) {
         ])}</section>`).join('')}
       </div></article>`;
     }).join('')}</div>`,system.conflicts) : '';
-  return searchForm(C,u) + notice(C,u) + influences + conflictCards;
+  return searchForm(C,u) + notice(C,u,!influences && !conflictCards) + influences + conflictCards;
 }
 function options(u,entries,selected) {
   return entries.map(([value,name]) => `<option value="${esc(u,value)}" ${value===selected?'selected':''}>${esc(u,name)}</option>`).join('');
+}
+function powerFiltersMatch(result,draft) {
+  return result?.known && result.kind === 'powerplay' && (result.scope === 'controlled' || draft.power || draft.state) &&
+    (result.power || '') === draft.power && (result.state || '') === draft.state;
 }
 function powerplay(C,u) {
   const m = model(C);
@@ -272,30 +276,34 @@ function powerplay(C,u) {
     ['Merits','Заслуги',num(u,pledge.merits)],
     ['Rank','Ранг',num(u,pledge.rank)],
   ]),pledge) : '';
-  const results = m.search || {};
-  const matching = results.kind === 'powerplay' && (results.scope === 'controlled' || a.power || a.state) &&
-    (results.power || '') === a.power && (results.state || '') === a.state && Number(results.page || 0) === a.page;
+  const latestResult = m.search;
+  const matching = powerFiltersMatch(latestResult,a) && Number(latestResult.page || 0) === a.page;
+  if (matching) a.lastPowerPage = latestResult;
+  const displayed = matching ? latestResult : powerFiltersMatch(a.lastPowerPage,a) ? a.lastPowerPage :
+    powerFiltersMatch(latestResult,a) ? latestResult : null;
+  const pendingPage = !matching && loading(C);
   const filters = powers.length ? `<div class="pol-filter-row">
     <label><span>${label(C,u,'Power','Держава')}</span><select id="politics-power-filter" data-politics-field="power">${options(u,[['',text(C,'All powers','Все державы')],...powers.map(power => [power.name,powerName(power.name)])],a.power)}</select></label>
     <label><span>${label(C,u,'System state','Состояние системы')}</span><select id="politics-state-filter" data-politics-field="state">${options(u,[['',text(C,'All controlled states','Все состояния контроля')],...[...new Set([...states.map(state => state.name),'Contested'])].map(value => [value,term(C,value)])],a.state)}</select></label>
   </div>` : '';
-  return notice(C,u) + pledgeCard + summary + filters +
-    (matching ? panel(C,u,text(C,'Systems','Системы'),powerResults(C,u,results),results) :
-      loading(C) || summary ? '' : empty(C,u,'No Powerplay data available.','Данные Пауэрплея пока недоступны.'));
+  const pageStatus = pendingPage ? `<p class="pol-status pol-page-status" role="status">${label(C,u,'Loading page','Загружаем страницу')} ${num(u,a.page+1)}…</p>` : '';
+  const noResults = pendingPage ? '' : empty(C,u,'No Powerplay data available.','Данные Пауэрплея пока недоступны.');
+  return notice(C,u,false) + pledgeCard + summary + filters +
+    panel(C,u,text(C,'Systems','Системы'),(displayed ? powerResults(C,u,displayed,pendingPage) : noResults) + pageStatus,displayed || {});
 }
-function powerResults(C,u,result) {
+function powerResults(C,u,result,pendingPage) {
   const rows = list(result.entries);
   const page = Number(result.page) || 0;
   const next = known(result.total) && (page+1)*(Number(result.limit)||10) < Number(result.total) && page < 100;
   const paging = page > 0 || next ? `<div class="pol-pagination">
-    ${button(C,u,'Previous','Назад','page',`data-page="${page-1}"`,page===0)}
+    ${button(C,u,'Previous','Назад','page',`data-page="${page-1}"`,pendingPage || page===0)}
     <span>${label(C,u,'Page','Страница')} ${num(u,page+1)}</span>
-    ${button(C,u,'Next','Далее','page',`data-page="${page+1}"`,!next)}
+    ${button(C,u,'Next','Далее','page',`data-page="${page+1}"`,pendingPage || !next)}
   </div>` : '';
   if (!rows.length) return (result.quality?.coverage === 'partial' ?
     empty(C,u,'No usable system records in this response.','В ответе нет пригодных записей о системах.') :
     empty(C,u,'No systems match these filters.','Нет систем с такими параметрами.')) + paging;
-  return `<div class="table-scroll"><table class="pol-table"><thead><tr>
+  return `<div class="table-scroll" aria-busy="${pendingPage}"><table class="pol-table"><thead><tr>
     ${[['System','Система'],['Power','Держава'],['Status','Состояние'],['Control','Контроль'],
       ['Reinforcement','Укрепление'],['Undermining','Подрыв']].map(names => `<th>${label(C,u,...names)}</th>`).join('')}
     </tr></thead><tbody>${rows.map(row => {
@@ -344,7 +352,7 @@ function freshness(C,values) {
 }
 function shouldLoad(C,values) {
   if (!values || window.COPILOT_SMOKE || model(C).status?.offline || !C.state?.politics) return false;
-  const interval = 60000*(Number(model(C).limits?.cacheMinutes) || 5);
+  const interval = 60000*Math.max(1,Number(model(C).limits?.cacheMinutes) || 5);
   const stamp = Date.parse(freshness(C,values));
   if (Number.isFinite(stamp) && Date.now()-stamp < interval) return false;
   const a = local(C);
@@ -358,12 +366,14 @@ function loading(C) {
   const values = request(C);
   const key = requestKey(values);
   const status = model(C).status;
-  return Boolean(key && (local(C).pending === key || sameStatus(status,values) && status.running || shouldLoad(C,values)));
+  const network = C.state?.politicsNetwork;
+  return Boolean(key && (local(C).pending === key || sameStatus(status,values) && status.running ||
+    network?.running && requestKey(network.options) === key || shouldLoad(C,values)));
 }
-function notice(C,u) {
+function notice(C,u,showLoading=true) {
   const values = request(C);
   const status = model(C).status;
-  if (loading(C)) {
+  if (loading(C) && showLoading) {
     return `<p class="pol-status" role="status">${label(C,u,'Updating…','Обновляем данные…')}</p>`;
   }
   if (sameStatus(status,values) && status.reason && window.FreshnessUI) {
@@ -375,7 +385,7 @@ function notice(C,u) {
   return '';
 }
 async function autoLoad(C,u) {
-  if (C.tab !== 'politics' || busy(C)) return;
+  if (C.tab !== 'politics' || C.page === null || busy(C) || typeof document !== 'undefined' && document.hidden) return;
   const values = request(C);
   if (!shouldLoad(C,values)) return;
   const a = local(C);
@@ -395,10 +405,10 @@ async function autoLoad(C,u) {
   } catch {
     a.errors.add(key);
   } finally {
-    a.pending = null;
     try {
-      if (C.tab === 'politics') await u.loadView();
+      if (C.tab === 'politics' && C.page !== null) await u.loadView(true);
     } finally {
+      a.pending = null;
       a.dispatching = false;
     }
   }
@@ -502,6 +512,9 @@ function init(C,u) {
       if (event.target.id !== 'politics-system-form' || latest.C.tab !== 'politics') return;
       event.preventDefault();
       selectSystem(latest.C,latest.u,local(latest.C).system).catch(error => latest.u.toast(error.message,true));
+    });
+    document.addEventListener('visibilitychange',() => {
+      if (!document.hidden) autoLoad(latest.C,latest.u).catch(() => {});
     });
   }
   schedule();

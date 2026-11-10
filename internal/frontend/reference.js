@@ -10,6 +10,8 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     ['blueprints', 'Чертежи', 'target'], ['experimentals', 'Эффекты', 'compass'], ['systems', 'Системы', 'compass'], ['exobiology', 'Экзобиология', 'orbit'],
   ];
   const modeCategory = { 'Статьи': 'articles', 'Корабли': 'ships', 'Инженеры': 'engineers', 'Товары': 'commodities', 'Модули': 'modules', 'Материалы': 'materials', 'Чертежи': 'blueprints', 'Эффекты': 'experimentals', 'Системы': 'systems', 'Экзобиология':'exobiology' };
+  const farmingGroup = 'article-engineering-farming';
+  const farmingActive = r => r.category === 'articles' && r.group === farmingGroup;
   const bindings = new WeakSet();
   const active = C => C.tab === 'encyclopedia' || (['engineering', 'targets'].includes(C.tab) && C.mode === 'Инженеры');
   const scope = C => ['engineering', 'targets'].includes(C.tab) ? 'engineers' : 'library';
@@ -95,7 +97,12 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (r.scope === 'engineers') return '';
     const catalogueCategories = r.list?.categories?.length ? r.list.categories : categories.map(([id, title]) => ({ id, title }));
     const available = catalogueCategories.some(item => item.id === 'all') ? catalogueCategories : [{ id: 'all', title: t("Всё") }, ...catalogueCategories];
-    return `<nav class="ref-category-nav" aria-label="${th("Разделы энциклопедии")}">${available.map(item => `<button type="button" data-click="reference-category" data-id="${ui.esc(item.id)}" class="${r.category === item.id ? 'selected' : ''}" aria-pressed="${r.category === item.id}">${ui.icon(categoryIcon(item.id))}<span>${text(ui, t(item.title))}</span>${Number.isFinite(Number(item.count)) ? `<small>${text(ui, ui.fmt(item.count))}</small>` : ''}</button>`).join('')}</nav>`;
+    const farming = farmingActive(r);
+    const shortcut = `<button type="button" class="ref-farming-shortcut${farming ? ' selected' : ''}" data-click="reference-farming" aria-pressed="${farming}">${ui.icon('layers')}<span>${th("Фарм материалов")}</span></button>`;
+    return `<nav class="ref-category-nav" aria-label="${th("Разделы энциклопедии")}">${shortcut}${available.map(item => {
+      const selected = !farming && r.category === item.id;
+      return `<button type="button" data-click="reference-category" data-id="${ui.esc(item.id)}" class="${selected ? 'selected' : ''}" aria-pressed="${selected}">${ui.icon(categoryIcon(item.id))}<span>${text(ui, t(item.title))}</span>${Number.isFinite(Number(item.count)) ? `<small>${text(ui, ui.fmt(item.count))}</small>` : ''}</button>`;
+    }).join('')}</nav>`;
   }
   function skeleton(ui, reader = false) {
     if (reader) return `<div class="ref-reader-loading" role="status"><div class="ref-skeleton ref-skeleton-title"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-picture"></div><div class="ref-skeleton ref-skeleton-line"></div><div class="ref-skeleton ref-skeleton-line short"></div><span class="muted">${th("Открываем страницу…")}</span></div>`;
@@ -109,7 +116,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const galaxy = r.category === 'systems' && window.GalaxyUI;
     const title = galaxy ? t("Системы") : r.scope === 'engineers' ? t("Инженеры") : t("Энциклопедия");
     const intro = r.scope === 'engineers' ? t("Условия знакомства, доступные улучшения и всё необходимое для следующего визита.") : t("Знакомьтесь с кораблями, находите нужные материалы и разбирайтесь в устройстве галактики.");
-    const resultsTitle = galaxy ? t("Системы из справочника") : categoryTitle(r, r.category);
+    const resultsTitle = farmingActive(r) ? t("Фарм материалов") : galaxy ? t("Системы из справочника") : categoryTitle(r, r.category);
     const groups = [...(list.groups || [])];
     if (r.group && !groups.some(group => group.id === r.group)) groups.unshift({ id: r.group, title: r.groupName || t("Выбранная группа") });
     const toolbar = `<div class="ref-catalog-toolbar"><label class="ref-search" for="reference-query">${ui.icon('search')}<input id="reference-query" type="search" placeholder="${r.scope === 'engineers' ? t("Найти инженера, систему или улучшение") : t("Поиск в выбранном разделе")}" value="${ui.esc(r.query)}" autocomplete="off"><span class="ref-search-key">${text(ui, categoryTitle(r, r.category))}</span></label>${groups.length ? `<label class="ref-group-label"><span>${th("Группа")}</span><select id="reference-group" aria-label="${th("Группа справочника")}"><option value="">${th("Все группы")}</option>${groups.filter(group => group.id).map(group => `<option value="${ui.esc(group.id)}" ${r.group === group.id ? 'selected' : ''}>${text(ui, group.title)}${group.count === undefined ? '' : ' · ' + text(ui, ui.fmt(group.count))}</option>`).join('')}</select></label>` : ''}</div>`;
@@ -182,7 +189,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   function marketRow(row, index, buying, ui) {
     const system = marketSystem(row), pad = typeof row.pad === 'string' ? row.pad.trim().toUpperCase() : '';
     const systemHTML = system ? `${internalLink({ id: 'system/' + encodeURIComponent(system), title: system }, ui, 'ref-market-system-link')}<button type="button" class="ref-market-copy" data-click="reference-market-copy-system" data-index="${index}" aria-label="${ui.esc(t("Копировать систему ") + system)}" title="${th("Копировать систему")}">${ui.icon('copy')}<span>${th("Копировать")}</span></button>` : `<span class="ref-market-unknown">${th("Система неизвестна")}</span>`;
-    return `<tr><td><strong>${text(ui, row.station || t("Рынок"))}</strong><div class="ref-market-system">${systemHTML}</div></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${['S', 'M', 'L'].includes(pad) ? `<span class="ref-market-pad">${pad}</span>` : `<span class="ref-market-unknown">${th("Неизвестно")}</span>`}</td><td>${marketDistance(row.distanceLy, ui)}</td><td>${marketDistance(row.distanceLs, ui)}</td><td>${row.expired ? `<span class="ref-market-stale">${th("Устарела")}</span>` : ''}${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`;
+    return `<tr><td><strong>${text(ui, row.station || t("Рынок"))}</strong><div class="ref-market-system">${systemHTML}</div></td><td>${text(ui, valueText(row.quote.price, ui))}</td><td>${text(ui, valueText(row.quote[buying ? 'supply' : 'demand'], ui))}</td><td>${['S', 'M', 'L'].includes(pad) ? `<span class="ref-market-pad">${pad}</span>` : `<span class="ref-market-unknown">${th("Неизвестно")}</span>`}</td><td>${marketDistance(row.distanceLy, ui)}</td><td>${marketDistance(row.distanceLs, ui)}</td><td>${text(ui, marketDate(row.updatedAt || row.quote.updatedAt))}</td></tr>`;
   }
   function trading(r, entry, ui) {
     const key = entry.commodityKey || entry.actions?.find(action => action.type === 'trade')?.commodityKey;
@@ -290,12 +297,16 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const r = state(C); stopMarkets(r); r.entryToken++; r.entryId = ''; r.entry = null; r.entryError = ''; r.entryLoading = false; r.entryPromise = null; r.history = [];
     r.restoreScroll = r.listScroll; redraw(C, ui, r); return loadList(C, ui);
   }
-  async function setCategory(C, ui, category) {
+  async function setCategory(C, ui, category, group = '') {
     if (typeof category !== 'string' || !category || category.length > 64) return false;
     const r = state(C);
     if (r.scope === 'engineers' && category !== 'engineers') return false;
     stopMarkets(r);
-    clearTimeout(r.searchTimer); r.listToken++; r.category = category; r.query = ''; r.group = ''; r.offset = 0; r.entryId = ''; r.entryToken++; r.entry = null; r.history = [];
+    if (group !== r.group && (group === farmingGroup || farmingActive(r))) {
+      r.list = null;
+      r.loadedKey = '';
+    }
+    clearTimeout(r.searchTimer); r.listToken++; r.category = category; r.query = ''; r.group = group; r.groupName = group === farmingGroup ? t("Фарм материалов") : ''; r.offset = 0; r.entryId = ''; r.entryToken++; r.entry = null; r.history = [];
     r.restoreScroll = 0; await loadList(C, ui); return true;
   }
   async function handleClick(action, button, C, ui) {
@@ -304,6 +315,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (action.startsWith('reference-galaxy-')) return window.GalaxyUI?.handleClick(action.slice('reference-galaxy-'.length), button, C, r, ui) || false;
     if (action === 'reference-open') return open(C, ui, id);
     if (action === 'reference-category') return setCategory(C, ui, id);
+    if (action === 'reference-farming') return setCategory(C, ui, 'articles', farmingActive(r) ? '' : farmingGroup);
     if (action === 'reference-engineering-roadmap') {
       const item=r.entry?.actions?.[Number(button?.dataset?.index)];
       if(item?.type==='engineering-roadmap'&&item.engineerKey&&window.EngineeringRoadmapUI){

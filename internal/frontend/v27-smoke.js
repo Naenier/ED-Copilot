@@ -40,6 +40,7 @@ async function run(C,u){
    await u.navigate('colonization',{mode:'Бюджет'});
    const budget=u.$('[data-colony-budget]');
    check(language+': colony resource budget belongs to the active project',!!budget&&budget.dataset.colonyBudget===C.state.colonization?.activeProject?.id&&!!C.state.colonization?.activeProject?.costSummary);
+   if(C.state.colonization?.projects?.length===1)check(language+': standalone budget search shares the heading',!!u.$('.page-heading #table-query')&&!u.$('.filters #table-query'));
    check(language+': budget shows three distinct totals and a collapsed detailed breakdown',budget.querySelectorAll(':scope>.colony-budget-metrics>.colony-summary-metric').length===3&&budget.querySelector('.colony-budget-breakdown')?.open===false);
    if(language==='en')check('English colony budget has no untranslated prose',!/[\p{Script=Cyrillic}]/u.test(budget.innerText));
    await u.navigate('colonization',{mode:'Бюджет'});

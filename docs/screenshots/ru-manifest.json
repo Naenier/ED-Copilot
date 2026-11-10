@@ -1,5 +1,5 @@
 {
-  "applicationVersion": "2.8.7",
+  "applicationVersion": "2.8.8",
   "language": "ru",
   "data": "synthetic",
   "displayMode": "fullscreen",
@@ -14,13 +14,13 @@
       "file": "commander.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "b3f88fdcc96697699415f8da4964397d604a68e17dc1dbecbb37707eef642162"
+      "sha256": "8d7d86bca858d878571014e41a242115b272aa42f6244344b4f78a955f516e89"
     },
     {
       "file": "ranks.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "ef261340305144c4f46e0f54daf651a4ceb56de255467fee83091cefafef9df8"
+      "sha256": "f4f9a249e054d3a21727c84848eb666914d91007c3eff01f3506dafdaab6d776"
     },
     {
       "file": "fleet.png",
@@ -50,7 +50,13 @@
       "file": "deals.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "5dd60655b343a8ec6d25d98f2296cbde859f729f5fe8a684c49e6f48a76b9e36"
+      "sha256": "9d3a47d867eaef2a98e79b4697b92d4a91c70aa9b30ca27a2aabf5e29bc0376f"
+    },
+    {
+      "file": "deals-filters.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "3dd52c8d7f87f2ef504e4463a13bb02f6fdc61eaf9a08acf87a43a9eefdce169"
     },
     {
       "file": "carrier-trade.png",
@@ -62,13 +68,13 @@
       "file": "route.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "32d079e97dd44d3711dfa82cea179cc55599505e8ac828395e0046465e84f323"
+      "sha256": "3b199fe6edaffc11fb90339936ae22f9fdb57ce6884fc325e5c78453badc685e"
     },
     {
       "file": "galaxy.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "618b7b8d0304e8b1e40a77fe794999f21a5c593e9941b3b0333c704c224983df"
+      "sha256": "69cd00c3c4113f5a3bc3943ae6ca461e238677ae5564e63dbfe51d38773daa3f"
     },
     {
       "file": "system.png",
@@ -80,7 +86,7 @@
       "file": "ships.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "f96bad469a4876184141a7eb53dcbe0ccf963d441223f380614bd2b63d0e0001"
+      "sha256": "ad26ae4c7b133461607c5800135cd7be90acecc3705ba6959bdfa1f7ce7dad18"
     },
     {
       "file": "ship.png",
@@ -98,13 +104,13 @@
       "file": "engineering.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "0f6e153fcf3031e2f9e921df9873a9732060608a752ce7f2c6cf5a121befc1ab"
+      "sha256": "10e381500946d87a4d58b24a7d89587c5d05e826f2a4b7d5494d34e8b9cde747"
     },
     {
       "file": "material-exchange.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "ef80c8862bea90c08e288b7d99ee504178458109e3ea02f91bd22049df93134b"
+      "sha256": "263a255fe8c8de425cfa1c0162d949a45a9154b1ff91c2b955db54411b728dad"
     },
     {
       "file": "material.png",
@@ -119,16 +125,22 @@
       "sha256": "bc6de907593be6d27765d7f041a67b8943572fcc4672f33fe2cf13bbd35849a0"
     },
     {
+      "file": "farming-catalog.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f65e57b21533aa604c540cf484725f0d8958ebe72f6d89f4cf219b2df0dc278d"
+    },
+    {
       "file": "farming.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "ec6d1afc446e32b402a2567099109d5d06ecc771db05d92a2bd8a652071d8ab1"
+      "sha256": "2741aaf309b5aed01520a38f6513f2e876c508c276c1f7da6319d6b4f292a2c7"
     },
     {
       "file": "colonization.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "38459a6db4a89abeef154a92185e8c4dfc6defbac02b171efbbafc13b527c438"
+      "sha256": "7de8a763578a9796365a4e7b86fad455c55521184f4edc398b237a5b23de3e42"
     },
     {
       "file": "academy.png",
@@ -141,6 +153,24 @@
       "width": 1920,
       "height": 1080,
       "sha256": "f14698e577738e4c9d806ddb7cdee16427cee1f2c78df9b74e3d088179bcea55"
+    },
+    {
+      "file": "exo-planets.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "78105d76a84da21a062595aace7c84d3f4b590ac2d22e5989504934d3d39ec91"
+    },
+    {
+      "file": "exo-samples.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "e1c8ecae45a8d871f9de10b884d27d5cdfd1c9e02bbcff1834cda8366e77b00f"
+    },
+    {
+      "file": "politics.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "f27be155f0db7dd69b6d3fb2778fca8ccd20482bbcc991b0adc747c8b059f43a"
     }
   ]
 }

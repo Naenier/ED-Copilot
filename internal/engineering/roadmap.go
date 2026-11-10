@@ -336,22 +336,26 @@ func (p *Planner) roadmapFilters(q roadmapQuery, equipment []M) M {
 		erows = append(erows, p.roadmapEngineerState(key))
 	}
 	bpMax, effectKeys := map[string]int{}, map[string]bool{}
+	bpModules := map[string][]string{}
 	for _, key := range roadmapData.moduleOrder {
 		mods = append(mods, v.Copy(roadmapData.modules[key]))
-		if q.module != "" && key != q.module {
-			continue
-		}
 		for _, raw := range v.Arr(modules[key]["blueprints"]) {
 			id := v.Str(raw)
-			for key := range v.Obj(blueprints[id]["grades"]) {
-				bpMax[id] = max(bpMax[id], v.Int(key))
+			bpModules[id] = append(bpModules[id], key)
+			if q.module == "" || key == q.module {
+				for grade := range v.Obj(blueprints[id]["grades"]) {
+					bpMax[id] = max(bpMax[id], v.Int(grade))
+				}
 			}
 		}
-		for _, raw := range v.Arr(modules[key]["experimentals"]) {
-			effectKeys[v.Str(raw)] = true
+		if q.module == "" || key == q.module {
+			for _, raw := range v.Arr(modules[key]["experimentals"]) {
+				effectKeys[v.Str(raw)] = true
+			}
 		}
 	}
 	for key, row := range roadmapData.personalRecipes {
+		bpModules[key] = []string{v.Str(row["moduleKey"])}
 		if q.module == "" || row["moduleKey"] == q.module {
 			bpMax[key] = 1
 		}
@@ -362,6 +366,7 @@ func (p *Planner) roadmapFilters(q roadmapQuery, equipment []M) M {
 			continue
 		}
 		row := roadLabel(bp)
+		row["moduleKeys"] = bpModules[key]
 		row["maxGrade"] = grade
 		row["damageType"] = bp["damageType"]
 		row["kind"] = "ship"

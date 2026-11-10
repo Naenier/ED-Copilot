@@ -239,6 +239,7 @@
   "Frontier ограничил частоту запросов. Повторите позднее.": "Frontier has limited the request rate. Try again later.",
   "Inara: HTTP %d. Проверьте ключ или повторите позже.": "Inara: HTTP %d. Check the key or try again later.",
   ". Проверьте ключ или повторите позже.": ". Check the key or try again later.",
-  "Событие устарело или не поддерживается API Inara.": "The event has expired or is not supported by the Inara API.",
+  "Срок отправки события в Inara истёк.": "The event's delivery window for Inara has expired.",
+  "Дата или тип события не подходят для Inara.": "Inara does not accept the event's date or type.",
   "Inara пока не разрешила доступ для ED Copilot. Ключ сохранён; отправка возобновится после разрешения сервиса.": "Inara has not yet allowed access for ED Copilot. Your key is saved; delivery will resume after the service grants access."
 }
