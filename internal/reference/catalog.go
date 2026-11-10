@@ -101,6 +101,13 @@ func (s *Store) Entry(id string) (Entry, bool) {
 	}
 	out := cloneEntry(r.entry)
 	out.Image = s.image(r.imageKey, false, out.Title)
+	for i := range out.Sections {
+		section := &out.Sections[i]
+		if image := s.image(section.figureKey, false, section.Title); image != nil {
+			image.Fit = "contain"
+			section.Figure = image
+		}
+	}
 	out.Related = []Summary{}
 	seen := map[string]bool{id: true}
 	for _, related := range r.relatedIDs {
@@ -142,6 +149,7 @@ func (s *Store) build() {
 	s.buildShips()
 	s.buildEngineering()
 	s.buildEngineeringFarming()
+	s.buildAXGuide()
 	s.buildOdysseyRecipes()
 	s.linkMaterialRecipes()
 	s.buildCommodities()
@@ -235,11 +243,17 @@ func cloneEntry(in Entry) Entry {
 	out.Sections = append([]Section{}, in.Sections...)
 	for i, section := range in.Sections {
 		out.Sections[i].Paragraphs = append([]string{}, section.Paragraphs...)
+		out.Sections[i].EnglishParagraphs = append([]string{}, section.EnglishParagraphs...)
 		out.Sections[i].Items = append([]Item{}, section.Items...)
 		out.Sections[i].Columns = append([]string{}, section.Columns...)
+		out.Sections[i].EnglishColumns = append([]string{}, section.EnglishColumns...)
 		out.Sections[i].Rows = make([][]string, len(section.Rows))
 		for j, row := range section.Rows {
 			out.Sections[i].Rows[j] = append([]string{}, row...)
+		}
+		out.Sections[i].EnglishRows = make([][]string, len(section.EnglishRows))
+		for j, row := range section.EnglishRows {
+			out.Sections[i].EnglishRows[j] = append([]string{}, row...)
 		}
 		out.Sections[i].CellLinks = make([][]string, len(section.CellLinks))
 		for j, row := range section.CellLinks {

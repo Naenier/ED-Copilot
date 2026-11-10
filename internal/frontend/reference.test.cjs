@@ -241,6 +241,22 @@ test('internal material routes remain visible and open the linked article', asyn
   assert.match(f.api.render(f.C,f.ui),/data-entry-id="article\/farm-raw-nearby"/);
 });
 
+test('illustrated guide sections show embedded diagrams, internal links and copyable destinations', async () => {
+  const f = fixture();
+  f.setRPC(async () => ({ entry: { id: 'article/ax-preparation', category: 'articles', title: 'AX', sections: [
+    { id: 'hearts', title: 'Hearts', type: 'route', figure: { src: pixel, alt: 'Exposed heart' }, figureCaption: '<Aim here>',
+      items: [{ title: 'Workshop', entryId: 'engineer/300220', system: 'Arque', text: 'Engineering' }] },
+    { id: 'other', title: 'Other', type: 'prose', figure: { src: 'https://example.com/untrusted.jpg' }, figureCaption: 'Hidden caption' },
+  ] } }));
+  await f.api.open('article/ax-preparation', f.C, f.ui);
+  const html = f.api.render(f.C, f.ui);
+  assert.match(html, /<figure class="ref-section-figure">.*alt="Exposed heart"/);
+  assert.match(html, /<figcaption>&lt;Aim here&gt;<\/figcaption>/);
+  assert.match(html, /data-click="reference-open" data-id="engineer\/300220"/);
+  assert.match(html, /data-click="table-copy-system" data-system="Arque"/);
+  assert.doesNotMatch(html, /example\.com|Hidden caption/);
+});
+
 test('grouped blueprint pages expose complete grade recipes with material and effect links', async () => {
   const f = fixture();
   f.setRPC(async () => ({ entry: { id: 'blueprint/long-range', category: 'blueprints', title: 'Увеличенная дальность', sections: [

@@ -202,11 +202,19 @@ func localizeReferenceEntry(entry M) {
 		if title := v.Str(section["englishTitle"]); title != "" {
 			section["title"] = title
 		}
+		if caption := v.Str(section["englishFigureCaption"]); caption != "" {
+			section["figureCaption"] = caption
+			if figure := v.Obj(section["figure"]); figure != nil {
+				figure["alt"] = section["title"]
+			}
+		}
 		referenceProperties(v.Rows(section["properties"]))
 		if section["type"] == "facts" {
 			referenceProperties(v.Rows(section["items"]))
 		}
-		if category != "systems" {
+		if english := v.Arr(section["englishParagraphs"]); len(english) > 0 {
+			section["paragraphs"] = english
+		} else if category != "systems" {
 			for i, paragraph := range v.Arr(section["paragraphs"]) {
 				v.Arr(section["paragraphs"])[i] = localization.T("en", v.Str(paragraph))
 			}
@@ -232,31 +240,18 @@ func localizeReferenceEntry(entry M) {
 		}
 		columns := v.Arr(section["columns"])
 		original := append([]any{}, columns...)
-		for i, column := range columns {
-			columns[i] = localization.T("en", v.Str(column))
+		if english := v.Arr(section["englishColumns"]); len(english) > 0 {
+			section["columns"] = english
+		} else {
+			for i, column := range columns {
+				columns[i] = localization.T("en", v.Str(column))
+			}
 		}
 		links := v.Arr(section["cellLinks"])
-		for i, rawRow := range v.Arr(section["rows"]) {
-			row := v.Arr(rawRow)
-			var linked []any
-			if i < len(links) {
-				linked = v.Arr(links[i])
-			}
-			for j, cell := range row {
-				link := ""
-				if j < len(linked) {
-					link = v.Str(linked[j])
-				}
-				if referenceIdentityLink(link) || j < len(original) && referenceIdentityLabel(v.Str(original[j])) {
-					continue
-				}
-				value := v.Str(cell)
-				if referenceWeaponClass.MatchString(value) {
-					row[j] = referenceWeaponClass.ReplaceAllString(value, "Weapon: class $1")
-				} else {
-					row[j] = referenceEntityName(link, value)
-				}
-			}
+		if english := v.Arr(section["englishRows"]); len(english) > 0 {
+			section["rows"] = english
+		} else {
+			localizeReferenceRows(section, original, links)
 		}
 		for _, grade := range v.Rows(section["grades"]) {
 			title := v.Str(grade["title"])
@@ -275,5 +270,30 @@ func localizeReferenceEntry(entry M) {
 	}
 	for _, related := range v.Rows(entry["related"]) {
 		localizeReferenceEntry(related)
+	}
+}
+
+func localizeReferenceRows(section M, columns, links []any) {
+	for i, rawRow := range v.Arr(section["rows"]) {
+		row := v.Arr(rawRow)
+		var linked []any
+		if i < len(links) {
+			linked = v.Arr(links[i])
+		}
+		for j, cell := range row {
+			link := ""
+			if j < len(linked) {
+				link = v.Str(linked[j])
+			}
+			if referenceIdentityLink(link) || j < len(columns) && referenceIdentityLabel(v.Str(columns[j])) {
+				continue
+			}
+			value := v.Str(cell)
+			if referenceWeaponClass.MatchString(value) {
+				row[j] = referenceWeaponClass.ReplaceAllString(value, "Weapon: class $1")
+			} else {
+				row[j] = referenceEntityName(link, value)
+			}
+		}
 	}
 }

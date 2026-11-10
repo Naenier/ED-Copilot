@@ -158,11 +158,13 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   }
   function renderSection(section, index, ui, r) {
     const id = 'reference-section-' + index;
-    let body = (section.paragraphs || []).map(paragraph => `<p>${text(ui, paragraph)}</p>`).join('');
+    const src = imageSource(section.figure);
+    const figure = src ? `<figure class="ref-section-figure"><img data-reference-image src="${ui.esc(src)}" alt="${text(ui, section.figure.alt || section.title)}" loading="lazy" decoding="async">${section.figureCaption ? `<figcaption>${text(ui, section.figureCaption)}</figcaption>` : ''}</figure>` : '';
+    let body = figure + (section.paragraphs || []).map(paragraph => `<p>${text(ui, paragraph)}</p>`).join('');
     if (section.type === 'facts') body += facts(section.properties || section.items || [], ui);
     else if (section.type === 'table') body += table(section, ui);
     else if (section.type === 'grades') body += grades(section, ui, r);
-    else if (section.type === 'route') body += `<ol class="ref-farm-route">${(section.items || []).map(item => `<li><div><strong>${text(ui, item.title)}</strong>${item.text ? `<p>${text(ui, item.text)}</p>` : ''}${item.system ? `<button type="button" class="ref-farm-system" data-click="table-copy-system" data-system="${ui.esc(item.system)}" aria-label="${th('Копировать систему')} ${ui.esc(item.system)}">${ui.icon('copy')}${ui.esc(item.system)}</button>` : ''}</div></li>`).join('')}</ol>`;
+    else if (section.type === 'route') body += `<ol class="ref-farm-route">${(section.items || []).map(item => `<li><div><strong>${validID(item.entryId) ? internalLink(item, ui) : text(ui, item.title)}</strong>${item.text ? `<p>${text(ui, item.text)}</p>` : ''}${item.system ? `<button type="button" class="ref-farm-system" data-click="table-copy-system" data-system="${ui.esc(item.system)}" aria-label="${th('Копировать систему')} ${ui.esc(item.system)}">${ui.icon('copy')}${ui.esc(item.system)}</button>` : ''}</div></li>`).join('')}</ol>`;
     else if (section.items?.length) body += sectionItems(section, ui, section.type === 'requirements');
     return `<section class="ref-entry-section" id="${id}" data-reference-section="${index}">${section.title ? `<h2>${text(ui, section.title)}</h2>` : ''}${body}</section>`;
   }

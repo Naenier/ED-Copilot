@@ -96,6 +96,8 @@ After a confirmed arrival, the next system can be copied to the clipboard automa
 
 Browse by category, search by name and narrow results by group. Ships and engineers have illustrated catalogue cards; each entry opens a full page with properties, requirements and related entries.
 
+Search for **Solo Thargoid hunting** for an illustrated AX guide with heart targeting, copyable hunting systems, ship fits, Guardian unlocks and ammunition synthesis.
+
 ![Ship catalogue](docs/screenshots/en/ships.png)
 
 ![Complete ship page](docs/screenshots/en/ship.png)

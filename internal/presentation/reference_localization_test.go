@@ -29,6 +29,40 @@ func referenceHasCyrillic(value string) bool {
 	}
 	return false
 }
+func TestSoloAXGuideUsesCompleteEnglishText(t *testing.T) {
+	source := referenceDTO(t, "article/ax-solo")
+	english := LocalizeReference("en", source)
+	if english["title"] != "Solo Thargoid hunting" || source["title"] != "Соло-охота на таргоидов" {
+		t.Fatal("the reader must show the right title in both languages")
+	}
+	check := func(value any) {
+		t.Helper()
+		if referenceHasCyrillic(v.Str(value)) {
+			t.Errorf("untranslated AX guide content: %q", value)
+		}
+	}
+	for _, section := range v.Rows(english["sections"]) {
+		check(section["title"])
+		check(section["figureCaption"])
+		check(v.At(section, "figure", "alt"))
+		for _, paragraph := range v.Arr(section["paragraphs"]) {
+			check(paragraph)
+		}
+		for _, column := range v.Arr(section["columns"]) {
+			check(column)
+		}
+		for _, row := range v.Arr(section["rows"]) {
+			for _, cell := range v.Arr(row) {
+				check(cell)
+			}
+		}
+		for _, item := range v.Rows(section["items"]) {
+			check(item["title"])
+			check(item["text"])
+		}
+	}
+}
+
 func TestReferenceCommodityCaptionsCanonicalNameAndActionModes(t *testing.T) {
 	source := referenceDTO(t, "commodity/platinum")
 	source["personal"] = M{"commander": M{"name": "Платина", "system": "Кислород", "station": "Материалы"}, "notes": "Копировать систему"}

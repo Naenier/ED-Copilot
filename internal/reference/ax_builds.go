@@ -1,0 +1,183 @@
+package reference
+
+func axBuildSections() []Section {
+	return []Section{
+		{
+			ID: "ax-krait", Title: "Первый корабль · Krait Mk II", EnglishTitle: "First ship · Krait Mk II", Type: "table",
+			Paragraphs: []string{
+				"Сборка из человеческих модулей для разведчиков и подготовки к первому «Циклопу». Для соло здесь используются карданные версии пулемётов. Четыре пулемёта стоят около 8,37 млн кр. по базовым ценам, отдельно от корабля и оборудования. Оставьте деньги на несколько страховок по сумме из правой панели корабля.",
+				"С разведчиками начните в варианте с лучом. Перед «Циклопом» поставьте зенитное орудие, потренируйтесь стрелять по рою и закончите хотя бы настройку двигателей и распределителя. Полный скан «Циклопа» улучшенным ксеносканером с расстояния до 2 км открывает выбор сердца как подсистемы. Карданные пулемёты ведут его после вскрытия.",
+			},
+			EnglishParagraphs: []string{
+				"A human-tech build for Scouts and preparation for a first Cyclops. Use the gimballed Enhanced AX Multi-cannons in this solo fit. All four cost about 8.37 million credits at list prices, before the hull and the rest of the loadout. Set aside several rebuys using the figure in the ship's right panel.",
+				"Start against Scouts with the beam variant. Before taking on a Cyclops, fit flak, practise firing at the swarm and engineer at least the thrusters and distributor. Complete an Enhanced Xeno Scanner scan within 2 km to expose the heart subsystems in the targeting panel. Gimballed guns can then track an exerted heart.",
+			},
+			Columns: []string{"Отсек", "Комплектация"}, EnglishColumns: []string{"Slot", "Fit"},
+			Rows: [][]string{
+				{"Корабль", "Krait Mk II"},
+				{"Большие точки ×3", "Три 3C улучшенных ПТ-пулемёта на кардане"},
+				{"Средние точки ×2", "2E улучшенный ПТ-пулемёт на кардане и 2B зенитное орудие с дистанционным подрывом. Для разведчиков можно заменить зенитку на 2D лучевой лазер на кардане"},
+				{"Броня и основные модули", "Военная композитная броня, 7A энергетическая установка, 6A двигатели, 5A РСД (SCO), 4D жизнеобеспечение, 7A распределитель, 6D датчики, 5C бак"},
+				{"Два отсека 6 и два отсека 5", "6C двухпоточный щит, два 5D усилителя корпуса, 5D усилитель модулей"},
+				{"Отсеки 4, 3, 3, 2 и 1", "4E трюм (16 т), 3D контроллер ремонтных дронов, 3D усилитель модулей, 2A блок полевого ремонта, 1D усилитель модулей"},
+				{"Четыре внешних крепления", "Два теплоотвода, улучшенный ксеносканер, пусковая установка каустических поглотителей. Для «Циклопа» замените один теплоотвод нейтрализатором поля отключения"},
+			},
+			EnglishRows: [][]string{
+				{"Ship", "Krait Mk II"},
+				{"3 large hardpoints", "3 × 3C gimballed Enhanced AX Multi-cannon"},
+				{"2 medium hardpoints", "2E gimballed Enhanced AX Multi-cannon and 2B Remote Release Flak Launcher. For Scouts, swap flak for a 2D gimballed beam laser"},
+				{"Bulkheads and core", "Military Grade Composite, 7A power plant, 6A thrusters, 5A FSD (SCO), 4D life support, 7A power distributor, 6D sensors, 5C fuel tank"},
+				{"Two size-6 and two size-5 slots", "6C bi-weave shield, two 5D Hull Reinforcement Packages, 5D Module Reinforcement Package"},
+				{"Size 4, 3, 3, 2 and 1 slots", "4E cargo rack (16 t), 3D Repair Limpet Controller, 3D Module Reinforcement Package, 2A AFMU, 1D Module Reinforcement Package"},
+				{"Four utility mounts", "Two heat sinks, Enhanced Xeno Scanner, Caustic Sink Launcher. For Cyclops runs, swap one heat sink for a Shutdown Field Neutraliser"},
+			},
+			CellLinks: [][]string{{"", "ship/kraitmkii"}},
+		},
+		{
+			ID: "ax-chieftain", Title: "Холодная орбита · Alliance Chieftain", EnglishTitle: "Cold orbit · Alliance Chieftain", Type: "table",
+			Paragraphs: []string{
+				"Бесщитовой корабль для одиночного боя с боевыми перехватчиками. Поставьте по одной средней и малой пушке Гаусса на два разных спуска в одной огневой группе. Под теплоотводом чередуйте пары. Так проще удержать нагрев ниже 20% и заряд конденсатора оружия. На разворотах луч охлаждает только пока попадает в цель и имеет эффект Thermal Vent.",
+				"Перед вылетом загрузите дроны, проверьте запас энергии в боевом режиме и оставьте питание двигателям, жизнеобеспечению и средствам отхода. Блок полевого ремонта и контроллер дронов можно держать выключенными до применения. После боя отключите ремонтируемый модуль, запустите ремонт и следите, чтобы крупный усилитель модулей оставался работоспособным. Корпус чинят дроны, а не блок полевого ремонта.",
+			},
+			EnglishParagraphs: []string{
+				"A shieldless build for solo combat Interceptors. Assign one medium and one small Gauss cannon to each trigger in a single fire group. Alternate pairs while a heat sink is active to keep heat under 20% and preserve the weapons capacitor. The beam cools the ship only while hitting the target with Thermal Vent fitted.",
+				"Load limpets and check your deployed power budget before departure. Protect power for thrusters, life support and escape equipment. You can leave the AFMU and limpet controller switched off until needed. After the fight, disable the module you want to repair, start the AFMU and keep the main reinforcement package operational. Repair limpets restore the hull, while the AFMU repairs modules.",
+			},
+			Columns: []string{"Отсек", "Комплектация"}, EnglishColumns: []string{"Slot", "Fit"},
+			Rows: [][]string{
+				{"Корабль", "Alliance Chieftain"},
+				{"Две большие и две крайние малые точки", "Две средние 2B и две малые 1D пушки Гаусса Стражей"},
+				{"Средняя и центральная малая точки", "2B зенитное орудие с дистанционным подрывом и 1E фиксированный лучевой лазер с Long Range и Thermal Vent"},
+				{"Броня и энергетика", "Военный композит Heavy Duty G5 + Deep Plating. Установка 6A Armoured G5 + Thermal Spread. Распределитель 6A Charge Enhanced G5 + Super Conduits"},
+				{"Двигатели и РСД", "6A Dirty Drives G5 + Drag Drives, 5A РСД (SCO) Increased Range G5 + Mass Manager"},
+				{"Остальные основные модули", "5A жизнеобеспечение (можно облегчить), 4D датчики (Long Range по желанию), 4C бак"},
+				{"Отсеки 6, 5 и 4", "5D контроллер ремонтных дронов, 5D усилитель модулей Стражей, 4E трюм (16 т)"},
+				{"Отсеки 2, 2 и 1", "2A блок полевого ремонта, 2D и 1D усилители модулей Стражей. Человеческие версии работают и в зонах подавления Стражей"},
+				{"Военные отсеки ×3", "Три 4D усилителя корпуса Heavy Duty G5 + Deep Plating"},
+				{"Четыре внешних крепления", "Три теплоотвода с Ammo Capacity и улучшенный ксеносканер. Можно заменить теплоотвод нейтрализатором поля отключения, а освоив визуальное наведение, освободить крепление сканера"},
+			},
+			EnglishRows: [][]string{
+				{"Ship", "Alliance Chieftain"},
+				{"Two large and two outer small hardpoints", "Two medium 2B and two small 1D Guardian Gauss Cannons"},
+				{"Medium and centre small hardpoints", "2B Remote Release Flak Launcher and 1E fixed beam laser with Long Range and Thermal Vent"},
+				{"Bulkheads and power", "Military Grade Composite with Heavy Duty G5 + Deep Plating. 6A power plant with Armoured G5 + Thermal Spread. 6A distributor with Charge Enhanced G5 + Super Conduits"},
+				{"Thrusters and FSD", "6A Dirty Drives G5 + Drag Drives, 5A FSD (SCO) with Increased Range G5 + Mass Manager"},
+				{"Remaining core modules", "5A life support (Lightweight optional), 4D sensors (Long Range optional), 4C fuel tank"},
+				{"Size 6, 5 and 4 slots", "5D Repair Limpet Controller, 5D Guardian Module Reinforcement Package, 4E cargo rack (16 t)"},
+				{"Size 2, 2 and 1 slots", "2A AFMU, 2D and 1D Guardian Module Reinforcement Packages. Human packages also work in Guardian-suppression fields"},
+				{"Three military slots", "Three 4D Hull Reinforcement Packages with Heavy Duty G5 + Deep Plating"},
+				{"Four utility mounts", "Three heat sinks with Ammo Capacity and an Enhanced Xeno Scanner. Swap a heat sink for a Shutdown Field Neutraliser if needed. Once you can aim at hearts by sight, the scanner slot becomes flexible"},
+			},
+			CellLinks: [][]string{{"", "ship/typex"}, {"", "module/guardian-gauss"}},
+		},
+		{
+			ID: "ax-engineering", Title: "Инженеры и порядок улучшений", EnglishTitle: "Engineers and upgrade order", Type: "route",
+			Items: []Item{
+				{Title: "Распределитель и охлаждение", EnglishTitle: "Distributor and cooling", Text: "В Wyrd Палач (The Dweller) доводит распределитель до Charge Enhanced G5 + Super Conduits. Там же можно поставить Long Range и Thermal Vent на луч. Для полноценного Long Range G5 воспользуйтесь услугами Бру Таркина в Muang. Для охлаждения на обычной дистанции боя достаточно меньшей ступени.", EnglishText: "In Wyrd, The Dweller can apply Charge Enhanced G5 + Super Conduits to the distributor and Long Range + Thermal Vent to a beam. Visit Broo Tarquin in Muang for Long Range G5. A lower grade is enough for cooling at normal engagement distances.", EntryID: "engineer/300180", System: "Wyrd"},
+				{Title: "Скорость и манёвренность", EnglishTitle: "Speed and handling", Text: "Профессор Пэйлин в Arque даёт Dirty Drives G5 + Drag Drives. Начать можно с доступных ступеней у Фелисити Фарсир в Deciat. Сравните скорость форсажа с полностью заправленным кораблём, боевым комплектом и дронами.", EnglishText: "Professor Palin in Arque provides Dirty Drives G5 + Drag Drives. Start with the grades available from Felicity Farseer in Deciat if needed. Check boost speed with a full tank, the combat fit and limpets aboard.", EntryID: "engineer/300220", System: "Arque"},
+				{Title: "Запас прочности", EnglishTitle: "Hull strength", Text: "Селена Джин в Kuk улучшает броню и усилители корпуса до Heavy Duty G5 + Deep Plating. Выбирайте прочность корпуса для боя с перехватчиками. Обычные термические, кинетические и взрывные сопротивления против едкого урона не помогают.", EnglishText: "Selene Jean in Kuk applies Heavy Duty G5 + Deep Plating to bulkheads and hull reinforcements. Prioritise raw hull strength for Interceptors. Standard thermal, kinetic and explosive resistances do not reduce caustic damage.", EntryID: "engineer/300210", System: "Kuk"},
+				{Title: "Энергетическая установка", EnglishTitle: "Power plant", Text: "Гера Тани в Kuwemaki делает Armoured G5 + Thermal Spread, Марко Квент в Sirius даёт Armoured до G4. Проверьте боевое потребление перед нанесением модификации. Overcharged сильнее греет корабль и ухудшает прочность установки.", EnglishText: "Hera Tani in Kuwemaki offers Armoured G5 + Thermal Spread. Marco Qwent in Sirius offers Armoured up to G4. Check deployed draw before engineering. Overcharged makes the ship run hotter and reduces plant integrity.", EntryID: "engineer/300090", System: "Kuwemaki"},
+				{Title: "Дополнительные теплоотводы", EnglishTitle: "More heat sinks", Text: "Рам Та в Meene наносит Ammo Capacity на теплоотвод. Готовая версия Sirius даёт на один выстрел больше, чем обычная с Ammo Capacity. Цена за модуль составляет 8 механических деталей низшего класса (Mechanical Scrap), 6 ниобия, 6 ванадия и 5 механических компонентов.", EnglishText: "Ram Tah in Meene applies Ammo Capacity to heat sinks. The pre-engineered Sirius version carries one more shot than the ordinary Ammo Capacity version. Each launcher costs 8 Mechanical Scrap, 6 Niobium, 6 Vanadium and 5 Mechanical Components.", EntryID: "engineer/300110", System: "Meene"},
+			},
+		},
+		{
+			ID: "ax-weapons", Title: "Оружие для разных целей", EnglishTitle: "Weapons for different targets", Type: "route",
+			Items: []Item{
+				axStep("Обычная пушка Гаусса", "Standard Guardian Gauss", "Точный выстрел после короткой задержки и много тепла. Полный урон до 1,5 км, предельная дистанция 3 км. Средняя 2B эффективнее малой 1D. Модифицированная пушка стреляет очередью, которую труднее удержать на маленьком сердце, поэтому для указанных сборок берите обычную.", "A precise shot after a short delay, with substantial heat. Full damage to 1.5 km and a 3 km maximum range. The medium 2B is stronger than the small 1D. Modified Gauss fires a burst that is harder to keep on a small heart, so the builds here use standard Gauss."),
+				axStep("Модифицированное осколочное орудие", "Modified Guardian Shard", "Выбирайте средний класс 2. Плотная группа осколков помогает вскрыть перехватчик на близкой дистанции. Осколочные орудия расходуют меньше заряда распределителя, чем Гауссы или плазма, но залп из нескольких стволов ощутимо нагревает корабль. Для обычного Gauss Chieftain эта замена меняет и дистанцию, и ритм стрельбы.", "Choose the medium size 2. Its tight pellet spread helps exert an Interceptor at close range. Shards draw less from the distributor than Gauss or plasma, but firing several together still generates substantial heat. Replacing Gauss on a Chieftain changes both its engagement range and firing rhythm."),
+				axStep("Модифицированная плазма", "Modified Guardian Plasma Charger", "Заряжайте выстрел заранее. Это сильное оружие для вскрытия корпуса, но нужно учитывать полёт снаряда и целиться в само сердце. Попадание рядом может повредить корпус, так и не уничтожив сердце.", "Charge the shot in advance. Plasma is strong for exerting, but its projectile takes time to arrive. Aim directly at the heart because a nearby impact can damage the hull without destroying the heart."),
+				axStep("Человеческие варианты для фарма", "Human weapon alternatives for farming", "Карданные пулемёты Azimuth с автозарядкой дольше ведут огонь, но сильнее нагреваются. Начните с замены больших 3C. У брокера спасательного корабля или в Mbooni каждый модуль оплачивается отдельно. Обычные улучшенные ПТ-пулемёты подходят для разведчиков и «Циклопа». Улучшенные ПТ-ракеты полезны для медленных целей без сердец, например «Ортура», и не повреждают сердца боевых перехватчиков.", "Azimuth gimballed multi-cannons have an autoloader for longer bursts and generate more heat. Upgrade the large 3C mounts first. A rescue ship broker or Mbooni charges materials for each module. Standard Enhanced AX Multi-cannons suit Scouts and Cyclops. Enhanced AX missiles are useful against slow, heartless targets such as Orthrus and cannot damage combat Interceptor hearts."),
+				axStep("Экспериментальный лимит", "Experimental weapon limit", "Штатный лимит — четыре экспериментальных орудия. Стабилизатор класса 3 поднимает лимит до пяти, класса 5 — до шести. Зенитное орудие с дистанционным подрывом лимит не занимает. В обеих приведённых сборках стабилизатор не нужен.", "The default limit is four experimental weapons. A class-3 stabiliser raises it to five, and class 5 raises it to six. Remote Release Flak is exempt. Neither of the builds above needs a stabiliser."),
+				{Title: "Альтернативные корпуса", EnglishTitle: "Alternative hulls", Text: "Krait Mk II с тремя средними пушками Гаусса, зениткой и охлаждающим лучом оставляет большие отсеки под ремонт. Corsair вмещает четыре средних Гаусса, зенитку и луч. У Challenger три хорошо сведённые средние точки под модифицированные осколочные орудия или плазму. Против «Василиска» ему сложнее оторваться, так что заранее потренируйте холодную орбиту.", EnglishText: "A Krait Mk II with three medium Gauss, flak and a cooling beam leaves large internals for repair equipment. A Corsair can fit four medium Gauss, flak and a beam. The Challenger has three closely spaced medium hardpoints for modified Shards or Plasma, but struggles to outrun a Basilisk. Practise cold orbiting before that matchup.", EntryID: "ship/corsair"},
+			},
+		},
+		{
+			ID: "ax-unlocks", Title: "Открытие оружия и модулей Стражей", EnglishTitle: "Unlocking Guardian weapons and modules", Type: "table",
+			Paragraphs: []string{
+				"Улучшенные ПТ-пулемёты, ксеносканер и нейтрализатор покупаются за кредиты на спасательных мегакораблях. Обычные модули Стражей открываются у брокера технологий один раз, после чего копии покупаются за кредиты. Средний и малый Гаусс открываются отдельно. Модифицированные версии у брокера в Prospect’s Deep (Mbooni) оплачиваются материалами за каждую копию. Для допуска в Mbooni получите союзную репутацию с Azimuth Biotech и проверьте предложение допуска на Glorious Prospect в LHS 1163.",
+				"На руины возьмите ТРП Scarab и точечную оборону в верхнем креплении. Чертежи, данные и компоненты занимают хранилище материалов, а закупаемые на рынке катушки, пластины и преобразователи перевозятся в трюме.",
+			},
+			EnglishParagraphs: []string{
+				"Enhanced AX Multi-cannons, the Enhanced Xeno Scanner and the neutraliser are sold for credits on rescue megaships. Standard Guardian modules have a one-time unlock at a Guardian Technology Broker, then copies cost credits. Small and medium Gauss unlock separately. Modified weapons at Prospect’s Deep in Mbooni cost materials for every copy. For the permit, become Allied with Azimuth Biotech and check Glorious Prospect in LHS 1163 for the permit mission.",
+				"Bring a Scarab SRV and fit point defence to a top utility mount for the ruins. Blueprints, data and components go into material storage. Market commodities such as coils, mounting plates and converters need cargo space.",
+			},
+			Columns: []string{"Предмет", "Что привезти"}, EnglishColumns: []string{"Equipment", "Bring to the broker"},
+			Rows: [][]string{
+				{"Гаусс 2B", "1 фрагмент чертежа оружия Стражей, 18 энергоячеек Стражей, 20 компонентов технологий Стражей, 15 марганца, 6 катушек магнитного излучателя"},
+				{"Гаусс 1D", "1 фрагмент чертежа оружия Стражей, 12 энергопроводников Стражей, 12 компонентов обломков Стражей, 15 деталей вооружения часовых Стражей"},
+				{"Усилитель модулей Стражей", "1 фрагмент чертежа модуля Стражей, 18 компонентов обломков Стражей, 20 энергопроводников Стражей, 15 данных обелиска «Эпсилон», 9 усиленных монтажных пластин"},
+				{"Модифицированное осколочное орудие 2A", "1 фрагмент чертежа оружия Стражей, 5 компонентов обломков Стражей, 5 компонентов технологий Стражей, 4 германия, 2 преобразователя энергии"},
+				{"Модифицированное плазменное орудие 2B", "1 фрагмент чертежа оружия Стражей, 5 энергопроводников Стражей, 5 деталей вооружения часовых Стражей, 4 мышьяка, 2 шины передачи энергии"},
+			},
+			EnglishRows: [][]string{
+				{"2B Guardian Gauss", "1 Guardian Weapon Blueprint Fragment, 18 Guardian Power Cells, 20 Guardian Technology Components, 15 Manganese, 6 Magnetic Emitter Coils"},
+				{"1D Guardian Gauss", "1 Guardian Weapon Blueprint Fragment, 12 Guardian Power Conduits, 12 Guardian Wreckage Components, 15 Guardian Sentinel Weapon Parts"},
+				{"Guardian Module Reinforcement Package", "1 Guardian Module Blueprint Fragment, 18 Guardian Wreckage Components, 20 Guardian Power Conduits, 15 Pattern Epsilon Obelisk Data, 9 Reinforced Mounting Plates"},
+				{"2A Modified Guardian Shard", "1 Guardian Weapon Blueprint Fragment, 5 Guardian Wreckage Components, 5 Guardian Technology Components, 4 Germanium, 2 Power Converters"},
+				{"2B Modified Guardian Plasma", "1 Guardian Weapon Blueprint Fragment, 5 Guardian Power Conduits, 5 Guardian Sentinel Weapon Parts, 4 Arsenic, 2 Power Transfer Buses"},
+			},
+			CellLinks: [][]string{{"module/guardian-gauss"}, {"module/guardian-gauss"}, {"module/guardian-mr"}, {"module/guardian-shard"}, {"module/guardian-plasma"}},
+		},
+		{
+			ID: "ax-guardian-sites", Title: "Где собрать детали", EnglishTitle: "Where to collect the parts", Type: "route",
+			Items: []Item{
+				{Title: "Чертежи оружия и модулей", EnglishTitle: "Weapon and module blueprints", Text: "Для оружия подойдут руины на B 1 в Synuefe GV-T b50-4, для модуля — на B 2 в Synuefe LQ-T b50-1. На площадке зарядите пилоны ТРП, поднесите реликвию и просканируйте открывшуюся сферу.", EnglishText: "Use the structure on B 1 in Synuefe GV-T b50-4 for weapons and the B 2 site in Synuefe LQ-T b50-1 for modules. Charge the pylons from the SRV, offer a relic and scan the exposed orb.", EntryID: "article/farm-guardian-blueprints", System: "Synuefe GV-T b50-4"},
+				{Title: "Компоненты Стражей", EnglishTitle: "Guardian components", Text: "Сбивайте детали с разрушаемых панелей в руинах. Детали вооружения выпадают из часовых. Для компонентов технологий есть удобная площадка на C 3 в Synuefe HT-F d12-29.", EnglishText: "Shoot destructible panels at the ruins and collect the pieces. Sentinels drop their weapon parts. For technology components, a useful site is C 3 in Synuefe HT-F d12-29.", EntryID: "article/farm-guardian-components", System: "Synuefe HT-F d12-29"},
+				{Title: "Данные обелисков", EnglishTitle: "Obelisk data", Text: "Сканируйте активные обелиски датчиком ТРП. Для «Эпсилон» можно начать с древних руин на 1 B в Synuefe XR-H d11-102.", EnglishText: "Scan active obelisks with the SRV Data Link Scanner. The ancient ruins on 1 B in Synuefe XR-H d11-102 are a starting point for Pattern Epsilon.", EntryID: "article/farm-guardian-obelisks", System: "Synuefe XR-H d11-102"},
+				{Title: "Устойчивость к полю подавления", EnglishTitle: "Anti-Guardian Field resistance", Text: "Поле «Ортура» и «Глефы» выводит из строя незащищённое оборудование Стражей. У Рам Та устойчивость для совместимого модуля стоит 2 окаменелых фрагмента поверхности и 1 едкий кристалл за модуль. Модифицированное оружие из Mbooni эту обработку не принимает. Надёжный источник фрагментов — обшивка активного Титана. Если фрагментов нет, берите человеческое ПТ-оружие и обычные усилители модулей.", EnglishText: "The Orthrus and Glaive suppression field damages unprotected Guardian equipment. Ram Tah can protect a compatible module for 2 Hardened Surface Fragments and 1 Caustic Crystal per module. The modified Mbooni weapons cannot take this engineering. The hull of an active Titan is the reliable fragment source. If fragments are unavailable, use human AX weapons and human module reinforcements.", EntryID: "engineer/300110", System: "Meene"},
+			},
+		},
+		{
+			ID: "ax-synthesis", Title: "Синтез боеприпасов и расходников", EnglishTitle: "Ammo and consumable synthesis", Type: "table",
+			Paragraphs: []string{
+				"Откройте «Инвентарь → Синтез» в правой панели корабля. Рецепт оружия считается на один модуль. Пополняйтесь заранее или на отходе, пока спадает щит перехватчика. Обычное пополнение на станции заменяет синтезированный заряд обычным. Для «Гидры» закладывайте несколько пополнений на ствол с учётом своей точности. Одно премиум-пополнение всех четырёх Гауссов требует 24 волокнистых композита, 24 компонента технологий Стражей, 32 марганца и 40 фокусировочных кристаллов.",
+			},
+			EnglishParagraphs: []string{
+				"Open Inventory → Synthesis in the ship’s right panel. Weapon recipes apply to one module at a time. Rearm in advance or at a distance while the Interceptor’s shield decays. Standard station restock replaces synthesised ammo with ordinary rounds. Budget several reloads per gun for a Hydra depending on your accuracy. One premium reload across four Gauss guns costs 24 Filament Composites, 24 Guardian Technology Components, 32 Manganese and 40 Focus Crystals.",
+			},
+			Columns: []string{"Что пополнить", "Материалы за операцию"}, EnglishColumns: []string{"Resupply", "Materials per synthesis"},
+			Rows: [][]string{
+				{"Гаусс · базовый", "2 фокусировочных кристалла, 2 энергопроводника Стражей, 3 марганца, 4 компонента обломков Стражей"},
+				{"Гаусс · стандартный (+15% урона)", "3 жаростойкие керамики, 3 детали вооружения часовых Стражей, 4 энергопроводника Стражей, 5 марганца, 5 фокусировочных кристаллов"},
+				{"Гаусс · премиум (+30% урона)", "6 волокнистых композитов, 6 компонентов технологий Стражей, 8 марганца, 10 фокусировочных кристаллов"},
+				{"ПТ-пулемёт · базовый", "2 железа, 1 никель, 1 сера, 2 детали оружия (Weapon Parts)"},
+				{"Зенитное орудие · базовый", "4 никеля, 3 углерода, 2 серы"},
+				{"Теплоотвод", "2 базовых проводника, 2 теплопроводящие проводки"},
+				{"Каустические поглотители", "1 контейнер для химикатов, 1 гальванизирующий сплав, 4 каустических осколка, 2 коррозионных механизма"},
+				{"Блок полевого ремонта · базовый", "2 никеля, 2 цинка, 2 хрома, 3 ванадия"},
+				{"4 дрона", "4 железа, 4 никеля. Нужен свободный трюм"},
+			},
+			EnglishRows: [][]string{
+				{"Gauss · basic", "2 Focus Crystals, 2 Guardian Power Conduits, 3 Manganese, 4 Guardian Wreckage Components"},
+				{"Gauss · standard (+15% damage)", "3 Heat Resistant Ceramics, 3 Guardian Sentinel Weapon Parts, 4 Guardian Power Conduits, 5 Manganese, 5 Focus Crystals"},
+				{"Gauss · premium (+30% damage)", "6 Filament Composites, 6 Guardian Technology Components, 8 Manganese, 10 Focus Crystals"},
+				{"AX Multi-cannon · basic", "2 Iron, 1 Nickel, 1 Sulphur, 2 Weapon Parts"},
+				{"Flak Launcher · basic", "4 Nickel, 3 Carbon, 2 Sulphur"},
+				{"Heat Sink Launcher", "2 Basic Conductors, 2 Heat Conduction Wiring"},
+				{"Caustic Sinks", "1 Chemical Storage Unit, 1 Galvanising Alloy, 4 Caustic Shards, 2 Corrosive Mechanisms"},
+				{"AFMU · basic", "2 Nickel, 2 Zinc, 2 Chromium, 3 Vanadium"},
+				{"4 limpets", "4 Iron, 4 Nickel. Leave free cargo space"},
+			},
+		},
+		{
+			ID: "ax-synthesis-modified", Title: "Боеприпасы для осколочных орудий и плазмы", EnglishTitle: "Shard and Plasma ammunition", Type: "table",
+			Columns: []string{"Боеприпасы", "Материалы на одно орудие"}, EnglishColumns: []string{"Ammo", "Materials per weapon"},
+			Rows: [][]string{
+				{"Осколочное · базовый", "3 углерода, 2 ванадия, 3 осколка кристаллов, 3 энергоячейки Стражей, 5 компонентов обломков Стражей"},
+				{"Осколочное · стандартный (+15%)", "4 осколка кристаллов, 2 энергоячейки Стражей, 2 детали вооружения часовых Стражей"},
+				{"Осколочное · премиум (+30%)", "8 углерода, 6 энергоячеек Стражей, 4 ванадия, 8 осколков кристаллов"},
+				{"Плазма · базовый", "3 хрома, 2 теплорассеивающие пластины, 3 энергопроводника Стражей, 4 компонента обломков Стражей"},
+				{"Плазма · стандартный (+15%)", "4 хрома, 2 теплообменника, 2 фазовых сплава, 2 энергоячейки Стражей, 2 компонента технологий Стражей"},
+				{"Плазма · премиум (+30%)", "6 хрома, 2 циркония, 4 теплообменника, 6 фазовых сплавов, 4 энергоячейки Стражей, 3 детали вооружения часовых Стражей"},
+			},
+			EnglishRows: [][]string{
+				{"Shard · basic", "3 Carbon, 2 Vanadium, 3 Crystal Shards, 3 Guardian Power Cells, 5 Guardian Wreckage Components"},
+				{"Shard · standard (+15%)", "4 Crystal Shards, 2 Guardian Power Cells, 2 Guardian Sentinel Weapon Parts"},
+				{"Shard · premium (+30%)", "8 Carbon, 6 Guardian Power Cells, 4 Vanadium, 8 Crystal Shards"},
+				{"Plasma · basic", "3 Chromium, 2 Heat Dispersion Plates, 3 Guardian Power Conduits, 4 Guardian Wreckage Components"},
+				{"Plasma · standard (+15%)", "4 Chromium, 2 Heat Exchangers, 2 Phase Alloys, 2 Guardian Power Cells, 2 Guardian Technology Components"},
+				{"Plasma · premium (+30%)", "6 Chromium, 2 Zirconium, 4 Heat Exchangers, 6 Phase Alloys, 4 Guardian Power Cells, 3 Guardian Sentinel Weapon Parts"},
+			},
+		},
+	}
+}

@@ -37,3 +37,6 @@
 .ref-market-table{min-width:880px}.ref-market-table th:first-child{min-width:205px}.ref-market-table td:nth-child(n+2){white-space:nowrap}.ref-market-table td:nth-child(4){text-align:center}.ref-market-system{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;line-height:1.7}.ref-market-system-link{font-size:10px;overflow-wrap:anywhere}.ref-market-system-link>.icon{flex-shrink:0}.ref-market-copy{display:inline-flex;align-items:center;gap:4px;font-size:9px;line-height:1.4;padding:4px 5px;min-height:26px;margin-left:-5px;border-radius:5px;color:#8da5b7;white-space:nowrap}.ref-market-copy>.icon{height:11px;width:11px}.ref-market-copy:hover{color:#d3e6f5;background:#34424c}.ref-market-pad{display:inline-flex;align-items:center;justify-content:center;min-width:24px;padding:1px 5px;border:1px solid #46525c;border-radius:4px;color:#c0d1df;font-size:10px}.ref-market-unknown{font-size:10px;color:#82919c}
 
 .ref-category-nav .ref-farming-shortcut:not(.selected){border-color:var(--ref-line);color:var(--text)}
+.ref-section-figure{margin:0 0 18px;border:1px solid var(--ref-line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.ref-section-figure img{display:block;width:100%;height:auto}
+.ref-section-figure figcaption{padding:10px 14px;color:var(--muted);font-size:12px;line-height:1.6}

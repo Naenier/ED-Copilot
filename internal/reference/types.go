@@ -78,16 +78,23 @@ type Grade struct {
 }
 
 type Section struct {
-	ID           string     `json:"id"`
-	Title        string     `json:"title"`
-	EnglishTitle string     `json:"englishTitle,omitempty"`
-	Type         string     `json:"type"`
-	Paragraphs   []string   `json:"paragraphs,omitempty"`
-	Items        []Item     `json:"items,omitempty"`
-	Columns      []string   `json:"columns,omitempty"`
-	Rows         [][]string `json:"rows,omitempty"`
-	CellLinks    [][]string `json:"cellLinks,omitempty"`
-	Grades       []Grade    `json:"grades,omitempty"`
+	ID                   string     `json:"id"`
+	Title                string     `json:"title"`
+	EnglishTitle         string     `json:"englishTitle,omitempty"`
+	Type                 string     `json:"type"`
+	Paragraphs           []string   `json:"paragraphs,omitempty"`
+	EnglishParagraphs    []string   `json:"englishParagraphs,omitempty"`
+	Items                []Item     `json:"items,omitempty"`
+	Columns              []string   `json:"columns,omitempty"`
+	EnglishColumns       []string   `json:"englishColumns,omitempty"`
+	Rows                 [][]string `json:"rows,omitempty"`
+	EnglishRows          [][]string `json:"englishRows,omitempty"`
+	CellLinks            [][]string `json:"cellLinks,omitempty"`
+	Grades               []Grade    `json:"grades,omitempty"`
+	Figure               *Image     `json:"figure,omitempty"`
+	FigureCaption        string     `json:"figureCaption,omitempty"`
+	EnglishFigureCaption string     `json:"englishFigureCaption,omitempty"`
+	figureKey            string
 }
 
 type Action struct {
