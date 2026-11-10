@@ -87,9 +87,11 @@ func newHUD(u *Window) (*hudWindow, error) {
 		return nil, fmt.Errorf("Не удалось подключить горячую клавишу оверлея: %v", syscall.GetLastError())
 	}
 	// MOD_NOREPEAT prevents a held key from toggling the setting repeatedly.
-	ok, _, _ := registerHotKey.Call(uintptr(u.main.Handle()), overlayHotKeyID, 0x0001|0x0002|0x4000, 'H')
-	h.hotkeyRegistered = ok != 0
-	h.foregroundHook, _, _ = userDLL.NewProc("SetWinEventHook").Call(3, 3, 0, foregroundProcedure, 0, 0, 0)
+	if u.options.Soak == nil {
+		ok, _, _ := registerHotKey.Call(uintptr(u.main.Handle()), overlayHotKeyID, 0x0001|0x0002|0x4000, 'H')
+		h.hotkeyRegistered = ok != 0
+		h.foregroundHook, _, _ = userDLL.NewProc("SetWinEventHook").Call(3, 3, 0, foregroundProcedure, 0, 0, 0)
+	}
 	// A hotkey already owned by another application does not disable the HUD;
 	// its ordinary in-app and tray controls remain available.
 	h.refresh()
@@ -199,7 +201,14 @@ func (h *hudWindow) refresh() {
 		return
 	}
 	s := h.owner.state
-	foreground, process := foregroundGame()
+	var foreground win.HWND
+	var process string
+	if h.owner.options.Soak != nil {
+		// Only the isolated synthetic run supplies a game window identity.
+		foreground, process = h.owner.main.Handle(), "EliteDangerous64.exe"
+	} else {
+		foreground, process = foregroundGame()
+	}
 	if !p.HUDVisible(v.Bool(v.At(s, "settings", "overlayEnabled")), v.At(s, "connection", "gameRunning"), process) {
 		h.hide()
 		return
@@ -327,7 +336,13 @@ func (h *hudWindow) paintWindow(hwnd win.HWND) {
 	if target == 0 {
 		return
 	}
-	defer win.EndPaint(hwnd, &ps)
+	var rendered string
+	defer func() {
+		win.EndPaint(hwnd, &ps)
+		if rendered != "" {
+			h.owner.modern.soak.painted(rendered)
+		}
+	}()
 	var client win.RECT
 	if !win.GetClientRect(hwnd, &client) {
 		return
@@ -368,12 +383,17 @@ func (h *hudWindow) paintWindow(hwnd win.HWND) {
 			metrics = h.measureSection(hdc, int(width), sections[panel.Index])
 		}
 		h.drawSection(hdc, int(width), panel.Bounds.Y-bounds.Y, panel.Bounds.Height, sections[panel.Index], metrics, panel.Clipped)
+		if h.owner.options.Soak != nil && panel.Index == 0 {
+			rendered = sections[panel.Index].Subtitle
+		}
 	}
 	if column == 1 && h.plan.Hidden > 0 && h.plan.Overflow.Height > 0 {
 		r := h.plan.Overflow
 		h.drawOverflow(hdc, int(width), r.Y-bounds.Y, r.Height, h.plan.Hidden)
 	}
-	win.BitBlt(target, 0, 0, width, height, hdc, 0, 0, win.SRCCOPY)
+	if !win.BitBlt(target, 0, 0, width, height, hdc, 0, 0, win.SRCCOPY) {
+		rendered = ""
+	}
 }
 
 func (h *hudWindow) close() {

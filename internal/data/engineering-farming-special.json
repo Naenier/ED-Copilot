@@ -1,0 +1,346 @@
+[
+  {
+    "key": "farm-thargoid-encounters",
+    "title": "Материалы таргоидов — обломки, сооружения и сигналы",
+    "englishTitle": "Thargoid materials — wrecks, structures and signals",
+    "description": "Соберите обломки сенсоров для Пэйлина и Седези, добудьте детали с падальщиков и получите данные с наземных узлов, кораблей и следов прыжков.",
+    "englishDescription": "Collect sensor fragments for Palin and Sedesi, salvage parts from Scavengers and obtain data from surface uplinks, ships and hyperspace wakes.",
+    "keywords": [
+      "Таргоиды",
+      "Пэйлин",
+      "Седези",
+      "Sensor Fragment",
+      "Scavenger",
+      "Thargoid Uplink Device",
+      "Xeno Scanner",
+      "Frame Shift Wake Scanner",
+      "NHSS",
+      "Solati",
+      "Mel 22 Sector UE-G b11-0",
+      "HIP 17403",
+      "Asterope"
+    ],
+    "materials": [
+      "unknownenergysource",
+      "unknownshipsignature",
+      "unknownwakedata",
+      "tgcompositiondata",
+      "tgresiduedata",
+      "tgstructuraldata",
+      "unknowncarapace",
+      "unknownenergycell",
+      "unknownorganiccircuitry",
+      "unknowntechnologycomponents",
+      "tgshipflightdata",
+      "tgshipsystemsdata"
+    ],
+    "sections": [
+      {
+        "key": "sensor",
+        "title": "Обломки сенсоров",
+        "englishTitle": "Sensor fragments",
+        "steps": [
+          {
+            "title": "Крушение на Halla",
+            "englishTitle": "Crash site on Halla",
+            "text": "В Solati сядьте на Halla у +36,9423°, −100,2683° в Live. Если маркера крушения нет, подойдите по координатам. На ТРП найдите мигающий Thargoid Sensor у кормы обломков, разбейте его выстрелом и подберите Sensor Fragment ковшом. Проверьте число единиц в промышленных материалах и при необходимости обновите площадку через главное меню.",
+            "englishText": "In Solati, land on Halla near +36.9423°, −100.2683° in Live. If the crash marker is missing, fly to the coordinates. In an SRV, find the flashing Thargoid Sensor near the rear of the wreck, shoot it apart and scoop the Sensor Fragments. Check the unit count in Manufactured Materials and reload the site through the main menu if needed.",
+            "system": "Solati"
+          },
+          {
+            "title": "Крушение на A 4 a в Плеядах",
+            "englishTitle": "Pleiades crash site on A 4 a",
+            "text": "В HIP 17403 картографируйте A 4 a и проверьте сигнал обломков таргоидов около −7,3362°, −6,2770° в Live. Подберите готовые обломки или разбейте сенсоры, если они появились. Если выдача пустая после нескольких обновлений, используйте точку Solati. Целый Thargoid Sensor занимает трюм и вызывает коррозию. Для разблокировки нужны именно обломки из инвентаря материалов.",
+            "englishText": "Map A 4 a in HIP 17403 and check the Thargoid wreck signal near −7.3362°, −6.2770° in Live. Scoop loose fragments or break sensors if present. Switch to the Solati site if several fresh instances have no useful drops. An intact Thargoid Sensor takes cargo space and is corrosive. The unlock calls for Sensor Fragments from the materials inventory.",
+            "system": "HIP 17403"
+          },
+          {
+            "title": "Сколько взять для инженеров",
+            "englishTitle": "Unlock quantities",
+            "text": "Профессор Пэйлин в Arque и Хлоя Седези в Shenve запрашивают по 25 обломков. Возьмите 50, если планируете открыть обе мастерские, и проверьте остальные условия приглашения на карточках инженеров.",
+            "englishText": "Professor Palin in Arque and Chloe Sedesi in Shenve each ask for 25 fragments. Take 50 if you plan to unlock both workshops and check the remaining invitation requirements on their engineer profiles."
+          }
+        ]
+      },
+      {
+        "key": "surface",
+        "title": "Данные и детали на поверхности",
+        "englishTitle": "Surface data and parts",
+        "steps": [
+          {
+            "title": "Сооружение на A 2",
+            "englishTitle": "Surface structure on A 2",
+            "text": "Картографируйте A 2 в Mel 22 Sector UE-G b11-0. В полевых отчётах сооружение отмечено около −33,2026°, +141,7225°. На ТРП объезжайте внешний периметр и сканируйте доступные Thargoid Uplink Device сканером канала данных. Так собираются Thargoid Structural Data, Thargoid Material Composition Data и Thargoid Residue Data. Состав выдачи меняется от узла к узлу.",
+            "englishText": "Map A 2 in Mel 22 Sector UE-G b11-0. Field reports place the surface structure near −33.2026°, +141.7225°. Circle the outer area in an SRV and scan accessible Thargoid Uplink Devices with the Data Link Scanner. They yield Thargoid Structural Data, Thargoid Material Composition Data and Thargoid Residue Data. The drops vary by uplink.",
+            "system": "Mel 22 Sector UE-G b11-0"
+          },
+          {
+            "title": "Добыча с падальщиков",
+            "englishTitle": "Scavenger salvage",
+            "text": "На том же типе наземных площадок ищите летающих Scavenger. После уничтожения подберите ковшом выпавшие материалы. В списке добычи отмечены Thargoid Carapace, Thargoid Energy Cell, Thargoid Organic Circuitry, Thargoid Technological Components и Sensor Fragment. Проверьте название контакта, прежде чем подбирать коррозионные грузовые образцы.",
+            "englishText": "Look for hovering Scavengers at the same kind of surface site. Destroy one and scoop the materials it drops. Reported drops include Thargoid Carapace, Thargoid Energy Cell, Thargoid Organic Circuitry, Thargoid Technological Components and Sensor Fragment. Check contact names before scooping corrosive cargo samples."
+          }
+        ]
+      },
+      {
+        "key": "encounter",
+        "title": "Корабельные данные и след прыжка",
+        "englishTitle": "Ship data and hyperspace wakes",
+        "steps": [
+          {
+            "title": "Найти нечеловеческий сигнал",
+            "englishTitle": "Find a non-human signal",
+            "text": "Для встреч в Плеядах начните с Asterope, Sterope II или Merope. Ищите Non-Human Signal Source в навигации или через FSS. Состав зависит от сигнала, его угрозы и текущего состояния региона. Перехватчик удобен для сканирования корпуса и следа. В сигналах с разведчиками подготовьтесь к бою или уходу.",
+            "englishText": "For encounters in the Pleiades, start with Asterope, Sterope II or Merope. Find a Non-Human Signal Source in navigation or via the FSS. Its contents vary with the signal, threat level and region. An Interceptor is useful for ship and wake scans. Be prepared to fight or leave if Scouts appear.",
+            "system": "Asterope"
+          },
+          {
+            "title": "Сигнатура, полётные и системные данные",
+            "englishTitle": "Signature, flight and systems data",
+            "text": "Назначьте Xeno Scanner на группу огня, выберите корабль таргоидов целью и удерживайте сканирование в рабочей дальности своего модуля. Проверьте в кодированных материалах Thargoid Ship Signature, Ship Flight Data и Ship Systems Data. Для наблюдения за пассивным перехватчиком оставьте груз таргоидов и реликвии Стражей на станции.",
+            "englishText": "Assign a Xeno Scanner to a fire group, target the Thargoid ship and keep scanning within your module’s working range. Check Encoded Materials for Thargoid Ship Signature, Ship Flight Data and Ship Systems Data. Leave Thargoid cargo and Guardian relics at the station when observing a passive Interceptor."
+          },
+          {
+            "title": "Данные следа таргоидов",
+            "englishTitle": "Thargoid Wake Data",
+            "text": "Установите Frame Shift Wake Scanner заранее. Дождитесь ухода перехватчика, выберите оставленный след прыжка и просканируйте его до исчезновения. Результат ищите под Thargoid Wake Data в кодированных материалах.",
+            "englishText": "Fit a Frame Shift Wake Scanner before leaving. Wait for an Interceptor to depart, target the wake it leaves and complete a scan before it disappears. Look for Thargoid Wake Data. Use the dedicated Wake Scanner for this step."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "CMDR Fwaggle — Solati crash-site report with screenshots",
+        "url": "https://www.fwaggle.org/games/elite/thargoid-sensors/"
+      },
+      {
+        "title": "CMDR Vaethe — HIP 17403 Live field report",
+        "url": "https://inara.cz/elite/cmdr-logbook-entry/513657/96734/"
+      },
+      {
+        "title": "Player discussion — current HIP 17403 spawns",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1weir35/"
+      },
+      {
+        "title": "Canonnball Run X — Mel 22 surface visit",
+        "url": "https://inara.cz/elite/logbook/89621/"
+      },
+      {
+        "title": "Canonn survey — Thargoid structures",
+        "url": "https://elitedangerousutilities.azurewebsites.net/customtable/display?id=thargoid+structures"
+      },
+      {
+        "title": "Anti-Xeno Initiative — Finding Thargoids",
+        "url": "https://wiki.antixenoinitiative.com/en/finding-thargoids"
+      },
+      {
+        "title": "Player report — Thargoid wake scans",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1vcjoaa/"
+      },
+      {
+        "title": "Deep Space Network — materials and data",
+        "url": "https://ed-dsn.net/en/materials-and-data/"
+      }
+    ]
+  },
+  {
+    "key": "farm-thargoid-titans",
+    "title": "Обломки титанов и материалы для Рам Таха",
+    "englishTitle": "Titan wreck salvage and materials for Ram Tah",
+    "description": "Сбор деталей и едких кристаллов на кладбище титана. Отдельно отмечено, что известно о добыче окаменелых фрагментов после гибели Cocijo.",
+    "englishDescription": "Salvage parts and Caustic Crystals at a Titan graveyard, with the current evidence on Hardened Surface Fragments after Cocijo’s destruction.",
+    "keywords": [
+      "Таргоиды",
+      "титан",
+      "кладбище титана",
+      "Рам Тах",
+      "защита от антистражевых полей",
+      "Anti-Guardian Zone Resistance",
+      "Titan Drive Component",
+      "Propulsion Elements",
+      "Bio-Mechanical Conduits",
+      "Weapon Parts",
+      "Wreckage Components",
+      "Caustic Crystal",
+      "Hardened Surface Fragments",
+      "Cocijo",
+      "Sol",
+      "HIP 8887"
+    ],
+    "materials": [
+      "tgbiomechanicalconduits",
+      "tgpropulsionelement",
+      "tgweaponparts",
+      "tgwreckagecomponents",
+      "tg_causticcrystal",
+      "tg_abrasion03"
+    ],
+    "sections": [
+      {
+        "key": "salvage",
+        "title": "Маршрут по полю обломков",
+        "englishTitle": "Debris-field salvage loop",
+        "steps": [
+          {
+            "title": "Cocijo у Земли",
+            "englishTitle": "Cocijo near Earth",
+            "text": "Если есть разрешение на Sol, выберите в навигации поле обломков Cocijo возле Земли. Возьмите манёвренный корабль, датчики, контроллер дронов-сборщиков и запас дронов. Если собираете ещё и коррозионные товары, оборудуйте устойчивый к коррозии грузовой отсек. При необходимости используйте поле Leigong в HIP 8887 у A 4.",
+            "englishText": "With a Sol permit, target Cocijo’s debris field near Earth. Bring a manoeuvrable ship, sensors, a collector limpet controller and spare limpets. Fit a corrosion-resistant cargo rack if you will collect corrosive commodities as well. Leigong’s field near A 4 in HIP 8887 is another option.",
+            "system": "Sol"
+          },
+          {
+            "title": "Подбирать материалы по контактам",
+            "englishTitle": "Collect materials through Contacts",
+            "text": "Обследуйте несколько участков поля от крупных обломков до периферии. В контактах ищите Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts, Wreckage Components и Caustic Crystal. Подбирайте их ковшом или дронами. Для массового сбора настройте список игнорирования и выпускайте дроны без выбранной цели. Titan Drive Component для предмодифицированного SCO — отдельный редкий грузовой предмет. Проверьте его название и свободное место в трюме.",
+            "englishText": "Cover several parts of the field, from the main wreck to the edges. Watch Contacts for Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts, Wreckage Components and Caustic Crystal. Scoop them or use collectors. For bulk collection, configure the ignore list and launch limpets without a target. A Titan Drive Component for the pre-engineered SCO is a separate rare cargo item. Check its name and available cargo space."
+          },
+          {
+            "title": "Альтернатива для четырёх деталей",
+            "englishTitle": "Alternative for the four parts",
+            "text": "В сигналах NHSS с угрозой 4 или 5, где появились Thargoid Scouts, бой и подбор обломков дают альтернативный источник элементов двигательной установки, биомеханических проводников, деталей вооружения и компонентов обломков. Возьмите AX-оснащение. Для едких кристаллов используйте поле обломков.",
+            "englishText": "In Threat 4 or 5 NHSS instances that spawn Thargoid Scouts, combat salvage is an alternative source of Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts and Wreckage Components. Bring an AX loadout. For Caustic Crystals, use a Titan debris field."
+          }
+        ]
+      },
+      {
+        "key": "resistance",
+        "title": "Материалы модификации у Рам Таха",
+        "englishTitle": "Materials for Ram Tah’s modification",
+        "steps": [
+          {
+            "title": "Комплект на один модуль",
+            "englishTitle": "Cost per module",
+            "text": "Для Anti-Guardian Zone Resistance у Рам Таха в Meene нужны 2 Hardened Surface Fragments и 1 Caustic Crystal на совместимый модуль. Сверьте совместимость и итог по количеству модулей в плане. Тактический чип фигурирует в старых руководствах, а в текущем рецепте каталога его нет.",
+            "englishText": "Ram Tah in Meene asks for 2 Hardened Surface Fragments and 1 Caustic Crystal per compatible module for Anti-Guardian Zone Resistance. Check compatibility and multiply the cost by the modules in your plan. Tactical Core Chips appear in older guides and are absent from the current recipe in the catalogue.",
+            "system": "Meene"
+          },
+          {
+            "title": "Как читать старые маршруты",
+            "englishTitle": "How to read older routes",
+            "text": "Во время войны Hardened Surface Fragments сбивали с Coarse Hull Surface живого титана абразивным бластером. Cocijo был последним активным титаном и погиб в декабре 2024 года. На ноябрь 2026 устойчивый способ добычи этих фрагментов на кладбищах не подтверждён. Старые сообщения о единичных выпадениях относятся к периоду войны или её окончанию. Планируйте модификацию по уже имеющемуся запасу, пока в игре не появится подтверждённый источник.",
+            "englishText": "During the war, Hardened Surface Fragments were mined with an Abrasion Blaster from Coarse Hull Surface deposits on a live Titan. Cocijo was the last active Titan and fell in December 2024. As of November 2026, a repeatable graveyard route for these fragments is unconfirmed. Older one-off reports date from the war or its aftermath. Base the engineering plan on your existing stock until a current source is confirmed."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "Frontier — Thargoid War Epilogue",
+        "url": "https://forums.frontier.co.uk/threads/elite-dangerous-thargoid-war-epilogue.631977/"
+      },
+      {
+        "title": "Xeno Strike Force — Anti-Guardian Field engineering",
+        "url": "https://xenostrikeforce.com/guides/hip-22460/"
+      },
+      {
+        "title": "Player report — Titan graveyard visits in October 2026",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1x62nye/"
+      },
+      {
+        "title": "Player report — removal of Tactical Core Chips from the recipe",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1h1yfok/"
+      }
+    ]
+  },
+  {
+    "key": "farm-merc-coins",
+    "title": "Монеты наёмников и операции Odyssey",
+    "englishTitle": "Merc Coin and Odyssey Operations",
+    "description": "Как начать операцию, оценить награду за время и потратить монеты на MercGear и инженерные рецепты.",
+    "englishDescription": "How to launch an Operation, compare rewards against time and spend Merc Coin on MercGear and engineering recipes.",
+    "keywords": [
+      "монеты наёмников",
+      "Merc Coin",
+      "MercGear",
+      "Operations",
+      "Odyssey",
+      "Mercenary Operations",
+      "Powerplay Operations",
+      "Bill Turner",
+      "Extended Cargo Rack",
+      "Firestorm Rescue",
+      "Rapid Response"
+    ],
+    "materials": [
+      "mercenarycoin"
+    ],
+    "sections": [
+      {
+        "key": "operation",
+        "title": "Получить монеты",
+        "englishTitle": "Earn Merc Coin",
+        "steps": [
+          {
+            "title": "Войти в операцию",
+            "englishTitle": "Join an Operation",
+            "text": "В Live с Odyssey пришвартуйтесь на станции и откройте Operations на домашней вкладке правой панели. Выберите Mercenary Operations или Powerplay Operations, сценарий и сложность. Можно запустить свой отряд или заполнить свободные места подбором игроков. При старте отряд отправится к месту задания на Operation Runner.",
+            "englishText": "In Live with Odyssey, dock and open Operations from the Home tab of the right-hand panel. Choose Mercenary Operations or Powerplay Operations, a scenario and a difficulty. Start with your own squad or fill open slots by matchmaking. The Operation Runner takes the team to the scenario."
+          },
+          {
+            "title": "Сравнить сценарии",
+            "englishTitle": "Compare scenarios",
+            "text": "Начните с Easy и проверьте описание снаряжения. Например, Firestorm Rescue рассчитана на корабельную эвакуацию, для которой нужны пассажирские каюты, а смешанные операции требуют готовности к пешим этапам. Hard выбирайте, если отряд закрывает все роли и может стабильно завершать задания. Для фарма сравнивайте монеты за время успешно пройденных сценариев.",
+            "englishText": "Start on Easy and read the equipment briefing. Firestorm Rescue is a ship-only evacuation, for example, so fit passenger cabins. Hybrid Operations also require ground equipment. Choose Hard when your squad covers the roles and can finish consistently. For farming, compare the coins per minute of completed runs."
+          },
+          {
+            "title": "Учесть недельный цикл",
+            "englishTitle": "Account for the weekly cycle",
+            "text": "Доведите задание до экрана результатов и проверьте начисление. Награды зависят от сложности и повторов. По замерам игроков, около 1 000 монет за недельный цикл действует мягкий порог, после которого начисление снижается. Цикл обновляется с обслуживанием в четверг. Для планирования ориентируйтесь на фактическую награду в игре.",
+            "englishText": "Finish through the results screen and check the credited amount. Rewards depend on difficulty and repeats. Player testing reports a soft threshold around 1,000 coins per weekly cycle, with lower rewards beyond it. The cycle resets with Thursday maintenance. Use the actual in-game reward for planning."
+          }
+        ]
+      },
+      {
+        "key": "spend",
+        "title": "Покупка и улучшение MercGear",
+        "englishTitle": "Buy and upgrade MercGear",
+        "steps": [
+          {
+            "title": "Выбрать нужную версию модуля",
+            "englishTitle": "Choose the right module variant",
+            "text": "Проверьте цену и доступность нужной позиции у игрового продавца. Для модификаций, где требуется готовая версия G1, сначала купите именно MercGear с нужным названием в оснащении. Обычный модуль того же класса не заменяет эту заготовку. В плане прокачки различайте цену самой версии и расход монет на дальнейшие шаги.",
+            "englishText": "Check the price and availability of the desired item with its in-game vendor. For modifications requiring a pre-engineered G1 variant, buy the named MercGear item in Outfitting first. A standard module of the same class cannot substitute for that base item. Track the purchase price and the cost of later engineering separately in your plan."
+          },
+          {
+            "title": "Проверить совместимого инженера",
+            "englishTitle": "Check the compatible engineer",
+            "text": "Выберите точный модуль и класс в карточке чертежа и сложите монеты с обычными материалами каждого оставшегося уровня. Например, игроки подтвердили улучшение расширенных грузовых стеллажей за Merc Coin у Билла Тёрнера в Alioth. Точный набор зависит от модуля и текущего уровня.",
+            "englishText": "Pick the exact module and grade in its blueprint card and total the coins alongside ordinary materials for each remaining grade. For example, a player confirmed Merc Coin engineering for extended cargo racks at Bill Turner in Alioth. The exact requirements depend on the module and current grade.",
+            "system": "Alioth"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier — Operations Update",
+        "url": "https://steamcommunity.com/games/elitedangerous/announcements/detail/685257749622163111"
+      },
+      {
+        "title": "Pilots Trade Network — Operations Guide",
+        "url": "https://pilotstradenetwork.com/?p=6097"
+      },
+      {
+        "title": "NEWP — Squad Operations",
+        "url": "https://newp.io/missions"
+      },
+      {
+        "title": "CMDR Darth Kalabric — Merc Coin engineering at Bill Turner",
+        "url": "https://inara.cz/elite/logbook/96724/"
+      },
+      {
+        "title": "Player discussion — MercGear variants and engineering",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1ulzqxa/"
+      }
+    ]
+  }
+]

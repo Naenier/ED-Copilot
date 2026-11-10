@@ -139,3 +139,159 @@ func TestRemovedAndEarlierImportedSessionsRebuildInOrder(t *testing.T) {
 		t.Fatal("empty history retained events", rows, reader.State())
 	}
 }
+
+func TestReplayAcceptsOnlyCompleteSingleObjectsAndMatchingSideFiles(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, data string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(data), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	const name = "Journal.1.log"
+	write(name, strings.Join([]string{
+		"\xef\xbb\xbf{\"event\":\"fileheader\",\"gameversion\":\"4.4.0\"}",
+		`{"event":"LoadGame","timestamp":"2026-01-10T00:00:00Z","FID":"FTEST"}`,
+		`{"event":"Location","SystemAddress":18446744073709551615}`,
+		`{"event":"MarketBuy","Count":99}{"event":"MarketBuy","Count":100}`,
+		`null`, `[{"event":"MarketBuy"}]`, `{"event":71}`, `{"event":" "}`,
+		"{\"event\":\"MarketSell\",\"Name\":\"\xff\"}",
+		`{"event":"SyntheticFutureEvent","Unknown":true}`,
+		`{"event":"FSDJump","StarSystem":"Incomplete"}`,
+	}, "\n"))
+	write("Status.json", `{"event":"LoadGame","FID":"FSPOOF"}`)
+	write("Cargo.json", `{"event":"Cargo","timestamp":"2026-01-09T23:59:59Z","Count":99}`)
+	write("NavRoute.json", `{"Route":[]}`)
+
+	var events []string
+	reader := New(dir, func(e, meta M) {
+		events = append(events, v.Str(e["event"]))
+		if e["event"] == "Location" && v.Str(e["SystemAddress"]) != "18446744073709551615" {
+			t.Fatalf("lossy system address: %v", e["SystemAddress"])
+		}
+	}, func() { events = nil })
+	want := "Fileheader,LoadGame,Location,SyntheticFutureEvent,NavRoute"
+	for i := 0; i < 3; i++ {
+		if i == 2 {
+			reader.Rescan()
+		}
+		reader.Poll()
+		if got := strings.Join(events, ","); got != want || v.Int(reader.State()["eventCount"]) != 4 {
+			t.Fatalf("poll %d: events %s, state %v", i, got, reader.State())
+		}
+	}
+	write("Cargo.json", `{"event":"Cargo","timestamp":"2026-01-10T00:00:01Z","Count":0}`)
+	reader.Poll()
+	if got := strings.Join(events, ","); got != want+",Cargo" {
+		t.Fatalf("new valid cargo snapshot missed: %s", got)
+	}
+	write("NavRoute.json", `{"event":"NavRouteClear","timestamp":"2026-01-10T00:00:02Z"}`)
+	reader.Poll()
+	if got := strings.Join(events, ","); got != want+",Cargo,NavRouteClear" {
+		t.Fatalf("valid route clear missed: %s", got)
+	}
+}
+
+func TestReplayKeepsCommanderUntilNewIdentityLineIsComplete(t *testing.T) {
+	dir := t.TempDir()
+	const header = "{\"event\":\"Fileheader\",\"gameversion\":\"4.4.0\"}\n"
+	older := filepath.Join(dir, "Journal.1.log")
+	newer := filepath.Join(dir, "Journal.2.log")
+	const first = `{"event":"LoadGame","FID":"FTEST-A"}`
+	const second = `{"event":"LoadGame","FID":"FTEST-B"}`
+	if err := os.WriteFile(older, []byte(header+first+"\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(newer, []byte(header+second), 0600); err != nil {
+		t.Fatal(err)
+	}
+	var owners []string
+	reader := New(dir, func(e, meta M) {
+		if fid := v.Str(e["FID"]); fid != "" {
+			owners = append(owners, fid)
+		}
+	}, func() { owners = nil })
+	reader.Poll()
+	if got := strings.Join(owners, ","); got != "FTEST-A" {
+		t.Fatalf("unterminated line changed commander: %s", got)
+	}
+	f, err := os.OpenFile(newer, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.WriteString("\n"); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reader.Poll()
+	if got := strings.Join(owners, ","); got != "FTEST-B" {
+		t.Fatalf("completed identity did not rebuild history: %s", got)
+	}
+}
+
+func TestReplaySeparatesKnownGameModesAndRechecksReplacedIdentity(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, version, fid, tag string) {
+		t.Helper()
+		data := "{\"event\":\"Fileheader\",\"gameversion\":\"" + version + "\"}\n" +
+			"{\"event\":\"LoadGame\",\"FID\":\"" + fid + "\",\"tag\":\"" + tag + "\"}\n"
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(data), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("Journal.1.log", "3.8.0", "FTEST-A", "legacy")
+	write("Journal.2.log", "4.4.0", "FTEST-A", "live")
+	write("Journal.3.log", "4.4.0", "FTEST-A", "copy")
+	var history []string
+	reader := New(dir, func(e, meta M) {
+		if e["tag"] != nil {
+			history = append(history, v.Str(e["tag"]))
+		}
+	}, func() { history = nil })
+	reader.Poll()
+	if got := strings.Join(history, ","); got != "live,copy" {
+		t.Fatalf("mixed game branches: %s", got)
+	}
+	write("Journal.3.log", "3.8.0", "FTEST-B", "swap")
+	reader.Rescan()
+	reader.Poll()
+	if got := strings.Join(history, ","); got != "swap" {
+		t.Fatalf("manual replay reused cached file identity: %s", got)
+	}
+	for version, want := range map[string]string{" 4.4.0 ": "live", "3.8.0": "legacy", "4.0.0 Beta": "", "4.0 alpha": "", "": ""} {
+		if got := GameMode(version); got != want {
+			t.Errorf("GameMode(%q) = %q, want %q", version, got, want)
+		}
+	}
+}
+
+func TestContinuationUsesItsOwnSessionCommander(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name string, part string, rows string) {
+		t.Helper()
+		header := "{\"event\":\"Fileheader\",\"gameversion\":\"4.4.0\",\"part\":" + part + "}\n"
+		if err := os.WriteFile(filepath.Join(dir, "Journal."+name+".log"), []byte(header+rows), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("older.01", "1", "{\"event\":\"LoadGame\",\"FID\":\"FTEST-B\"}\n")
+	write("older.02", "2", "{\"event\":\"FSDJump\",\"StarSystem\":\"Other Commander\"}\n")
+	write("recent.01", "1", "{\"event\":\"LoadGame\",\"FID\":\"FTEST-A\"}\n")
+	write("recent.02", "2", "{\"event\":\"FSDJump\",\"StarSystem\":\"Current Commander\"}\n")
+	write("unfinished.01", "1", "{\"event\":\"FSDJump\",\"StarSystem\":\"No Identity\"}\n")
+	var systems []string
+	reader := New(dir, func(event, meta M) {
+		if event["event"] == "FSDJump" {
+			systems = append(systems, v.Str(event["StarSystem"]))
+		}
+	}, func() { systems = nil })
+	reader.Poll()
+	reader.Rescan()
+	reader.Poll()
+	if got := strings.Join(systems, ","); got != "Current Commander" {
+		t.Fatalf("replayed another commander's continuation or an unconfirmed session: %s", got)
+	}
+}

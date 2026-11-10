@@ -4,14 +4,21 @@ import (
 	"math"
 	"time"
 
+	"github.com/Naenier/ED-Copilot/internal/freshness"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
+
+const maxEstimateAge = 7 * 24 * time.Hour
 
 // EnrichCosts annotates an owned desktop snapshot. The planner and its saved
 // resource quantities are untouched. Prices are game MeanPrice observations,
 // not local market offers, manually entered prices or recorded expenditure.
 // Callers deliberately omit this work for the in-game HUD and sync snapshots.
 func EnrichCosts(snapshot, prices M) {
+	enrichCostsAt(snapshot, prices, time.Now())
+}
+
+func enrichCostsAt(snapshot, prices M, now time.Time) {
 	project := v.Obj(snapshot["activeProject"])
 	if len(project) == 0 {
 		return
@@ -53,20 +60,34 @@ func EnrichCosts(snapshot, prices M) {
 		own["unknownBills"] = boolInt(len(requirements) == 0)
 		b["costSummary"] = own
 	}
-	priced, commodityCount := 0, 0
+	priced, stalePrices, undatedPrices, commodityCount := 0, 0, 0, 0
 	var oldest, latest time.Time
 	for _, row := range rows(project["supplies"]) {
 		annotatePrice(row, prices)
 		commodityCount++
 		price := row["galacticAveragePrice"]
+		stamp := v.Time(row["galacticAveragePriceAt"])
+		observed, fetched := stamp, time.Time{}
+		// The current CAPI market metadata records receipt. The actual market
+		// observation time is only available for journal prices.
+		if row["galacticAveragePriceSource"] == "Frontier CAPI" {
+			observed, fetched = time.Time{}, stamp
+		}
+		quality := freshness.Describe(now, maxEstimateAge, price != nil, "", observed, fetched)
+		row["priceQuality"] = quality
 		if price != nil {
 			priced++
-			at := v.Time(row["galacticAveragePriceAt"])
-			if oldest.IsZero() || at.Before(oldest) {
-				oldest = at
+			switch quality.State {
+			case freshness.Stale:
+				stalePrices++
+			case freshness.Undated:
+				undatedPrices++
 			}
-			if at.After(latest) {
-				latest = at
+			if oldest.IsZero() || stamp.Before(oldest) {
+				oldest = stamp
+			}
+			if stamp.After(latest) {
+				latest = stamp
 			}
 		}
 		cargo, carrier := coveredAmounts(row)
@@ -83,6 +104,7 @@ func EnrichCosts(snapshot, prices M) {
 	}
 	summary["unknownBills"], summary["plannedBuildings"], summary["buildingBuildings"], summary["manualBills"] = unknownBills, planned, building, manual
 	summary["pricedCommodityCount"], summary["commodityCount"] = priced, commodityCount
+	summary["stalePriceCount"], summary["undatedPriceCount"] = stalePrices, undatedPrices
 	summary["oldestPriceAt"], summary["latestPriceAt"] = nil, nil
 	if !oldest.IsZero() {
 		summary["oldestPriceAt"] = v.ISO(oldest)

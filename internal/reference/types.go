@@ -41,22 +41,27 @@ type Badge struct {
 }
 
 type Summary struct {
-	ID           string     `json:"id"`
-	Category     string     `json:"category"`
-	Title        string     `json:"title"`
-	Subtitle     string     `json:"subtitle,omitempty"`
-	Description  string     `json:"description,omitempty"`
-	Group        string     `json:"group,omitempty"`
-	Image        *Image     `json:"image,omitempty"`
-	Badges       []Badge    `json:"badges,omitempty"`
-	Meta         []Property `json:"meta,omitempty"`
-	CommodityKey string     `json:"commodityKey,omitempty"`
+	ID                 string     `json:"id"`
+	Category           string     `json:"category"`
+	Title              string     `json:"title"`
+	Subtitle           string     `json:"subtitle,omitempty"`
+	Description        string     `json:"description,omitempty"`
+	EnglishTitle       string     `json:"englishTitle,omitempty"`
+	EnglishDescription string     `json:"englishDescription,omitempty"`
+	Group              string     `json:"group,omitempty"`
+	Image              *Image     `json:"image,omitempty"`
+	Badges             []Badge    `json:"badges,omitempty"`
+	Meta               []Property `json:"meta,omitempty"`
+	CommodityKey       string     `json:"commodityKey,omitempty"`
 }
 
 type Item struct {
-	Title   string `json:"title"`
-	Text    string `json:"text,omitempty"`
-	EntryID string `json:"entryId,omitempty"`
+	Title        string `json:"title"`
+	EnglishTitle string `json:"englishTitle,omitempty"`
+	Text         string `json:"text,omitempty"`
+	EnglishText  string `json:"englishText,omitempty"`
+	EntryID      string `json:"entryId,omitempty"`
+	System       string `json:"system,omitempty"`
 }
 
 type Ingredient struct {
@@ -73,15 +78,16 @@ type Grade struct {
 }
 
 type Section struct {
-	ID         string     `json:"id"`
-	Title      string     `json:"title"`
-	Type       string     `json:"type"`
-	Paragraphs []string   `json:"paragraphs,omitempty"`
-	Items      []Item     `json:"items,omitempty"`
-	Columns    []string   `json:"columns,omitempty"`
-	Rows       [][]string `json:"rows,omitempty"`
-	CellLinks  [][]string `json:"cellLinks,omitempty"`
-	Grades     []Grade    `json:"grades,omitempty"`
+	ID           string     `json:"id"`
+	Title        string     `json:"title"`
+	EnglishTitle string     `json:"englishTitle,omitempty"`
+	Type         string     `json:"type"`
+	Paragraphs   []string   `json:"paragraphs,omitempty"`
+	Items        []Item     `json:"items,omitempty"`
+	Columns      []string   `json:"columns,omitempty"`
+	Rows         [][]string `json:"rows,omitempty"`
+	CellLinks    [][]string `json:"cellLinks,omitempty"`
+	Grades       []Grade    `json:"grades,omitempty"`
 }
 
 type Action struct {
@@ -89,23 +95,26 @@ type Action struct {
 	Label        string `json:"label"`
 	Mode         string `json:"mode,omitempty"`
 	CommodityKey string `json:"commodityKey,omitempty"`
+	EngineerKey  string `json:"engineerKey,omitempty"`
 	System       string `json:"system,omitempty"`
 }
 
 type Entry struct {
-	ID           string     `json:"id"`
-	Category     string     `json:"category"`
-	Title        string     `json:"title"`
-	Subtitle     string     `json:"subtitle,omitempty"`
-	Description  string     `json:"description"`
-	Group        string     `json:"group,omitempty"`
-	Image        *Image     `json:"image,omitempty"`
-	Badges       []Badge    `json:"badges,omitempty"`
-	Properties   []Property `json:"properties,omitempty"`
-	Sections     []Section  `json:"sections"`
-	Related      []Summary  `json:"related"`
-	Actions      []Action   `json:"actions,omitempty"`
-	CommodityKey string     `json:"commodityKey,omitempty"`
+	ID                 string     `json:"id"`
+	Category           string     `json:"category"`
+	Title              string     `json:"title"`
+	Subtitle           string     `json:"subtitle,omitempty"`
+	Description        string     `json:"description"`
+	EnglishTitle       string     `json:"englishTitle,omitempty"`
+	EnglishDescription string     `json:"englishDescription,omitempty"`
+	Group              string     `json:"group,omitempty"`
+	Image              *Image     `json:"image,omitempty"`
+	Badges             []Badge    `json:"badges,omitempty"`
+	Properties         []Property `json:"properties,omitempty"`
+	Sections           []Section  `json:"sections"`
+	Related            []Summary  `json:"related"`
+	Actions            []Action   `json:"actions,omitempty"`
+	CommodityKey       string     `json:"commodityKey,omitempty"`
 }
 
 type ListResult struct {

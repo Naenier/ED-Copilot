@@ -15,12 +15,20 @@ func DealsPage(mode, query string, state M) Page {
 	rows := v.Rows(routes["results"])
 	if mode == "Сохранённые" {
 		rows = v.Rows(state["savedTradeRoutes"])
+		p.Summary = ""
 	}
 	for _, route := range rows {
 		if count := len(v.Rows(route["legs"])); count < 1 || count > 2 {
 			continue
 		}
 		systems, stations, goods, detail := []string{}, []string{}, []string{}, []string{}
+		if mode == "Сохранённые" {
+			label := "Общий рейс"
+			if route["scope"] == "personal" {
+				label = "Личный рейс"
+			}
+			detail = append(detail, label)
+		}
 		for i, leg := range v.Rows(route["legs"]) {
 			buy, sell := v.Obj(leg["buy"]), v.Obj(leg["sell"])
 			systems = append(systems, v.Str(buy["system"])+" → "+v.Str(sell["system"]))
@@ -81,11 +89,19 @@ func DealsActions(state, selected M) []Action {
 	if len(v.Obj(state["tradePlan"])) > 0 {
 		actions = append(actions, Action{ID: "deals.clear-plan", Title: "Убрать план плеча", Path: "/api/trading/plan/clear", Confirm: "Убрать текущий план плеча? Сохранённые рейсы останутся."})
 	}
-	if len(v.Rows(selected["legs"])) > 0 {
-		actions = append(actions, Action{ID: "deals.save-route", Title: "Сохранить весь рейс", Path: "/api/trading/saved-routes", Payload: M{"action": "save-route", "route": selected}})
+	owner := v.Str(v.At(state, "planWorkspace", "key"))
+	if len(v.Rows(selected["legs"])) > 0 && !v.Bool(selected["quoteSnapshot"]) {
+		actions = append(actions, Action{ID: "deals.save-route", Title: "Сохранить весь рейс", Path: "/api/trading/saved-routes", Payload: M{"action": "save-route", "route": selected, "expectedPlanWorkspace": owner}})
 	}
 	if v.Bool(selected["quoteSnapshot"]) {
-		actions = append(actions, Action{ID: "deals.delete-route", Title: "Удалить сохранённый рейс", Path: "/api/trading/saved-routes", Payload: M{"action": "delete-route", "id": selected["id"]}, Confirm: "Удалить рейс из сохранённых?"})
+		actions = append(actions, Action{ID: "deals.delete-route", Title: "Удалить сохранённый рейс", Path: "/api/trading/saved-routes", Payload: M{"action": "delete-route", "id": selected["id"], "expectedPlanWorkspace": owner}, Confirm: "Удалить рейс из сохранённых?"})
+		if owner != "" {
+			scope, title := "personal", "Сделать личным"
+			if selected["scope"] == "personal" {
+				scope, title = "shared", "Сделать общим"
+			}
+			actions = append(actions, Action{ID: "deals.scope", Title: title, Path: "/api/trading/saved-routes", Payload: M{"action": "set-scope", "id": selected["id"], "scope": scope, "expectedPlanWorkspace": owner}})
+		}
 	}
 	for i, leg := range v.Rows(selected["legs"]) {
 		buy, sell := v.Obj(leg["buy"]), v.Obj(leg["sell"])

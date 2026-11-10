@@ -65,9 +65,10 @@ func TradeOpportunityContext(trade, state M, request M) M {
 	}
 	services, estimated := tradeServices(trade, owned)
 	out := M{
-		"scenario": TradeOpportunityScenario, "system": system, "carrierType": options["carrierType"],
+		"scenario": TradeOpportunityScenario, "system": system, "carrierType": options["carrierType"], "preset": options["preset"],
 		"commanderSystem": commander["system"], "shipPad": options["haulerPad"],
 		"shipModel":    v.First(commander["shipModel"], commander["shipType"], commander["ship"]),
+		"vehicle":      commander["vehicle"],
 		"shipCapacity": commander["cargoCapacity"],
 		"credits":      v.First(request["credits"], v.At(state, "pilot", "credits")),
 		"servicesTons": services, "estimatedServices": estimated,

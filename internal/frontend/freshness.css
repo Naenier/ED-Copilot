@@ -1,0 +1,8 @@
+.freshness-detail,.freshness-badge{color:var(--muted);font-size:11px;font-weight:500}
+.freshness-detail summary{cursor:pointer;width:fit-content}
+.freshness-detail summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.freshness-detail dl{margin:5px 0 0}
+.freshness-detail dl div{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:space-between}
+.freshness-detail dd{margin:0;color:var(--text)}
+.freshness-detail.is-warning summary,.freshness-badge.is-warning{color:var(--warn)}
+.colony-budget-basis{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px}

@@ -50,6 +50,9 @@ type modernShell struct {
 	desktopSaving    bool
 	desiredMode      string
 	smokeOnce        sync.Once
+	smokeFirstView   M
+	smokeAfterUI     M
+	soak             *nativeSoak
 	lastSummary      string
 	language         string
 	diagnostics      int
@@ -70,7 +73,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	u.font, _ = walk.NewFont("Segoe UI", 10, 0)
 	u.main.SetFont(u.font)
 	_ = u.main.SetTitle("ED Copilot · Elite Dangerous")
-	if options.Smoke || options.Demo {
+	if options.Smoke || options.Demo || options.Soak != nil {
 		_ = u.main.SetTitle("ED Copilot · Демонстрация")
 	}
 	_ = u.main.SetSize(walk.Size{Width: 1440, Height: 940})
@@ -85,6 +88,9 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		_ = u.main.SetIcon(icon)
 	}
 	u.modern = &modernShell{owner: u, uiPost: u.main.Synchronize}
+	if options.Soak != nil {
+		u.modern.soak = &nativeSoak{webReady: make(chan struct{}), dpi: u.main.DPI()}
+	}
 	u.hud, err = newHUD(u)
 	if err != nil {
 		u.dispose()
@@ -478,6 +484,9 @@ func (u *Window) refreshModern() {
 }
 
 func (m *modernShell) postSnapshot(state M) {
+	if m.soak != nil {
+		m.soak.snapshot(v.Str(v.At(state, "commander", "system")))
+	}
 	m.snapshotMu.Lock()
 	m.pendingState = state
 	if m.stateQueued {
@@ -625,6 +634,12 @@ func (m *modernShell) message(raw string, sender *edge.ICoreWebView2, args *edge
 }
 
 func (m *modernShell) handleRequest(req webRequest) {
+	if m.owner.quitting {
+		return
+	}
+	if m.soak != nil && req.Op == "view" {
+		m.soak.readyOnce.Do(func() { close(m.soak.webReady) })
+	}
 	if req.Op == "window" {
 		result, e := m.windowAction(v.Str(req.Params["action"]))
 		m.reply(req.ID, result, e)
@@ -632,6 +647,18 @@ func (m *modernShell) handleRequest(req webRequest) {
 	}
 	if req.Op == "smoke-result" && m.owner.options.Smoke {
 		m.receiveSmoke(req.Params)
+		m.reply(req.ID, M{"ok": true}, nil)
+		return
+	}
+	if req.Op == "smoke-performance" && m.owner.options.Smoke && m.owner.options.SmokeFixture != nil {
+		switch v.Str(req.Params["checkpoint"]) {
+		case "firstView":
+			m.recordSmokeFirstView()
+		case "afterInteractions":
+			if m.smokeAfterUI == nil {
+				m.smokeAfterUI = smokeMemory()
+			}
+		}
 		m.reply(req.ID, M{"ok": true}, nil)
 		return
 	}
@@ -659,7 +686,7 @@ func (m *modernShell) handleRequest(req webRequest) {
 		m.reply(req.ID, result, e)
 		return
 	}
-	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "exo.sites" {
+	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "exo.sites" || req.Op == "engineering-roadmap" {
 		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 		return
 	}
@@ -861,6 +888,10 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 	u.dialogOpen = true
 	defer func() { u.dialogOpen = false }()
 	switch v.Str(params["action"]) {
+	case "profile-export":
+		return u.profileExportAction()
+	case "profile-import":
+		return u.profileImportAction()
 	case "open":
 		return M{"ok": true}, openExternal(v.Str(params["url"]))
 	case "copy":
@@ -975,6 +1006,9 @@ func (m *modernShell) finishSmoke(report M) {
 	report["renderer"] = "WebView2 · Go backend · native Win32 HUD"
 	report["version"] = v.At(m.owner.state, "app", "version")
 	report["networkDisabled"] = true
+	if m.owner.options.SmokeFixture != nil {
+		report["performance"] = m.smokePerformance(report["interactionTimings"])
+	}
 	m.smokeVisualState(report)
 	if m.owner.hud != nil {
 		m.owner.hud.refresh()

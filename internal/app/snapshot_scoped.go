@@ -36,10 +36,12 @@ func (e *Engine) snapshotScoped(tab string) M {
 	e.mu.RLock()
 	cmd, settings, game := v.Copy(e.commander), v.Copy(e.settings), v.Copy(e.game)
 	running, revision, statsSince := e.gameRunning, e.revision, e.statsSince
+	engineeringRevision := e.engineeringRoadmapRevision
 	cmd["locationUpdatedAt"], cmd["cargoUpdatedAt"] = e.locationAt, e.cargoAt
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	activity, hud, syncOnly := v.Text(settings["activity"], "flight"), tab == "hud", tab == "sync"
 	appearance, desktop := M{}, M{}
+	workspace := e.planWorkspace
 	var navigation []string
 	var goals, bookmarks, notices any
 	manual, prices, network := M{}, M{}, map[string]M{}
@@ -47,7 +49,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	if !syncOnly {
 		appearance, desktop = v.Copy(e.appearance), v.Copy(e.desktop)
 		navigation = append([]string(nil), e.navigation...)
-		goals, bookmarks, notices = v.Clone(e.objectives), v.Clone(e.bookmarks), v.Clone(e.notices)
+		goals, bookmarks, notices = goalsForWorkspace(e.objectives, workspace), v.Clone(e.bookmarks), v.Clone(e.notices)
 		manual, prices = v.Copy(e.manualPrices), v.Copy(e.prices)
 		if !hud && oneOf(tab, "colonization", "overview", "statistics") {
 			galacticPrices = v.Copy(e.galacticPrices)
@@ -67,6 +69,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	cmd["cargoKnown"] = cargoSync["inventory"] != nil
 	cmd["cargoForSync"], cmd["cargoForSyncAt"], cmd["cargoVessel"] = cargoSync["inventory"], cargoSync["timestamp"], cmd["vehicle"]
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "connection": connection, "pilot": e.Pilot.Snapshot()}
+	if tab == "engineering-roadmap" {
+		state["engineeringRoadmapRevision"] = engineeringRevision
+	}
 	if syncOnly {
 		state["engineering"] = e.Engineering.InventorySnapshot()
 		return state
@@ -77,6 +82,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	palette, _ := theme.Palette(appearance)
 	state["desktop"], state["theme"], state["navigation"] = desktop, M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, M{"tabs": navigation}
 	state["objectives"], state["bookmarks"], state["notices"] = goals, bookmarks, notices
+	state["planWorkspace"] = workspace.snapshot()
 	ledger := e.Trading.Snapshot(M{"commander": cmd, "marketOptions": v.Obj(network["trading"])["options"], "now": v.ISO(time.Now())})
 	cargo, tons := v.Rows(ledger["inventory"]), float64(0)
 	for _, row := range cargo {
@@ -85,7 +91,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 	cmd["cargo"], cmd["cargoTons"] = cargo, tons
 	state["tradeLedger"], state["tradePlan"] = ledger, ledger["plan"]
 	if tab == "deals" {
-		state["savedTradeRoutes"] = e.Trading.SavedRoutesSnapshot()
+		state["savedTradeRoutes"] = e.Trading.SavedRoutesFor(workspace.key)
 		cmd["shipPad"] = trading.ShipPad(cmd)
 	}
 	resources, goods := trading.Resources(), v.Rows(ledger["goods"])
@@ -164,7 +170,7 @@ func (e *Engine) snapshotScoped(tab string) M {
 		state["carrierCalculator"] = e.Calculator.Snapshot()
 	}
 	if tab == "carrier-trade" {
-		state["carrierTrade"] = e.carrierTradeSnapshot(v.Obj(state["carrier"]))
+		state["carrierTrade"] = e.carrierTradeSnapshot(state)
 	}
 	if tab == "learning" {
 		state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))

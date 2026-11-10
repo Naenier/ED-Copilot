@@ -6,16 +6,54 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Naenier/ED-Copilot/internal/freshness"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 	"io"
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const maxResponseBytes = 4 << 20
+
+type requestFailure struct {
+	reason      freshness.Reason
+	description string
+	retryAt     time.Time
+	failedAt    time.Time
+}
+
+func (f requestFailure) Error() string { return f.description }
+
+func failureDetails(err error, now time.Time) requestFailure {
+	var f requestFailure
+	if !errors.As(err, &f) {
+		f = requestFailure{reason: freshness.Unavailable, description: err.Error()}
+	}
+	f.failedAt = now
+	if floor := now.Add(time.Minute); f.retryAt.Before(floor) {
+		f.retryAt = floor
+	}
+	if ceiling := now.Add(time.Hour); f.retryAt.After(ceiling) {
+		f.retryAt = ceiling
+	}
+	return f
+}
+
+func failedStatus(kind string, params M, failure requestFailure) M {
+	status := M{"running": false, "kind": kind, "parameters": params, "error": failure.description, "reason": string(failure.reason), "failedAt": v.ISO(failure.failedAt)}
+	if !failure.retryAt.IsZero() {
+		status["retryAt"] = v.ISO(failure.retryAt)
+	}
+	return status
+}
+
+func incomplete(message string) requestFailure {
+	return requestFailure{reason: freshness.Incomplete, description: message}
+}
 
 func (s *Service) request(ctx context.Context, method, address string, body M) (M, error) {
 	var input io.Reader
@@ -40,9 +78,17 @@ func (s *Service) request(ctx context.Context, method, address string, body M) (
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, errors.New("Public data request failed")
+		return nil, requestFailure{reason: freshness.Offline, description: "Public data request failed"}
 	}
 	defer response.Body.Close()
+	if response.StatusCode == http.StatusTooManyRequests {
+		retry := response.Header.Get("Retry-After")
+		at, _ := http.ParseTime(retry)
+		if seconds, err := strconv.ParseInt(retry, 10, 64); err == nil && seconds > 0 {
+			at = s.opts.Now().Add(time.Duration(min(seconds, 3600)) * time.Second)
+		}
+		return nil, requestFailure{reason: freshness.RateLimited, description: "Public data HTTP 429", retryAt: at}
+	}
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("Public data HTTP %d", response.StatusCode)
 	}
@@ -57,17 +103,16 @@ func (s *Service) request(ctx context.Context, method, address string, body M) (
 	decoder.UseNumber()
 	var result M
 	if err = decoder.Decode(&result); err != nil || result == nil {
-		return nil, errors.New("Invalid public JSON response")
+		return nil, incomplete("Invalid public JSON response")
 	}
 	var tail any
 	if decoder.Decode(&tail) != io.EOF {
-		return nil, errors.New("Invalid trailing public JSON")
+		return nil, incomplete("Invalid trailing public JSON")
 	}
 	return result, nil
 }
 
 func (s *Service) fetch(ctx context.Context, kind, name, power, state, language string, page int) (M, error) {
-	now := s.now()
 	base := strings.TrimRight(s.opts.SpanshURL, "/")
 	if kind == "goals" {
 		separator := "?"
@@ -80,7 +125,7 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 		}
 		items, ok := raw["activeInitiatives"]
 		if !ok || v.Arr(items) == nil {
-			return nil, errors.New("Community-goal response has no activeInitiatives list")
+			return nil, incomplete("Community-goal response has no activeInitiatives list")
 		}
 		entries := []M{}
 		for _, r := range boundedRows(items, 100) {
@@ -95,8 +140,9 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 			}
 			entries = append(entries, M{"id": clean(r["id"], 100), "title": clean(r["title"], 500), "system": clean(r["starsystem_name"], 200), "station": clean(r["market_name"], 200), "expiry": expiry, "activityType": clean(r["activityType"], 100), "objective": goalText(r["objective"], 4000), "commodities": goalText(r["target_commodity_list"], 4000), "currentTotal": numericString(r["qty"]), "target": numericString(r["target_qty"]), "description": goalText(v.First(r["bulletin"], r["news"]), 24000)})
 		}
-		goals := meta("frontier-public", "", now, "https://www.elitedangerous.com/community/goals")
+		goals := meta("frontier-public", "", s.now(), "https://www.elitedangerous.com/community/goals")
 		goals["entries"] = entries
+		goals["partial"] = len(entries) < len(v.Arr(items))
 		goals["language"] = language
 		return M{"goals": goals}, nil
 	}
@@ -104,6 +150,9 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 		names, err := s.request(ctx, "GET", base+"/systems/field_values/system_names?q="+url.QueryEscape(name), nil)
 		if err != nil {
 			return nil, err
+		}
+		if v.Arr(names["min_max"]) == nil {
+			return nil, incomplete("Public system name index is missing")
 		}
 		address := ""
 		for _, candidate := range boundedRows(names["min_max"], 30) {
@@ -113,7 +162,7 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 			}
 		}
 		if address == "" {
-			return nil, errors.New("Exact system is not present in the public name index")
+			return nil, requestFailure{reason: freshness.NoMatch, description: "Exact system is not present in the public name index"}
 		}
 		for _, r := range address {
 			if r < '0' || r > '9' {
@@ -126,11 +175,12 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 		}
 		record := v.Obj(raw["record"])
 		if key(v.Str(record["name"])) != key(name) {
-			return nil, errors.New("Public system response does not match the requested name")
+			return nil, incomplete("Public system response does not match the requested name")
 		}
+		now := s.now()
 		normalized := NormalizePublicSystem(record, now)
 		if normalized == nil {
-			return nil, errors.New("Public system record is missing")
+			return nil, incomplete("Public system record is missing")
 		}
 		normalized["detailsFetchedAt"] = now
 		return M{"system": normalized}, nil
@@ -154,9 +204,9 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 			return nil, err
 		}
 		if v.Arr(indexRaw["values"]) == nil {
-			return nil, errors.New("Public state index is missing")
+			return nil, incomplete("Public state index is missing")
 		}
-		index = meta("spansh", "", now, "https://spansh.co.uk/systems")
+		index = meta("spansh", "", s.now(), "https://spansh.co.uk/systems")
 		index["states"] = indexRows(indexRaw)
 		if kind == "powerplay" {
 			powers, err := s.request(ctx, "GET", base+"/systems/field_values/controlling_power", nil)
@@ -164,9 +214,10 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 				return nil, err
 			}
 			if v.Arr(powers["values"]) == nil {
-				return nil, errors.New("Public controlling power index is missing")
+				return nil, incomplete("Public controlling power index is missing")
 			}
 			index["powers"] = indexRows(powers)
+			index["fetchedAt"] = s.now()
 		}
 	}
 	filters := M{}
@@ -201,7 +252,7 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 	if kind == "thargoid" && state == "None" {
 		return nil, errors.New("Choose an affected Thargoid state, not None")
 	}
-	search := meta("spansh", "", now, "https://spansh.co.uk/systems")
+	search := meta("spansh", "", s.now(), "https://spansh.co.uk/systems")
 	search["kind"], search["power"], search["state"], search["page"], search["limit"], search["entries"], search["states"] = kind, power, state, page, 10, []M{}, index["states"]
 	if kind == "powerplay" {
 		search["scope"] = "controlled"
@@ -222,15 +273,18 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 	}
 	items, ok := raw["results"]
 	if !ok || v.Arr(items) == nil {
-		return M{"index": index}, errors.New("Public system search results are missing")
+		return M{"index": index}, incomplete("Public system search results are missing")
 	}
 	entries := []M{}
+	now := s.now()
 	for _, r := range boundedRows(items, 10) {
 		if normalized := NormalizePublicSystem(r, now); normalized != nil {
 			entries = append(entries, normalized)
 		}
 	}
 	search["entries"], search["total"], search["indexHasAffectedStates"] = entries, number(raw["count"]), true
+	search["fetchedAt"] = now
+	search["partial"] = len(entries) < len(v.Arr(items)) || search["total"] == nil
 	return M{"index": index, "search": search}, nil
 }
 

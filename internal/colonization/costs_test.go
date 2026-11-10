@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Naenier/ED-Copilot/internal/freshness"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -76,6 +77,30 @@ func TestColonyBudgetUnknownPricesAndBillsRemainPartial(t *testing.T) {
 		if row["commodity"] == "aluminium" && (row["galacticAveragePrice"] != nil || row["requiredCost"] != nil) {
 			t.Fatal("invented price", row)
 		}
+	}
+}
+
+func TestBudgetUsesOldPricesAsEstimatesAndDistinguishesRetrievalTime(t *testing.T) {
+	steel := M{"commodity": "steel", "required": 10, "missing": 10}
+	aluminium := M{"commodity": "aluminium", "required": 20, "missing": 20}
+	titanium := M{"commodity": "titanium", "required": 30, "missing": 30}
+	snapshot := M{"activeProject": M{"supplies": []M{steel, aluminium, titanium}}}
+	prices := costPrices()
+	v.Obj(prices["steel"])["observedAt"] = v.ISO(testNow.Add(-8 * 24 * time.Hour))
+	enrichCostsAt(snapshot, prices, testNow)
+	old, loaded, unknown := steel["priceQuality"].(freshness.Observation), aluminium["priceQuality"].(freshness.Observation), titanium["priceQuality"].(freshness.Observation)
+	if old.State != freshness.Stale || old.ObservedAt == "" || old.FetchedAt != "" || steel["requiredCost"] != float64(20) {
+		t.Fatal("stale observation was discarded or misrepresented", steel)
+	}
+	if loaded.State != freshness.Fresh || loaded.ObservedAt != "" || loaded.FetchedAt != v.ISO(testNow) {
+		t.Fatal("Frontier retrieval was presented as a provider observation", loaded)
+	}
+	if unknown.State != freshness.Unknown || titanium["galacticAveragePrice"] != nil || titanium["requiredCost"] != nil {
+		t.Fatal("unknown price became zero", titanium)
+	}
+	cost := v.Obj(v.At(snapshot, "activeProject", "costSummary"))
+	if v.Int(cost["stalePriceCount"]) != 1 || v.Int(cost["pricedCommodityCount"]) != 2 || v.At(cost, "required", "value") != nil {
+		t.Fatal("budget lost partial coverage", cost)
 	}
 }
 

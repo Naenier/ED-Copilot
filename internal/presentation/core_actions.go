@@ -95,15 +95,7 @@ func coreActions(tab, mode string, state, selected, prefill M) []Action {
 		if tab == "targets" && mode == "Инженеры" {
 			return CoreActions("engineering", "Инженеры", state, selected, prefill)
 		}
-		goalFields := func(r M) []Field {
-			return []Field{{Key: "title", Label: "Что нужно сделать", Kind: "text", Required: true, Default: r["title"]}, selectField("kind", "Занятие", v.First(r["kind"], "travel"), ChoicePairs("travel", "Перелёт", "trade", "Торговля", "mining", "Добыча", "engineering", "Инженерия", "exploration", "Исследования", "combat", "Бой", "mission", "Поручение", "carrier", "Флотоносец", "colonization", "Колонизация", "odyssey", "Пешие задачи", "other", "Другое")), textField("system", "Система", r["system"]), textField("station", "Станция", r["station"]), textField("body", "Тело", r["body"]), selectField("priority", "Приоритет", v.First(r["priority"], "normal"), ChoicePairs("normal", "Обычный", "high", "Высокий")), {Key: "notes", Label: "Заметки", Kind: "multiline", Default: r["notes"]}}
-		}
-		isGoal := hasRow && selected["title"] != nil && selected["kind"] != nil
-		actions := []Action{newAction("goal.add", "Новая цель", "/api/objectives", M{"action": "add"}, goalFields(M{})...), newAction("goal.edit", "Изменить цель", "/api/objectives", M{"action": "update", "id": selected["id"]}, goalFields(selected)...), newAction("goal.complete", "Выполнено", "/api/objectives", M{"action": "complete", "id": selected["id"]}), newAction("goal.reopen", "Вернуть в работу", "/api/objectives", M{"action": "reopen", "id": selected["id"]}), {ID: "goal.delete", Title: "Удалить цель", Path: "/api/objectives", Payload: M{"action": "remove", "id": selected["id"]}, Confirm: "Удалить выбранную личную цель?"}, copySystem(v.First(selected["system"], cmd["system"])), {ID: "overview.colonies", Title: "Колонии", Kind: "navigate", Path: "colonization"}}
-		for i := 1; i <= 4; i++ {
-			actions[i].Disabled = !isGoal
-		}
-		return actions
+		return append(goalActions(state, selected, hasRow), copySystem(v.First(selected["system"], cmd["system"])), Action{ID: "overview.colonies", Title: "Колонии", Kind: "navigate", Path: "colonization"})
 	case "sale":
 		buying := mode == "Купить"
 		tradeMode := "sell"
@@ -184,6 +176,9 @@ func coreActions(tab, mode string, state, selected, prefill M) []Action {
 		}
 		return []Action{newAction("route.calculate", "Рассчитать маршрут", "/api/carrier/route", nil, fields...), {ID: "route.visited", Title: "Пройдено до этой остановки", Path: "/api/carrier/route/visited", Payload: M{"index": selected["index"]}, Disabled: selected["index"] == nil, Confirm: "Отметить этот этап маршрута пройденным в личном плане?"}, export("route.export", "Экспорт маршрута CSV", "/api/carrier/route.csv"), newAction("route.cancel", "Остановить расчёт", "/api/carrier/route/cancel", nil), copySystem(v.First(selected["name"], selected["system"]))}
 	case "engineering":
+		if mode == "" || mode == EngineeringProgression {
+			return nil
+		}
 		e := v.Obj(state["engineering"])
 		catalog := v.Obj(e["catalog"])
 		if len(catalog) == 0 {

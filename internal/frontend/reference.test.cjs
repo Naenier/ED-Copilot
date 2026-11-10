@@ -47,11 +47,24 @@ function fixture(options = {}) {
     window, setTimeout(callback) { timers.set(++sequence, callback); return sequence; }, clearTimeout(id) { timers.delete(id); },
   });
   api = window.ReferenceUI;
-  return { api, C, ui, calls, navigation, host, handlers, nodes, timers, toasts,
+  return { api, C, ui, window, calls, navigation, host, handlers, nodes, timers, toasts,
     setRPC(value) { rpc = value; }, get renders() { return renders; }, get html() { return html; },
     async flushTimers() { const ready = [...timers.values()]; timers.clear(); for (const callback of ready) callback(); await microtasks(); },
   };
 }
+
+test('an engineer card opens the progression screen with its stable engineer key', async () => {
+  const f=fixture(), seen=[];
+  f.window.EngineeringRoadmapUI={preselect(C,key){assert.equal(C,f.C);seen.push(key);}};
+  f.C.tab='engineering';f.C.mode='Инженеры';
+  f.setRPC(async()=>({entry:{...entry('engineer/felicity'),category:'engineers',
+    actions:[{type:'engineering-roadmap',engineerKey:'felicity',label:'Открыть план прокачки'}]}}));
+  await f.api.open('engineer/felicity',f.C,f.ui);
+  assert.match(f.api.render(f.C,f.ui),/data-click="reference-engineering-roadmap" data-index="0"/);
+  await f.api.handleClick('reference-engineering-roadmap',{dataset:{index:'0'}},f.C,f.ui);
+  assert.deepEqual(seen,['felicity']);
+  assert.deepEqual(f.navigation,[{id:'engineering',opts:{mode:'Прокачка'}}]);
+});
 
 test('reference renders immediately and lazily loads one bounded catalogue request without blocking controls', async () => {
   const f = fixture({ autoInit: true }), pending = deferred();

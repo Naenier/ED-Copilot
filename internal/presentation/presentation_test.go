@@ -125,6 +125,12 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 				if !reflect.DeepEqual(p.Modes, initial.Modes) {
 					t.Fatalf("mode picker changed: %v -> %v", initial.Modes, p.Modes)
 				}
+				if tab.ID == "engineering" && (mode == "" || mode == EngineeringProgression) {
+					if len(p.Columns) != 0 || len(p.Rows) != 0 || p.Modes[0] != EngineeringProgression {
+						t.Fatal("custom progression view got a legacy table")
+					}
+					return
+				}
 				if len(p.Rows) == 0 {
 					t.Fatal("populated domain fixture rendered empty")
 				}

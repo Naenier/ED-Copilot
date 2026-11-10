@@ -59,6 +59,7 @@ function empty(C,u,en,ru) {
   return `<p class="pol-empty">${label(C,u,en,ru)}</p>`;
 }
 function timestamp(C,u,data={}) {
+  if (data.quality && window.FreshnessUI) return window.FreshnessUI.observation(data.quality,language(C),u.esc);
   const value = date(C,u,data.observedAt || data.fetchedAt);
   if (!value) return '';
   const title = data.observedAt ? label(C,u,'Observed','Наблюдение') : label(C,u,'Updated','Обновлено');
@@ -221,10 +222,13 @@ function goals(C,u) {
   const m = model(C);
   const published = list(m.communityGoals?.entries);
   const joined = list(m.personalGoals?.entries);
-  const publicHTML = published.length ?
-    `<div class="pol-section-heading"><h2>${label(C,u,'Public community goals','Цели галактики')}</h2>${timestamp(C,u,m.communityGoals)}</div>${goalCards(C,u,published,false)}` :
-    loading(C) ? '' : m.communityGoals?.known ? empty(C,u,'No active community goals in the latest update.','В последнем обновлении нет активных целей.') :
-      empty(C,u,'No public community goal data.','Данных о целях сообщества пока нет.');
+  const goalsQuality = m.communityGoals?.quality;
+  const publicHTML = published.length || m.communityGoals?.known ?
+    `<div class="pol-section-heading"><h2>${label(C,u,'Public community goals','Цели галактики')}</h2>${timestamp(C,u,m.communityGoals)}</div>`+
+    (published.length ? goalCards(C,u,published,false) : goalsQuality?.coverage === 'partial' ?
+      empty(C,u,'No usable community goals in this response.','В ответе нет пригодных данных о целях.') :
+      empty(C,u,'No active community goals in the latest update.','В последнем обновлении нет активных целей.')) :
+    loading(C) ? '' : empty(C,u,'No public community goal data.','Данных о целях сообщества пока нет.');
   const joinedHTML = joined.length ? `<div class="pol-section-heading"><h2>${label(C,u,'Your community goals','Ваши цели')}</h2>${timestamp(C,u,m.personalGoals)}</div>${goalCards(C,u,joined,true)}` : '';
   return notice(C,u) + publicHTML + joinedHTML;
 }
@@ -288,7 +292,9 @@ function powerResults(C,u,result) {
     <span>${label(C,u,'Page','Страница')} ${num(u,page+1)}</span>
     ${button(C,u,'Next','Далее','page',`data-page="${page+1}"`,!next)}
   </div>` : '';
-  if (!rows.length) return empty(C,u,'No systems match these filters.','Нет систем с такими параметрами.') + paging;
+  if (!rows.length) return (result.quality?.coverage === 'partial' ?
+    empty(C,u,'No usable system records in this response.','В ответе нет пригодных записей о системах.') :
+    empty(C,u,'No systems match these filters.','Нет систем с такими параметрами.')) + paging;
   return `<div class="table-scroll"><table class="pol-table"><thead><tr>
     ${[['System','Система'],['Power','Держава'],['Status','Состояние'],['Control','Контроль'],
       ['Reinforcement','Укрепление'],['Undermining','Подрыв']].map(names => `<th>${label(C,u,...names)}</th>`).join('')}
@@ -344,6 +350,7 @@ function shouldLoad(C,values) {
   const a = local(C);
   const key = requestKey(values);
   const status = model(C).status;
+  if (sameStatus(status,values) && Date.parse(status.retryAt) > Date.now()) return false;
   const retryDelay = a.errors.has(key) || sameStatus(status,values) && status.error ? 60000 : interval;
   return !a.attempted.has(key) || Date.now()-a.attempted.get(key) >= retryDelay;
 }
@@ -358,6 +365,9 @@ function notice(C,u) {
   const status = model(C).status;
   if (loading(C)) {
     return `<p class="pol-status" role="status">${label(C,u,'Updating…','Обновляем данные…')}</p>`;
+  }
+  if (sameStatus(status,values) && status.reason && window.FreshnessUI) {
+    return `<p class="notice pol-status" role="status">${esc(u,window.FreshnessUI.reason(status.reason,language(C)))}</p>`;
   }
   if (local(C).errors.has(requestKey(values)) || sameStatus(status,values) && status.error) {
     return `<p class="notice pol-status" role="status">${label(C,u,'Could not update these observations.','Не удалось обновить данные.')}</p>`;

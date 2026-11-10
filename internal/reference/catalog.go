@@ -114,7 +114,7 @@ func (s *Store) Entry(id string) (Entry, bool) {
 
 func (s *Store) summary(r *record, withImage bool) Summary {
 	e := r.entry
-	out := Summary{ID: e.ID, Category: e.Category, Title: e.Title, Subtitle: e.Subtitle, Description: trimRunes(e.Description, 180), Group: e.Group, Badges: append([]Badge{}, e.Badges...), CommodityKey: e.CommodityKey}
+	out := Summary{ID: e.ID, Category: e.Category, Title: e.Title, Subtitle: e.Subtitle, Description: trimRunes(e.Description, 180), EnglishTitle: e.EnglishTitle, EnglishDescription: trimRunes(e.EnglishDescription, 180), Group: e.Group, Badges: append([]Badge{}, e.Badges...), CommodityKey: e.CommodityKey}
 	if len(e.Properties) > 0 {
 		out.Meta = append([]Property{}, e.Properties[:min(2, len(e.Properties))]...)
 	}
@@ -141,6 +141,7 @@ func (s *Store) build() {
 	s.buildArticles()
 	s.buildShips()
 	s.buildEngineering()
+	s.buildEngineeringFarming()
 	s.buildCommodities()
 	s.buildSystems()
 	normalizedAliases := map[string]string{}

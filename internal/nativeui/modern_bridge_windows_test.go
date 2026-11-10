@@ -54,8 +54,15 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 			}
 			page := result["page"].(p.Page)
 			referencePage := tab.ID == "encyclopedia" || (tab.ID == "engineering" || tab.ID == "targets") && mode == "Инженеры"
-			if page.Title == "" || len(page.Columns) == 0 && !referencePage {
+			progressionPage := tab.ID == "engineering" && mode == p.EngineeringProgression
+			if page.Title == "" || len(page.Columns) == 0 && !referencePage && !progressionPage {
 				t.Fatalf("empty %s/%s", tab.ID, mode)
+			}
+			if progressionPage {
+				roadmap, err := dispatchWeb(engine, "engineering-roadmap", M{"tab": tab.ID})
+				if err != nil || len(v.Rows(roadmap["engineers"])) != 38 {
+					t.Fatalf("engineering view has no roadmap: %v", err)
+				}
 			}
 			if _, err := json.Marshal(result); err != nil {
 				t.Fatalf("non-JSON view %s/%s: %v", tab.ID, mode, err)

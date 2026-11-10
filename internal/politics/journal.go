@@ -146,6 +146,9 @@ func (s *Service) Apply(event M) {
 	if name == "" {
 		return
 	}
+	if s.selected == "" && key(s.current) != key(name) {
+		s.selectionID++
+	}
 	s.current = name
 	row := M{"name": name, "address": clean(event["SystemAddress"], 100)}
 	info := meta("journal", at, "", "")
@@ -227,7 +230,7 @@ func NormalizePublicSystem(raw M, fetched string) M {
 	info["controllingFaction"] = clean(raw["controlling_minor_faction"], 200)
 	info["state"] = clean(raw["controlling_minor_faction_state"], 100)
 	row["info"] = info
-	if f, ok := raw["minor_faction_presences"]; ok {
+	if f := raw["minor_faction_presences"]; v.Arr(f) != nil {
 		d := meta("spansh", at, fetched, url)
 		d["entries"] = factions(f, false)
 		row["factions"] = d

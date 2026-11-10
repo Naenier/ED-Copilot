@@ -46,6 +46,20 @@ test('full route save preserves both legs, saved routes can be opened and remova
  await api.handle('deals-delete',button({id:'saved-1'}),C,u);assert.equal(calls.length,1);assert.match(dialogs[0].footer,/close-dialog/);assert.match(dialogs[0].footer,/deals-delete-confirm/);
  await api.handle('deals-delete-confirm',button({id:'saved-1'}),C,u);assert.deepEqual(calls[1].params.values,{action:'delete-route',id:'saved-1'});
 });
+test('saved route scope is visible and changing owner uses the displayed journal workspace',async()=>{
+ const {api,C,u,calls,button,route}=fixture();
+ C.state.planWorkspace={key:'owner-a',name:'Test Commander',branch:'live'};
+ C.state.savedTradeRoutes=[{...route,id:'saved-1',scope:'shared'}];
+ await api.handle('deals-view',{dataset:{view:'saved'}},C,u);
+ const html=api.render(C,u);
+ assert.match(html,/Test Commander · Live/);
+ assert.match(html,/Общий рейс/);
+ assert.match(html,/Сделать личным/);
+ await api.handle('deals-scope',button({id:'saved-1'}),C,u);
+ assert.deepEqual(calls[0],{op:'deals-saved-route',params:{values:{action:'set-scope',id:'saved-1',scope:'personal',expectedPlanWorkspace:'owner-a'}}});
+ C.state.planWorkspace={key:''};
+ assert.doesNotMatch(api.render(C,u),/Сделать личным/);
+});
 test('result pagination mounts only ten complete cards and filtering searches both systems and stations',async()=>{
  const {api,C,u,route,query}=fixture();C.state.tradeRoutes.results=Array.from({length:25},(_,i)=>({...route,id:'route'+i}));let html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,10);assert.match(html,/1 \/ 3/);
  await api.handle('deals-next',null,C,u);html=api.render(C,u);assert.match(html,/2 \/ 3/);api.handleInput({target:{id:'deals-query',value:'missing',selectionStart:7}},C,u);assert.match(api.render(C,u),/Совпадений нет/);assert.equal(query.focused,true);assert.equal(query.start,7);

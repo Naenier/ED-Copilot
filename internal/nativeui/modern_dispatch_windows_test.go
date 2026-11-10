@@ -37,6 +37,37 @@ func (c *scopedDispatchProbe) SnapshotForUI(tab string) M {
 	return c.state
 }
 
+type engineeringDispatchProbe struct {
+	scopedDispatchProbe
+	input M
+}
+
+func (c *engineeringDispatchProbe) EngineeringRoadmap(input M) (M, error) {
+	c.input = v.Copy(input)
+	return M{"summary": M{"total": 38}}, nil
+}
+
+func TestEngineeringProgressionUsesItsReadOnlyProjection(t *testing.T) {
+	backend := &engineeringDispatchProbe{}
+	query := M{"engineerIDs": []any{"300100"}, "moduleKey": "fsd"}
+	result, err := dispatchWeb(backend, "engineering-roadmap", query)
+	if err != nil || v.Int(v.At(result, "summary", "total")) != 38 || !reflect.DeepEqual(query, backend.input) {
+		t.Fatalf("wrong roadmap result or filters: %v, %v, %v", result, backend.input, err)
+	}
+	if backend.snapshots != 0 || len(backend.scopes) != 0 || backend.path != "" {
+		t.Fatal("the roadmap built an unrelated snapshot or dispatched a mutation")
+	}
+	view, err := dispatchWeb(backend, "view", M{"tab": "engineering"})
+	page, ok := view["page"].(p.Page)
+	if err != nil || !ok || len(page.Modes) == 0 || page.Modes[0] != p.EngineeringProgression ||
+		v.At(view, "context", "mode") != p.EngineeringProgression || len(v.Rows(view["actions"])) != 0 {
+		t.Fatalf("wrong default engineering view: %v, %v", view, err)
+	}
+	if !reflect.DeepEqual(backend.scopes, []string{"engineering-roadmap"}) {
+		t.Fatalf("unexpected snapshot scopes: %v", backend.scopes)
+	}
+}
+
 func TestDirectWebCommandsDoNotBuildOrSnapshotDomains(t *testing.T) {
 	for _, test := range []struct {
 		op, path string

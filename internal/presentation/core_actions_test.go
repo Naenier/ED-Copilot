@@ -97,6 +97,12 @@ func TestCoreActionsEveryTabAndVisibleMode(t *testing.T) {
 			t.Run(tab.ID+"/"+mode, func(t *testing.T) {
 				for _, row := range []M{nil, selected} {
 					actions := CoreActions(tab.ID, mode, s, row, nil)
+					if tab.ID == "engineering" && mode == EngineeringProgression {
+						if len(actions) != 0 {
+							t.Fatal("custom progression view got legacy plan actions")
+						}
+						continue
+					}
 					if len(actions) == 0 {
 						t.Fatal("page has no actions")
 					}

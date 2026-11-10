@@ -5,7 +5,7 @@ const groups=[
  {id:'trade',title:'Торговля',icon:'arrow-left-right',tabs:['deals','sale','carrier-trade'],default:'deals'},
  {id:'colonization',title:'Колонизация',icon:'orbit',tabs:['colonization'],modes:[['Обзор','house'],['Выбор системы','search'],['Строительство','wrench'],['Снабжение','package'],['Бюджет','wallet']]},
  {id:'mining',title:'Добыча',icon:'pickaxe',tabs:['mining'],modes:[['Текущий заход','pickaxe'],['История','history'],['Снаряжение','package'],['План','target']]},
- {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['План','target'],['Материалы','package'],['Обмен','arrow-left-right'],['Инженеры','users']]},
+ {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['План','target'],['Материалы','package'],['Обмен','arrow-left-right'],['Инженеры','users']]},
  {id:'exobiology',title:'Экзобиология',icon:'leaf',tabs:['exobiology'],modes:[['Обзор','house'],['Планеты','orbit'],['Образцы','leaf'],['Продажи','wallet'],['Находки','target'],['Места','map-pin'],['Статистика','chart-no-axes-combined']]},
  {id:'fleet',title:'Флотоносцы',icon:'ship',tabs:['carrier','route','carrier-calculator']},
  {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics']},

@@ -19,6 +19,20 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   const listKey = r => JSON.stringify([r.category, r.query.trim(), r.group, r.offset, r.limit]);
   const pageSize = r => Number.isInteger(Number(r.list?.limit)) && Number(r.list.limit) > 0 && Number(r.list.limit) <= r.limit ? Number(r.list.limit) : r.limit;
   const validID = id => typeof id === 'string' && id.length > 0 && id.length <= 512;
+  const guardianVisuals = 'https://newp.io/guardian_guide';
+  const engineeringVisuals = 'https://wiki.antixenoinitiative.com/en/engineering-materials';
+  const odysseyVisuals = 'https://inara.cz/elite/cmdr-logbook-entry/350242/73614/';
+  const visualGuides = new Map([
+    ['article/farm-material-trading', engineeringVisuals + '#material-trading'],
+    ['article/farm-raw-nearby', 'https://www.reddit.com/r/EliteDangerous/comments/1j80for/update_41_raw_materials_collection_infographics/'],
+    ['article/farm-manufactured-hge', engineeringVisuals + '#manufactured-materials'],
+    ['article/farm-guardian', guardianVisuals],
+    ['article/farm-guardian-components', guardianVisuals],
+    ['article/farm-guardian-obelisks', engineeringVisuals + '#data'],
+    ['article/farm-guardian-blueprints', guardianVisuals],
+    ['article/farm-odyssey', odysseyVisuals],
+    ['article/farm-odyssey-assets', odysseyVisuals],
+  ]);
 
   function state(C) {
     const key = scope(C);
@@ -108,6 +122,11 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
   function sectionIsVisible(section) {
     return !/^(?:sources?|references?|links?)$/i.test(section.type || '') && !/^(?:sources?|references?|links?)$/i.test(section.id || '') && !/(?:источники|ссылки на источники|внешние ссылки)/i.test(section.title || '');
   }
+  function engineerRoadmap(entry,ui) {
+    const index=entry.actions?.findIndex(item=>item.type==='engineering-roadmap'&&item.engineerKey)??-1;
+    if(index<0)return '';
+    return '<div class="ref-engineer-plan">'+ui.btn(entry.actions[index].label||t("Открыть план прокачки"),'reference-engineering-roadmap','arrow-right','','data-index="'+index+'"')+'</div>';
+  }
   function sectionItems(section, ui, requirements = false) {
     return `<ul class="${requirements ? 'ref-requirements' : 'ref-notes'}">${(section.items || []).map(raw => {
       const item = typeof raw === 'string' ? { text: raw } : raw;
@@ -131,6 +150,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (section.type === 'facts') body += facts(section.properties || section.items || [], ui);
     else if (section.type === 'table') body += table(section, ui);
     else if (section.type === 'grades') body += grades(section, ui, r);
+    else if (section.type === 'route') body += `<ol class="ref-farm-route">${(section.items || []).map(item => `<li><div><strong>${text(ui, item.title)}</strong>${item.text ? `<p>${text(ui, item.text)}</p>` : ''}${item.system ? `<button type="button" class="ref-farm-system" data-click="table-copy-system" data-system="${ui.esc(item.system)}" aria-label="${th('Копировать систему')} ${ui.esc(item.system)}">${ui.icon('copy')}${ui.esc(item.system)}</button>` : ''}</div></li>`).join('')}</ol>`;
     else if (section.items?.length) body += sectionItems(section, ui, section.type === 'requirements');
     return `<section class="ref-entry-section" id="${id}" data-reference-section="${index}">${section.title ? `<h2>${text(ui, section.title)}</h2>` : ''}${body}</section>`;
   }
@@ -169,7 +189,8 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     return `<section class="ref-entry-section ref-trade-section"><div class="ref-section-title"><div><span class="eyebrow">${th("Перейти к делу")}</span><h2>${th("Покупка и продажа")}</h2></div>${ui.icon('arrow-left-right')}</div><p>${th("Сравните рынки по цене, доступному объёму и расстоянию. Дата наблюдения помогает оценить свежесть предложения.")}</p><div class="ref-market-modes segmented" aria-label="${th("Операция с товаром")}">${[['buy', t("Купить")], ['sell', t("Продать")]].map(([id, label]) => `<button type="button" data-click="reference-market-mode" data-id="${id}" class="${market.mode === id ? 'selected' : ''}" aria-pressed="${market.mode === id}">${label}</button>`).join('')}</div><div class="ref-market-controls"><label><span>${th("Исходная система")}</span><input id="reference-market-system" value="${ui.esc(market.system)}" placeholder="${th("Например, Sol")}" autocomplete="off"></label><label><span>${th("Количество, т")}</span><input id="reference-market-quantity" value="${ui.esc(market.quantity)}" inputmode="numeric"></label><label><span>${th("Радиус, св. л.")}</span><input id="reference-market-radius" value="${ui.esc(market.radius)}" inputmode="decimal"></label>${ui.btn(running ? (paused ? t("Обновляем…") : t("Поиск…")) : paused ? t("Обновить статус") : (buying ? t("Найти продавцов") : t("Найти покупателей")), paused ? 'reference-refresh-markets' : 'reference-find-markets', paused ? 'refresh-cw' : 'search', 'primary', `type="button" ${running ? 'disabled' : ''}`)}</div>${status ? `<p class="ref-market-status ${market.error || (currentMarket(r) && market.result?.error) ? 'is-error' : ''}" role="status">${text(ui, status)}</p>` : ''}${tableHTML}<div class="ref-market-footer"><span>${rows.length ? text(ui, ui.fmt(rows.length) + t(" предложений")) : t("Цены меняются по мере торговли в игре")}</span>${ui.btn(t("Все фильтры в торговле"), buying ? 'reference-trade-buy' : 'reference-trade-sell', 'arrow-right', 'quiet', `type="button" data-key="${ui.esc(key)}"`)}</div></section>`;
   }
   function entity(r, ui) {
-    const actions = (r.entry?.actions || []).map((item, index) => item.type === 'copy-system' ? ui.btn(plain(item.label || t("Копировать систему")), 'reference-copy-system', 'copy', 'quiet', `type="button" data-index="${index}"`) : '').join('');
+    const visual = visualGuides.has(r.entry?.id) ? ui.btn(t("Игровые кадры и карты"), 'reference-visual-guide', 'external-link', 'quiet', 'type="button"') : '';
+    const actions = (r.entry?.actions || []).map((item, index) => item.type === 'copy-system' ? ui.btn(plain(item.label || t("Копировать систему")), 'reference-copy-system', 'copy', 'quiet', `type="button" data-index="${index}"`) : '').join('') + visual;
     const back = `<div class="ref-entry-nav">${ui.btn(r.history.length ? t("Назад") : (r.scope === 'engineers' ? t("Все инженеры") : t("К списку")), 'reference-back', 'arrow-left', 'quiet', 'type="button"')}${r.history.length ? ui.btn(r.scope === 'engineers' ? t("Все инженеры") : t("Каталог"), 'reference-library', 'layout-grid', 'quiet', 'type="button"') : ''}<span class="spacer"></span>${actions}<span class="ref-entry-context">${text(ui, categoryTitle(r, r.entry?.category || r.category))}</span></div>`;
     if (r.entryError) return `<section class="reference-root ref-reader">${back}${errorPanel(r.entryError, ui, true)}</section>`;
     if (r.entryLoading || !r.entry) return `<section class="reference-root ref-reader" aria-busy="true">${back}${skeleton(ui, true)}</section>`;
@@ -177,7 +198,7 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const sections = (entry.sections || []).filter(sectionIsVisible);
     const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${imageSource(entry.image) ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${entry.description || entry.summary ? `<p class="ref-entry-lead">${text(ui, entry.description || entry.summary)}</p>` : ''}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${imageSource(entry.image) ? imageHTML(entry, ui, true) : ''}</header>`;
     const related = (entry.related || []).filter(item => validID(item.id || item.entryId));
-    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${entry.properties?.length ? facts(entry.properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div></section>`;
+    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${entry.properties?.length ? facts(entry.properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}${engineerRoadmap(entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div></section>`;
   }
 
   function render(C, ui) { const r = state(C); return r.entryId ? entity(r, ui) : catalogue(r, ui); }
@@ -272,6 +293,14 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const r = state(C), id = button?.dataset?.id;
     if (action === 'reference-open') return open(C, ui, id);
     if (action === 'reference-category') return setCategory(C, ui, id);
+    if (action === 'reference-engineering-roadmap') {
+      const item=r.entry?.actions?.[Number(button?.dataset?.index)];
+      if(item?.type==='engineering-roadmap'&&item.engineerKey&&window.EngineeringRoadmapUI){
+        window.EngineeringRoadmapUI.preselect(C,item.engineerKey);
+        await ui.navigate('engineering',{mode:'Прокачка'});
+      }
+      return true;
+    }
     if (action === 'reference-library') { await returnToLibrary(C, ui); return true; }
     if (action === 'reference-back') {
       if (r.history.length) { const previous = r.history.pop(); await open(C, ui, previous.id, false); r.restoreScroll = previous.scroll; redraw(C, ui, r); }
@@ -300,6 +329,11 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (action === 'reference-copy-system') {
       const item = r.entry?.actions?.[Number(button?.dataset?.index)];
       if (item?.type === 'copy-system' && typeof item.system === 'string') { await ui.call('native', { action: 'copy', text: item.system }); ui.toast(t("Система скопирована")); }
+      return true;
+    }
+    if (action === 'reference-visual-guide') {
+      const url = visualGuides.get(r.entry?.id);
+      if (url) await ui.call('native', { action: 'open', url });
       return true;
     }
     if (action === 'reference-market-copy-system') {

@@ -1,0 +1,476 @@
+[
+  {
+    "key": "farm-guardian",
+    "title": "Стражи — первая экспедиция и усилитель FSD",
+    "englishTitle": "Guardians — first expedition and FSD booster",
+    "description": "Один маршрут для фрагмента чертежа модуля и компонентов усилителя FSD. Подготовьте ТРП, откройте терминал и сдайте комплект брокеру технологий Стражей.",
+    "englishDescription": "A single route for the module blueprint fragment and Guardian parts needed for the FSD booster. Take an SRV, activate the terminal and turn in the set to a Guardian Technology Broker.",
+    "keywords": [
+      "Стражи",
+      "усилитель FSD",
+      "Guardian FSD Booster",
+      "Guardian Structure",
+      "Ancient Relic",
+      "Ancient Data Terminal",
+      "Ram Tah",
+      "Synuefe NL-N c23-4",
+      "Synuefe LQ-T b50-1",
+      "Turtle",
+      "point defence"
+    ],
+    "materials": [
+      "guardianmoduleblueprint",
+      "guardianpowercell",
+      "guardiantechcomponent",
+      "focuscrystals"
+    ],
+    "image": "farm-guardian",
+    "sections": [
+      {
+        "key": "loadout",
+        "title": "Комплект перед вылетом",
+        "englishTitle": "Before departure",
+        "steps": [
+          {
+            "title": "Корабль и ТРП",
+            "englishTitle": "Ship and SRV",
+            "text": "Возьмите небольшой корабль с топливозаборником, щитом, детальным сканером поверхности и ангаром с исправным ТРП. Для реликвии оставьте свободное место в грузовом отсеке ТРП. Запасной ТРП или материалы синтеза для ремонта, топлива и боеприпасов помогут закончить экспедицию за один вылет.",
+            "englishText": "Take a small ship with a fuel scoop, shields, Detailed Surface Scanner and a working SRV in a vehicle hangar. Leave cargo space in the SRV for the relic. A spare SRV or synthesis supplies for repairs, fuel and ammunition can save a return trip."
+          },
+          {
+            "title": "Точечная оборона",
+            "englishTitle": "Point defence",
+            "text": "Установите Point Defence на верхнее крепление корабля, включите питание модуля и посадите корабль рядом с сооружением. Открытый обзор в сторону руин позволит турели перехватывать ракеты часовых. Проверьте в ТРП управление турелью, грузовым ковшом и сканером канала передачи данных.",
+            "englishText": "Fit Point Defence to an upper utility mount, power it and land near the structure with a clear view of the ruins. The turret can intercept Sentinel missiles from the parked ship. Check the turret, cargo scoop and Data Link Scanner bindings in the SRV."
+          }
+        ]
+      },
+      {
+        "key": "locations",
+        "title": "Где взять фрагмент модуля",
+        "englishTitle": "Where to find a module fragment",
+        "steps": [
+          {
+            "title": "Основная точка — B 3",
+            "englishTitle": "Main site — B 3",
+            "text": "В Synuefe NL-N c23-4 картографируйте B 3 и выберите сигнал Guardian Structure. Терминал расположен примерно на широте +51,21°, долготе +89,09°. На той же планете есть Ancient Ruins для отдельного сбора данных обелисков.",
+            "englishText": "Map B 3 in Synuefe NL-N c23-4 and select the Guardian Structure signal. The terminal is near latitude +51.21°, longitude +89.09°. The same body also has Ancient Ruins for a separate obelisk-data loop.",
+            "system": "Synuefe NL-N c23-4"
+          },
+          {
+            "title": "Другой терминал модуля — B 2",
+            "englishTitle": "Another module terminal — B 2",
+            "text": "В Synuefe LQ-T b50-1 на B 2 терминал модуля находится примерно на −43,86°, −21,32°. При необходимости доберите компоненты технологий на отдельной точке из статьи о панелях и часовых.",
+            "englishText": "The module terminal on B 2 in Synuefe LQ-T b50-1 is near −43.86°, −21.32°. If you still need Technology Components, make the dedicated collection stop described in the panels and Sentinels article.",
+            "system": "Synuefe LQ-T b50-1"
+          }
+        ]
+      },
+      {
+        "key": "terminal",
+        "title": "Цикл терминала",
+        "englishTitle": "Terminal sequence",
+        "steps": [
+          {
+            "title": "Реликвия и разведка",
+            "englishTitle": "Relic and reconnaissance",
+            "text": "Найдите башню, которая выдвигается из грунта при приближении. Выстрелите по кристаллу на вершине, отметьте Ancient Relic и подберите его ковшом ТРП. На схеме показаны шесть пилонов и порядок работы. До начала отсчёта найдите терминал и осмотрите реальный маршрут к пилонам на выбранной площадке. Если появились часовые, сначала освободите проезд.",
+            "englishText": "Approach a relic tower until it rises, shoot the crystal at its top, target the Ancient Relic and scoop it into the SRV. The diagram shows the six pylons and the sequence. Locate the terminal and scout the actual pylon route at your site before starting the timer. Clear Sentinels that have already spawned so the route stays open."
+          },
+          {
+            "title": "Зарядка шести пилонов",
+            "englishTitle": "Charge six pylons",
+            "text": "Подъедьте к паре пилонов у терминала, чтобы поднять их. Стреляйте из турели ТРП в светящийся узел каждого поднятого пилона до сообщения о заряде. Первый заряд запускает отсчёт, следующие добавляют время. Объезжайте площадку по намеченному маршруту. При сбросе отсчёта начните зарядку заново.",
+            "englishText": "Drive to the pair of pylons by the terminal to raise them. Shoot each raised pylon's glowing node with the SRV turret until the charge confirmation appears. The first charge starts a timer and later charges add time. Follow your scouted route and start charging again if the timer expires."
+          },
+          {
+            "title": "Подношение и сканирование",
+            "englishTitle": "Deposit and scan",
+            "text": "После шестого заряда подъедьте к светящейся площадке перед терминалом. Выбросьте Ancient Relic из грузового отсека ТРП, нацелитесь на поднявшуюся сферу и удерживайте Data Link Scanner до завершения. Проверьте Guardian Module Blueprint Fragment в кодированных материалах. Для следующего фрагмента вернитесь в корабль, выйдите в главное меню и заново загрузите площадку.",
+            "englishText": "After the sixth charge, drive onto the glowing pad in front of the terminal. Jettison the Ancient Relic from the SRV, target the rising orb and hold the Data Link Scanner until it finishes. Check for the Guardian Module Blueprint Fragment in Encoded Materials. For another fragment, reboard the ship, return to the main menu and load a fresh instance."
+          }
+        ]
+      },
+      {
+        "key": "broker",
+        "title": "Комплект для брокера",
+        "englishTitle": "What to take to the broker",
+        "steps": [
+          {
+            "title": "Материалы на один доступ",
+            "englishTitle": "One-time unlock cost",
+            "text": "Соберите 1 фрагмент чертежа модуля, 21 энергоячейку Стражей и 21 компонент технологий Стражей. Дополнительно нужны 24 Focus Crystals из промышленных материалов и 8 т HN Shock Mount с товарного рынка. Для этого рецепта сканировать обелиски не требуется.",
+            "englishText": "Collect 1 module blueprint fragment, 21 Guardian Power Cells and 21 Guardian Technology Components. Add 24 Focus Crystals from manufactured materials and 8 tonnes of HN Shock Mounts from a commodity market. This recipe requires no obelisk scans."
+          },
+          {
+            "title": "Открытие и покупка",
+            "englishTitle": "Unlock and purchase",
+            "text": "В станционных службах откройте контакты брокера технологий Стражей и сдайте комплект на Guardian FSD Booster. Доступ к линейке открывается один раз. После этого купите подходящий размер за кредиты в разделе оснащения станции, где он есть в продаже.",
+            "englishText": "In station services, open the Guardian Technology Broker contact and turn in the set for the Guardian FSD Booster. This unlocks the module family once. Buy the size you need with credits at an outfitter that stocks it."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "NEWP — Guardian Guide",
+        "url": "https://newp.io/guardian_guide"
+      },
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "EDCAS — Guardian Data Terminal logs",
+        "url": "https://edcas.de/codex/entry/Guardian_Terminal"
+      },
+      {
+        "title": "Dallicort — Guardian Power-Up",
+        "url": "https://www.dallicort.com/ad-academy/guardian-power-up"
+      },
+      {
+        "title": "ED Field Manual — Guardian Frame Shift Drive Booster",
+        "url": "https://edfieldmanual.com/wiki/Guardian_Frame_Shift_Drive_Booster"
+      },
+      {
+        "title": "Canonn — Guardian maps and field reports",
+        "url": "https://github.com/canonn-science/Canonn-Discord/blob/master/Useful-Links/guardians.md"
+      }
+    ]
+  },
+  {
+    "key": "farm-guardian-components",
+    "title": "Компоненты Стражей — панели и часовые",
+    "englishTitle": "Guardian components — panels and Sentinels",
+    "description": "Источники всех пяти промышленных компонентов Стражей. Собирайте панели по короткому маршруту и добирайте детали с уничтоженных часовых.",
+    "englishDescription": "Sources for all five manufactured Guardian components. Run a short panel route and gather parts from destroyed Sentinels.",
+    "keywords": [
+      "компоненты Стражей",
+      "Guardian Technology Component",
+      "Guardian Power Cell",
+      "Guardian Power Conduit",
+      "Guardian Sentinel",
+      "Guardian Wreckage Components",
+      "Destructible Panel",
+      "Synuefe HT-F d12-29",
+      "Synuefe NL-N c23-4",
+      "Ram Tah"
+    ],
+    "materials": [
+      "guardianpowercell",
+      "guardianpowerconduit",
+      "guardiantechcomponent",
+      "guardiansentinelweaponparts",
+      "guardiansentinelwreckagecomponents"
+    ],
+    "sections": [
+      {
+        "key": "materials",
+        "title": "Что сбивать и подбирать",
+        "englishTitle": "What to shoot and scoop",
+        "steps": [
+          {
+            "title": "Энергоячейки",
+            "englishTitle": "Guardian Power Cells",
+            "text": "Обстреляйте прицельно выбранные Destructible Panel на наклонных колоннах и боковых стенках сооружения. Подберите энергоячейки ковшом ТРП, выбрав выпавший материал в контактах. Осматривайте обломки часовых после боя, если не хватает ячеек.",
+            "englishText": "Target Destructible Panels on slanted towers and outer walls of a structure and shoot them. Target dropped power cells in contacts and scoop them with the SRV. Check Sentinel debris after a fight if you still need cells."
+          },
+          {
+            "title": "Энергопроводники",
+            "englishTitle": "Guardian Power Conduits",
+            "text": "Собирайте энергопроводники с разрушаемых панелей вместе с ячейками. Выбирайте цель по имени, поскольку рядом могут лежать реликвии и другие грузовые предметы. Энергопроводники также встречаются среди обломков часовых.",
+            "englishText": "Collect conduits from destructible panels on the same route as the cells. Target each drop by name when relics and other cargo are nearby. Conduits can also appear among Sentinel debris."
+          },
+          {
+            "title": "Компоненты технологий",
+            "englishTitle": "Guardian Technology Components",
+            "text": "Сосредоточьтесь на панелях, которые дают нужный материал. При повторном обходе запоминайте колонну и высоту панели с компонентом. Удобная точка для большого заказа находится на C 3 в Synuefe HT-F d12-29.",
+            "englishText": "Prioritise panels that yield the desired material. Note which tower and panel height produced a Technology Component before repeating the loop. C 3 in Synuefe HT-F d12-29 is a useful dedicated stop.",
+            "system": "Synuefe HT-F d12-29"
+          },
+          {
+            "title": "Детали вооружения и обломки",
+            "englishTitle": "Sentinel Weapon Parts and Wreckage Components",
+            "text": "Для этих двух позиций уничтожайте Guardian Sentinel и собирайте его обломки. Ведите огонь из турели ТРП с укрытия. Пока часовой атакует, дайте энергию системам, а в момент стрельбы переключите часть распределителя на оружие. После боя подбирайте материалы до начала следующего цикла.",
+            "englishText": "Destroy Guardian Sentinels and collect their debris for these two materials. Use the SRV turret from cover. Allocate power to systems under fire and move pips to weapons while shooting. Scoop the drops before starting another run."
+          }
+        ]
+      },
+      {
+        "key": "route",
+        "title": "Два маршрута панелей",
+        "englishTitle": "Two panel routes",
+        "steps": [
+          {
+            "title": "Совместить с чертежом — B 3",
+            "englishTitle": "Combine with a blueprint — B 3",
+            "text": "На B 3 в Synuefe NL-N c23-4 ориентируйте схему так, чтобы терминал был сверху. Для спокойного обхода приземлитесь с правой нижней стороны площадки за земляным валом. Начните с ближайшей наклонной колонны и обходите внешние панели по периметру, пока не соберёте нужное. Если делаете только сбор, оставьте терминал и зарядные пилоны в покое.",
+            "englishText": "On B 3 in Synuefe NL-N c23-4, orient the site map with the terminal at the top. For a quiet loop, land beyond the earth berm on the lower right of that view. Start with the nearest slanted tower and work around the outer panels. Leave the terminal and power pylons alone for a components-only run.",
+            "system": "Synuefe NL-N c23-4"
+          },
+          {
+            "title": "Запас компонентов технологий — C 3",
+            "englishTitle": "Stock up on Technology Components — C 3",
+            "text": "На C 3 в Synuefe HT-F d12-29 ориентируйтесь по сигналу Guardian Structure. Проверяйте верхние панели наклонных колонн. Карты игроков отмечают до восьми точек выпадения, или примерно 24 единицы при полном сборе. Будьте готовы к часовым и контролируйте счётчик в инвентаре после каждого обхода.",
+            "englishText": "On C 3 in Synuefe HT-F d12-29, target the Guardian Structure signal and check the upper panels of slanted towers. Player maps report up to eight pickups, around 24 units if all are collected. Expect Sentinels and check the inventory total after each loop.",
+            "system": "Synuefe HT-F d12-29"
+          },
+          {
+            "title": "Повторить сбор",
+            "englishTitle": "Repeat the loop",
+            "text": "Запомните панели с нужным материалом. Вернитесь в корабль и перезайдите через главное меню, чтобы обновить площадку. Сравните остаток по рецепту с инвентарём перед вылетом. Брокер принимает компоненты за доступ к оборудованию, а обменщики материалов их не конвертируют.",
+            "englishText": "Mark the panels yielding the material you need. Reboard the ship and log out to the main menu and back in to refresh the site. Check the remaining recipe cost before departure. The broker takes these components for unlocks, and material traders offer no conversion for them."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Dallicort — Guardian Components field route",
+        "url": "https://www.dallicort.com/guardian-technology/guardian-components"
+      },
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "NEWP — Guardian Guide",
+        "url": "https://newp.io/guardian_guide"
+      },
+      {
+        "title": "Canonn — Guardian maps and field reports",
+        "url": "https://github.com/canonn-science/Canonn-Discord/blob/master/Useful-Links/guardians.md"
+      }
+    ]
+  },
+  {
+    "key": "farm-guardian-obelisks",
+    "title": "Данные обелисков Стражей",
+    "englishTitle": "Guardian obelisk pattern data",
+    "description": "Цикл сканирования активных обелисков для паттернов Альфа, Бета, Гамма, Дельта и Эпсилон. Выберите руины рядом с основным маршрутом или отдельную площадку с группой обелисков.",
+    "englishDescription": "A repeatable scan loop for Alpha, Beta, Gamma, Delta and Epsilon patterns. Use ruins on the main route or make a dedicated stop at a cluster of obelisks.",
+    "keywords": [
+      "данные обелисков",
+      "Guardian Obelisk",
+      "Data Link Scanner",
+      "Ancient Ruins",
+      "Pattern Alpha Obelisk Data",
+      "Pattern Beta Obelisk Data",
+      "Pattern Gamma Obelisk Data",
+      "Pattern Delta Obelisk Data",
+      "Pattern Epsilon Obelisk Data",
+      "Xenohenge",
+      "Ram Tah",
+      "Synuefe XR-H d11-102",
+      "Synuefe NL-N c23-4"
+    ],
+    "materials": [
+      "ancientbiologicaldata",
+      "ancientculturaldata",
+      "ancienthistoricaldata",
+      "ancientlanguagedata",
+      "ancienttechnologicaldata"
+    ],
+    "sections": [
+      {
+        "key": "sites",
+        "title": "Выбрать руины",
+        "englishTitle": "Pick an Ancient Ruins site",
+        "steps": [
+          {
+            "title": "Руины на B 3",
+            "englishTitle": "Ruins on B 3",
+            "text": "На B 3 в Synuefe NL-N c23-4 после картографирования выберите Ancient Ruins. Полевой маршрут Dallicort для Ruins 1 ведёт к группе из трёх обелисков рядом с приподнятыми ровными полосами. Ищите подсветку активных панелей и посадите корабль рядом, оставив место для развёртывания турели ТРП.",
+            "englishText": "After mapping B 3 in Synuefe NL-N c23-4, select an Ancient Ruins signal. Dallicort’s Ruins 1 approach leads to a group of three obelisks beside raised flat strips. Look for active illuminated panels and land nearby with room to deploy the SRV turret.",
+            "system": "Synuefe NL-N c23-4"
+          },
+          {
+            "title": "Отдельная остановка — 1 B",
+            "englishTitle": "Dedicated stop — 1 B",
+            "text": "На 1 B в Synuefe XR-H d11-102 Anti-Xeno Initiative описывает группу из четырёх обелисков. На этой луне отмечено несколько площадок. Найдите маркеры Ancient Ruins после детального сканирования поверхности и сверьте вид площадки с картой, прежде чем парковаться.",
+            "englishText": "Anti-Xeno Initiative reports a four-obelisk cluster on 1 B in Synuefe XR-H d11-102. Several ruins have been recorded on this moon. Use Detailed Surface Scanner mapping to locate the Ancient Ruins signals and compare the layout with the site map before landing.",
+            "system": "Synuefe XR-H d11-102"
+          }
+        ]
+      },
+      {
+        "key": "loop",
+        "title": "Сканирование и повтор",
+        "englishTitle": "Scan and repeat",
+        "steps": [
+          {
+            "title": "Нацелиться на подсвеченный обелиск",
+            "englishTitle": "Target an illuminated obelisk",
+            "text": "Подъедьте к обелиску с активным светящимся рисунком, выберите его целью и просканируйте Data Link Scanner из ТРП. Переключитесь в турель, если мешает угол обзора. Сканер состава регистрирует объект в Кодексе, а паттерны выдаёт сканер канала данных.",
+            "englishText": "Drive to an obelisk with a lit pattern, target it and use the SRV Data Link Scanner. Use turret view if the angle is awkward. The Composition Scanner registers the object in the Codex, while the Data Link Scanner retrieves the pattern data."
+          },
+          {
+            "title": "Проверить пять счётчиков",
+            "englishTitle": "Check all five counters",
+            "text": "Один активный обелиск может дать случайную комбинацию Альфа, Бета, Гамма, Дельта и Эпсилон. Обойдите всю группу и проверьте кодированные материалы. Дельта и особенно Эпсилон могут потребовать дополнительных кругов. Цель по каждому паттерну берите из рецепта брокера.",
+            "englishText": "An active obelisk can yield a random combination of Alpha, Beta, Gamma, Delta and Epsilon. Scan the whole cluster and check Encoded Materials. Delta and especially Epsilon may take additional loops. Use the broker recipe to set the target for each pattern."
+          },
+          {
+            "title": "Обновить экземпляр руин",
+            "englishTitle": "Refresh the ruins instance",
+            "text": "На безопасном участке руин можно выйти в главное меню прямо в ТРП, затем снова загрузиться и повторить сканы. Если сессия предлагает перемещение из опасной зоны, вернитесь в корабль перед выходом. Приключения Рам Таха со сбором записей Кодекса используют сочетания артефактов, обычный сбор паттернов обходится сканированием активных обелисков.",
+            "englishText": "At a safe ruin you can return to the main menu from the SRV, then load back in and repeat the scans. If the game warns it will move you from a danger zone, reboard the ship before leaving the instance. Ram Tah’s Codex-log missions use artefact combinations, while ordinary pattern gathering uses scans of active obelisks."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "Dallicort — Obelisk Pattern Data field route",
+        "url": "https://www.dallicort.com/guardian-technology/obelisk-pattern-data"
+      },
+      {
+        "title": "EDSM — Synuefe XR-H d11-102 survey",
+        "url": "https://www.edsm.net/en_GB/system/id/6379187/name/Synuefe%2BXR-H%2Bd11-102"
+      },
+      {
+        "title": "Player report — Epsilon data and SRV scanner",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1v05swv/farming_guardian_epsilon_data/"
+      },
+      {
+        "title": "Canonn — Guardian maps and field reports",
+        "url": "https://github.com/canonn-science/Canonn-Discord/blob/master/Useful-Links/guardians.md"
+      }
+    ]
+  },
+  {
+    "key": "farm-guardian-blueprints",
+    "title": "Чертежи оружия и истребителей Стражей",
+    "englishTitle": "Guardian weapon and fighter blueprints",
+    "description": "Две ветки экспедиции. Для оружия активируйте наземный терминал реликвией. Для корабельного истребителя сначала подберите Ancient Key у космического маяка.",
+    "englishDescription": "Two expedition branches. Activate a ground terminal with a relic for weapons. For a ship-launched fighter, collect an Ancient Key from a space beacon first.",
+    "keywords": [
+      "чертежи Стражей",
+      "оружие Стражей",
+      "истребитель Стражей",
+      "Guardian Weapon Blueprint Fragment",
+      "Guardian Vessel Blueprint Fragment",
+      "Ancient Key",
+      "Guardian Beacon",
+      "Guardian Structure",
+      "Synuefe GV-T b50-4",
+      "Synuefe EU-Q c21-10",
+      "Synuefe EU-Q c21-15",
+      "Synuefe KU-F b44-4",
+      "XG7 Trident",
+      "XG8 Javelin",
+      "XG9 Lance",
+      "Ram Tah"
+    ],
+    "materials": [
+      "guardianweaponblueprint",
+      "guardianvesselblueprint"
+    ],
+    "sections": [
+      {
+        "key": "weapon",
+        "title": "Фрагмент чертежа оружия",
+        "englishTitle": "Weapon blueprint fragment",
+        "steps": [
+          {
+            "title": "Основная точка — B 1",
+            "englishTitle": "Main site — B 1",
+            "text": "На B 1 в Synuefe GV-T b50-4 выберите Guardian Structure. Координаты терминала приблизительно −40,40°, +128,50°. На площадке возьмите Ancient Relic с башни и используйте наземный цикл из статьи про модульный чертёж. Зарядите шесть пилонов, выбросьте реликвию на площадку и просканируйте сферу. В кодированных материалах появится фрагмент оружия.",
+            "englishText": "On B 1 in Synuefe GV-T b50-4, select the Guardian Structure. The terminal is near −40.40°, +128.50°. Get an Ancient Relic from a tower and follow the ground sequence in the module article. Charge six pylons, drop the relic on the pad and scan the orb. A weapon fragment appears in Encoded Materials.",
+            "system": "Synuefe GV-T b50-4"
+          },
+          {
+            "title": "Другая точка — A 3",
+            "englishTitle": "Another site — A 3",
+            "text": "На A 3 в Synuefe EU-Q c21-10 терминал оружия находится примерно на +19,83°, −82,46°. Оба сооружения дают фрагмент оружия. Перед повтором проверьте потребность в рецептах выбранных моделей у брокера.",
+            "englishText": "The weapon terminal on A 3 in Synuefe EU-Q c21-10 is near +19.83°, −82.46°. Both structures award the weapon fragment. Check the recipe costs for the models you want before repeating the run.",
+            "system": "Synuefe EU-Q c21-10"
+          }
+        ]
+      },
+      {
+        "key": "beacon",
+        "title": "Космический маяк и древний ключ",
+        "englishTitle": "Space beacon and Ancient Key",
+        "steps": [
+          {
+            "title": "Guardian Beacon у планеты 4",
+            "englishTitle": "Guardian Beacon near body 4",
+            "text": "Возьмите корабельный лазер и оставьте по 1 т грузовой ёмкости на каждый ключ. В Synuefe KU-F b44-4 подойдите к планете 4, выберите Guardian Beacon в навигации и выйдите из суперкруиза на сигнале.",
+            "englishText": "Fit a ship laser and leave one tonne of cargo capacity per key. In Synuefe KU-F b44-4, approach body 4, target the Guardian Beacon in the navigation panel and drop from supercruise.",
+            "system": "Synuefe KU-F b44-4"
+          },
+          {
+            "title": "Три узла и один ключ",
+            "englishTitle": "Three nodes and one key",
+            "text": "Облетите маяк и зарядите лазером три светящихся узла. Когда откроется сфера, выберите её целью и просканируйте корабельным Data Link Scanner. Найдите Ancient Key в контактах, подберите грузовым ковшом и убедитесь, что он в трюме. Каждый запуск наземного терминала истребителя расходует один ключ.",
+            "englishText": "Circle the beacon and charge its three glowing nodes with a laser. When the orb opens, target it and scan with the ship’s Data Link Scanner. Locate the ejected Ancient Key in contacts, scoop it and verify that it is in cargo. Each fighter-terminal activation consumes a key."
+          }
+        ]
+      },
+      {
+        "key": "vessel",
+        "title": "Фрагмент чертежа корабля",
+        "englishTitle": "Vessel blueprint fragment",
+        "steps": [
+          {
+            "title": "Площадка A 1",
+            "englishTitle": "Site A 1",
+            "text": "Перелетите в Synuefe EU-Q c21-15 и выберите Guardian Structure на A 1. Терминал расположен примерно на +44,88°, −118,88°. После посадки перенесите Ancient Key из трюма корабля в грузовой отсек ТРП через панель инвентаря.",
+            "englishText": "Fly to Synuefe EU-Q c21-15 and select the Guardian Structure on A 1. The terminal is near +44.88°, −118.88°. After landing, transfer the Ancient Key from the ship to the SRV via the inventory panel.",
+            "system": "Synuefe EU-Q c21-15"
+          },
+          {
+            "title": "Шесть пилонов, ключ, сканирование",
+            "englishTitle": "Six pylons, key, scan",
+            "text": "Зарядите шесть наземных пилонов и выбросьте Ancient Key на площадку терминала. Просканируйте сферу Data Link Scanner и проверьте появление Guardian Vessel Blueprint Fragment в кодированных материалах. Этот тип фрагмента нужен для истребителей XG7 Trident, XG8 Javelin и XG9 Lance. Запланируйте по ключу и фрагменту на каждую выбранную модель.",
+            "englishText": "Charge the six ground pylons and jettison the Ancient Key on the terminal pad. Scan the orb with the Data Link Scanner and check Encoded Materials for the Guardian Vessel Blueprint Fragment. This fragment is used for XG7 Trident, XG8 Javelin and XG9 Lance fighter unlocks. Plan one key and fragment per chosen fighter."
+          }
+        ]
+      },
+      {
+        "key": "finish",
+        "title": "Проверить комплект перед возвращением",
+        "englishTitle": "Check the complete recipe before leaving",
+        "steps": [
+          {
+            "title": "Материалы, данные и доступ",
+            "englishTitle": "Materials, data and access",
+            "text": "У истребителей свои сочетания компонентов и паттернов, включая Эпсилон. Сверьте нужную модель и полный рецепт брокера, пока находитесь рядом с руинами. Разблокировка у брокера и доработка совместимого оборудования у Рам Таха происходят отдельно. Для рецепта инженерной модификации откройте карточку Рам Таха.",
+            "englishText": "Fighter models call for different combinations of components and patterns, including Epsilon. Check the full broker recipe for your intended fighter while you are still near the ruins. Broker unlocks and engineering compatible equipment at Ram Tah’s workshop are separate steps. Open Ram Tah’s profile for the engineering recipe."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "NEWP — Guardian Guide",
+        "url": "https://newp.io/guardian_guide"
+      },
+      {
+        "title": "Dallicort — Guardian Power-Up",
+        "url": "https://www.dallicort.com/ad-academy/guardian-power-up"
+      },
+      {
+        "title": "Anti-Xeno Initiative — Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "EDCAS — Guardian Data Terminal logs",
+        "url": "https://edcas.de/codex/entry/Guardian_Terminal"
+      },
+      {
+        "title": "Canonn — Guardian maps and field reports",
+        "url": "https://github.com/canonn-science/Canonn-Discord/blob/master/Useful-Links/guardians.md"
+      },
+      {
+        "title": "Player route — Guardian ship-launched fighters",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/r4xxr1/a_guide_to_unlocking_the_guardian_ship_launched/"
+      }
+    ]
+  }
+]

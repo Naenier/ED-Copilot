@@ -1,0 +1,975 @@
+[
+  {
+    "key": "farm-material-trading",
+    "title": "Обмен корабельных материалов",
+    "englishTitle": "Ship material trading",
+    "description": "Соберите редкий материал, сохраните запас для рецептов и обменяйте остаток по своей строке.",
+    "englishDescription": "Collect high-grade materials, reserve what your recipes need and trade the surplus down within its family.",
+    "keywords": [
+      "материальный торговец",
+      "обмен",
+      "trade down",
+      "Material Trader",
+      "farm",
+      "G4",
+      "G5"
+    ],
+    "materials": [
+      "@raw",
+      "@manufactured",
+      "@encoded"
+    ],
+    "sections": [
+      {
+        "key": "start",
+        "title": "Маршрут сбора",
+        "englishTitle": "Collection loop",
+        "steps": [
+          {
+            "title": "Проверьте план",
+            "englishTitle": "Check the plan",
+            "text": "Откройте список недостающих компонентов. Отметьте категорию, семейство и класс каждой позиции. Запас, нужный текущему чертежу или экспериментальному эффекту, оставьте у себя.",
+            "englishText": "Open the shortages list. Note the type, family and grade of each item. Reserve the stock already required by your blueprint or experimental effect."
+          },
+          {
+            "title": "Пополните редкий запас",
+            "englishTitle": "Refill the top grades",
+            "text": "В сырье высший класс G4. В промышленных материалах и закодированных данных высший класс G5. Для пополнения целого семейства обычно выгоднее найти его редкий материал и обменять часть вниз.",
+            "englishText": "Raw materials top out at G4. Manufactured and encoded materials top out at G5. To refill a family, collect its top-grade item and convert some of it to the lower grades."
+          },
+          {
+            "title": "Найдите торговца нужного типа",
+            "englishTitle": "Visit the right trader",
+            "text": "После стыковки откройте контакты станции и выберите торговца сырьём, промышленными материалами или данными. У него меняются материалы только его типа. В интерфейсе сначала выберите, что получить, затем то, что отдадите.",
+            "englishText": "After docking, open station contacts and choose a Raw, Manufactured or Encoded Material Trader. Each trader handles only their own type. Select the material to receive, then choose what to spend."
+          }
+        ]
+      },
+      {
+        "key": "rates",
+        "title": "Курс обмена",
+        "englishTitle": "Exchange rates",
+        "steps": [
+          {
+            "title": "Вниз внутри семейства",
+            "englishTitle": "Down within a family",
+            "text": "За 1 единицу G5 можно получить 3 G4, 9 G3, 27 G2 или 81 G1 того же семейства. Для сырья 1 G4 даёт 3 G3, 9 G2 или 27 G1. Например, 2 единицы иттрия дают 18 ванадия.",
+            "englishText": "One G5 buys 3 G4, 9 G3, 27 G2 or 81 G1 in the same family. For raws, one G4 buys 3 G3, 9 G2 or 27 G1. For example, 2 Yttrium buy 18 Vanadium."
+          },
+          {
+            "title": "Вверх внутри семейства",
+            "englishTitle": "Up within a family",
+            "text": "Одна ступень вверх стоит 6 единиц, две стоят 36. Если не хватает одного G5, можно отдать 6 G4 из той же строки. Для большой партии обычно быстрее пополнить G5 напрямую.",
+            "englishText": "One grade up costs 6 units, and two grades up cost 36. To cover a single missing G5, you can spend 6 G4 from the same family. Direct collection is usually faster for a larger batch."
+          },
+          {
+            "title": "В другую строку",
+            "englishTitle": "Across families",
+            "text": "При обмене в другую строку того же типа расход умножается на 6. Шесть единиц имперской защиты дают 1 единицу фармацевтических изоляционных материалов того же класса G5 или 3 химических манипулятора G4. Смотрите на размер партии в окне обмена.",
+            "englishText": "Crossing families within the same type multiplies the cost by 6. Six Imperial Shielding yield one G5 Pharmaceutical Isolator or three G4 Chemical Manipulators. Check the batch shown by the trader."
+          }
+        ]
+      },
+      {
+        "key": "storage",
+        "title": "Запасы и награды",
+        "englishTitle": "Stock and rewards",
+        "steps": [
+          {
+            "title": "Освободите место до вылета",
+            "englishTitle": "Make space before departure",
+            "text": "Лимит относится к каждому материалу отдельно. Для обычных материалов вместимость составляет 300 для G1, 250 для G2, 200 для G3, 150 для G4 и 100 для G5. Заполненный запас ограничит сбор. Перед дальним рейсом обменяйте лишние редкие материалы вниз.",
+            "englishText": "Each material has a separate cap. Standard caps are 300 for G1, 250 for G2, 200 for G3, 150 for G4 and 100 for G5. A full bin stops further collection. Before a long trip, trade surplus rare materials down."
+          },
+          {
+            "title": "Используйте награды миссий",
+            "englishTitle": "Use mission rewards",
+            "text": "После обновления Live 18.08 размер некоторых наград достигает 24 единиц. Количество и конкретный материал зависят от задания. Сверяйте награду перед принятием и выбирайте нужный вариант при сдаче.",
+            "englishText": "Live update 18.08 increased some mission rewards to as many as 24 units. The amount and material depend on the mission. Check the reward before accepting and select it when handing the mission in."
+          },
+          {
+            "title": "Проверьте особые материалы",
+            "englishTitle": "Check special materials",
+            "text": "У материалов Стражей и таргоидов свои способы получения. Материалы Odyssey собираются отдельно, а обмен у бармена действует только для разрешённых категорий. В плане эти материалы вынесены в отдельные маршруты.",
+            "englishText": "Guardian and Thargoid materials have separate sources. Odyssey materials are collected separately, and bartenders trade only eligible categories. The plan lists these materials under their own routes."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Live 18.08",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "NEWP · Engineering Guide",
+        "url": "https://newp.io/engineeringguide"
+      },
+      {
+        "title": "Players · Material Traders",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/wedncb/material_traders_for_dummies/"
+      }
+    ]
+  },
+  {
+    "key": "farm-raw-crystalline",
+    "title": "Кристаллические осколки и сырьё G4",
+    "englishTitle": "Crystalline Shards and G4 raws",
+    "description": "Шесть залежей на спутниках HIP 36601 и Outotz LS-K D8-3 дают сырьё для 24 материалов.",
+    "englishDescription": "Six moon sites in HIP 36601 and Outotz LS-K D8-3 feed 24 materials across six raw families.",
+    "keywords": [
+      "кристаллы",
+      "кристаллические осколки",
+      "Crystal Shards",
+      "crystalline shards",
+      "HIP 36601",
+      "Outotz LS-K D8-3",
+      "ТРП",
+      "SRV"
+    ],
+    "materials": [
+      "nickel",
+      "carbon",
+      "sulphur",
+      "phosphorus",
+      "manganese",
+      "chromium",
+      "vanadium",
+      "germanium",
+      "cadmium",
+      "tungsten",
+      "arsenic",
+      "molybdenum",
+      "niobium",
+      "zirconium",
+      "mercury",
+      "yttrium",
+      "tellurium",
+      "polonium",
+      "technetium",
+      "ruthenium",
+      "antimony",
+      "rhenium",
+      "lead",
+      "boron"
+    ],
+    "image": "farm-raw",
+    "sections": [
+      {
+        "key": "fit",
+        "title": "Оснастка и посадка",
+        "englishTitle": "Outfitting and landing",
+        "steps": [
+          {
+            "title": "Дальний перелёт",
+            "englishTitle": "Long-range flight",
+            "text": "Поставьте топливозаборник, подробный сканер поверхности и ангар с ТРП. Для маршрута полезны дальность прыжка и небольшой корпус, который легче посадить среди камней. Перед вылетом освободите запас G4 и проверьте маршрут через звёзды с доступной заправкой.",
+            "englishText": "Fit a fuel scoop, Detailed Surface Scanner and a vehicle hangar with an SRV. Good jump range cuts travel time and a small hull is easier to land among rocks. Free space in your G4 bins and check that your route includes scoopable stars."
+          },
+          {
+            "title": "Сканирование поверхности",
+            "englishTitle": "Surface mapping",
+            "text": "Картографируйте нужный спутник сканером и выберите Crystalline Shards в списке биологических сигналов. В Live цветная карта показывает зоны, где возможны осколки. Ниже приведены координаты участков, которые обследовали игроки. Номера Biological Site из старых путеводителей относятся к прежней схеме посадки.",
+            "englishText": "Map the moon with the DSS and select Crystalline Shards from its biological signals. In Live the map marks terrain where shards can occur. The coordinates below are patches reported by players. Numbered Biological Sites in older guides refer to the previous landing system."
+          }
+        ]
+      },
+      {
+        "key": "sites",
+        "title": "Спутники и координаты",
+        "englishTitle": "Moons and coordinates",
+        "steps": [
+          {
+            "title": "Полоний G4 · C 1 A",
+            "englishTitle": "Polonium G4 · C 1 A",
+            "text": "Участок −57.4599, +126.9543, широта и долгота. В той же строке обмена доступны Ртуть G3 · Мышьяк G2 · Рений G1.",
+            "englishText": "Patch at −57.4599, +126.9543, latitude and longitude. This feeds Mercury G3 · Arsenic G2 · Rhenium G1 at the trader.",
+            "system": "HIP 36601"
+          },
+          {
+            "title": "Рутений G4 · C 1 D",
+            "englishTitle": "Ruthenium G4 · C 1 D",
+            "text": "Участок −51.2639, +14.7291, широта и долгота. В той же строке обмена доступны Кадмий G3 · Марганец G2 · Сера G1.",
+            "englishText": "Patch at −51.2639, +14.7291, latitude and longitude. This feeds Cadmium G3 · Manganese G2 · Sulphur G1 at the trader.",
+            "system": "HIP 36601"
+          },
+          {
+            "title": "Теллур G4 · C 3 B",
+            "englishTitle": "Tellurium G4 · C 3 B",
+            "text": "Участок +67.00, +131.75, широта и долгота. В той же строке обмена доступны Вольфрам G3 · Германий G2 · Никель G1.",
+            "englishText": "Patch at +67.00, +131.75, latitude and longitude. This feeds Tungsten G3 · Germanium G2 · Nickel G1 at the trader.",
+            "system": "HIP 36601"
+          },
+          {
+            "title": "Технеций G4 · C 5 A",
+            "englishTitle": "Technetium G4 · C 5 A",
+            "text": "Участок +6.82, −23.81, широта и долгота. В той же строке обмена доступны Молибден G3 · Хром G2 · Фосфор G1.",
+            "englishText": "Patch at +6.82, −23.81, latitude and longitude. This feeds Molybdenum G3 · Chromium G2 · Phosphorus G1 at the trader.",
+            "system": "HIP 36601"
+          },
+          {
+            "title": "Иттрий G4 · B 5 A",
+            "englishTitle": "Yttrium G4 · B 5 A",
+            "text": "Участок −1.9216, −145.7013, широта и долгота. В той же строке обмена доступны Ниобий G3 · Ванадий G2 · Углерод G1.",
+            "englishText": "Patch at −1.9216, −145.7013, latitude and longitude. This feeds Niobium G3 · Vanadium G2 · Carbon G1 at the trader.",
+            "system": "Outotz LS-K D8-3"
+          },
+          {
+            "title": "Сурьма G4 · B 5 C",
+            "englishTitle": "Antimony G4 · B 5 C",
+            "text": "Участок −62.4905, +80.2426, широта и долгота. В той же строке обмена доступны Бор G3 · Цирконий G2 · Свинец G1.",
+            "englishText": "Patch at −62.4905, +80.2426, latitude and longitude. This feeds Boron G3 · Zirconium G2 · Lead G1 at the trader.",
+            "system": "Outotz LS-K D8-3"
+          }
+        ]
+      },
+      {
+        "key": "collect",
+        "title": "Сбор с поверхности",
+        "englishTitle": "Surface collection",
+        "steps": [
+          {
+            "title": "Осколок и фрагмент",
+            "englishTitle": "Shard and fragment",
+            "text": "Включите ночное видение, если поверхность тёмная. Подъезжайте на ТРП, прицельтесь в отделяемый кристаллический нарост и сбейте его турелью. Выберите выпавший фрагмент в контактах и подберите с открытым ковшом. Если участок редкий или уже собран, переезжайте к следующему скоплению.",
+            "englishText": "Use night vision on the dark side. Approach in the SRV, target the breakable crystalline growth and shoot it with the turret. Select the fragment in Contacts and drive over it with the scoop open. Move on to another cluster when a patch is sparse or depleted."
+          },
+          {
+            "title": "Селен собирайте отдельно",
+            "englishTitle": "Collect Selenium separately",
+            "text": "Для селена используйте ближние маршруты по мозговым деревьям или награду задания. Для небольшого дефицита годится обмен любого другого G4 сырья по курсу 6 к 1. Железо, цинк и олово относятся к семейству селена.",
+            "englishText": "For Selenium, use the nearby brain-tree routes or take it as a mission reward. For a small shortage, trade another G4 raw at 6 to 1. Iron, Zinc and Tin share Selenium’s family."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "CMDR community · Field observations and shard coordinates",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1stoml8/psa_engineering_material_harvesting_and_you/"
+      },
+      {
+        "title": "CMDR community · Crystalline Shard routes and SRV reports",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1q4uz58/is_there_a_more_efficient_way_to_do_crystal_shard/"
+      },
+      {
+        "title": "Anti-Xeno Initiative · Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      }
+    ]
+  },
+  {
+    "key": "farm-raw-nearby",
+    "title": "Сырьё рядом с Пузырём",
+    "englishTitle": "Raw materials near the Bubble",
+    "description": "Соберите редкое сырьё на шести телах HIP 29560 или выберите короткий рейс к месту крушения. Отдельные точки подходят для селена.",
+    "englishDescription": "Collect rare raws across six bodies in HIP 29560 or make a shorter wreck run. The guide includes dedicated Selenium stops.",
+    "keywords": [
+      "сырьё",
+      "селен",
+      "selenium",
+      "Brain Trees",
+      "мозговые деревья",
+      "HIP 29560",
+      "HR 3230",
+      "Koli Discii",
+      "Orrere",
+      "Synuefe",
+      "Коли Дисци"
+    ],
+    "materials": [
+      "@raw",
+      "iron",
+      "tin",
+      "zinc",
+      "selenium"
+    ],
+    "image": "farm-raw",
+    "sections": [
+      {
+        "key": "hip-29560",
+        "title": "HIP 29560 · все семь материалов G4",
+        "englishTitle": "HIP 29560 · all seven G4 raws",
+        "steps": [
+          {
+            "title": "Как найти участки",
+            "englishTitle": "Find the patches",
+            "text": "Автор колонии обследовал систему примерно в 573 св. г. от Sol и поставил наземные ориентиры возле участков. Названия содержат материал, курс и расстояние. Ниже даны координаты первых участков сбора. Сверьте тело, знак долготы и рельеф.",
+            "englishText": "The colony architect surveyed this system about 573 ly from Sol and built surface markers near the patches. Their names give the material, heading and distance. Use the coordinates below to find the first collection patches. Check the body, longitude sign and terrain.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Сурьма и селен · A 4 B",
+            "englishTitle": "Antimony and Selenium · A 4 B",
+            "text": "Первый участок −47.1081, −87.8582. Ориентир наземной базы даёт курс и дистанцию около 180° / 20 км.",
+            "englishText": "First patch at −47.1081, −87.8582. The surface marker gives a heading and distance of about 180° / 20 km.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Теллур · A 6 A",
+            "englishTitle": "Tellurium · A 6 A",
+            "text": "Первый участок −38.5415, +134.7737. Ориентир наземной базы даёт курс и дистанцию около 90° / 10 км.",
+            "englishText": "First patch at −38.5415, +134.7737. The surface marker gives a heading and distance of about 90° / 10 km.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Иттрий и селен · A 7 B",
+            "englishTitle": "Yttrium and Selenium · A 7 B",
+            "text": "Первый участок −54.8323, +43.9765. Ориентир наземной базы даёт курс и дистанцию около 270° / 10 км.",
+            "englishText": "First patch at −54.8323, +43.9765. The surface marker gives a heading and distance of about 270° / 10 km.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Рутений · A 7 F A",
+            "englishTitle": "Ruthenium · A 7 F A",
+            "text": "Первый участок −9.5889, −61.0722. Ориентир наземной базы даёт курс и дистанцию около 90° / 10 км.",
+            "englishText": "First patch at −9.5889, −61.0722. The surface marker gives a heading and distance of about 90° / 10 km.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Технеций и селен · A 8 A",
+            "englishTitle": "Technetium and Selenium · A 8 A",
+            "text": "Первый участок −4.0930, −148.5803. Ориентир наземной базы даёт курс и дистанцию около 64° / 11 км.",
+            "englishText": "First patch at −4.0930, −148.5803. The surface marker gives a heading and distance of about 64° / 11 km.",
+            "system": "HIP 29560"
+          },
+          {
+            "title": "Полоний · A 9 A",
+            "englishTitle": "Polonium · A 9 A",
+            "text": "Первый участок −2.7833, −112.2373. Ориентир наземной базы даёт курс и дистанцию около 180° / 20 км.",
+            "englishText": "First patch at −2.7833, −112.2373. The surface marker gives a heading and distance of about 180° / 20 km.",
+            "system": "HIP 29560"
+          }
+        ]
+      },
+      {
+        "key": "selenium",
+        "title": "Селен и альтернативный маршрут",
+        "englishTitle": "Selenium and alternate routes",
+        "steps": [
+          {
+            "title": "Synuefe SE-V b49-4 · B 3 A",
+            "englishTitle": "Synuefe SE-V b49-4 · B 3 A",
+            "text": "Стартовые координаты для селена −51.48, +63.90. Для теллура попробуйте −50.97, +63.98. Держите оба участка в закладках, поскольку урожайность различается даже в соседних скоплениях.",
+            "englishText": "Start at −51.48, +63.90 for Selenium. Try −50.97, +63.98 for Tellurium. Bookmark both spots because yields vary even between nearby patches.",
+            "system": "Synuefe SE-V b49-4"
+          },
+          {
+            "title": "HR 3230 · 3 A A",
+            "englishTitle": "HR 3230 · 3 A A",
+            "text": "Точка, которую используют игроки, находится на +52.6000, −165.8786. Селен встречается вперемешку с обычным сырьём, поэтому при слабом сборе смените участок. Альтернатива в Kappa-1 Volantis B 3 F A находится в кратере возле Tablock’s Selenium Tree Hydroponics.",
+            "englishText": "A player-reported patch is at +52.6000, −165.8786. Selenium occurs among common materials, so move to another patch if the yield is low. In Kappa-1 Volantis B 3 F A, another option is the crater near Tablock’s Selenium Tree Hydroponics.",
+            "system": "HR 3230"
+          },
+          {
+            "title": "35 G. Carinae и Synuefe AA-P c22-7",
+            "englishTitle": "35 G. Carinae and Synuefe AA-P c22-7",
+            "text": "В 35 G. Carinae ищите сурьму на 1 E, технеций на 2 A, рутений на 2 C и иттрий на 2 D. В Synuefe AA-P c22-7 на 5 C отмечен полоний около +28.97, +133.48. В этой группе точек встречаются деревья, гейзеры и лавовые фонтаны.",
+            "englishText": "In 35 G. Carinae, look for Antimony on 1 E, Technetium on 2 A, Ruthenium on 2 C and Yttrium on 2 D. In Synuefe AA-P c22-7 on 5 C, Polonium is reported around +28.97, +133.48. These sites include trees, geysers and lava vents.",
+            "system": "35 G. Carinae"
+          }
+        ]
+      },
+      {
+        "key": "collection",
+        "title": "Сбор на ТРП",
+        "englishTitle": "Collecting with an SRV",
+        "steps": [
+          {
+            "title": "Выберите нужный нарост",
+            "englishTitle": "Target the right growth",
+            "text": "На мозговых деревьях проверяйте в контактах Phloem Excretion для большинства G4. Для селена на подходящих телах проверяйте Polyporous Growth. На геологических участках цель для редких элементов часто называется Needle Crystals. Сбейте нарост турелью, выберите выпавший предмет и подберите его ковшом.",
+            "englishText": "On brain trees, check Contacts for Phloem Excretion for most G4 raws. On Selenium-bearing bodies, look for Polyporous Growth. At geological sites, Needle Crystals often carry the rare elements. Shoot the growth, target the fragment and scoop it with the SRV."
+          },
+          {
+            "title": "Проверьте рельеф",
+            "englishTitle": "Check terrain",
+            "text": "Включите ночное видение и ищите соседние скопления, если нужный нарост встречается редко. Корабельный вариант с дистанционной зенитной установкой и дронами требует открытой траектории. Если дроны разбиваются о деревья, закончите сбор на ТРП.",
+            "englishText": "Use night vision and move to nearby clusters if the required growth is uncommon. A ship with remote-release flak and limpets needs a clear path to collect the drops. Finish with the SRV if the limpets collide with trees."
+          }
+        ]
+      },
+      {
+        "key": "wrecks",
+        "title": "Быстрый запас на обломках",
+        "englishTitle": "Quick wreck run",
+        "steps": [
+          {
+            "title": "Orrere · 2 B",
+            "englishTitle": "Orrere · 2 B",
+            "text": "Точка крушения Anaconda находится примерно на +43.812, −173.972. Обстреляйте повреждённые грузовые стойки и подберите рассыпавшееся сырьё. Состав смешанный. Выберите ровное место для посадки и оставьте путь назад к кораблю.",
+            "englishText": "The Anaconda wreck is near +43.812, −173.972. Shoot the damaged cargo racks and scoop the spilled raws. The mix varies. Pick a flat landing area and keep a route back to the ship.",
+            "system": "Orrere"
+          },
+          {
+            "title": "Koli Discii · C 6 A",
+            "englishTitle": "Koli Discii · C 6 A",
+            "text": "Запасная точка крушения на +28.577, +7.219. Перелёт в суперкруизе до тела длинный, зато вокруг обломков легче маневрировать. Из стоек среди прочего находят сурьму, рутений, теллур, вольфрам и цирконий. Обменивайте запас после сбора.",
+            "englishText": "Alternate wreck at +28.577, +7.219. The supercruise leg is long, but terrain near the wreck is easier to drive. Player reports include Antimony, Ruthenium, Tellurium, Tungsten and Zirconium from the racks. Trade the mix after collecting it.",
+            "system": "Koli Discii"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "CMDR karmacappa · HIP 29560 survey and coordinates",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1u7wmjm/hip_29560_newly_colonized_system_with_all_6_t4/"
+      },
+      {
+        "title": "CMDR Captain Scrotium · Odyssey raw routes",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1j80for/update_41_raw_materials_collection_infographics/"
+      },
+      {
+        "title": "CMDR Erik Halvorsen · Near-Bubble field report",
+        "url": "https://inara.cz/elite/logbook/91010/"
+      },
+      {
+        "title": "CMDR community · Wreck and shard observations",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/bucrnx/"
+      },
+      {
+        "title": "CMDR community · Current wreck and surface collection reports",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1tcq9u0/farming_raw_engineering_materials/"
+      }
+    ]
+  },
+  {
+    "key": "farm-manufactured-hge",
+    "title": "Промышленные материалы в сигналах HGE",
+    "englishTitle": "Manufactured materials from HGEs",
+    "description": "Соберите восемь промышленных семейств в сигналах высокой степени и обменяйте G5 на нужные компоненты.",
+    "englishDescription": "Find eight manufactured families in High Grade Emissions and exchange G5 salvage for the components you need.",
+    "keywords": [
+      "HGE",
+      "High Grade Emissions",
+      "высокая степень",
+      "промышленные",
+      "collector limpets",
+      "дроны-сборщики",
+      "Федерация",
+      "Империя",
+      "Outbreak",
+      "Boom",
+      "Civil Unrest",
+      "War"
+    ],
+    "materials": [
+      "gridresistors",
+      "temperedalloys",
+      "mechanicalscrap",
+      "heatconductionwiring",
+      "wornshieldemitters",
+      "compactcomposites",
+      "salvagedalloys",
+      "chemicalstorageunits",
+      "hybridcapacitors",
+      "heatresistantceramics",
+      "mechanicalequipment",
+      "heatdispersionplate",
+      "shieldemitters",
+      "filamentcomposites",
+      "galvanisingalloys",
+      "chemicalprocessors",
+      "electrochemicalarrays",
+      "precipitatedalloys",
+      "mechanicalcomponents",
+      "heatexchangers",
+      "shieldingsensors",
+      "highdensitycomposites",
+      "phasealloys",
+      "chemicaldistillery",
+      "polymercapacitors",
+      "thermicalloys",
+      "configurablecomponents",
+      "heatvanes",
+      "compoundshielding",
+      "fedproprietarycomposites",
+      "protolightalloys",
+      "chemicalmanipulators",
+      "militarysupercapacitors",
+      "militarygradealloys",
+      "improvisedcomponents",
+      "protoheatradiators",
+      "imperialshielding",
+      "fedcorecomposites",
+      "protoradiolicalloys",
+      "pharmaceuticalisolators"
+    ],
+    "image": "farm-manufactured",
+    "sections": [
+      {
+        "key": "route",
+        "title": "Поиск и вход в сигнал",
+        "englishTitle": "Finding and entering a signal",
+        "steps": [
+          {
+            "title": "Снарядите корабль",
+            "englishTitle": "Outfit the ship",
+            "text": "Поставьте контроллер дронов-сборщиков и небольшой трюм. Купите дроны в пополнении запасов. Они занимают грузовые ячейки, а собранные материалы идут в отдельное хранилище. Два активных сборщика помогут быстрее закончить сигнал.",
+            "englishText": "Fit a Collector Limpet Controller and a small cargo rack. Buy limpets under Advanced Maintenance. Limpets occupy cargo space, while salvaged materials go into their own storage. Two active collectors help clear a signal faster."
+          },
+          {
+            "title": "Выберите систему и фракцию",
+            "englishTitle": "Pick a system and faction",
+            "text": "Ищите населённую систему с подходящей принадлежностью или фракцией в нужном состоянии. В обычном пространстве сканируйте навигационный маяк и возвращайтесь в суперкруиз. Можно также найти сигнал через FSS. Выберите High Grade Emissions и проверьте фракцию источника, её состояние и таймер.",
+            "englishText": "Pick a populated system with the relevant allegiance or a faction in the right state. Scan the navigation beacon in normal space, then return to supercruise. You can also find the signal in the FSS. Select High Grade Emissions and inspect the source faction, state and timer."
+          },
+          {
+            "title": "Подберите обломки",
+            "englishTitle": "Collect the salvage",
+            "text": "После входа сверьте материал по контактам. Откройте ковш, снимите выделение с отдельного фрагмента и запустите сборщики. Без выделенной цели каждый дрон подбирает несколько предметов за срок службы. Прекратите сбор, когда целевой запас заполнится.",
+            "englishText": "After dropping in, verify the material in Contacts. Open the cargo scoop, clear any targeted fragment and deploy collectors. Untargeted limpets collect multiple items during their lifetime. Stop when the intended material bin is full."
+          }
+        ]
+      },
+      {
+        "key": "g5",
+        "title": "Состояния и семейства G5",
+        "englishTitle": "G5 states and families",
+        "steps": [
+          {
+            "title": "Имперская защита G5",
+            "englishTitle": "Imperial Shielding G5",
+            "text": "Имперская система. Начните с HGE фракции без активного состояния, чтобы уменьшить число конкурирующих выпадений. Для обмена вниз по своей строке доступны Многоступенчатая защита G4 · Сенсоры системы экранирования G3 · Щитоизлучатели G2 · Изношенные щитоизлучатели G1.",
+            "englishText": "Empire-controlled system. Start with an HGE from a faction with no active state to reduce the competing drop pool. Lower grades in this family are Compound Shielding G4 · Shielding Sensors G3 · Shield Emitters G2 · Worn Shield Emitters G1."
+          },
+          {
+            "title": "Композиты Core Dynamics G5",
+            "englishTitle": "Core Dynamics Composites G5",
+            "text": "Федеральная система. В сигнале могут одновременно оказаться фирменные композиты G4, поэтому перед запуском дронов проверьте оба запаса. Для обмена вниз по своей строке доступны Патентованные композиты G4 · Высокоплотностные композиты G3 · Волокнистые композиты G2 · Спрессованные композиты G1.",
+            "englishText": "Federation-controlled system. The signal can also contain G4 Proprietary Composites, so check both storage bins before launching limpets. Lower grades in this family are Proprietary Composites G4 · High Density Composites G3 · Filament Composites G2 · Compact Composites G1."
+          },
+          {
+            "title": "Прототипы теплоизлучателей G5",
+            "englishTitle": "Proto Heat Radiators G5",
+            "text": "Ищите HGE фракции в состоянии Boom. Независимая система или система Альянса уменьшает конкуренцию материалов Империи и Федерации. Для обмена вниз по своей строке доступны Тепловые заслонки G4 · Теплообменные агрегаты G3 · Теплорассеивающая пластина G2 · Теплопроводящие провода G1.",
+            "englishText": "Look for an HGE from a faction in Boom. An independent or Alliance system reduces competition from Imperial and Federal drops. Lower grades in this family are Heat Vanes G4 · Heat Exchangers G3 · Heat Dispersion Plate G2 · Heat Conduction Wiring G1."
+          },
+          {
+            "title": "Сплавы для изготовления зондов G5",
+            "englishTitle": "Proto Radiolic Alloys G5",
+            "text": "Тоже ищите Boom. В добыче могут быть опытные лёгкие сплавы G4, а альтернативный сигнал в том же состоянии может дать радиаторы. Для обмена вниз по своей строке доступны Опытные легкие сплавы G4 · Фазовые сплавы G3 · Сплавы для гальванизации G2 · Захваченные сплавы G1.",
+            "englishText": "Look for Boom here too. The salvage can include G4 Proto Light Alloys, while another Boom signal may yield radiators. Lower grades in this family are Proto Light Alloys G4 · Phase Alloys G3 · Galvanising Alloys G2 · Salvaged Alloys G1."
+          },
+          {
+            "title": "Сплавы военного класса G5",
+            "englishTitle": "Military Grade Alloys G5",
+            "text": "Война или гражданская война у фракции источника. Сигнал может дать военные суперконденсаторы, поэтому подтвердите состав в контактах. Для обмена вниз по своей строке доступны Термические сплавы G4 · Осажденные сплавы G3 · Жаропрочная керамика G2 · Закаленные сплавы G1.",
+            "englishText": "War or Civil War for the signal faction. It may yield Military Supercapacitors, so confirm the salvage in Contacts. Lower grades in this family are Thermic Alloys G4 · Precipitated Alloys G3 · Heat Resistant Ceramics G2 · Tempered Alloys G1."
+          },
+          {
+            "title": "Военные суперконденсаторы G5",
+            "englishTitle": "Military Supercapacitors G5",
+            "text": "Проверяйте HGE при War или Civil War. Оба состояния дают шанс на суперконденсаторы. В том же пуле встречаются военные сплавы. Для обмена вниз по своей строке доступны Полимерные конденсаторы G4 · Электрохимические массивы G3 · Гибридные конденсаторы G2 · Наборные резисторы G1.",
+            "englishText": "Check HGEs in War or Civil War. Both states can yield these capacitors. Military Grade Alloys compete in the same pool. Lower grades in this family are Polymer Capacitors G4 · Electrochemical Arrays G3 · Hybrid Capacitors G2 · Grid Resistors G1."
+          },
+          {
+            "title": "Кустарные компоненты G5",
+            "englishTitle": "Improvised Components G5",
+            "text": "Гражданские беспорядки, Civil Unrest, у фракции сигнала. Ищите сначала независимую систему или систему Альянса. Для обмена вниз по своей строке доступны Настраиваемые компоненты G4 · Механические компоненты G3 · Механическое оборудование G2 · Механические отходы G1.",
+            "englishText": "Civil Unrest for the signal faction. Start with an independent or Alliance-controlled system. Lower grades in this family are Configurable Components G4 · Mechanical Components G3 · Mechanical Equipment G2 · Mechanical Scrap G1."
+          },
+          {
+            "title": "Фармацевтические изоляционные материалы G5",
+            "englishTitle": "Pharmaceutical Isolators G5",
+            "text": "Эпидемия, Outbreak, у фракции сигнала. В независимой системе или системе Альянса меньше конкуренции с материалами сверхдержав. Для обмена вниз по своей строке доступны Манипуляторы для работы с химикатами G4 · Оборудование для перегонки химикатов G3 · Оборудование для химобработки G2 · Контейнеры для химикатов G1.",
+            "englishText": "Outbreak for the signal faction. Independent or Alliance-controlled systems have less competition from superpower-specific materials. Lower grades in this family are Chemical Manipulators G4 · Chemical Distillery G3 · Chemical Processors G2 · Chemical Storage Units G1."
+          }
+        ]
+      },
+      {
+        "key": "fallback",
+        "title": "Если нужный сигнал не появляется",
+        "englishTitle": "When the right signal is missing",
+        "steps": [
+          {
+            "title": "Сверьте фактическую добычу",
+            "englishTitle": "Check the actual drop",
+            "text": "Состояние фракции и принадлежность системы задают набор возможных материалов. После входа проверьте состав. Если на табло несколько HGE, начните с источника, который соответствует нужному состоянию и ещё успеет прожить до завершения сбора.",
+            "englishText": "The faction state and system allegiance determine the possible loot. Verify the actual contents after dropping in. If several HGEs are listed, start with a matching source whose timer leaves time to finish collecting."
+          },
+          {
+            "title": "Соберите доступный G5",
+            "englishTitle": "Collect an available G5",
+            "text": "Если редкое состояние не находится поблизости, соберите доступную имперскую защиту или федеральные композиты и обменяйте небольшую часть. В Live 18.08 количество источников и объём добычи G4 и G5 выросли. Перелёт к следующему сигналу часто практичнее старой серии перезапусков клиента.",
+            "englishText": "If a rare state is unavailable nearby, collect Imperial Shielding or Federal composites and trade a small portion. Live update 18.08 increased the number of sources and the quantity of G4 and G5 salvage. Moving to another signal is often more practical than the old repeated client restarts."
+          },
+          {
+            "title": "Проводники и кристаллы",
+            "englishTitle": "Conductors and crystals",
+            "text": "Две промышленные строки закрываются наградами или обменом. Для биотехнологических проводников и безупречных фокусирующих кристаллов смотрите задания или берите излишек G5 к промышленному торговцу.",
+            "englishText": "Two manufactured families are supplied by rewards or trade. For Biotech Conductors and Exquisite Focus Crystals, check mission rewards or take surplus G5 to a Manufactured Material Trader."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Live 18.08 engineering rebalance",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "CMDR Vaethe · 2026 HGE observations by state and allegiance",
+        "url": "https://inara.cz/elite/logbook/98351/"
+      },
+      {
+        "title": "CMDR Vorsipellis · AXI field guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "Frontier Forums · High Grade Emissions for Dummies",
+        "url": "https://forums.frontier.co.uk/threads/3-3-01-high-grade-emissions-for-dummies.468936/"
+      },
+      {
+        "title": "EDGalaxy · High Grade Emissions Finder",
+        "url": "https://edgalaxy.net/hge"
+      }
+    ]
+  },
+  {
+    "key": "farm-manufactured-missions",
+    "title": "Награды, обломки и Dav’s Hope",
+    "englishTitle": "Mission rewards, salvage and Dav’s Hope",
+    "description": "Получите два семейства G5, которые удобнее собирать через задания и обмен. Доберите обычные компоненты на поверхности или после боя.",
+    "englishDescription": "Supply two G5 families through missions and trading. Pick up common components on the surface or after combat.",
+    "keywords": [
+      "Dav’s Hope",
+      "Dav's Hope",
+      "Robigo",
+      "Sothis",
+      "миссии",
+      "проводники",
+      "кристаллы",
+      "фокусирующие",
+      "focus crystals",
+      "Biotech Conductors",
+      "награды"
+    ],
+    "materials": [
+      "crystalshards",
+      "basicconductors",
+      "uncutfocuscrystals",
+      "conductivecomponents",
+      "focuscrystals",
+      "conductiveceramics",
+      "refinedfocuscrystals",
+      "conductivepolymers",
+      "exquisitefocuscrystals",
+      "biotechconductors"
+    ],
+    "image": "farm-manufactured",
+    "sections": [
+      {
+        "key": "reward",
+        "title": "Два семейства из наград",
+        "englishTitle": "Two reward families",
+        "steps": [
+          {
+            "title": "Биотехнологические проводники G5",
+            "englishTitle": "Biotech Conductors G5",
+            "text": "Проверяйте награды высокоуровневых заданий. Небольшой дефицит можно закрыть обменом избытка из HGE у промышленного торговца. Младшие классы этой строки — Проводящие полимеры G4 · Проводящая керамика G3 · Проводящие компоненты G2 · Простые проводники G1.",
+            "englishText": "Check higher-level mission rewards. For a small shortage, exchange surplus HGE salvage at a Manufactured Material Trader. Lower grades in this family are Conductive Polymers G4 · Conductive Ceramics G3 · Conductive Components G2 · Basic Conductors G1."
+          },
+          {
+            "title": "Безупречные фокусирующие кристаллы G5",
+            "englishTitle": "Exquisite Focus Crystals G5",
+            "text": "Выбирайте награду за перевозку пассажиров, добычу или боевое задание, когда на доске указаны именно эти кристаллы. Для фокусирующих кристаллов G3 обменяйте один G5 на девять G3 из той же строки. Младшие классы этой строки — Обработанные фокусировочные кристаллы G4 · Фокусировочные кристаллы G3 · Поврежденные фокусировочные кристаллы G2 · Осколки кристаллов G1.",
+            "englishText": "Take a passenger, mining or combat mission reward when the board explicitly lists these crystals. For G3 Focus Crystals, one G5 trades down to nine G3 in the same family. Lower grades in this family are Refined Focus Crystals G4 · Focus Crystals G3 · Flawed Focus Crystals G2 · Crystal Shards G1."
+          },
+          {
+            "title": "Robigo Mines → Sothis",
+            "englishTitle": "Robigo Mines → Sothis",
+            "text": "Классический маршрут перевозки пассажиров к маяку Sirius Atmospherics и обратно. Для стыковки в Robigo Mines берите корабль с малой или средней площадкой и пассажирскими каютами. Сначала откройте доску и посмотрите, какие награды есть сейчас. Репутация расширяет выбор, а нужные материалы выпадают по ситуации.",
+            "englishText": "A classic sightseeing run to the Sirius Atmospherics beacon and back. Bring a small or medium ship with cabins to dock at Robigo Mines. Inspect the board for current reward choices first. Reputation expands your options and the desired materials rotate.",
+            "system": "Robigo"
+          },
+          {
+            "title": "Получите награду при сдаче",
+            "englishTitle": "Select the reward on hand-in",
+            "text": "В Live 18.08 Frontier расширила набор и количество инженерных наград. Обратите внимание на сложность, объём груза и требуемую репутацию. При завершении выберите нужный материал среди вариантов выплаты.",
+            "englishText": "In Live 18.08 Frontier increased the selection and size of engineering rewards. Check difficulty, cargo requirements and reputation. Pick the desired material from the payout choices when turning in the mission."
+          }
+        ]
+      },
+      {
+        "key": "surface",
+        "title": "Наземный сбор G1–G4",
+        "englishTitle": "Surface salvage G1–G4",
+        "steps": [
+          {
+            "title": "Dav’s Hope · A 5",
+            "englishTitle": "Dav’s Hope · A 5",
+            "text": "Летите в Hyades Sector DR-V c2-23. При первом посещении просканируйте A 5 подробным сканером поверхности и выберите Dav’s Hope в навигации. На ТРП объезжайте постройки и подбирайте контейнеры в точках сбора. В контактах также появится терминал для сканирования.",
+            "englishText": "Fly to Hyades Sector DR-V c2-23. On your first visit, map A 5 with the DSS and select Dav’s Hope in Navigation. Drive the SRV around the buildings and scoop canisters at the salvage points. You will also find a scannable terminal in Contacts.",
+            "system": "Hyades Sector DR-V c2-23"
+          },
+          {
+            "title": "Используйте смешанный запас",
+            "englishTitle": "Use the mixed salvage",
+            "text": "Состав контейнеров меняется. Среди находок бывают детали щитов, сплавы, композиты, а иногда химические манипуляторы и конденсаторы G4. Если материалы исчезли после круга, новая игровая сессия обычно снова заполняет точки. Для целевых G5 выбирайте HGE, награды или торговца.",
+            "englishText": "The canister contents vary. Expect a mix of shield parts, alloys and composites, with occasional G4 Chemical Manipulators and capacitors. A fresh instance usually repopulates collected spots. For targeted G5, use HGEs, rewards or a trader."
+          },
+          {
+            "title": "Собирайте после боя",
+            "englishTitle": "Collect after combat",
+            "text": "В зоне добычи или у маяка на боевом корабле следите за обломками уничтоженных целей. Подбирайте компоненты дронами после того, как выйдете из-под огня. Для быстрого обмена пригодятся и лишние награды Powerplay, если они содержат нужный тип материалов.",
+            "englishText": "At a resource extraction site or beacon, look for salvage from destroyed targets. Collect it with limpets once you are clear of enemy fire. Spare Powerplay rewards can also feed a trader when they contain the right material type."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Live 18.08 engineering rebalance",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "CMDR Vorsipellis · AXI Engineering Materials Guide",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "CMDR community · Robigo reward observations",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1l1er4k/are_robigo_runs_still_good_in_2025/"
+      },
+      {
+        "title": "CMDR community · Dav’s Hope field report",
+        "url": "https://inara.cz/elite/logbook/94819/"
+      }
+    ]
+  },
+  {
+    "key": "farm-encoded-jameson",
+    "title": "Данные у места крушения Джеймсона",
+    "englishTitle": "Encoded data at Jameson’s Crash Site",
+    "description": "Просканируйте маяки у разбитой Cobra и обменяйте накопленные данные в Ray Gateway.",
+    "englishDescription": "Scan the beacons by the crashed Cobra and exchange the stock at Ray Gateway.",
+    "keywords": [
+      "Jameson Crash Site",
+      "Джеймсон",
+      "HIP 12099",
+      "Cobra",
+      "Comms Control",
+      "дешифровка",
+      "шифрование",
+      "Ray Gateway",
+      "Diaguandri"
+    ],
+    "materials": [
+      "legacyfirmware",
+      "encryptedfiles",
+      "consumerfirmware",
+      "encryptioncodes",
+      "industrialfirmware",
+      "symmetrickeys",
+      "securityfirmware",
+      "encryptionarchives",
+      "embeddedfirmware",
+      "adaptiveencryptors"
+    ],
+    "image": "farm-encoded",
+    "sections": [
+      {
+        "key": "approach",
+        "title": "Маршрут и посадка",
+        "englishTitle": "Travel and landing",
+        "steps": [
+          {
+            "title": "HIP 12099 · 1 B",
+            "englishTitle": "HIP 12099 · 1 B",
+            "text": "Установите подробный сканер поверхности и возьмите ТРП. Ориентир места крушения на 1 B находится около −54.38, −50.36. При первом визите картографируйте спутник и выберите Jameson Crash Site в навигации. Приземлитесь на ровном участке возле обломков.",
+            "englishText": "Fit a Detailed Surface Scanner and carry an SRV. The wreck marker on 1 B is near −54.38, −50.36. On your first visit map the moon, select Jameson Crash Site in Navigation and land on a level patch by the wreck.",
+            "system": "HIP 12099"
+          },
+          {
+            "title": "Подготовьте Data Link Scanner",
+            "englishTitle": "Prepare the Data Link Scanner",
+            "text": "Назначьте сканер линии передачи данных ТРП на группу огня и переключитесь в режим анализа. Поверните турель к красным устройствам Comms Control, выберите их в контактах и удерживайте сканирование до подтверждения.",
+            "englishText": "Assign the SRV Data Link Scanner to a fire group and switch to Analysis Mode. Turn the turret toward the red Comms Control units, target them in Contacts and hold the scanner until the scan completes."
+          }
+        ]
+      },
+      {
+        "key": "loop",
+        "title": "Что сканировать и когда повторять",
+        "englishTitle": "What to scan and when to repeat",
+        "steps": [
+          {
+            "title": "Обойдите обломки",
+            "englishTitle": "Work around the wreck",
+            "text": "Объедьте Cobra и просканируйте доступные терминалы с обеих сторон. Для дальних точек смените позицию. Основной запас здесь дают захват адаптивного шифровальщика G5 и нетипичные архивы шифрования G4. Иногда встречаются более низкие классы прошивок. Отдельное сканирование корабля открывает журнал Джеймсона.",
+            "englishText": "Drive around the Cobra and scan the reachable terminals on both sides. Reposition for the far units. The main drops are G5 Adaptive Encryptors Capture and G4 Atypical Encryption Archives. Lower-grade firmware can also appear. Scanning the ship separately unlocks Jameson’s logs."
+          },
+          {
+            "title": "Следите за вместимостью",
+            "englishTitle": "Watch storage",
+            "text": "Посмотрите остаток места у обоих основных материалов. При необходимости выйдите в главное меню и снова войдите в игровой режим, чтобы повторить сканирование. Некоторые пилоты сканируют с небольшого корабля, но ТРП проще удерживать в зоне действия сканера.",
+            "englishText": "Check the remaining space for both main drops. When needed, exit to the main menu and re-enter your game mode to scan again. Some pilots scan from a small ship, but the SRV is easier to keep within scanner range."
+          }
+        ]
+      },
+      {
+        "key": "trade",
+        "title": "Что взять у торговца",
+        "englishTitle": "What to get from the trader",
+        "steps": [
+          {
+            "title": "Захват адаптивного шифровальщика G5",
+            "englishTitle": "Adaptive Encryptors Capture G5",
+            "text": "Сохраните запас G5 для рецептов и обменяйте избыток вниз. Если архивы G4 собраны напрямую, сначала используйте их для небольших дефицитов. Младшие классы этой строки — Нетипичные архивы шифрования G4 · Открытые симметричные ключи G3 · Меченые коды шифрования G2 · Необычные зашифрованные файлы G1.",
+            "englishText": "Reserve the G5 needed by your recipes and trade surplus down. If you collected G4 archives directly, use those first for small shortages. Lower grades in this family are Atypical Encryption Archives G4 · Open Symmetric Keys G3 · Tagged Encryption Codes G2 · Unusual Encrypted Files G1."
+          },
+          {
+            "title": "Модифицированное встроенное ПО G5",
+            "englishTitle": "Modified Embedded Firmware G5",
+            "text": "Для полного запаса этой строки выбирайте модифицированное встроенное ПО в наградах, если оно доступно, или обменивайте G5 другой строки по курсу 6 к 1. Младшие классы этой строки — Патч защитного ПО G4 · Взломанные промышленные микропрограммы G3 · Измененные пользовательские микропрограммы G2 · Специальные микропрограммы предыдущего поколения G1.",
+            "englishText": "To stock this family, choose Modified Embedded Firmware when it appears as a mission reward, or trade a different G5 at 6 to 1. Lower grades in this family are Security Firmware Patch G4 · Cracked Industrial Firmware G3 · Modified Consumer Firmware G2 · Specialised Legacy Firmware G1."
+          },
+          {
+            "title": "Ray Gateway · Diaguandri",
+            "englishTitle": "Ray Gateway · Diaguandri",
+            "text": "На станции Ray Gateway откройте торговца закодированными материалами. Например, 6 G5 захватов дадут одно исключение из глубинного анализа данных следа G5 или три позиции G4 из другой строки. Если нужный запас уже почти заполнен, сначала закрывайте точные дефициты в плане.",
+            "englishText": "At Ray Gateway, open the Encoded Material Trader. For example, 6 G5 Adaptive Encryptors can buy one G5 Datamined Wake Exception or three G4 items in a different family. When storage is nearly full, fill the exact shortages shown in your plan first.",
+            "system": "Diaguandri"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Anti-Xeno Initiative · Jameson’s Crashed Cobra",
+        "url": "https://wiki.antixenoinitiative.com/en/engineering-materials"
+      },
+      {
+        "title": "CMDR community · Live beacons and encoded trades",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1xeh034/need_help_getting_aberrant_shield_pattern_analysis/"
+      },
+      {
+        "title": "CMDR community · Jameson Crash Site reports",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1cqes5f/"
+      },
+      {
+        "title": "EDSM · Ray Gateway station services",
+        "url": "https://www.edsm.net/en_GB/system/stations/id/7479/name/Diaguandri/details/idS/53/nameS/Ray%2BGateway/facility/market"
+      }
+    ]
+  },
+  {
+    "key": "farm-encoded-direct",
+    "title": "Следы, щиты и архивы данных",
+    "englishTitle": "Wake scans, shield data and archives",
+    "description": "Соберите четыре семейства напрямую сканированием или рассчитайте, сколько данных Джеймсона понадобится для обмена.",
+    "englishDescription": "Collect four encoded families directly through scanning, or work out how much Jameson data to trade for them.",
+    "keywords": [
+      "wake scanner",
+      "High Wake",
+      "сканер следов",
+      "FSD",
+      "Data Archives",
+      "Shield Data",
+      "Emission Data",
+      "датамайнинг",
+      "Encoded Emissions"
+    ],
+    "materials": [
+      "bulkscandata",
+      "disruptedwakeechoes",
+      "scrambledemissiondata",
+      "shieldcyclerecordings",
+      "scanarchives",
+      "fsdtelemetry",
+      "archivedemissiondata",
+      "shieldsoakanalysis",
+      "scandatabanks",
+      "wakesolutions",
+      "emissiondata",
+      "shielddensityreports",
+      "encodedscandata",
+      "hyperspacetrajectories",
+      "decodedemissiondata",
+      "shieldpatternanalysis",
+      "classifiedscandata",
+      "dataminedwake",
+      "compactemissionsdata",
+      "shieldfrequencydata"
+    ],
+    "image": "farm-encoded",
+    "sections": [
+      {
+        "key": "wakes",
+        "title": "Следы гиперпрыжков",
+        "englishTitle": "Hyperspace wakes",
+        "steps": [
+          {
+            "title": "Поставьте сканер следов",
+            "englishTitle": "Fit a wake scanner",
+            "text": "Установите Frame Shift Wake Scanner в слот внешнего оборудования, назначьте группу огня и вылетите к оживлённой станции. Дождитесь, когда NPC уйдут в другую систему. Выберите High Energy Wake, подойдите в пределах дальности модуля и завершите сканирование. Держитесь в стороне от посадочного коридора.",
+            "englishText": "Fit a Frame Shift Wake Scanner in a utility mount and assign a fire group. Fly to a busy station and watch for NPCs jumping to other systems. Target a High Energy Wake, move within your module’s range and complete the scan. Stay clear of the docking lane."
+          },
+          {
+            "title": "Исключения из глубинного анализа данных следа G5",
+            "englishTitle": "Datamined Wake Exceptions G5",
+            "text": "Редкое выпадение при сканировании следов гиперпрыжка. Пилоты также находят его у маяков в сигналах Encoded Emissions. Для нескольких единиц быстрее сравнить текущий запас данных с ценой обмена. Младшие классы этой строки — Аномальные траектории в гиперпространстве G4 · Странные расчеты следа G3 · Аномальная телеметрия FSD G2 · Атипичное эхо поврежденного следа G1.",
+            "englishText": "A rare drop from scanning high-energy wakes. Players also report it from beacons in Encoded Emissions. For a few units, compare your current encoded stock with the trader’s cost. Lower grades in this family are Eccentric Hyperspace Trajectories G4 · Strange Wake Solutions G3 · Anomalous FSD Telemetry G2 · Atypical Disrupted Wake Echoes G1."
+          }
+        ]
+      },
+      {
+        "key": "ship-data",
+        "title": "Корабли, маяки и архивы",
+        "englishTitle": "Ships, beacons and archives",
+        "steps": [
+          {
+            "title": "Необычные данные частоты щита G5",
+            "englishTitle": "Peculiar Shield Frequency Data G5",
+            "text": "Выберите проходящие корабли целью и держите их в секторе датчиков до завершения обычного сканирования. В местах с потоком боевых кораблей удобно собрать младшие данные щитов. G5 пополняйте наградой или обменом, если прямое выпадение редкое. Младшие классы этой строки — Аномальный анализ схемы щита G4 · Нетипичные сканирования щита G3 · Несогласованный анализ поглощения щита G2 · Искажённые записи циклов щита G1.",
+            "englishText": "Target passing ships and keep them in the sensor arc until the standard scan completes. Traffic with combat ships helps collect lower shield grades. Use a reward or exchange for G5 if direct drops are scarce. Lower grades in this family are Aberrant Shield Pattern Analysis G4 · Untypical Shield Scans G3 · Inconsistent Shield Soak Analysis G2 · Distorted Shield Cycle Recordings G1."
+          },
+          {
+            "title": "Аномальные компактные данные излучения G5",
+            "englishTitle": "Abnormal Compact Emissions Data G5",
+            "text": "Ищите частные маяки в сигналах Encoded Emissions и сканируйте их сканером линии передачи данных. Низкие классы также появляются при обычном сканировании кораблей. Младшие классы этой строки — Декодированные данные излучения G4 · Неожиданные данные излучения G3 · Нерегулярные данные излучения G2 · Исключительные искажённые данные излучения G1.",
+            "englishText": "Look for private beacons in Encoded Emissions and use the Data Link Scanner. Standard ship scans can also produce lower grades. Lower grades in this family are Decoded Emission Data G4 · Unexpected Emission Data G3 · Irregular Emission Data G2 · Exceptional Scrambled Emission Data G1."
+          },
+          {
+            "title": "Засекреченный фрагмент сканирования G5",
+            "englishTitle": "Classified Scan Fragment G5",
+            "text": "Проверяйте награды миссий и сканируйте корабли службы безопасности или военные суда. Некоторые наземные точки данных также дают материалы этой строки. Учитывайте законность доступа к частным терминалам. Младшие классы этой строки — Расходящиеся данные сканирования G4 · Засекреченные базы данных сканирования G3 · Неопознанные архивы сканирования G2 · Аномальный массив данных сканирования G1.",
+            "englishText": "Check mission rewards and scan security or military ships. Some surface data points also yield this family. Check whether accessing a private terminal is legal. Lower grades in this family are Divergent Scan Data G4 · Classified Scan Databanks G3 · Unidentified Scan Archives G2 · Anomalous Bulk Scan Data G1."
+          }
+        ]
+      },
+      {
+        "key": "pick",
+        "title": "Как выбрать способ",
+        "englishTitle": "Choosing a method",
+        "steps": [
+          {
+            "title": "Обмен для короткого списка",
+            "englishTitle": "Trade for a short list",
+            "text": "Если нужно несколько материалов из разных строк, возьмите к торговцу излишки после Джеймсона. Для большой партии сначала ищите награду или прямой источник нужного семейства. Сравните, сколько G5 придётся отдать, с числом недостающих единиц.",
+            "englishText": "When you need a few items across several families, trade the surplus from Jameson. For a large batch, check for a reward or a direct source of the desired family first. Compare how much G5 the trader will charge with the number of items you still need."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "CMDR community · Encoded Emission and wake scan field reports",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1gv7ulz/"
+      },
+      {
+        "title": "CMDR community · Trade and ship scan experiences",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/mcquek/"
+      },
+      {
+        "title": "Deep Space Network · First-hand material and data guide",
+        "url": "https://ed-dsn.net/en/materials-and-data/"
+      },
+      {
+        "title": "EDCD · FDevIDs material symbols",
+        "url": "https://github.com/EDCD/FDevIDs/blob/master/material.csv"
+      }
+    ]
+  }
+]

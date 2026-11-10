@@ -113,3 +113,27 @@ test('a visible details pane remains reachable at the narrow layout breakpoint',
  assert.match(css,/width:min\(330px,calc\(100vw - 36px\)\)/);
  assert.match(css,/\.settings-workspace\.has-help \.settings-grid\{grid-template-columns:1fr\}/);
 });
+
+test('profile backup uses native file dialogs and reports the restore folder safely',async()=>{
+ const f=fixture(),button={disabled:false};
+ const html=f.api.renderProfile(f.ui);
+ assert.match(html,/data-click="profile-export"/);
+ assert.match(html,/data-click="profile-import"/);
+ const messages=[];
+ f.ui.dialog=(title,body)=>messages.push({title,body});
+ f.ui.toast=message=>messages.push({message});
+ f.ui.call=async (op,{action})=>{
+  assert.equal(op,'native');
+  assert.equal(button.disabled,true);
+  if(action==='profile-export')return {cancelled:true};
+  assert.equal(action,'profile-import');
+  return {ok:true,folder:'C:\\Test & Restore'};
+ };
+ await f.api.handleProfile('profile-export',button,f.ui);
+ assert.equal(button.disabled,false);
+ assert.equal(messages.length,0);
+ await f.api.handleProfile('profile-import',button,f.ui);
+ assert.equal(button.disabled,false);
+ assert.equal(messages[0].title,'Профиль восстановлен');
+ assert.match(messages[0].body,/Test &amp; Restore/);
+});

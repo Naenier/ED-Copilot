@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-07",
+  "updatedAt": "2026-11-10",
   "scope": "ship",
   "materials": [
     {
@@ -1509,6 +1509,38 @@
       "grade": 3,
       "capacity": 200,
       "tradeable": true
+    },
+    {
+      "key": "mercenarycoin",
+      "symbol": "MercCoin",
+      "name": "Монеты наёмников",
+      "english": "Merc Coin",
+      "category": "currency",
+      "family": "operations",
+      "grade": 0,
+      "tradeable": false
+    },
+    {
+      "key": "tg_abrasion03",
+      "symbol": "tg_abrasion03",
+      "english": "Hardened Surface Fragments",
+      "name": "Окаменелые фрагменты поверхности",
+      "category": "manufactured",
+      "family": "Thargoid",
+      "grade": 1,
+      "capacity": 300,
+      "tradeable": false
+    },
+    {
+      "key": "tg_causticcrystal",
+      "symbol": "tg_causticcrystal",
+      "english": "Caustic Crystal",
+      "name": "Едкий кристалл",
+      "category": "manufactured",
+      "family": "Thargoid",
+      "grade": 4,
+      "capacity": 150,
+      "tradeable": false
     }
   ],
   "blueprints": [
@@ -4819,7 +4851,8 @@
             "count": 1
           }
         ]
-      }
+      },
+      "journalSymbol": "Sensor_LongRange"
     },
     {
       "key": "Scanner_WideAngle",
@@ -4884,7 +4917,8 @@
             "count": 1
           }
         ]
-      }
+      },
+      "journalSymbol": "Sensor_WideAngle"
     },
     {
       "key": "Sensor_LightWeight",
@@ -6286,7 +6320,8 @@
             "count": 1
           }
         ]
-      }
+      },
+      "journalSymbol": "Weapon_Overcharged"
     },
     {
       "key": "Weapon_Overcharged",
@@ -6546,6 +6581,861 @@
             "count": 1
           }
         ]
+      }
+    },
+    {
+      "key": "FuelScoop_Efficiency",
+      "name": "Повышенная скорость забора топлива",
+      "english": "Scoop rate enhanced",
+      "grades": {
+        "1": [
+          {
+            "key": "phosphorus",
+            "count": 1
+          },
+          {
+            "key": "gridresistors",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 10
+          }
+        ],
+        "2": [
+          {
+            "key": "chromium",
+            "count": 1
+          },
+          {
+            "key": "gridresistors",
+            "count": 1
+          },
+          {
+            "key": "chemicalprocessors",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 15
+          }
+        ],
+        "3": [
+          {
+            "key": "chromium",
+            "count": 1
+          },
+          {
+            "key": "chemicalprocessors",
+            "count": 1
+          },
+          {
+            "key": "conductiveceramics",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 20
+          }
+        ],
+        "4": [
+          {
+            "key": "chemicalprocessors",
+            "count": 2
+          },
+          {
+            "key": "chemicaldistillery",
+            "count": 1
+          },
+          {
+            "key": "protolightalloys",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 25
+          }
+        ],
+        "5": [
+          {
+            "key": "tellurium",
+            "count": 1
+          },
+          {
+            "key": "chemicalmanipulators",
+            "count": 1
+          },
+          {
+            "key": "protoheatradiators",
+            "count": 1
+          },
+          {
+            "key": "protoradiolicalloys",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 30
+          }
+        ]
+      },
+      "kind": "operations",
+      "liveOnly": true,
+      "mercCoins": {
+        "1": 10,
+        "2": 15,
+        "3": 20,
+        "4": 25,
+        "5": 30
+      },
+      "gradeStats": {
+        "1": {
+          "features": [
+            {
+              "label": "RefuelRate",
+              "method": "multiplicative",
+              "min": 0.05,
+              "max": 0.1
+            },
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.03,
+              "max": 0.03
+            }
+          ]
+        },
+        "2": {
+          "features": [
+            {
+              "label": "RefuelRate",
+              "method": "multiplicative",
+              "min": 0.1,
+              "max": 0.2
+            },
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.06,
+              "max": 0.06
+            }
+          ]
+        },
+        "3": {
+          "features": [
+            {
+              "label": "RefuelRate",
+              "method": "multiplicative",
+              "min": 0.2,
+              "max": 0.3
+            },
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.09,
+              "max": 0.09
+            }
+          ]
+        },
+        "4": {
+          "features": [
+            {
+              "label": "RefuelRate",
+              "method": "multiplicative",
+              "min": 0.3,
+              "max": 0.4
+            },
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.12,
+              "max": 0.12
+            }
+          ]
+        },
+        "5": {
+          "features": [
+            {
+              "label": "RefuelRate",
+              "method": "multiplicative",
+              "min": 0.5,
+              "max": 0.5
+            },
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.15,
+              "max": 0.15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "PulseLaser_ThermalPlasmaConversion",
+      "name": "Плазменная конверсия",
+      "english": "Plasma conversion",
+      "grades": {
+        "1": [
+          {
+            "key": "phosphorus",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 10
+          }
+        ],
+        "2": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 15
+          }
+        ],
+        "3": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 20
+          }
+        ],
+        "4": [
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "refinedfocuscrystals",
+            "count": 1
+          },
+          {
+            "key": "configurablecomponents",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 25
+          }
+        ],
+        "5": [
+          {
+            "key": "technetium",
+            "count": 1
+          },
+          {
+            "key": "thermicalloys",
+            "count": 1
+          },
+          {
+            "key": "militarysupercapacitors",
+            "count": 1
+          },
+          {
+            "key": "embeddedfirmware",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 30
+          }
+        ]
+      },
+      "kind": "operations",
+      "liveOnly": true,
+      "mercCoins": {
+        "1": 10,
+        "2": 15,
+        "3": 20,
+        "4": 25,
+        "5": 30
+      },
+      "gradeStats": {
+        "1": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.05,
+              "max": 0.05
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.03,
+              "max": -0.03
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.961,
+            "absolute": 0.039
+          }
+        },
+        "2": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.1,
+              "max": 0.1
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.05,
+              "max": -0.05
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.934,
+            "absolute": 0.066
+          }
+        },
+        "3": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.2,
+              "max": 0.2
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.07,
+              "max": -0.07
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.906,
+            "absolute": 0.094
+          }
+        },
+        "4": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.3,
+              "max": 0.3
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.09,
+              "max": -0.09
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.876,
+            "absolute": 0.124
+          }
+        },
+        "5": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.4,
+              "max": 0.4
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.11,
+              "max": -0.11
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.845,
+            "absolute": 0.155
+          }
+        }
+      }
+    },
+    {
+      "key": "BurstLaser_ThermalPlasmaConversion",
+      "name": "Плазменная конверсия",
+      "english": "Plasma conversion",
+      "grades": {
+        "1": [
+          {
+            "key": "phosphorus",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 10
+          }
+        ],
+        "2": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 15
+          }
+        ],
+        "3": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 20
+          }
+        ],
+        "4": [
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "refinedfocuscrystals",
+            "count": 1
+          },
+          {
+            "key": "configurablecomponents",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 25
+          }
+        ],
+        "5": [
+          {
+            "key": "technetium",
+            "count": 1
+          },
+          {
+            "key": "thermicalloys",
+            "count": 1
+          },
+          {
+            "key": "militarysupercapacitors",
+            "count": 1
+          },
+          {
+            "key": "embeddedfirmware",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 30
+          }
+        ]
+      },
+      "kind": "operations",
+      "liveOnly": true,
+      "mercCoins": {
+        "1": 10,
+        "2": 15,
+        "3": 20,
+        "4": 25,
+        "5": 30
+      },
+      "gradeStats": {
+        "1": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.05,
+              "max": 0.05
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.03,
+              "max": -0.03
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.961,
+            "absolute": 0.039
+          }
+        },
+        "2": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.1,
+              "max": 0.1
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.05,
+              "max": -0.05
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.934,
+            "absolute": 0.066
+          }
+        },
+        "3": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.2,
+              "max": 0.2
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.07,
+              "max": -0.07
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.906,
+            "absolute": 0.094
+          }
+        },
+        "4": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.3,
+              "max": 0.3
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.09,
+              "max": -0.09
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.876,
+            "absolute": 0.124
+          }
+        },
+        "5": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.4,
+              "max": 0.4
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.11,
+              "max": -0.11
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.845,
+            "absolute": 0.155
+          }
+        }
+      }
+    },
+    {
+      "key": "BeamLaser_ThermalPlasmaConversion",
+      "name": "Плазменная конверсия",
+      "english": "Plasma conversion",
+      "grades": {
+        "1": [
+          {
+            "key": "phosphorus",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 10
+          }
+        ],
+        "2": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatconductionwiring",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 15
+          }
+        ],
+        "3": [
+          {
+            "key": "arsenic",
+            "count": 1
+          },
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 20
+          }
+        ],
+        "4": [
+          {
+            "key": "heatdispersionplate",
+            "count": 1
+          },
+          {
+            "key": "phasealloys",
+            "count": 1
+          },
+          {
+            "key": "refinedfocuscrystals",
+            "count": 1
+          },
+          {
+            "key": "configurablecomponents",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 25
+          }
+        ],
+        "5": [
+          {
+            "key": "technetium",
+            "count": 1
+          },
+          {
+            "key": "thermicalloys",
+            "count": 1
+          },
+          {
+            "key": "militarysupercapacitors",
+            "count": 1
+          },
+          {
+            "key": "embeddedfirmware",
+            "count": 1
+          },
+          {
+            "key": "mercenarycoin",
+            "count": 30
+          }
+        ]
+      },
+      "kind": "operations",
+      "liveOnly": true,
+      "mercCoins": {
+        "1": 10,
+        "2": 15,
+        "3": 20,
+        "4": 25,
+        "5": 30
+      },
+      "gradeStats": {
+        "1": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.05,
+              "max": 0.05
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.03,
+              "max": -0.03
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.961,
+            "absolute": 0.039
+          }
+        },
+        "2": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.1,
+              "max": 0.1
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.05,
+              "max": -0.05
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.934,
+            "absolute": 0.066
+          }
+        },
+        "3": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.2,
+              "max": 0.2
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.07,
+              "max": -0.07
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.906,
+            "absolute": 0.094
+          }
+        },
+        "4": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.3,
+              "max": 0.3
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.09,
+              "max": -0.09
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.876,
+            "absolute": 0.124
+          }
+        },
+        "5": {
+          "features": [
+            {
+              "label": "PowerDraw",
+              "method": "multiplicative",
+              "min": 0.4,
+              "max": 0.4
+            },
+            {
+              "label": "Damage",
+              "method": "multiplicative",
+              "min": -0.11,
+              "max": -0.11
+            }
+          ],
+          "damageDistribution": {
+            "thermal": 0.845,
+            "absolute": 0.155
+          }
+        }
+      }
+    },
+    {
+      "key": "GuardianModule_Sturdy",
+      "name": "Защита от антистражевых полей",
+      "english": "Anti-Guardian Zone Resistance",
+      "grades": {
+        "1": [
+          {
+            "key": "tg_abrasion03",
+            "count": 2
+          },
+          {
+            "key": "tg_causticcrystal",
+            "count": 1
+          }
+        ]
+      },
+      "kind": "guardian",
+      "liveOnly": true,
+      "gradeStats": {
+        "1": {
+          "features": [
+            {
+              "label": "GuardianModuleResistance",
+              "method": "additive",
+              "min": 1,
+              "max": 1
+            }
+          ]
+        }
       }
     }
   ],
@@ -7178,7 +8068,8 @@
           "key": "filamentcomposites",
           "count": 5
         }
-      ]
+      ],
+      "journalSymbol": "special_feedback_cascade"
     },
     {
       "key": "special_super_penetrator_cooled",
@@ -7201,7 +8092,8 @@
           "key": "shielddensityreports",
           "count": 5
         }
-      ]
+      ],
+      "journalSymbol": "special_super_penetrator"
     },
     {
       "key": "special_plasma_slug_cooled",
@@ -7224,7 +8116,8 @@
           "key": "mercury",
           "count": 4
         }
-      ]
+      ],
+      "journalSymbol": "special_plasma_slug"
     },
     {
       "key": "special_plasma_slug_pa",
@@ -7247,7 +8140,8 @@
           "key": "mercury",
           "count": 4
         }
-      ]
+      ],
+      "journalSymbol": "special_plasma_slug"
     },
     {
       "key": "special_penetrator_munitions",
@@ -8298,6 +9192,29 @@
           "count": 2
         }
       ]
+    },
+    {
+      "key": "special_choke_canister",
+      "name": "Ионное нарушение",
+      "english": "Ion Disruption",
+      "materials": [
+        {
+          "key": "sulphur",
+          "count": 5
+        },
+        {
+          "key": "phosphorus",
+          "count": 5
+        },
+        {
+          "key": "chemicaldistillery",
+          "count": 3
+        },
+        {
+          "key": "electrochemicalarrays",
+          "count": 3
+        }
+      ]
     }
   ],
   "modules": [
@@ -8333,7 +9250,50 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Auto Field-Maintenance Unit",
+      "journalSymbols": [
+        "Int_Repairer_Size1_Class1",
+        "Int_Repairer_Size2_Class1",
+        "Int_Repairer_Size3_Class1",
+        "Int_Repairer_Size4_Class1",
+        "Int_Repairer_Size5_Class1",
+        "Int_Repairer_Size6_Class1",
+        "Int_Repairer_Size7_Class1",
+        "Int_Repairer_Size8_Class1",
+        "Int_Repairer_Size1_Class2",
+        "Int_Repairer_Size2_Class2",
+        "Int_Repairer_Size3_Class2",
+        "Int_Repairer_Size4_Class2",
+        "Int_Repairer_Size5_Class2",
+        "Int_Repairer_Size6_Class2",
+        "Int_Repairer_Size7_Class2",
+        "Int_Repairer_Size8_Class2",
+        "Int_Repairer_Size1_Class3",
+        "Int_Repairer_Size2_Class3",
+        "Int_Repairer_Size3_Class3",
+        "Int_Repairer_Size4_Class3",
+        "Int_Repairer_Size5_Class3",
+        "Int_Repairer_Size6_Class3",
+        "Int_Repairer_Size7_Class3",
+        "Int_Repairer_Size8_Class3",
+        "Int_Repairer_Size1_Class4",
+        "Int_Repairer_Size2_Class4",
+        "Int_Repairer_Size3_Class4",
+        "Int_Repairer_Size4_Class4",
+        "Int_Repairer_Size5_Class4",
+        "Int_Repairer_Size6_Class4",
+        "Int_Repairer_Size7_Class4",
+        "Int_Repairer_Size8_Class4",
+        "Int_Repairer_Size1_Class5",
+        "Int_Repairer_Size2_Class5",
+        "Int_Repairer_Size3_Class5",
+        "Int_Repairer_Size4_Class5",
+        "Int_Repairer_Size5_Class5",
+        "Int_Repairer_Size6_Class5",
+        "Int_Repairer_Size7_Class5",
+        "Int_Repairer_Size8_Class5"
+      ]
     },
     {
       "key": "bh",
@@ -8467,7 +9427,257 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Armour",
+      "journalSymbols": [
+        "SideWinder_Armour_Grade1",
+        "SideWinder_Armour_Grade2",
+        "SideWinder_Armour_Grade3",
+        "SideWinder_Armour_Mirrored",
+        "SideWinder_Armour_Reactive",
+        "Eagle_Armour_Grade1",
+        "Eagle_Armour_Grade2",
+        "Eagle_Armour_Grade3",
+        "Eagle_Armour_Mirrored",
+        "Eagle_Armour_Reactive",
+        "Hauler_Armour_Grade1",
+        "Hauler_Armour_Grade2",
+        "Hauler_Armour_Grade3",
+        "Hauler_Armour_Mirrored",
+        "Hauler_Armour_Reactive",
+        "Adder_Armour_Grade1",
+        "Adder_Armour_Grade2",
+        "Adder_Armour_Grade3",
+        "Adder_Armour_Mirrored",
+        "Adder_Armour_Reactive",
+        "Viper_Armour_Grade1",
+        "Viper_Armour_Grade2",
+        "Viper_Armour_Grade3",
+        "Viper_Armour_Mirrored",
+        "Viper_Armour_Reactive",
+        "CobraMkIII_Armour_Grade1",
+        "CobraMkIII_Armour_Grade2",
+        "CobraMkIII_Armour_Grade3",
+        "CobraMkIII_Armour_Mirrored",
+        "CobraMkIII_Armour_Reactive",
+        "Type6_Armour_Grade1",
+        "Type6_Armour_Grade2",
+        "Type6_Armour_Grade3",
+        "Type6_Armour_Mirrored",
+        "Type6_Armour_Reactive",
+        "Dolphin_Armour_Grade1",
+        "Dolphin_Armour_Grade2",
+        "Dolphin_Armour_Grade3",
+        "Dolphin_Armour_Mirrored",
+        "Dolphin_Armour_Reactive",
+        "Type7_Armour_Grade1",
+        "Type7_Armour_Grade2",
+        "Type7_Armour_Grade3",
+        "Type7_Armour_Mirrored",
+        "Type7_Armour_Reactive",
+        "Asp_Armour_Grade1",
+        "Asp_Armour_Grade2",
+        "Asp_Armour_Grade3",
+        "Asp_Armour_Mirrored",
+        "Asp_Armour_Reactive",
+        "Vulture_Armour_Grade1",
+        "Vulture_Armour_Grade2",
+        "Vulture_Armour_Grade3",
+        "Vulture_Armour_Mirrored",
+        "Vulture_Armour_Reactive",
+        "Empire_Trader_Armour_Grade1",
+        "Empire_Trader_Armour_Grade2",
+        "Empire_Trader_Armour_Grade3",
+        "Empire_Trader_Armour_Mirrored",
+        "Empire_Trader_Armour_Reactive",
+        "Federation_Dropship_Armour_Grade1",
+        "Federation_Dropship_Armour_Grade2",
+        "Federation_Dropship_Armour_Grade3",
+        "Federation_Dropship_Armour_Mirrored",
+        "Federation_Dropship_Armour_Reactive",
+        "Orca_Armour_Grade1",
+        "Orca_Armour_Grade2",
+        "Orca_Armour_Grade3",
+        "Orca_Armour_Mirrored",
+        "Orca_Armour_Reactive",
+        "Type9_Armour_Grade1",
+        "Type9_Armour_Grade2",
+        "Type9_Armour_Grade3",
+        "Type9_Armour_Mirrored",
+        "Type9_Armour_Reactive",
+        "Python_Armour_Grade1",
+        "Python_Armour_Grade2",
+        "Python_Armour_Grade3",
+        "Python_Armour_Mirrored",
+        "Python_Armour_Reactive",
+        "BelugaLiner_Armour_Grade1",
+        "BelugaLiner_Armour_Grade2",
+        "BelugaLiner_Armour_Grade3",
+        "BelugaLiner_Armour_Mirrored",
+        "BelugaLiner_Armour_Reactive",
+        "FerDeLance_Armour_Grade1",
+        "FerDeLance_Armour_Grade2",
+        "FerDeLance_Armour_Grade3",
+        "FerDeLance_Armour_Mirrored",
+        "FerDeLance_Armour_Reactive",
+        "Anaconda_Armour_Grade1",
+        "Anaconda_Armour_Grade2",
+        "Anaconda_Armour_Grade3",
+        "Anaconda_Armour_Mirrored",
+        "Anaconda_Armour_Reactive",
+        "Federation_Corvette_Armour_Grade1",
+        "Federation_Corvette_Armour_Grade2",
+        "Federation_Corvette_Armour_Grade3",
+        "Federation_Corvette_Armour_Mirrored",
+        "Federation_Corvette_Armour_Reactive",
+        "Cutter_Armour_Grade1",
+        "Cutter_Armour_Grade2",
+        "Cutter_Armour_Grade3",
+        "Cutter_Armour_Mirrored",
+        "Cutter_Armour_Reactive",
+        "DiamondBack_Armour_Grade1",
+        "DiamondBack_Armour_Grade2",
+        "DiamondBack_Armour_Grade3",
+        "DiamondBack_Armour_Mirrored",
+        "DiamondBack_Armour_Reactive",
+        "Empire_Courier_Armour_Grade1",
+        "Empire_Courier_Armour_Grade2",
+        "Empire_Courier_Armour_Grade3",
+        "Empire_Courier_Armour_Mirrored",
+        "Empire_Courier_Armour_Reactive",
+        "DiamondBackXL_Armour_Grade1",
+        "DiamondBackXL_Armour_Grade2",
+        "DiamondBackXL_Armour_Grade3",
+        "DiamondBackXL_Armour_Mirrored",
+        "DiamondBackXL_Armour_Reactive",
+        "Empire_Eagle_Armour_Grade1",
+        "Empire_Eagle_Armour_Grade2",
+        "Empire_Eagle_Armour_Grade3",
+        "Empire_Eagle_Armour_Mirrored",
+        "Empire_Eagle_Armour_Reactive",
+        "Federation_Dropship_MkII_Armour_Grade1",
+        "Federation_Dropship_MkII_Armour_Grade2",
+        "Federation_Dropship_MkII_Armour_Grade3",
+        "Federation_Dropship_MkII_Armour_Mirrored",
+        "Federation_Dropship_MkII_Armour_Reactive",
+        "Federation_Gunship_Armour_Grade1",
+        "Federation_Gunship_Armour_Grade2",
+        "Federation_Gunship_Armour_Grade3",
+        "Federation_Gunship_Armour_Mirrored",
+        "Federation_Gunship_Armour_Reactive",
+        "Viper_MkIV_Armour_Grade1",
+        "Viper_MkIV_Armour_Grade2",
+        "Viper_MkIV_Armour_Grade3",
+        "Viper_MkIV_Armour_Mirrored",
+        "Viper_MkIV_Armour_Reactive",
+        "CobraMkIV_Armour_Grade1",
+        "CobraMkIV_Armour_Grade2",
+        "CobraMkIV_Armour_Grade3",
+        "CobraMkIV_Armour_Mirrored",
+        "CobraMkIV_Armour_Reactive",
+        "Independant_Trader_Armour_Grade1",
+        "Independant_Trader_Armour_Grade2",
+        "Independant_Trader_Armour_Grade3",
+        "Independant_Trader_Armour_Mirrored",
+        "Independant_Trader_Armour_Reactive",
+        "Asp_Scout_Armour_Grade1",
+        "Asp_Scout_Armour_Grade2",
+        "Asp_Scout_Armour_Grade3",
+        "Asp_Scout_Armour_Mirrored",
+        "Asp_Scout_Armour_Reactive",
+        "Type9_Military_Armour_Grade1",
+        "Type9_Military_Armour_Grade2",
+        "Type9_Military_Armour_Grade3",
+        "Type9_Military_Armour_Mirrored",
+        "Type9_Military_Armour_Reactive",
+        "Krait_MkII_Armour_Grade1",
+        "Krait_MkII_Armour_Grade2",
+        "Krait_MkII_Armour_Grade3",
+        "Krait_MkII_Armour_Mirrored",
+        "Krait_MkII_Armour_Reactive",
+        "TypeX_Armour_Grade1",
+        "TypeX_Armour_Grade2",
+        "TypeX_Armour_Grade3",
+        "TypeX_Armour_Mirrored",
+        "TypeX_Armour_Reactive",
+        "TypeX_2_Armour_Grade1",
+        "TypeX_2_Armour_Grade2",
+        "TypeX_2_Armour_Grade3",
+        "TypeX_2_Armour_Mirrored",
+        "TypeX_2_Armour_Reactive",
+        "TypeX_3_Armour_Grade1",
+        "TypeX_3_Armour_Grade2",
+        "TypeX_3_Armour_Grade3",
+        "TypeX_3_Armour_Mirrored",
+        "TypeX_3_Armour_Reactive",
+        "Krait_Light_Armour_Grade1",
+        "Krait_Light_Armour_Grade2",
+        "Krait_Light_Armour_Grade3",
+        "Krait_Light_Armour_Mirrored",
+        "Krait_Light_Armour_Reactive",
+        "Mamba_Armour_Grade1",
+        "Mamba_Armour_Grade2",
+        "Mamba_Armour_Grade3",
+        "Mamba_Armour_Mirrored",
+        "Mamba_Armour_Reactive",
+        "Python_NX_Armour_Grade1",
+        "Python_NX_Armour_Grade2",
+        "Python_NX_Armour_Grade3",
+        "Python_NX_Armour_Mirrored",
+        "Python_NX_Armour_Reactive",
+        "Type8_Armour_Grade1",
+        "Type8_Armour_Grade2",
+        "Type8_Armour_Grade3",
+        "Type8_Armour_Mirrored",
+        "Type8_Armour_Reactive",
+        "Mandalay_Armour_Grade1",
+        "Mandalay_Armour_Grade2",
+        "Mandalay_Armour_Grade3",
+        "Mandalay_Armour_Mirrored",
+        "Mandalay_Armour_Reactive",
+        "CobraMkV_Armour_Grade1",
+        "CobraMkV_Armour_Grade2",
+        "CobraMkV_Armour_Grade3",
+        "CobraMkV_Armour_Mirrored",
+        "CobraMkV_Armour_Reactive",
+        "Corsair_Armour_Grade1",
+        "Corsair_Armour_Grade2",
+        "Corsair_Armour_Grade3",
+        "Corsair_Armour_Mirrored",
+        "Corsair_Armour_Reactive",
+        "PantherMkII_Armour_Grade1",
+        "PantherMkII_Armour_Grade2",
+        "PantherMkII_Armour_Grade3",
+        "PantherMkII_Armour_Mirrored",
+        "PantherMkII_Armour_Reactive",
+        "LakonMiner_Armour_Grade1",
+        "LakonMiner_Armour_Grade2",
+        "LakonMiner_Armour_Grade3",
+        "LakonMiner_Armour_Mirrored",
+        "LakonMiner_Armour_Reactive",
+        "Explorer_NX_Armour_Grade1",
+        "Explorer_NX_Armour_Grade2",
+        "Explorer_NX_Armour_Grade3",
+        "Explorer_NX_Armour_Mirrored",
+        "Explorer_NX_Armour_Reactive",
+        "Explorer_NX_Armour_Grade1_Default",
+        "SmallCombat01_NX_Armour_Grade1",
+        "SmallCombat01_NX_Armour_Grade2",
+        "SmallCombat01_NX_Armour_Grade3",
+        "SmallCombat01_NX_Armour_Mirrored",
+        "SmallCombat01_NX_Armour_Reactive",
+        "MediumTransport01_Armour_Grade1",
+        "MediumTransport01_Armour_Grade2",
+        "MediumTransport01_Armour_Grade3",
+        "MediumTransport01_Armour_Mirrored",
+        "MediumTransport01_Armour_Reactive",
+        "AnacondaMkII_Armour_Grade1",
+        "AnacondaMkII_Armour_Grade2",
+        "AnacondaMkII_Armour_Grade3",
+        "AnacondaMkII_Armour_Mirrored",
+        "AnacondaMkII_Armour_Reactive",
+        "AnacondaMkII_Armour_Grade1_Default"
+      ]
     },
     {
       "key": "bl",
@@ -8478,7 +9688,8 @@
         "Weapon_LongRange",
         "Weapon_Overcharged",
         "Weapon_ShortRange",
-        "Weapon_Sturdy"
+        "Weapon_Sturdy",
+        "BeamLaser_ThermalPlasmaConversion"
       ],
       "experimentals": [
         "special_concordant_sequence",
@@ -8641,8 +9852,48 @@
             "Broo Tarquin",
             "Mel Brandon"
           ]
+        },
+        "BeamLaser_ThermalPlasmaConversion": {
+          "1": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "2": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "3": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "4": [
+            "Broo Tarquin",
+            "Mel Brandon"
+          ],
+          "5": [
+            "Broo Tarquin",
+            "Mel Brandon"
+          ]
         }
-      }
+      },
+      "english": "Beam Laser",
+      "journalSymbols": [
+        "Hpt_BeamLaser_Fixed_Small",
+        "Hpt_BeamLaser_Fixed_Medium",
+        "Hpt_BeamLaser_Fixed_Large",
+        "Hpt_BeamLaser_Fixed_Huge",
+        "Hpt_BeamLaser_Gimbal_Small",
+        "Hpt_BeamLaser_Gimbal_Medium",
+        "Hpt_BeamLaser_Gimbal_Large",
+        "Hpt_BeamLaser_Turret_Small",
+        "Hpt_BeamLaser_Turret_Medium",
+        "Hpt_BeamLaser_Turret_Large",
+        "Hpt_BeamLaser_Fixed_Small_Heat",
+        "Hpt_BeamLaser_Gimbal_Huge"
+      ]
     },
     {
       "key": "bsg",
@@ -8776,7 +10027,18 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Bi-Weave Shield Generator",
+      "journalSymbols": [
+        "Int_ShieldGenerator_Size1_Class3_Fast",
+        "Int_ShieldGenerator_Size2_Class3_Fast",
+        "Int_ShieldGenerator_Size3_Class3_Fast",
+        "Int_ShieldGenerator_Size4_Class3_Fast",
+        "Int_ShieldGenerator_Size5_Class3_Fast",
+        "Int_ShieldGenerator_Size6_Class3_Fast",
+        "Int_ShieldGenerator_Size7_Class3_Fast",
+        "Int_ShieldGenerator_Size8_Class3_Fast"
+      ]
     },
     {
       "key": "c",
@@ -8997,7 +10259,22 @@
             "Marsha Hicks"
           ]
         }
-      }
+      },
+      "english": "Cannon",
+      "journalSymbols": [
+        "Hpt_Cannon_Fixed_Small",
+        "Hpt_Cannon_Fixed_Medium",
+        "Hpt_Cannon_Fixed_Large",
+        "Hpt_Cannon_Fixed_Huge",
+        "Hpt_Cannon_Gimbal_Small",
+        "Hpt_Cannon_Gimbal_Medium",
+        "Hpt_Cannon_Gimbal_Huge",
+        "Hpt_Cannon_Turret_Small",
+        "Hpt_Cannon_Turret_Medium",
+        "Hpt_Cannon_Turret_Large",
+        "Hpt_Cannon_Gimbal_Large",
+        "Hpt_Cannon_Gimbal_Medium_Burst"
+      ]
     },
     {
       "key": "cc",
@@ -9102,7 +10379,30 @@
             "Tiana Fortune"
           ]
         }
-      }
+      },
+      "english": "Collector Limpet Controller",
+      "journalSymbols": [
+        "Int_DroneControl_Collection_Size1_Class1",
+        "Int_DroneControl_Collection_Size1_Class2",
+        "Int_DroneControl_Collection_Size1_Class3",
+        "Int_DroneControl_Collection_Size1_Class4",
+        "Int_DroneControl_Collection_Size1_Class5",
+        "Int_DroneControl_Collection_Size3_Class1",
+        "Int_DroneControl_Collection_Size3_Class2",
+        "Int_DroneControl_Collection_Size3_Class3",
+        "Int_DroneControl_Collection_Size3_Class4",
+        "Int_DroneControl_Collection_Size3_Class5",
+        "Int_DroneControl_Collection_Size5_Class1",
+        "Int_DroneControl_Collection_Size5_Class2",
+        "Int_DroneControl_Collection_Size5_Class3",
+        "Int_DroneControl_Collection_Size5_Class4",
+        "Int_DroneControl_Collection_Size5_Class5",
+        "Int_DroneControl_Collection_Size7_Class1",
+        "Int_DroneControl_Collection_Size7_Class2",
+        "Int_DroneControl_Collection_Size7_Class3",
+        "Int_DroneControl_Collection_Size7_Class4",
+        "Int_DroneControl_Collection_Size7_Class5"
+      ]
     },
     {
       "key": "ch",
@@ -9187,7 +10487,11 @@
             "Ram Tah"
           ]
         }
-      }
+      },
+      "english": "Chaff Launcher",
+      "journalSymbols": [
+        "Hpt_ChaffLauncher_Tiny"
+      ]
     },
     {
       "key": "cs",
@@ -9490,11 +10794,19 @@
             "Lei Cheung"
           ]
         }
-      }
+      },
+      "english": "Manifest Scanner",
+      "journalSymbols": [
+        "Hpt_CargoScanner_Size0_Class1",
+        "Hpt_CargoScanner_Size0_Class2",
+        "Hpt_CargoScanner_Size0_Class3",
+        "Hpt_CargoScanner_Size0_Class4",
+        "Hpt_CargoScanner_Size0_Class5"
+      ]
     },
     {
       "key": "csl",
-      "name": "Пусковая установка теплоотводов",
+      "name": "Пусковая установка поглотителей едкости",
       "blueprints": [
         "Misc_HeatSinkCapacity",
         "Misc_LightWeight",
@@ -9575,7 +10887,11 @@
             "Ram Tah"
           ]
         }
-      }
+      },
+      "english": "Caustic Sink Launcher",
+      "journalSymbols": [
+        "Hpt_CausticSinkLauncher_Turret_Tiny"
+      ]
     },
     {
       "key": "ec",
@@ -9653,7 +10969,11 @@
             "Ram Tah"
           ]
         }
-      }
+      },
+      "english": "Electronic Countermeasure",
+      "journalSymbols": [
+        "Hpt_ElectronicCountermeasure_Tiny"
+      ]
     },
     {
       "key": "fc",
@@ -9855,7 +11175,20 @@
             "Zacariah Nemo"
           ]
         }
-      }
+      },
+      "english": "Fragment Cannon",
+      "journalSymbols": [
+        "Hpt_Slugshot_Fixed_Small",
+        "Hpt_Slugshot_Fixed_Medium",
+        "Hpt_Slugshot_Fixed_Large",
+        "Hpt_Slugshot_Gimbal_Small",
+        "Hpt_Slugshot_Gimbal_Medium",
+        "Hpt_Slugshot_Turret_Small",
+        "Hpt_Slugshot_Turret_Medium",
+        "Hpt_Slugshot_Gimbal_Large",
+        "Hpt_Slugshot_Turret_Large",
+        "Hpt_Slugshot_Fixed_Large_Range"
+      ]
     },
     {
       "key": "fi",
@@ -9916,13 +11249,37 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Frame Shift Drive Interdictor",
+      "journalSymbols": [
+        "Int_FSDInterdictor_Size1_Class1",
+        "Int_FSDInterdictor_Size2_Class1",
+        "Int_FSDInterdictor_Size3_Class1",
+        "Int_FSDInterdictor_Size4_Class1",
+        "Int_FSDInterdictor_Size1_Class2",
+        "Int_FSDInterdictor_Size2_Class2",
+        "Int_FSDInterdictor_Size3_Class2",
+        "Int_FSDInterdictor_Size4_Class2",
+        "Int_FSDInterdictor_Size1_Class3",
+        "Int_FSDInterdictor_Size2_Class3",
+        "Int_FSDInterdictor_Size3_Class3",
+        "Int_FSDInterdictor_Size4_Class3",
+        "Int_FSDInterdictor_Size1_Class4",
+        "Int_FSDInterdictor_Size2_Class4",
+        "Int_FSDInterdictor_Size3_Class4",
+        "Int_FSDInterdictor_Size4_Class4",
+        "Int_FSDInterdictor_Size1_Class5",
+        "Int_FSDInterdictor_Size2_Class5",
+        "Int_FSDInterdictor_Size3_Class5",
+        "Int_FSDInterdictor_Size4_Class5"
+      ]
     },
     {
       "key": "fs",
       "name": "Топливозаборник",
       "blueprints": [
-        "FuelScoop_Shielded"
+        "FuelScoop_Shielded",
+        "FuelScoop_Efficiency"
       ],
       "experimentals": [],
       "engineers": {
@@ -9949,8 +11306,75 @@
           "5": [
             "Marsha Hicks"
           ]
+        },
+        "FuelScoop_Efficiency": {
+          "1": [
+            "Bill Turner",
+            "Lori Jameson",
+            "Marsha Hicks"
+          ],
+          "2": [
+            "Bill Turner",
+            "Lori Jameson",
+            "Marsha Hicks"
+          ],
+          "3": [
+            "Bill Turner",
+            "Lori Jameson",
+            "Marsha Hicks"
+          ],
+          "4": [
+            "Lori Jameson",
+            "Marsha Hicks"
+          ],
+          "5": [
+            "Marsha Hicks"
+          ]
         }
-      }
+      },
+      "english": "Fuel Scoop",
+      "journalSymbols": [
+        "Int_FuelScoop_Size1_Class1",
+        "Int_FuelScoop_Size2_Class1",
+        "Int_FuelScoop_Size3_Class1",
+        "Int_FuelScoop_Size4_Class1",
+        "Int_FuelScoop_Size5_Class1",
+        "Int_FuelScoop_Size6_Class1",
+        "Int_FuelScoop_Size7_Class1",
+        "Int_FuelScoop_Size8_Class1",
+        "Int_FuelScoop_Size1_Class2",
+        "Int_FuelScoop_Size2_Class2",
+        "Int_FuelScoop_Size3_Class2",
+        "Int_FuelScoop_Size4_Class2",
+        "Int_FuelScoop_Size5_Class2",
+        "Int_FuelScoop_Size6_Class2",
+        "Int_FuelScoop_Size7_Class2",
+        "Int_FuelScoop_Size8_Class2",
+        "Int_FuelScoop_Size1_Class3",
+        "Int_FuelScoop_Size2_Class3",
+        "Int_FuelScoop_Size3_Class3",
+        "Int_FuelScoop_Size4_Class3",
+        "Int_FuelScoop_Size5_Class3",
+        "Int_FuelScoop_Size6_Class3",
+        "Int_FuelScoop_Size7_Class3",
+        "Int_FuelScoop_Size8_Class3",
+        "Int_FuelScoop_Size1_Class4",
+        "Int_FuelScoop_Size2_Class4",
+        "Int_FuelScoop_Size3_Class4",
+        "Int_FuelScoop_Size4_Class4",
+        "Int_FuelScoop_Size5_Class4",
+        "Int_FuelScoop_Size6_Class4",
+        "Int_FuelScoop_Size7_Class4",
+        "Int_FuelScoop_Size8_Class4",
+        "Int_FuelScoop_Size1_Class5",
+        "Int_FuelScoop_Size2_Class5",
+        "Int_FuelScoop_Size3_Class5",
+        "Int_FuelScoop_Size4_Class5",
+        "Int_FuelScoop_Size5_Class5",
+        "Int_FuelScoop_Size6_Class5",
+        "Int_FuelScoop_Size7_Class5",
+        "Int_FuelScoop_Size8_Class5"
+      ]
     },
     {
       "key": "fsd",
@@ -10076,7 +11500,77 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Frame Shift Drive",
+      "journalSymbols": [
+        "Int_Hyperdrive_Size2_Class1",
+        "Int_Hyperdrive_Size2_Class2",
+        "Int_Hyperdrive_Size2_Class3",
+        "Int_Hyperdrive_Size2_Class4",
+        "Int_Hyperdrive_Size2_Class5",
+        "Int_Hyperdrive_Size3_Class1",
+        "Int_Hyperdrive_Size3_Class2",
+        "Int_Hyperdrive_Size3_Class3",
+        "Int_Hyperdrive_Size3_Class4",
+        "Int_Hyperdrive_Size3_Class5",
+        "Int_Hyperdrive_Size4_Class1",
+        "Int_Hyperdrive_Size4_Class2",
+        "Int_Hyperdrive_Size4_Class3",
+        "Int_Hyperdrive_Size4_Class4",
+        "Int_Hyperdrive_Size4_Class5",
+        "Int_Hyperdrive_Size5_Class1",
+        "Int_Hyperdrive_Size5_Class2",
+        "Int_Hyperdrive_Size5_Class3",
+        "Int_Hyperdrive_Size5_Class4",
+        "Int_Hyperdrive_Size5_Class5",
+        "Int_Hyperdrive_Size6_Class1",
+        "Int_Hyperdrive_Size6_Class2",
+        "Int_Hyperdrive_Size6_Class3",
+        "Int_Hyperdrive_Size6_Class4",
+        "Int_Hyperdrive_Size6_Class5",
+        "Int_Hyperdrive_Size7_Class1",
+        "Int_Hyperdrive_Size7_Class2",
+        "Int_Hyperdrive_Size7_Class3",
+        "Int_Hyperdrive_Size7_Class4",
+        "Int_Hyperdrive_Size7_Class5",
+        "Int_Hyperdrive_Size2_Class1_free",
+        "Int_Hyperdrive_Overcharge_Size5_Class3",
+        "Int_Hyperdrive_Overcharge_Size7_Class3",
+        "Int_Hyperdrive_Overcharge_Size6_Class3",
+        "Int_Hyperdrive_Overcharge_Size4_Class3",
+        "Int_Hyperdrive_Overcharge_Size3_Class3",
+        "Int_Hyperdrive_Overcharge_Size2_Class3",
+        "Int_Hyperdrive_Overcharge_Size2_Class1",
+        "Int_Hyperdrive_Overcharge_Size2_Class2",
+        "Int_Hyperdrive_Overcharge_Size2_Class4",
+        "Int_Hyperdrive_Overcharge_Size2_Class5",
+        "Int_Hyperdrive_Overcharge_Size3_Class1",
+        "Int_Hyperdrive_Overcharge_Size3_Class2",
+        "Int_Hyperdrive_Overcharge_Size3_Class4",
+        "Int_Hyperdrive_Overcharge_Size3_Class5",
+        "Int_Hyperdrive_Overcharge_Size4_Class1",
+        "Int_Hyperdrive_Overcharge_Size4_Class2",
+        "Int_Hyperdrive_Overcharge_Size4_Class4",
+        "Int_Hyperdrive_Overcharge_Size4_Class5",
+        "Int_Hyperdrive_Overcharge_Size5_Class1",
+        "Int_Hyperdrive_Overcharge_Size5_Class2",
+        "Int_Hyperdrive_Overcharge_Size5_Class4",
+        "Int_Hyperdrive_Overcharge_Size5_Class5",
+        "Int_Hyperdrive_Overcharge_Size6_Class1",
+        "Int_Hyperdrive_Overcharge_Size6_Class2",
+        "Int_Hyperdrive_Overcharge_Size6_Class4",
+        "Int_Hyperdrive_Overcharge_Size6_Class5",
+        "Int_Hyperdrive_Overcharge_Size7_Class1",
+        "Int_Hyperdrive_Overcharge_Size7_Class2",
+        "Int_Hyperdrive_Overcharge_Size7_Class4",
+        "Int_Hyperdrive_Overcharge_Size7_Class5",
+        "Int_Hyperdrive_Overcharge_Size8_Class1",
+        "Int_Hyperdrive_Overcharge_Size8_Class2",
+        "Int_Hyperdrive_Overcharge_Size8_Class3",
+        "Int_Hyperdrive_Overcharge_Size8_Class4",
+        "Int_Hyperdrive_Overcharge_Size8_Class5",
+        "Int_Hyperdrive_Overcharge_Size8_Class5_OverchargeBooster_MkII"
+      ]
     },
     {
       "key": "fx",
@@ -10181,7 +11675,30 @@
             "Tiana Fortune"
           ]
         }
-      }
+      },
+      "english": "Fuel Transfer Limpet Controller",
+      "journalSymbols": [
+        "Int_DroneControl_FuelTransfer_Size1_Class1",
+        "Int_DroneControl_FuelTransfer_Size1_Class2",
+        "Int_DroneControl_FuelTransfer_Size1_Class3",
+        "Int_DroneControl_FuelTransfer_Size1_Class4",
+        "Int_DroneControl_FuelTransfer_Size1_Class5",
+        "Int_DroneControl_FuelTransfer_Size3_Class1",
+        "Int_DroneControl_FuelTransfer_Size3_Class2",
+        "Int_DroneControl_FuelTransfer_Size3_Class3",
+        "Int_DroneControl_FuelTransfer_Size3_Class4",
+        "Int_DroneControl_FuelTransfer_Size3_Class5",
+        "Int_DroneControl_FuelTransfer_Size5_Class1",
+        "Int_DroneControl_FuelTransfer_Size5_Class2",
+        "Int_DroneControl_FuelTransfer_Size5_Class3",
+        "Int_DroneControl_FuelTransfer_Size5_Class4",
+        "Int_DroneControl_FuelTransfer_Size5_Class5",
+        "Int_DroneControl_FuelTransfer_Size7_Class1",
+        "Int_DroneControl_FuelTransfer_Size7_Class2",
+        "Int_DroneControl_FuelTransfer_Size7_Class3",
+        "Int_DroneControl_FuelTransfer_Size7_Class4",
+        "Int_DroneControl_FuelTransfer_Size7_Class5"
+      ]
     },
     {
       "key": "hb",
@@ -10286,7 +11803,31 @@
             "Tiana Fortune"
           ]
         }
-      }
+      },
+      "english": "Hatch Breaker Limpet Controller",
+      "journalSymbols": [
+        "Int_DroneControl_ResourceSiphon",
+        "Int_DroneControl_ResourceSiphon_Size1_Class1",
+        "Int_DroneControl_ResourceSiphon_Size1_Class2",
+        "Int_DroneControl_ResourceSiphon_Size1_Class3",
+        "Int_DroneControl_ResourceSiphon_Size1_Class4",
+        "Int_DroneControl_ResourceSiphon_Size1_Class5",
+        "Int_DroneControl_ResourceSiphon_Size3_Class1",
+        "Int_DroneControl_ResourceSiphon_Size3_Class2",
+        "Int_DroneControl_ResourceSiphon_Size3_Class3",
+        "Int_DroneControl_ResourceSiphon_Size3_Class4",
+        "Int_DroneControl_ResourceSiphon_Size3_Class5",
+        "Int_DroneControl_ResourceSiphon_Size5_Class1",
+        "Int_DroneControl_ResourceSiphon_Size5_Class2",
+        "Int_DroneControl_ResourceSiphon_Size5_Class3",
+        "Int_DroneControl_ResourceSiphon_Size5_Class4",
+        "Int_DroneControl_ResourceSiphon_Size5_Class5",
+        "Int_DroneControl_ResourceSiphon_Size7_Class1",
+        "Int_DroneControl_ResourceSiphon_Size7_Class2",
+        "Int_DroneControl_ResourceSiphon_Size7_Class3",
+        "Int_DroneControl_ResourceSiphon_Size7_Class4",
+        "Int_DroneControl_ResourceSiphon_Size7_Class5"
+      ]
     },
     {
       "key": "hr",
@@ -10420,7 +11961,20 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Hull Reinforcement Package",
+      "journalSymbols": [
+        "Int_HullReinforcement_Size1_Class1",
+        "Int_HullReinforcement_Size1_Class2",
+        "Int_HullReinforcement_Size2_Class1",
+        "Int_HullReinforcement_Size2_Class2",
+        "Int_HullReinforcement_Size3_Class1",
+        "Int_HullReinforcement_Size3_Class2",
+        "Int_HullReinforcement_Size4_Class1",
+        "Int_HullReinforcement_Size4_Class2",
+        "Int_HullReinforcement_Size5_Class1",
+        "Int_HullReinforcement_Size5_Class2"
+      ]
     },
     {
       "key": "hs",
@@ -10505,7 +12059,11 @@
             "Ram Tah"
           ]
         }
-      }
+      },
+      "english": "Heat Sink Launcher",
+      "journalSymbols": [
+        "Hpt_HeatSinkLauncher_Turret_Tiny"
+      ]
     },
     {
       "key": "kw",
@@ -10706,7 +12264,15 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Kill Warrant Scanner",
+      "journalSymbols": [
+        "Hpt_CrimeScanner_Size0_Class1",
+        "Hpt_CrimeScanner_Size0_Class2",
+        "Hpt_CrimeScanner_Size0_Class3",
+        "Hpt_CrimeScanner_Size0_Class4",
+        "Hpt_CrimeScanner_Size0_Class5"
+      ]
     },
     {
       "key": "ls",
@@ -10793,7 +12359,51 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Life Support",
+      "journalSymbols": [
+        "Int_LifeSupport_Size1_Class1",
+        "Int_LifeSupport_Size1_Class2",
+        "Int_LifeSupport_Size1_Class3",
+        "Int_LifeSupport_Size1_Class4",
+        "Int_LifeSupport_Size1_Class5",
+        "Int_LifeSupport_Size2_Class1",
+        "Int_LifeSupport_Size2_Class2",
+        "Int_LifeSupport_Size2_Class3",
+        "Int_LifeSupport_Size2_Class4",
+        "Int_LifeSupport_Size2_Class5",
+        "Int_LifeSupport_Size3_Class1",
+        "Int_LifeSupport_Size3_Class2",
+        "Int_LifeSupport_Size3_Class3",
+        "Int_LifeSupport_Size3_Class4",
+        "Int_LifeSupport_Size3_Class5",
+        "Int_LifeSupport_Size4_Class1",
+        "Int_LifeSupport_Size4_Class2",
+        "Int_LifeSupport_Size4_Class3",
+        "Int_LifeSupport_Size4_Class4",
+        "Int_LifeSupport_Size4_Class5",
+        "Int_LifeSupport_Size5_Class1",
+        "Int_LifeSupport_Size5_Class2",
+        "Int_LifeSupport_Size5_Class3",
+        "Int_LifeSupport_Size5_Class4",
+        "Int_LifeSupport_Size5_Class5",
+        "Int_LifeSupport_Size6_Class1",
+        "Int_LifeSupport_Size6_Class2",
+        "Int_LifeSupport_Size6_Class3",
+        "Int_LifeSupport_Size6_Class4",
+        "Int_LifeSupport_Size6_Class5",
+        "Int_LifeSupport_Size7_Class1",
+        "Int_LifeSupport_Size7_Class2",
+        "Int_LifeSupport_Size7_Class3",
+        "Int_LifeSupport_Size7_Class4",
+        "Int_LifeSupport_Size7_Class5",
+        "Int_LifeSupport_Size8_Class1",
+        "Int_LifeSupport_Size8_Class2",
+        "Int_LifeSupport_Size8_Class3",
+        "Int_LifeSupport_Size8_Class4",
+        "Int_LifeSupport_Size8_Class5",
+        "Int_LifeSupport_Size1_Class1_free"
+      ]
     },
     {
       "key": "mc",
@@ -11022,7 +12632,22 @@
             "Marsha Hicks"
           ]
         }
-      }
+      },
+      "english": "Multi-cannon",
+      "journalSymbols": [
+        "Hpt_MultiCannon_Fixed_Small",
+        "Hpt_MultiCannon_Fixed_Medium",
+        "Hpt_MultiCannon_Fixed_Large",
+        "Hpt_MultiCannon_Fixed_Huge",
+        "Hpt_MultiCannon_Gimbal_Small",
+        "Hpt_MultiCannon_Gimbal_Medium",
+        "Hpt_MultiCannon_Gimbal_Large",
+        "Hpt_MultiCannon_Turret_Small",
+        "Hpt_MultiCannon_Turret_Medium",
+        "Hpt_MultiCannon_Turret_Large",
+        "Hpt_MultiCannon_Fixed_Small_Strong",
+        "Hpt_MultiCannon_Gimbal_Huge"
+      ]
     },
     {
       "key": "advmc",
@@ -11251,7 +12876,12 @@
             "Marsha Hicks"
           ]
         }
-      }
+      },
+      "english": "Advanced Multi-cannon",
+      "journalSymbols": [
+        "Hpt_MultiCannon_Fixed_Medium_Advanced",
+        "Hpt_MultiCannon_Fixed_Small_Advanced"
+      ]
     },
     {
       "key": "mr",
@@ -11364,7 +12994,15 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Missile Rack",
+      "journalSymbols": [
+        "Hpt_DumbfireMissileRack_Fixed_Small",
+        "Hpt_DumbfireMissileRack_Fixed_Medium",
+        "Hpt_DrunkMissileRack_Fixed_Medium",
+        "Hpt_DumbfireMissileRack_Fixed_Medium_Lasso",
+        "Hpt_DumbfireMissileRack_Fixed_Large"
+      ]
     },
     {
       "key": "amr",
@@ -11457,7 +13095,12 @@
             "Liz Ryder"
           ]
         }
-      }
+      },
+      "english": "Advanced Missile Rack",
+      "journalSymbols": [
+        "Hpt_DumbfireMissileRack_Fixed_Small_Advanced",
+        "Hpt_DumbfireMissileRack_Fixed_Medium_Advanced"
+      ]
     },
     {
       "key": "nl",
@@ -11582,7 +13225,13 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Seeker Missile Rack",
+      "journalSymbols": [
+        "Hpt_BasicMissileRack_Fixed_Small",
+        "Hpt_BasicMissileRack_Fixed_Medium",
+        "Hpt_BasicMissileRack_Fixed_Large"
+      ]
     },
     {
       "key": "pa",
@@ -11803,7 +13452,14 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Plasma Accelerator",
+      "journalSymbols": [
+        "Hpt_PlasmaAccelerator_Fixed_Medium",
+        "Hpt_PlasmaAccelerator_Fixed_Large",
+        "Hpt_PlasmaAccelerator_Fixed_Huge",
+        "Hpt_PlasmaAccelerator_Fixed_Large_Advanced"
+      ]
     },
     {
       "key": "pc",
@@ -11908,7 +13564,30 @@
             "Tiana Fortune"
           ]
         }
-      }
+      },
+      "english": "Prospector Limpet Controller",
+      "journalSymbols": [
+        "Int_DroneControl_Prospector_Size1_Class1",
+        "Int_DroneControl_Prospector_Size1_Class2",
+        "Int_DroneControl_Prospector_Size1_Class3",
+        "Int_DroneControl_Prospector_Size1_Class4",
+        "Int_DroneControl_Prospector_Size1_Class5",
+        "Int_DroneControl_Prospector_Size3_Class1",
+        "Int_DroneControl_Prospector_Size3_Class2",
+        "Int_DroneControl_Prospector_Size3_Class3",
+        "Int_DroneControl_Prospector_Size3_Class4",
+        "Int_DroneControl_Prospector_Size3_Class5",
+        "Int_DroneControl_Prospector_Size5_Class1",
+        "Int_DroneControl_Prospector_Size5_Class2",
+        "Int_DroneControl_Prospector_Size5_Class3",
+        "Int_DroneControl_Prospector_Size5_Class4",
+        "Int_DroneControl_Prospector_Size5_Class5",
+        "Int_DroneControl_Prospector_Size7_Class1",
+        "Int_DroneControl_Prospector_Size7_Class2",
+        "Int_DroneControl_Prospector_Size7_Class3",
+        "Int_DroneControl_Prospector_Size7_Class4",
+        "Int_DroneControl_Prospector_Size7_Class5"
+      ]
     },
     {
       "key": "pd",
@@ -12097,7 +13776,51 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Power Distributor",
+      "journalSymbols": [
+        "Int_PowerDistributor_Size1_Class1",
+        "Int_PowerDistributor_Size1_Class2",
+        "Int_PowerDistributor_Size1_Class3",
+        "Int_PowerDistributor_Size1_Class4",
+        "Int_PowerDistributor_Size1_Class5",
+        "Int_PowerDistributor_Size2_Class1",
+        "Int_PowerDistributor_Size2_Class2",
+        "Int_PowerDistributor_Size2_Class3",
+        "Int_PowerDistributor_Size2_Class4",
+        "Int_PowerDistributor_Size2_Class5",
+        "Int_PowerDistributor_Size3_Class1",
+        "Int_PowerDistributor_Size3_Class2",
+        "Int_PowerDistributor_Size3_Class3",
+        "Int_PowerDistributor_Size3_Class4",
+        "Int_PowerDistributor_Size3_Class5",
+        "Int_PowerDistributor_Size4_Class1",
+        "Int_PowerDistributor_Size4_Class2",
+        "Int_PowerDistributor_Size4_Class3",
+        "Int_PowerDistributor_Size4_Class4",
+        "Int_PowerDistributor_Size4_Class5",
+        "Int_PowerDistributor_Size5_Class1",
+        "Int_PowerDistributor_Size5_Class2",
+        "Int_PowerDistributor_Size5_Class3",
+        "Int_PowerDistributor_Size5_Class4",
+        "Int_PowerDistributor_Size5_Class5",
+        "Int_PowerDistributor_Size6_Class1",
+        "Int_PowerDistributor_Size6_Class2",
+        "Int_PowerDistributor_Size6_Class3",
+        "Int_PowerDistributor_Size6_Class4",
+        "Int_PowerDistributor_Size6_Class5",
+        "Int_PowerDistributor_Size7_Class1",
+        "Int_PowerDistributor_Size7_Class2",
+        "Int_PowerDistributor_Size7_Class3",
+        "Int_PowerDistributor_Size7_Class4",
+        "Int_PowerDistributor_Size7_Class5",
+        "Int_PowerDistributor_Size8_Class1",
+        "Int_PowerDistributor_Size8_Class2",
+        "Int_PowerDistributor_Size8_Class3",
+        "Int_PowerDistributor_Size8_Class4",
+        "Int_PowerDistributor_Size8_Class5",
+        "Int_PowerDistributor_Size1_Class1_free"
+      ]
     },
     {
       "key": "pl",
@@ -12110,7 +13833,8 @@
         "Weapon_Overcharged",
         "Weapon_RapidFire",
         "Weapon_ShortRange",
-        "Weapon_Sturdy"
+        "Weapon_Sturdy",
+        "PulseLaser_ThermalPlasmaConversion"
       ],
       "experimentals": [
         "special_concordant_sequence",
@@ -12332,8 +14056,49 @@
             "Broo Tarquin",
             "Mel Brandon"
           ]
+        },
+        "PulseLaser_ThermalPlasmaConversion": {
+          "1": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "2": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "3": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "4": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "5": [
+            "Broo Tarquin",
+            "Mel Brandon"
+          ]
         }
-      }
+      },
+      "english": "Pulse Laser",
+      "journalSymbols": [
+        "Hpt_PulseLaser_Fixed_Small",
+        "Hpt_PulseLaser_Fixed_Medium",
+        "Hpt_PulseLaser_Fixed_Large",
+        "Hpt_PulseLaser_Fixed_Huge",
+        "Hpt_PulseLaser_Gimbal_Small",
+        "Hpt_PulseLaser_Gimbal_Medium",
+        "Hpt_PulseLaser_Gimbal_Large",
+        "Hpt_PulseLaser_Turret_Small",
+        "Hpt_PulseLaser_Turret_Medium",
+        "Hpt_PulseLaser_Turret_Large",
+        "Hpt_PulseLaser_Fixed_Medium_Disruptor",
+        "Hpt_PulseLaser_Gimbal_Huge"
+      ]
     },
     {
       "key": "po",
@@ -12418,7 +14183,11 @@
             "Ram Tah"
           ]
         }
-      }
+      },
+      "english": "Point Defence",
+      "journalSymbols": [
+        "Hpt_PlasmaPointDefence_Turret_Tiny"
+      ]
     },
     {
       "key": "pp",
@@ -12516,7 +14285,46 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Power Plant",
+      "journalSymbols": [
+        "Int_Powerplant_Size2_Class1",
+        "Int_Powerplant_Size2_Class2",
+        "Int_Powerplant_Size2_Class3",
+        "Int_Powerplant_Size2_Class4",
+        "Int_Powerplant_Size2_Class5",
+        "Int_Powerplant_Size3_Class1",
+        "Int_Powerplant_Size3_Class2",
+        "Int_Powerplant_Size3_Class3",
+        "Int_Powerplant_Size3_Class4",
+        "Int_Powerplant_Size3_Class5",
+        "Int_Powerplant_Size4_Class1",
+        "Int_Powerplant_Size4_Class2",
+        "Int_Powerplant_Size4_Class3",
+        "Int_Powerplant_Size4_Class4",
+        "Int_Powerplant_Size4_Class5",
+        "Int_Powerplant_Size5_Class1",
+        "Int_Powerplant_Size5_Class2",
+        "Int_Powerplant_Size5_Class3",
+        "Int_Powerplant_Size5_Class4",
+        "Int_Powerplant_Size5_Class5",
+        "Int_Powerplant_Size6_Class1",
+        "Int_Powerplant_Size6_Class2",
+        "Int_Powerplant_Size6_Class3",
+        "Int_Powerplant_Size6_Class4",
+        "Int_Powerplant_Size6_Class5",
+        "Int_Powerplant_Size7_Class1",
+        "Int_Powerplant_Size7_Class2",
+        "Int_Powerplant_Size7_Class3",
+        "Int_Powerplant_Size7_Class4",
+        "Int_Powerplant_Size7_Class5",
+        "Int_Powerplant_Size8_Class1",
+        "Int_Powerplant_Size8_Class2",
+        "Int_Powerplant_Size8_Class3",
+        "Int_Powerplant_Size8_Class4",
+        "Int_Powerplant_Size8_Class5",
+        "Int_PowerPlant_Size2_Class1_free"
+      ]
     },
     {
       "key": "psg",
@@ -12650,7 +14458,18 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Prismatic Shield Generator",
+      "journalSymbols": [
+        "Int_ShieldGenerator_Size1_Class5_Strong",
+        "Int_ShieldGenerator_Size2_Class5_Strong",
+        "Int_ShieldGenerator_Size3_Class5_Strong",
+        "Int_ShieldGenerator_Size4_Class5_Strong",
+        "Int_ShieldGenerator_Size5_Class5_Strong",
+        "Int_ShieldGenerator_Size6_Class5_Strong",
+        "Int_ShieldGenerator_Size7_Class5_Strong",
+        "Int_ShieldGenerator_Size8_Class5_Strong"
+      ]
     },
     {
       "key": "rf",
@@ -12684,7 +14503,30 @@
             "Marsha Hicks"
           ]
         }
-      }
+      },
+      "english": "Refinery",
+      "journalSymbols": [
+        "Int_Refinery_Size1_Class1",
+        "Int_Refinery_Size2_Class1",
+        "Int_Refinery_Size3_Class1",
+        "Int_Refinery_Size4_Class1",
+        "Int_Refinery_Size1_Class2",
+        "Int_Refinery_Size2_Class2",
+        "Int_Refinery_Size3_Class2",
+        "Int_Refinery_Size4_Class2",
+        "Int_Refinery_Size1_Class3",
+        "Int_Refinery_Size2_Class3",
+        "Int_Refinery_Size3_Class3",
+        "Int_Refinery_Size4_Class3",
+        "Int_Refinery_Size1_Class4",
+        "Int_Refinery_Size2_Class4",
+        "Int_Refinery_Size3_Class4",
+        "Int_Refinery_Size4_Class4",
+        "Int_Refinery_Size1_Class5",
+        "Int_Refinery_Size2_Class5",
+        "Int_Refinery_Size3_Class5",
+        "Int_Refinery_Size4_Class5"
+      ]
     },
     {
       "key": "rg",
@@ -12832,7 +14674,13 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Rail Gun",
+      "journalSymbols": [
+        "Hpt_Railgun_Fixed_Small",
+        "Hpt_Railgun_Fixed_Medium",
+        "Hpt_Railgun_Fixed_Medium_Burst"
+      ]
     },
     {
       "key": "s",
@@ -12988,7 +14836,51 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Sensors",
+      "journalSymbols": [
+        "Int_Sensors_Size1_Class1",
+        "Int_Sensors_Size1_Class2",
+        "Int_Sensors_Size1_Class3",
+        "Int_Sensors_Size1_Class4",
+        "Int_Sensors_Size1_Class5",
+        "Int_Sensors_Size2_Class1",
+        "Int_Sensors_Size2_Class2",
+        "Int_Sensors_Size2_Class3",
+        "Int_Sensors_Size2_Class4",
+        "Int_Sensors_Size2_Class5",
+        "Int_Sensors_Size3_Class1",
+        "Int_Sensors_Size3_Class2",
+        "Int_Sensors_Size3_Class3",
+        "Int_Sensors_Size3_Class4",
+        "Int_Sensors_Size3_Class5",
+        "Int_Sensors_Size4_Class1",
+        "Int_Sensors_Size4_Class2",
+        "Int_Sensors_Size4_Class3",
+        "Int_Sensors_Size4_Class4",
+        "Int_Sensors_Size4_Class5",
+        "Int_Sensors_Size5_Class1",
+        "Int_Sensors_Size5_Class2",
+        "Int_Sensors_Size5_Class3",
+        "Int_Sensors_Size5_Class4",
+        "Int_Sensors_Size5_Class5",
+        "Int_Sensors_Size6_Class1",
+        "Int_Sensors_Size6_Class2",
+        "Int_Sensors_Size6_Class3",
+        "Int_Sensors_Size6_Class4",
+        "Int_Sensors_Size6_Class5",
+        "Int_Sensors_Size7_Class1",
+        "Int_Sensors_Size7_Class2",
+        "Int_Sensors_Size7_Class3",
+        "Int_Sensors_Size7_Class4",
+        "Int_Sensors_Size7_Class5",
+        "Int_Sensors_Size8_Class1",
+        "Int_Sensors_Size8_Class2",
+        "Int_Sensors_Size8_Class3",
+        "Int_Sensors_Size8_Class4",
+        "Int_Sensors_Size8_Class5",
+        "Int_Sensors_Size1_Class1_free"
+      ]
     },
     {
       "key": "sb",
@@ -13139,7 +15031,15 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Shield Booster",
+      "journalSymbols": [
+        "Hpt_ShieldBooster_Size0_Class1",
+        "Hpt_ShieldBooster_Size0_Class2",
+        "Hpt_ShieldBooster_Size0_Class3",
+        "Hpt_ShieldBooster_Size0_Class4",
+        "Hpt_ShieldBooster_Size0_Class5"
+      ]
     },
     {
       "key": "scb",
@@ -13192,7 +15092,50 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Shield Cell Bank",
+      "journalSymbols": [
+        "Int_ShieldCellBank_Size1_Class1",
+        "Int_ShieldCellBank_Size1_Class2",
+        "Int_ShieldCellBank_Size1_Class3",
+        "Int_ShieldCellBank_Size1_Class4",
+        "Int_ShieldCellBank_Size1_Class5",
+        "Int_ShieldCellBank_Size2_Class1",
+        "Int_ShieldCellBank_Size2_Class2",
+        "Int_ShieldCellBank_Size2_Class3",
+        "Int_ShieldCellBank_Size2_Class4",
+        "Int_ShieldCellBank_Size2_Class5",
+        "Int_ShieldCellBank_Size3_Class1",
+        "Int_ShieldCellBank_Size3_Class2",
+        "Int_ShieldCellBank_Size3_Class3",
+        "Int_ShieldCellBank_Size3_Class4",
+        "Int_ShieldCellBank_Size3_Class5",
+        "Int_ShieldCellBank_Size4_Class1",
+        "Int_ShieldCellBank_Size4_Class2",
+        "Int_ShieldCellBank_Size4_Class3",
+        "Int_ShieldCellBank_Size4_Class4",
+        "Int_ShieldCellBank_Size4_Class5",
+        "Int_ShieldCellBank_Size5_Class1",
+        "Int_ShieldCellBank_Size5_Class2",
+        "Int_ShieldCellBank_Size5_Class3",
+        "Int_ShieldCellBank_Size5_Class4",
+        "Int_ShieldCellBank_Size5_Class5",
+        "Int_ShieldCellBank_Size6_Class1",
+        "Int_ShieldCellBank_Size6_Class2",
+        "Int_ShieldCellBank_Size6_Class3",
+        "Int_ShieldCellBank_Size6_Class4",
+        "Int_ShieldCellBank_Size6_Class5",
+        "Int_ShieldCellBank_Size7_Class1",
+        "Int_ShieldCellBank_Size7_Class2",
+        "Int_ShieldCellBank_Size7_Class3",
+        "Int_ShieldCellBank_Size7_Class4",
+        "Int_ShieldCellBank_Size7_Class5",
+        "Int_ShieldCellBank_Size8_Class1",
+        "Int_ShieldCellBank_Size8_Class2",
+        "Int_ShieldCellBank_Size8_Class3",
+        "Int_ShieldCellBank_Size8_Class4",
+        "Int_ShieldCellBank_Size8_Class5"
+      ]
     },
     {
       "key": "sg",
@@ -13326,7 +15269,51 @@
             "Mel Brandon"
           ]
         }
-      }
+      },
+      "english": "Shield Generator",
+      "journalSymbols": [
+        "Int_ShieldGenerator_Size1_Class1",
+        "Int_ShieldGenerator_Size1_Class2",
+        "Int_ShieldGenerator_Size1_Class3",
+        "Int_ShieldGenerator_Size1_Class4",
+        "Int_ShieldGenerator_Size1_Class5",
+        "Int_ShieldGenerator_Size2_Class1",
+        "Int_ShieldGenerator_Size2_Class2",
+        "Int_ShieldGenerator_Size2_Class3",
+        "Int_ShieldGenerator_Size2_Class4",
+        "Int_ShieldGenerator_Size2_Class5",
+        "Int_ShieldGenerator_Size3_Class1",
+        "Int_ShieldGenerator_Size3_Class2",
+        "Int_ShieldGenerator_Size3_Class3",
+        "Int_ShieldGenerator_Size3_Class4",
+        "Int_ShieldGenerator_Size3_Class5",
+        "Int_ShieldGenerator_Size4_Class1",
+        "Int_ShieldGenerator_Size4_Class2",
+        "Int_ShieldGenerator_Size4_Class3",
+        "Int_ShieldGenerator_Size4_Class4",
+        "Int_ShieldGenerator_Size4_Class5",
+        "Int_ShieldGenerator_Size5_Class1",
+        "Int_ShieldGenerator_Size5_Class2",
+        "Int_ShieldGenerator_Size5_Class3",
+        "Int_ShieldGenerator_Size5_Class4",
+        "Int_ShieldGenerator_Size5_Class5",
+        "Int_ShieldGenerator_Size6_Class1",
+        "Int_ShieldGenerator_Size6_Class2",
+        "Int_ShieldGenerator_Size6_Class3",
+        "Int_ShieldGenerator_Size6_Class4",
+        "Int_ShieldGenerator_Size6_Class5",
+        "Int_ShieldGenerator_Size7_Class1",
+        "Int_ShieldGenerator_Size7_Class2",
+        "Int_ShieldGenerator_Size7_Class3",
+        "Int_ShieldGenerator_Size7_Class4",
+        "Int_ShieldGenerator_Size7_Class5",
+        "Int_ShieldGenerator_Size8_Class1",
+        "Int_ShieldGenerator_Size8_Class2",
+        "Int_ShieldGenerator_Size8_Class3",
+        "Int_ShieldGenerator_Size8_Class4",
+        "Int_ShieldGenerator_Size8_Class5",
+        "Int_ShieldGenerator_Size2_Class1_free"
+      ]
     },
     {
       "key": "ss",
@@ -13384,7 +15371,11 @@
             "Hera Tani"
           ]
         }
-      }
+      },
+      "english": "Detailed Surface Scanner",
+      "journalSymbols": [
+        "Int_DetailedSurfaceScanner_Tiny"
+      ]
     },
     {
       "key": "t",
@@ -13498,7 +15489,50 @@
             "Chloe Sedesi"
           ]
         }
-      }
+      },
+      "english": "Thrusters",
+      "journalSymbols": [
+        "Int_Engine_Size2_Class1",
+        "Int_Engine_Size2_Class2",
+        "Int_Engine_Size2_Class3",
+        "Int_Engine_Size2_Class4",
+        "Int_Engine_Size2_Class5",
+        "Int_Engine_Size3_Class1",
+        "Int_Engine_Size3_Class2",
+        "Int_Engine_Size3_Class3",
+        "Int_Engine_Size3_Class4",
+        "Int_Engine_Size3_Class5",
+        "Int_Engine_Size4_Class1",
+        "Int_Engine_Size4_Class2",
+        "Int_Engine_Size4_Class3",
+        "Int_Engine_Size4_Class4",
+        "Int_Engine_Size4_Class5",
+        "Int_Engine_Size5_Class1",
+        "Int_Engine_Size5_Class2",
+        "Int_Engine_Size5_Class3",
+        "Int_Engine_Size5_Class4",
+        "Int_Engine_Size5_Class5",
+        "Int_Engine_Size6_Class1",
+        "Int_Engine_Size6_Class2",
+        "Int_Engine_Size6_Class3",
+        "Int_Engine_Size6_Class4",
+        "Int_Engine_Size6_Class5",
+        "Int_Engine_Size7_Class1",
+        "Int_Engine_Size7_Class2",
+        "Int_Engine_Size7_Class3",
+        "Int_Engine_Size7_Class4",
+        "Int_Engine_Size7_Class5",
+        "Int_Engine_Size8_Class1",
+        "Int_Engine_Size8_Class2",
+        "Int_Engine_Size8_Class3",
+        "Int_Engine_Size8_Class4",
+        "Int_Engine_Size8_Class5",
+        "Int_Engine_Size2_Class1_free",
+        "Int_Engine_Size3_Class5_Fast",
+        "Int_Engine_Size2_Class5_Fast",
+        "Int_Engine_Size7_Class5_GravityOptimised_MkII",
+        "Int_MkIIAgileBoost_Engine_Size5_Class5"
+      ]
     },
     {
       "key": "tp",
@@ -13569,7 +15603,13 @@
             "Petra Olmanova"
           ]
         }
-      }
+      },
+      "english": "Torpedo Pylon",
+      "journalSymbols": [
+        "Hpt_AdvancedTorpPylon_Fixed_Small",
+        "Hpt_AdvancedTorpPylon_Fixed_Medium",
+        "Hpt_AdvancedTorpPylon_Fixed_Large"
+      ]
     },
     {
       "key": "ul",
@@ -13582,7 +15622,8 @@
         "Weapon_Overcharged",
         "Weapon_RapidFire",
         "Weapon_ShortRange",
-        "Weapon_Sturdy"
+        "Weapon_Sturdy",
+        "BurstLaser_ThermalPlasmaConversion"
       ],
       "experimentals": [
         "special_concordant_sequence",
@@ -13796,8 +15837,48 @@
             "Broo Tarquin",
             "Mel Brandon"
           ]
+        },
+        "BurstLaser_ThermalPlasmaConversion": {
+          "1": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "2": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "3": [
+            "Broo Tarquin",
+            "The Dweller",
+            "Mel Brandon"
+          ],
+          "4": [
+            "Broo Tarquin",
+            "Mel Brandon"
+          ],
+          "5": [
+            "Broo Tarquin",
+            "Mel Brandon"
+          ]
         }
-      }
+      },
+      "english": "Burst Laser",
+      "journalSymbols": [
+        "Hpt_PulseLaserBurst_Fixed_Small",
+        "Hpt_PulseLaserBurst_Fixed_Medium",
+        "Hpt_PulseLaserBurst_Fixed_Large",
+        "Hpt_PulseLaserBurst_Fixed_Huge",
+        "Hpt_PulseLaserBurst_Gimbal_Small",
+        "Hpt_PulseLaserBurst_Gimbal_Medium",
+        "Hpt_PulseLaserBurst_Gimbal_Large",
+        "Hpt_PulseLaserBurst_Turret_Small",
+        "Hpt_PulseLaserBurst_Turret_Medium",
+        "Hpt_PulseLaserBurst_Turret_Large",
+        "Hpt_PulseLaserBurst_Fixed_Small_Scatter",
+        "Hpt_PulseLaserBurst_Gimbal_Huge"
+      ]
     },
     {
       "key": "ws",
@@ -13998,7 +16079,371 @@
             "Etienne Dorn"
           ]
         }
-      }
+      },
+      "english": "Frame Shift Wake Scanner",
+      "journalSymbols": [
+        "Hpt_CloudScanner_Size0_Class1",
+        "Hpt_CloudScanner_Size0_Class2",
+        "Hpt_CloudScanner_Size0_Class3",
+        "Hpt_CloudScanner_Size0_Class4",
+        "Hpt_CloudScanner_Size0_Class5"
+      ]
+    },
+    {
+      "key": "guardian-pp",
+      "name": "Силовая установка Стражей",
+      "english": "Guardian Power Plant",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianPowerplant_Size2",
+        "Int_GuardianPowerplant_Size3",
+        "Int_GuardianPowerplant_Size4",
+        "Int_GuardianPowerplant_Size5",
+        "Int_GuardianPowerplant_Size6",
+        "Int_GuardianPowerplant_Size7",
+        "Int_GuardianPowerplant_Size8"
+      ]
+    },
+    {
+      "key": "guardian-pd",
+      "name": "Распределитель питания Стражей",
+      "english": "Guardian Hybrid Power Distributor",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianPowerDistributor_Size1",
+        "Int_GuardianPowerDistributor_Size2",
+        "Int_GuardianPowerDistributor_Size3",
+        "Int_GuardianPowerDistributor_Size4",
+        "Int_GuardianPowerDistributor_Size5",
+        "Int_GuardianPowerDistributor_Size6",
+        "Int_GuardianPowerDistributor_Size7",
+        "Int_GuardianPowerDistributor_Size8"
+      ]
+    },
+    {
+      "key": "guardian-hr",
+      "name": "Усилитель корпуса Стражей",
+      "english": "Guardian Hull Reinforcement",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianHullReinforcement_Size1_Class1",
+        "Int_GuardianHullReinforcement_Size1_Class2",
+        "Int_GuardianHullReinforcement_Size2_Class1",
+        "Int_GuardianHullReinforcement_Size2_Class2",
+        "Int_GuardianHullReinforcement_Size3_Class1",
+        "Int_GuardianHullReinforcement_Size3_Class2",
+        "Int_GuardianHullReinforcement_Size4_Class1",
+        "Int_GuardianHullReinforcement_Size4_Class2",
+        "Int_GuardianHullReinforcement_Size5_Class1",
+        "Int_GuardianHullReinforcement_Size5_Class2"
+      ]
+    },
+    {
+      "key": "guardian-fsd",
+      "name": "Ускоритель FSD Стражей",
+      "english": "Guardian FSD Booster",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianFSDBooster_Size1",
+        "Int_GuardianFSDBooster_Size2",
+        "Int_GuardianFSDBooster_Size3",
+        "Int_GuardianFSDBooster_Size4",
+        "Int_GuardianFSDBooster_Size5"
+      ]
+    },
+    {
+      "key": "guardian-mr",
+      "name": "Усилитель модулей Стражей",
+      "english": "Guardian Module Reinforcement",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianModuleReinforcement_Size1_Class1",
+        "Int_GuardianModuleReinforcement_Size1_Class2",
+        "Int_GuardianModuleReinforcement_Size2_Class1",
+        "Int_GuardianModuleReinforcement_Size2_Class2",
+        "Int_GuardianModuleReinforcement_Size3_Class1",
+        "Int_GuardianModuleReinforcement_Size3_Class2",
+        "Int_GuardianModuleReinforcement_Size4_Class1",
+        "Int_GuardianModuleReinforcement_Size4_Class2",
+        "Int_GuardianModuleReinforcement_Size5_Class1",
+        "Int_GuardianModuleReinforcement_Size5_Class2"
+      ]
+    },
+    {
+      "key": "guardian-sr",
+      "name": "Усилитель щита Стражей",
+      "english": "Guardian Shield Reinforcement",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Int_GuardianShieldReinforcement_Size1_Class1",
+        "Int_GuardianShieldReinforcement_Size1_Class2",
+        "Int_GuardianShieldReinforcement_Size2_Class1",
+        "Int_GuardianShieldReinforcement_Size2_Class2",
+        "Int_GuardianShieldReinforcement_Size3_Class1",
+        "Int_GuardianShieldReinforcement_Size3_Class2",
+        "Int_GuardianShieldReinforcement_Size4_Class1",
+        "Int_GuardianShieldReinforcement_Size4_Class2",
+        "Int_GuardianShieldReinforcement_Size5_Class1",
+        "Int_GuardianShieldReinforcement_Size5_Class2"
+      ]
+    },
+    {
+      "key": "guardian-gauss",
+      "name": "Орудие Гаусса Стражей",
+      "english": "Guardian Gauss Cannon",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Hpt_Guardian_GaussCannon_Fixed_Medium",
+        "Hpt_Guardian_GaussCannon_Fixed_Small"
+      ]
+    },
+    {
+      "key": "guardian-plasma",
+      "name": "Плазменный ускоритель Стражей",
+      "english": "Guardian Plasma Charger",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Hpt_Guardian_PlasmaLauncher_Fixed_Medium",
+        "Hpt_Guardian_PlasmaLauncher_Turret_Medium",
+        "Hpt_Guardian_PlasmaLauncher_Fixed_Large",
+        "Hpt_Guardian_PlasmaLauncher_Turret_Large",
+        "Hpt_Guardian_PlasmaLauncher_Turret_Small",
+        "Hpt_Guardian_PlasmaLauncher_Fixed_Small"
+      ]
+    },
+    {
+      "key": "guardian-shard",
+      "name": "Осколочное орудие Стражей",
+      "english": "Guardian Shard Cannon",
+      "blueprints": [
+        "GuardianModule_Sturdy"
+      ],
+      "experimentals": [],
+      "engineers": {
+        "GuardianModule_Sturdy": {
+          "1": [
+            "Ram Tah"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Hpt_Guardian_ShardCannon_Fixed_Medium",
+        "Hpt_Guardian_ShardCannon_Turret_Medium",
+        "Hpt_Guardian_ShardCannon_Fixed_Large",
+        "Hpt_Guardian_ShardCannon_Turret_Large",
+        "Hpt_Guardian_ShardCannon_Turret_Small",
+        "Hpt_Guardian_ShardCannon_Fixed_Small"
+      ]
+    },
+    {
+      "key": "ml",
+      "name": "Минная установка",
+      "english": "Mine Launcher",
+      "blueprints": [
+        "Weapon_HighCapacity",
+        "Weapon_LightWeight",
+        "Weapon_RapidFire",
+        "Weapon_Sturdy"
+      ],
+      "experimentals": [
+        "special_choke_canister",
+        "special_emissive_munitions",
+        "special_overload_munitions",
+        "special_radiant_canister",
+        "special_reverberating_cascade",
+        "special_shiftlock_canister",
+        "special_weapon_damage",
+        "special_weapon_efficient",
+        "special_weapon_lightweight",
+        "special_weapon_toughened"
+      ],
+      "engineers": {
+        "Weapon_HighCapacity": {
+          "1": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "2": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "3": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "4": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "5": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ]
+        },
+        "Weapon_LightWeight": {
+          "1": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "2": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "3": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "4": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "5": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ]
+        },
+        "Weapon_RapidFire": {
+          "1": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "2": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "3": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "4": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "5": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ]
+        },
+        "Weapon_Sturdy": {
+          "1": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "2": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "3": [
+            "Liz Ryder",
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "4": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ],
+          "5": [
+            "Juri Ishmaak",
+            "Petra Olmanova"
+          ]
+        }
+      },
+      "journalSymbols": [
+        "Hpt_MineLauncher_Fixed_Small",
+        "Hpt_MineLauncher_Fixed_Medium",
+        "Hpt_MineLauncher_Fixed_Small_Impulse"
+      ]
     }
   ],
   "engineers": [
@@ -14277,12 +16722,84 @@
   ],
   "attribution": "Game data and Coriolis JSON: copyright Frontier Developments plc, subject to Frontier terms. EDCD and Coriolis data contributors. Russian labels independently translated, with game-localized labels preferred when available. No NEWP code, artwork or descriptive guide prose is included.",
   "omittedLegacyEffects": [
-    "special_choke_canister",
     "special_feedback_cascade",
     "special_plasma_slug",
     "special_super_penetrator"
   ],
   "omittedBlueprints": [
     "CargoRack_IncreasedCapacity"
-  ]
+  ],
+  "journalEffectExclusions": {
+    "Hpt_MultiCannon_Fixed_Small": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Fixed_Large": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Fixed_Huge": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Gimbal_Small": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Gimbal_Medium": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Gimbal_Large": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Turret_Small": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Turret_Medium": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Turret_Large": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Fixed_Small_Strong": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Gimbal_Huge": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Fixed_Medium_Advanced": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_MultiCannon_Fixed_Small_Advanced": [
+      "special_phasing_sequence"
+    ],
+    "Hpt_BasicMissileRack_Fixed_Small": [
+      "special_fsd_interrupt",
+      "special_penetrator_munitions"
+    ],
+    "Hpt_BasicMissileRack_Fixed_Medium": [
+      "special_penetrator_munitions"
+    ],
+    "Hpt_BasicMissileRack_Fixed_Large": [
+      "special_penetrator_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Small": [
+      "special_drag_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Medium": [
+      "special_drag_munitions"
+    ],
+    "Hpt_DrunkMissileRack_Fixed_Medium": [
+      "special_fsd_interrupt",
+      "special_penetrator_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Medium_Lasso": [
+      "special_drag_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Large": [
+      "special_drag_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Small_Advanced": [
+      "special_drag_munitions"
+    ],
+    "Hpt_DumbfireMissileRack_Fixed_Medium_Advanced": [
+      "special_drag_munitions"
+    ]
+  }
 }

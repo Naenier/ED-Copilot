@@ -3,6 +3,8 @@ package presentation
 import (
 	"strings"
 	"testing"
+
+	"github.com/Naenier/ED-Copilot/internal/freshness"
 )
 
 func TestColonyBudgetKeepsCoveredGoodsAndShowsUnknownPrices(t *testing.T) {
@@ -47,6 +49,17 @@ func TestColonyBudgetEnglishColumnsAndDetailKeepPriceSourceClear(t *testing.T) {
 	}
 	if !strings.Contains(p.Rows[0].Details, "not actual spending or a market offer") {
 		t.Fatal("estimate reads like a market quote", p.Rows[0].Details)
+	}
+}
+
+func TestColonyBudgetMarksStaleEstimateInBothLanguages(t *testing.T) {
+	for language, label := range map[string]string{"ru": "Устаревшая оценка", "en": "Outdated estimate"} {
+		row := M{"commodity": "steel", "galacticAveragePrice": 50, "priceQuality": freshness.Observation{State: freshness.Stale, FetchedAt: "2026-11-01T12:00:00Z"}}
+		state := M{"settings": M{"language": language}, "colonization": M{"activeProject": M{"id": "selected", "supplies": []M{row}}}}
+		page := Build("colonization", "Бюджет", "", state)
+		if !strings.Contains(page.Rows[0].Cells[3], "50 · "+label) {
+			t.Fatal(language, page.Rows[0])
+		}
 	}
 }
 

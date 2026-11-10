@@ -44,6 +44,9 @@ async function run(C,u){
   await entry('ships','Python');await capture('readme-ship');
   await entry('engineers','Felicity Farseer');await capture('readme-engineer');
   await entry('articles',language==='en'?'Tritium':'Тритий');await capture('readme-article');
+  await category('articles');await window.ReferenceUI.open('article/farm-guardian',C,u);await ready();
+  check('Farming route has a diagram and a copyable destination',!!u.$('.ref-farm-route button[data-system]')&&!!u.$('[data-reference="entry"] [data-reference-image]'));
+  await capture('readme-farming');
   await u.navigate('colonization',{mode:'Строительство'});await capture('readme-colonization');
   await u.navigate('learning');await capture('readme-academy');
   await u.navigate('exobiology',{mode:'Обзор'});

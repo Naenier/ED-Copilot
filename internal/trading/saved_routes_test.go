@@ -52,6 +52,45 @@ func TestSavedRoutesRejectInvalidSnapshotAtomically(t *testing.T) {
 		}
 	}
 }
+
+func TestSavedRoutesKeepOwnersSeparateAndAllowReversibleLegacyAssignment(t *testing.T) {
+	service := New(nil)
+	input := M{"action": "save-route", "route": savedFixture()}
+	shared, err := service.SaveRoute(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	setScope := func(id any, owner, scope string) error {
+		_, err := service.SaveRouteFor(M{"action": "set-scope", "id": id, "scope": scope}, owner)
+		return err
+	}
+	if err := setScope(shared["id"], "commander-a", "personal"); err != nil {
+		t.Fatal(err)
+	}
+	if rows := service.SavedRoutesFor("commander-b"); len(rows) != 0 {
+		t.Fatalf("personal route visible to another commander: %v", rows)
+	}
+	if _, err := service.SaveRouteFor(M{"action": "delete-route", "id": shared["id"]}, "commander-b"); err == nil {
+		t.Fatal("unrelated owner could delete a personal route")
+	}
+	second, err := service.SaveRouteFor(input, "commander-b")
+	if err != nil || second["id"] == shared["id"] {
+		t.Fatalf("same route for a different commander replaced the original: %v, %v", second, err)
+	}
+	if err := setScope(shared["id"], "commander-a", "shared"); err != nil {
+		t.Fatal(err)
+	}
+	if err := setScope(shared["id"], "commander-b", "personal"); err == nil {
+		t.Fatal("duplicate ownership conversion silently replaced another route")
+	}
+	rows := service.SavedRoutesFor("commander-b")
+	if len(rows) != 2 || rows[0]["scope"] != "personal" || rows[1]["scope"] != "shared" || rows[0]["planOwner"] != nil || rows[1]["id"] != shared["id"] {
+		t.Fatalf("unexpected visible routes after reversible migration: %v", rows)
+	}
+	if got := service.SavedRoutesFor(""); len(got) != 1 || got[0]["id"] != shared["id"] {
+		t.Fatalf("anonymous workspace saw a private route: %v", got)
+	}
+}
 func TestPlanKeepsBothStationQuotesAndRejectsPartialMarket(t *testing.T) {
 	s := New(nil)
 	leg := v.Rows(savedFixture()["legs"])[0]

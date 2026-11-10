@@ -38,7 +38,9 @@ function fixture(language='en') {
 function runtime(C=fixture()) {
   const listeners = new Map();
   const scope = vm.createContext({window:{},document:{addEventListener:(name,fn) => listeners.set(name,fn)}});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'politics.js'),'utf8'),scope);
+  for (const file of ['freshness.js','politics.js']) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname,file),'utf8'),scope);
+  }
   const api = scope.window.PoliticsUI;
   const calls = [];
   const esc = value => String(value??'').replace(/[&<>"']/g,ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -220,6 +222,34 @@ test('failed refresh keeps cached observations and avoids duplicate attempts', a
   assert.equal(requests(r).length,1);
   assert.match(html,/Could not update these observations/);
   assert.match(html,/Deliver &lt;supplies&gt;/);
+});
+
+test('Politics distinguishes provider failure, empty results and partial cached data', async () => {
+  const r = runtime();
+  r.C.mode = 'Цели сообщества';
+  const p = r.C.state.politics;
+  const age = '2026-10-01T12:00:00Z';
+  p.communityGoals = {...p.communityGoals, entries:[], fetchedAt:age,
+    quality:{state:'stale',coverage:'partial',observedAt:age,fetchedAt:'2026-10-01T13:00:00Z'}};
+  p.status = {kind:'goals',parameters:{language:'en'},reason:'rate-limited',retryAt:new Date(Date.now()+60000).toISOString()};
+  let html = r.api.render(r.C,r.u);
+  assert.match(html,/provider is limiting requests/);
+  assert.match(html,/<summary>Outdated<\/summary>/);
+  assert.match(html,/<dt>Observed<\/dt>/);
+  assert.match(html,/<dt>Retrieved<\/dt>/);
+  assert.match(html,/No usable community goals/);
+  assert.doesNotMatch(html,/No active community goals/);
+  r.api.init(r.C,r.u);
+  await flush();
+  assert.deepEqual(requests(r),[]);
+  p.status = {kind:'goals',parameters:{language:'ru'},reason:'offline'};
+  p.communityGoals.quality = {state:'fresh',coverage:'empty',fetchedAt:age};
+  r.C.state.settings.language = 'ru';
+  r.window.COPILOT_SMOKE = true;
+  html = r.api.render(r.C,r.u);
+  assert.match(html,/Нет соединения с источником данных/);
+  assert.match(html,/<summary>Пустой результат<\/summary>/);
+  assert.match(html,/В последнем обновлении нет активных целей/);
 });
 
 test('canonical and legacy government and security labels follow the interface language', () => {

@@ -18,7 +18,7 @@ func Read(file string) (v.M, error) {
 	if e != nil {
 		return nil, e
 	}
-	if len(b) > 16*1024*1024 {
+	if len(b) > maxSettingsSize {
 		return nil, errors.New("Файл настроек слишком большой")
 	}
 	b = bytes.TrimPrefix(b, []byte{239, 187, 191})
@@ -37,7 +37,11 @@ func Write(file string, value any) error {
 	if e != nil {
 		return e
 	}
-	if e = os.MkdirAll(filepath.Dir(file), 0700); e != nil {
+	return writeAtomic(file, b, replace)
+}
+
+func writeAtomic(file string, b []byte, install func(string, string) error) error {
+	if e := os.MkdirAll(filepath.Dir(file), 0700); e != nil {
 		return e
 	}
 	tmp, e := os.CreateTemp(filepath.Dir(file), ".copilot-save-*")
@@ -56,7 +60,7 @@ func Write(file string, value any) error {
 	if closeErr != nil {
 		return closeErr
 	}
-	return replace(name, file)
+	return install(name, file)
 }
 func DefaultDir() string {
 	if x := os.Getenv("ED_COPILOT_DATA_DIR"); x != "" {

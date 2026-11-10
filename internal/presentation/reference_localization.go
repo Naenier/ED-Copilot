@@ -144,6 +144,9 @@ func localizeReferenceEntry(entry M) {
 	if category != "systems" && !referenceIdentityLink(id) {
 		entry["title"] = referenceEntityName(id, oldTitle)
 	}
+	if title := v.Str(entry["englishTitle"]); title != "" {
+		entry["title"] = title
+	}
 	if category == "exobiology" {
 		entry["title"] = v.Text(entry["name_en"], entry["title"])
 		for _, field := range []string{"description", "summary"} {
@@ -166,6 +169,9 @@ func localizeReferenceEntry(entry M) {
 			}
 		}
 	}
+	if description := v.Str(entry["englishDescription"]); description != "" {
+		entry["description"] = description
+	}
 	for _, badge := range v.Rows(entry["badges"]) {
 		referenceCaption(badge, "label")
 	}
@@ -184,6 +190,9 @@ func localizeReferenceEntry(entry M) {
 	}
 	for _, section := range v.Rows(entry["sections"]) {
 		referenceCaption(section, "title")
+		if title := v.Str(section["englishTitle"]); title != "" {
+			section["title"] = title
+		}
 		referenceProperties(v.Rows(section["properties"]))
 		if section["type"] == "facts" {
 			referenceProperties(v.Rows(section["items"]))
@@ -200,10 +209,16 @@ func localizeReferenceEntry(entry M) {
 			if title, ok := item["title"].(string); ok {
 				item["title"] = referenceEntityName(v.Str(item["entryId"]), title)
 			}
+			if title := v.Str(item["englishTitle"]); title != "" {
+				item["title"] = title
+			}
 			for _, field := range []string{"text", "description"} {
 				if text := v.Str(item[field]); text != "" {
 					item[field] = localization.T("en", text)
 				}
+			}
+			if text := v.Str(item["englishText"]); text != "" {
+				item["text"] = text
 			}
 		}
 		columns := v.Arr(section["columns"])

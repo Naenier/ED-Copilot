@@ -79,6 +79,17 @@ test('expired quotes are hidden and force a replacement search',async()=>{
  assert.equal(requests.length,2);assert.equal(requests[1].params.values.force,true);
 });
 
+test('a new commander scope starts a fresh search with identical filters',async()=>{
+ const {api,C,ui,calls}=fixture();C.mode='Рейсы';
+ C.state.carrierTrade.opportunityScope=1;
+ await api.init(C,ui);
+ C.state.carrierTrade.opportunityScope=2;
+ await api.init(C,ui);await api.init(C,ui);
+ const requests=calls.filter(x=>x.params.values?.action==='opportunities');
+ assert.equal(requests.length,2);
+ assert.deepEqual(requests[0].params,requests[1].params);
+});
+
 test('carrier searches respond to service space but not existing cargo or fuel',async()=>{
  const {api,C,ui,calls}=fixture();C.mode='Рейсы';
  const carrier={owned:true,location:{system:'Sol'},space:{crewTons:1000,shipPacksTons:0,modulePacksTons:0,freeTons:5000},fuel:{tankTons:800,reserveTons:100}};

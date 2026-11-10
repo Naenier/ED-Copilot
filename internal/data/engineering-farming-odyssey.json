@@ -1,0 +1,1279 @@
+[
+  {
+    "key": "farm-odyssey",
+    "title": "Добыча материалов Odyssey",
+    "englishTitle": "Farming Odyssey materials",
+    "description": "Выберите источник по типу дефицита. Миссии позволяют забрать конкретную награду, поселения дают компоненты для обмена, а операции пополняют сразу несколько запасов.",
+    "englishDescription": "Match the source to the shortage. Missions offer a named reward, settlements yield assets for barter, and Operations build a broader stock.",
+    "keywords": [
+      "Odyssey",
+      "Maverick",
+      "Pioneer Supplies",
+      "mission board",
+      "recovery",
+      "операции",
+      "награды",
+      "костюм",
+      "оружие"
+    ],
+    "materials": [
+      "@odyssey"
+    ],
+    "image": "farm-odyssey",
+    "sections": [
+      {
+        "key": "plan",
+        "title": "Маршрут от рецепта до станции",
+        "englishTitle": "From recipe to station",
+        "steps": [
+          {
+            "title": "Посчитайте дефицит",
+            "englishTitle": "Calculate your shortage",
+            "text": "Откройте нужный костюм или оружие в плане инженеров. Сначала выберите цель по классу и модификациям, затем сверьте список с запасом. Зарезервируйте отдельные предметы для рекомендаций инженеров и продаж по условиям доступа.",
+            "englishText": "Open your suit or weapon in the engineering plan. Select its target grade and modifications, then compare the list with your locker. Reserve separate items for referrals and access conditions that require a sale."
+          },
+          {
+            "title": "Разделите список на три группы",
+            "englishTitle": "Split the list into three groups",
+            "text": "Данные скачивают из терминалов или получают наградой. Товары забирают из шкафчиков, контейнеров и списка наград. Компоненты обменивают у бармена внутри химии, электроники или технологий. У корабельного торговца материалов свой склад и курс.",
+            "englishText": "Download Data from ports or claim it as a reward. Collect Goods from lockers, containers and reward lists. Barter Assets with a bartender within Chemicals, Circuits or Tech. Ship material traders use a separate inventory and rates."
+          },
+          {
+            "title": "Проверьте снаряжение и рюкзак",
+            "englishTitle": "Check your loadout and backpack",
+            "text": "Для вылазок возьмите Maverick с резаком и проверьте свободное место. Базовый Maverick после 18.08 несёт 40 товаров, 60 компонентов и 20 данных. Запас в рюкзаке и запас в корабельном шкафчике отображаются отдельно.",
+            "englishText": "Bring a Maverick with its cutter and check free space. The base Maverick has room for 40 Goods, 60 Assets and 20 Data after Update 18.08. Backpack and ship locker stocks are shown separately."
+          },
+          {
+            "title": "Заплатите в подходящем месте",
+            "englishTitle": "Use the appropriate service",
+            "text": "Класс снаряжения повышает Pioneer Supplies. Модификации ставит открытый пеший инженер в свободные слоты. Установленную модификацию заменой другого эффекта не снять, поэтому проверьте весь набор перед тратами.",
+            "englishText": "Upgrade the item grade at Pioneer Supplies. An unlocked on-foot engineer installs modifications into free slots. Installed modifications cannot be replaced with another effect, so review the full build before spending."
+          }
+        ]
+      },
+      {
+        "key": "missions",
+        "title": "Доска заданий и вариант без штурма",
+        "englishTitle": "Mission board and low-combat route",
+        "steps": [
+          {
+            "title": "Начните с гарантированного названия",
+            "englishTitle": "Start with a named reward",
+            "text": "Выйдите в конкорс, откройте пешую доску и выберите фильтр наград материалами. Сверьте название и число единиц, а затем выбирайте задачу. Если подходящего предложения нет, проверьте другой терминал на другой станции или вернитесь позже.",
+            "englishText": "Disembark in the concourse, open the on-foot mission board, and filter for material rewards. Check the item and quantity before choosing the mission. If no listing fits, check another station or return after the board refreshes."
+          },
+          {
+            "title": "Выберите выполнимую задачу",
+            "englishTitle": "Pick a mission you can finish",
+            "text": "Для первого вылета подходят разрешённая доставка или возврат предмета и восстановление поселения с низкой угрозой. Посмотрите расстояние до цели и необходимость вернуться к выдавшей фракции. Ремонтные задания иногда привлекают мародёров.",
+            "englishText": "Start with legal delivery or retrieval, or a low-threat settlement restoration. Check travel distance and whether you must return to the issuing faction. Scavengers can appear even during a restoration."
+          },
+          {
+            "title": "Заберите именно материалы",
+            "englishTitle": "Claim the material payout",
+            "text": "На сдаче сравните варианты награды. Выберите материалы, если контракт брали ради рецепта. Обновление 18.08 увеличило выплаты, а точное количество показывает доска. У NPC в конкорсе иногда доступен торг за более высокую награду.",
+            "englishText": "Compare the reward choices when turning in the mission. Pick materials when the contract was for a recipe. Update 18.08 raised payouts, and the board shows the actual amount. Concourse NPCs can sometimes negotiate a higher payout."
+          }
+        ]
+      },
+      {
+        "key": "operations",
+        "title": "Операции для пополнения запасов",
+        "englishTitle": "Operations for building stock",
+        "steps": [
+          {
+            "title": "Подберите сценарий",
+            "englishTitle": "Choose an appropriate scenario",
+            "text": "Для пеших наград попробуйте Biohazard Takedown с подбором команды. Reclamation Point сочетает пеший этап и бой на кораблях. Состав и объём наград зависят от сценария и сложности. Когда нужен один определённый материал, ищите его на доске или в конкретном терминале.",
+            "englishText": "Try Biohazard Takedown with matchmaking for on-foot rewards. Reclamation Point combines ground and ship combat. Payouts vary by scenario and difficulty. Use a mission board or a known data port when you need one specific material."
+          },
+          {
+            "title": "Проверьте выплату",
+            "englishTitle": "Verify what you received",
+            "text": "После завершения проверьте итоговый экран и остатки в шкафчике. Операции дают разные материалы и подходят для общего запаса. Отложите найденные данные и товары для следующей рекомендации инженера.",
+            "englishText": "After finishing, check the reward screen and locker balances. Operations provide mixed materials for general stock. Keep Data and Goods needed for your next engineer referral."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Update 18.08",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "Frontier Developments · Operations Update",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320"
+      },
+      {
+        "title": "Pilots Trade Network · Operations Guide",
+        "url": "https://pilotstradenetwork.com/?p=6097"
+      },
+      {
+        "title": "CMDR discussion · low-combat Odyssey farming (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1tvrq1a/where_to_find_onfoot_materials_for_suit_and/"
+      },
+      {
+        "title": "CMDR discussion · mission boards and on-foot Operations (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1xbg73w/odyssey_data_material_grind/"
+      }
+    ]
+  },
+  {
+    "key": "farm-odyssey-assets",
+    "title": "Компоненты Odyssey и обмен у бармена",
+    "englishTitle": "Odyssey assets and bartender barter",
+    "description": "Три группы компонентов, точки сбора в Iah Bulu и обмен по баллам. Подходит для запасов на костюмы, оружие и модификации.",
+    "englishDescription": "Three asset pools, collection sites in Iah Bulu, and how barter points work. Use the route to stock suits, weapons and modifications.",
+    "keywords": [
+      "Assets",
+      "Chemicals",
+      "Circuits",
+      "Tech",
+      "Bartender",
+      "Graphene",
+      "Iah Bulu",
+      "бармен",
+      "обмен",
+      "компоненты"
+    ],
+    "materials": [
+      "graphene",
+      "aerogel",
+      "carbonfibreplating",
+      "chemicalcatalyst",
+      "chemicalsuperbase",
+      "circuitboard",
+      "circuitswitch",
+      "electricalfuse",
+      "electricalwiring",
+      "encryptedmemorychip",
+      "epoxyadhesive",
+      "memorychip",
+      "metalcoil",
+      "microhydraulics",
+      "microsupercapacitor",
+      "microthrusters",
+      "microtransformer",
+      "motor",
+      "opticalfibre",
+      "opticallens",
+      "scrambler",
+      "titaniumplating",
+      "transmitter",
+      "tungstencarbide",
+      "viscoelasticpolymer",
+      "rdx",
+      "electromagnet",
+      "oxygenicbacteria",
+      "epinephrine",
+      "phneutraliser",
+      "microelectrode",
+      "ionbattery",
+      "weaponcomponent"
+    ],
+    "sections": [
+      {
+        "key": "field",
+        "title": "Где пополнить запас",
+        "englishTitle": "Where to collect",
+        "steps": [
+          {
+            "title": "Arai’s Mine · Iah Bulu A 5",
+            "englishTitle": "Arai’s Mine · Iah Bulu A 5",
+            "text": "В добывающем поселении проверяйте открытые полки и шкафчики в EXT и соседних зданиях. Отметка на карте расположена примерно на 2.63675, 38.537. Перед посадкой проверьте фракцию и статус площадки. Награды и доступ зависят от текущего экземпляра.",
+            "englishText": "Check open shelves and lockers in EXT and adjacent buildings at this extraction settlement. Its map position is approximately 2.63675, 38.537. Check the controlling faction and site status before landing. Loot and access depend on the current instance.",
+            "system": "Iah Bulu"
+          },
+          {
+            "title": "Buhle Engineering Hub · Iah Bulu A 7",
+            "englishTitle": "Buhle Engineering Hub · Iah Bulu A 7",
+            "text": "У промышленного поселения есть здания IND с полками компонентов. Координаты 24.1834, 71.9092. Рассматривайте объект как вариант для подходящей миссии, а доступ к конкретному шкафчику проверяйте на месте.",
+            "englishText": "The industrial settlement has IND buildings with asset shelves. Coordinates are 24.1834, 71.9092. Use it as a candidate for a suitable mission and check access to individual lockers on site.",
+            "system": "Iah Bulu"
+          },
+          {
+            "title": "Повторяйте маршрут по рабочим точкам",
+            "englishTitle": "Repeat a route through productive sites",
+            "text": "Сначала возьмите миссию на восстановление или другой контракт с доступом к нужным зданиям. Сняв предметы с полок, вернитесь к кораблю и освободите рюкзак. Для следующего захода выберите новый контракт либо другой объект со схожей экономикой. Перезаход в середине восстановления может оставить объект без добычи.",
+            "englishText": "Start with restoration or another mission that gives access to the required buildings. After collecting from the shelves, return to your ship and empty the backpack. Use a new contract or another site of the same economy for the next run. Relogging in the middle of restoration can leave the site empty."
+          }
+        ]
+      },
+      {
+        "key": "barter",
+        "title": "Обмен компонентов",
+        "englishTitle": "Bartering assets",
+        "steps": [
+          {
+            "title": "Выберите нужную группу",
+            "englishTitle": "Choose the target pool",
+            "text": "В конкорсе откройте у бармена обмен компонентов. Химия, электроника и технологии торгуются раздельно. Внутри группы выберите недостающий компонент и наберите нужную сумму баллов из нескольких лишних предметов.",
+            "englishText": "Open asset barter at a concourse bartender. Chemicals, Circuits and Tech trade in separate pools. Select the missing asset and combine surplus items in that pool until you reach the required point total."
+          },
+          {
+            "title": "Собирайте ценные излишки",
+            "englishTitle": "Collect valuable surplus",
+            "text": "Химия даёт хороший запас в виде Graphene, электроника в виде Microelectrode, технологии в виде Weapon Component. Их сдача оценивается соответственно в 13, 9 и 10 баллов за единицу. Например, 1 Graphene покрывает 2 Epoxy Adhesive по 5 баллов. Сверяйте курс в окне сделки и сохраняйте запас для своего рецепта.",
+            "englishText": "Graphene, Microelectrode and Weapon Component are useful surplus in Chemicals, Circuits and Tech. Their offer values are 13, 9 and 10 points per unit respectively. For example, 1 Graphene covers 2 Epoxy Adhesive at 5 points each. Check the quote in game and keep enough for your own recipes."
+          },
+          {
+            "title": "Вычтите резерв перед обменом",
+            "englishTitle": "Keep your recipe reserve",
+            "text": "Проверьте два остатка в плане. Один нужен для повышения класса, второй для выбранных модификаций. Меняйте излишек и закрывайте наиболее дорогой дефицит прежде, чем собирать случайные материалы.",
+            "englishText": "Check both grade-upgrade and modification shortages in the plan. Spend the surplus and close the most expensive gap before collecting more random items."
+          }
+        ]
+      },
+      {
+        "key": "chemical-index",
+        "title": "Химия · материалы по названиям",
+        "englishTitle": "Chemicals by item",
+        "steps": [
+          {
+            "title": "Аэрогель",
+            "englishTitle": "Aerogel",
+            "text": "Проверяйте открытые полки и шкафчики LAB, PROC. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, PROC. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Химический катализатор",
+            "englishTitle": "Chemical Catalyst",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Химическое супероснование",
+            "englishTitle": "Chemical Superbase",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Эпинефрин",
+            "englishTitle": "Epinephrine",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Эпоксидный клей",
+            "englishTitle": "Epoxy Adhesive",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Графен",
+            "englishTitle": "Graphene",
+            "text": "Проверяйте открытые полки и шкафчики HAB, SEC, LAB, AGR. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in HAB, SEC, LAB, AGR. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Кислородные бактерии",
+            "englishTitle": "Oxygenic Bacteria",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Нейтрализатор pH",
+            "englishTitle": "pH Neutraliser",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Гексоген",
+            "englishTitle": "RDX",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Вязкоэластичный полимер",
+            "englishTitle": "Viscoelastic Polymer",
+            "text": "Проверяйте открытые полки и шкафчики LAB, MED. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in LAB, MED. If the item does not drop, barter surplus from the same asset pool."
+          }
+        ]
+      },
+      {
+        "key": "circuits-index",
+        "title": "Электроника · материалы по названиям",
+        "englishTitle": "Circuits by item",
+        "steps": [
+          {
+            "title": "Электроплата",
+            "englishTitle": "Circuit Board",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Переключатель цепи",
+            "englishTitle": "Circuit Switch",
+            "text": "Проверяйте открытые полки и шкафчики SEC, LAB, STO, DORM, OPR, PROC. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in SEC, LAB, STO, DORM, OPR, PROC. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Предохранитель",
+            "englishTitle": "Electrical Fuse",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Электропроводка",
+            "englishTitle": "Electrical Wiring",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Электромагнит",
+            "englishTitle": "Electromagnet",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Ионная батарея",
+            "englishTitle": "Ion Battery",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Металлическая катушка",
+            "englishTitle": "Metal Coil",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Микросуперконденсатор",
+            "englishTitle": "Micro Supercapacitor",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Микротрансформатор",
+            "englishTitle": "Micro Transformer",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Микроэлектрод",
+            "englishTitle": "Microelectrode",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Мотор",
+            "englishTitle": "Motor",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Оптоволокно",
+            "englishTitle": "Optical Fibre",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Для поиска на поверхности подходят обломки крупного спутника, обломки малого спутника, наземная точка с разбитым ТРП. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Surface sources include large crashed satellite, small crashed satellite, crashed SRV site. If the item does not drop, barter surplus from the same asset pool."
+          }
+        ]
+      },
+      {
+        "key": "tech-index",
+        "title": "Технологии · материалы по названиям",
+        "englishTitle": "Tech by item",
+        "steps": [
+          {
+            "title": "Углеволоконная пластина",
+            "englishTitle": "Carbon Fibre Plating",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Зашифрованная плата памяти",
+            "englishTitle": "Encrypted Memory Chip",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Плата памяти",
+            "englishTitle": "Memory Chip",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Микрогидравлика",
+            "englishTitle": "Micro Hydraulics",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Маневровые микродвигатели",
+            "englishTitle": "Micro Thrusters",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Оптические линзы",
+            "englishTitle": "Optical Lens",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Шифратор",
+            "englishTitle": "Scrambler",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Титановая пластина",
+            "englishTitle": "Titanium Plating",
+            "text": "Проверяйте открытые полки и шкафчики PWR, PROC. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in PWR, PROC. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Передатчик",
+            "englishTitle": "Transmitter",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Карбид вольфрама",
+            "englishTitle": "Tungsten Carbide",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          },
+          {
+            "title": "Компонент оружия",
+            "englishTitle": "Weapon Component",
+            "text": "Проверяйте открытые полки и шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. Если предмета нет в добыче, обменяйте излишки той же группы у бармена.",
+            "englishText": "Check open shelves and lockers in CMD, HAB, SEC, IND, LAB, MED, EXT, PWR, AGR, STO, OUT. If the item does not drop, barter surplus from the same asset pool."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "EDSM · Iah Bulu settlement directory",
+        "url": "https://www.edsm.net/en/system/stations/id/6726/name/Iah%2BBulu"
+      },
+      {
+        "title": "ED Odyssey Materials Helper · material source pools",
+        "url": "https://github.com/jixxed/ed-odyssey-materials-helper/blob/2e6d4c3e767d2b714ffddc5c9386831d66812916/application/src/main/java/nl/jixxed/eliteodysseymaterials/constants/SpawnConstants.java"
+      },
+      {
+        "title": "ED Odyssey Materials Helper · asset barter values",
+        "url": "https://github.com/jixxed/ed-odyssey-materials-helper/blob/2e6d4c3e767d2b714ffddc5c9386831d66812916/application/src/main/java/nl/jixxed/eliteodysseymaterials/enums/Asset.java"
+      },
+      {
+        "title": "New Pilots Initiative · Odyssey concourse services",
+        "url": "https://newp.io/odyssey"
+      },
+      {
+        "title": "CMDR discussion · Odyssey asset exchange",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/yr0onn/"
+      },
+      {
+        "title": "CMDR discussion · low-combat Odyssey farming (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1tvrq1a/where_to_find_onfoot_materials_for_suit_and/"
+      }
+    ]
+  },
+  {
+    "key": "farm-odyssey-data",
+    "title": "Данные Odyssey и терминалы поселений",
+    "englishTitle": "Odyssey data and settlement ports",
+    "description": "Награды за задания, подходящие комнаты и аварийные маяки для производственных инструкций, планов обороны и других данных.",
+    "englishDescription": "Mission rewards, building types and surface signals for Manufacturing Instructions, Settlement Defence Plans and other Data.",
+    "keywords": [
+      "Data",
+      "Manufacturing Instructions",
+      "Financial Projections",
+      "Settlement Defence Plans",
+      "Opinion Polls",
+      "HAB",
+      "CMD",
+      "SEC",
+      "данные",
+      "терминал"
+    ],
+    "materials": [
+      "biometricdata",
+      "nocdata",
+      "airqualityreports",
+      "atmosphericdata",
+      "audiologs",
+      "ballisticsdata",
+      "bloodtestresults",
+      "catmedia",
+      "chemicalexperimentdata",
+      "chemicalformulae",
+      "chemicalinventory",
+      "chemicalpatents",
+      "classicentertainment",
+      "cocktailrecipes",
+      "combattrainingmaterial",
+      "combatantperformance",
+      "culinaryrecipes",
+      "digitaldesigns",
+      "employeegeneticdata",
+      "evacuationprotocols",
+      "extractionyielddata",
+      "factionassociates",
+      "financialprojections",
+      "genesequencingdata",
+      "geneticresearch",
+      "maintenancelogs",
+      "manufacturinginstructions",
+      "medicalrecords",
+      "medicaltrialrecords",
+      "mineralsurvey",
+      "mininganalytics",
+      "multimediaentertainment",
+      "operationalmanual",
+      "opinionpolls",
+      "patrolroutes",
+      "productionreports",
+      "productionschedule",
+      "radioactivitydata",
+      "reactoroutputreview",
+      "recyclinglogs",
+      "riskassessments",
+      "securityexpenses",
+      "settlementassaultplans",
+      "settlementdefenceplans",
+      "smearcampaignplans",
+      "spectralanalysisdata",
+      "stellaractivitylogs",
+      "surveilleancelogs",
+      "tacticalplans",
+      "topographicalsurveys",
+      "troopdeploymentrecords",
+      "weaponinventory",
+      "weapontestdata",
+      "pharmaceuticalpatents"
+    ],
+    "sections": [
+      {
+        "key": "search",
+        "title": "Как найти конкретный файл",
+        "englishTitle": "How to find a specific file",
+        "steps": [
+          {
+            "title": "Сначала проверьте доску",
+            "englishTitle": "Check the mission board first",
+            "text": "Ищите точное название в разделе наград. Manufacturing Instructions часто нужны сразу для нескольких улучшений, поэтому берите их при подходящем контракте даже между походами за другими материалами. Если данных в наградах нет, переходите к портам соответствующего здания.",
+            "englishText": "Look for the exact name in the reward listing. Manufacturing Instructions are needed across many upgrades, so take a suitable contract for them between other trips. If a file is missing from available rewards, try the relevant building's ports."
+          },
+          {
+            "title": "Найдите нужный тип порта",
+            "englishTitle": "Find the right port type",
+            "text": "CMD означает командный, SEC охранный, HAB жилой, IND промышленный, LAB лабораторный, MED медицинский, EXT добывающий, AGR сельскохозяйственный, PWR энергетический. В указателе шкафчиков STO означает склад, OUT — участок снаружи. Смотрите обозначение конкретного терминала. Внутри большого центра могут быть разные порты.",
+            "englishText": "CMD is command, SEC security, HAB habitat, IND industrial, LAB laboratory, MED medical, EXT extraction, AGR agriculture and PWR power. For lockers, STO means storage and OUT means outside. Read the type on the individual port. A large centre can contain multiple port types."
+          },
+          {
+            "title": "Скачайте и выйдите",
+            "englishTitle": "Download and leave",
+            "text": "На терминале проверьте отметку доступа. При незаконной загрузке возможна тревога. Если вы выполняете задание без боя, выбирайте доступные по контракту порты и избегайте запрещённых действий. Держитесь в радиусе терминала до завершения загрузки, затем перенесите данные в шкафчик корабля.",
+            "englishText": "Check access and legality at the port. An illegal download can raise an alarm. For a low-combat mission, stick to authorized ports and actions. Stay in range until the download finishes, then transfer the Data into your ship locker."
+          }
+        ]
+      },
+      {
+        "key": "shortcuts",
+        "title": "Порты для частых дефицитов",
+        "englishTitle": "Ports for common shortages",
+        "steps": [
+          {
+            "title": "HAB · жилые и туристические здания",
+            "englishTitle": "HAB · habitats and tourism",
+            "text": "Ищите Opinion Polls, Cat Media, Classic Entertainment, Multimedia Entertainment и рецепты еды или коктейлей. Пример маршрута по Iah Bulu проходит через Mitchell Resort на A 5 (33.7762, 101.156) или отдельные жилые модули Hakimi Nutrition Biome на A 3. Проверяйте доступ к объекту и число работающих портов на месте.",
+            "englishText": "Look for Opinion Polls, Cat Media, Classic Entertainment, Multimedia Entertainment and food or cocktail recipes. In Iah Bulu, try Mitchell Resort on A 5 (33.7762, 101.156) or the separate habitat buildings at Hakimi Nutrition Biome on A 3. Check current access and the number of working ports on arrival.",
+            "system": "Iah Bulu"
+          },
+          {
+            "title": "SEC и CMD · военные и командные файлы",
+            "englishTitle": "SEC and CMD · military and command files",
+            "text": "В SEC проверяйте Settlement Defence Plans, Weapon Test Data, Combat Training Material и другие файлы охраны по карточке. Для Financial Projections начните с явно названной награды или командного порта. Название Settlement Assault Plans относится к другому файлу.",
+            "englishText": "Use SEC ports for Settlement Defence Plans, Weapon Test Data, Combat Training Material and other security files listed in the index. For Financial Projections, start with an explicitly named reward or command port. Settlement Assault Plans is a separate file."
+          },
+          {
+            "title": "IND, LAB и места крушения",
+            "englishTitle": "IND, LAB and crash sites",
+            "text": "Production Reports, Mining Analytics и другие производственные файлы ищите в портах по указателю. Если для Manufacturing Instructions нет награды, просканируйте подходящее тело DSS и проверьте Impact Site с разбитым спутником. Сигнал с разбитым ТРП может оказаться другим типом находки. Содержимое порта случайное.",
+            "englishText": "Use the index for Production Reports, Mining Analytics and other industrial data. If you cannot find a reward for Manufacturing Instructions, map a suitable body with DSS and look for an Impact Site with a crashed satellite. A crashed SRV signal can be a different site type. Port contents vary."
+          }
+        ]
+      },
+      {
+        "key": "security-index",
+        "title": "Командные, охранные и боевые файлы",
+        "englishTitle": "Command, security and combat files",
+        "steps": [
+          {
+            "title": "Атмосферные данные",
+            "englishTitle": "Atmospheric Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD. Для поиска на поверхности подходят обломки крупного спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD data ports. Surface sources include large crashed satellite."
+          },
+          {
+            "title": "Аудиозаписи",
+            "englishTitle": "Audio Logs",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC, MED data ports."
+          },
+          {
+            "title": "Баллистические данные",
+            "englishTitle": "Ballistics Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC. Для поиска на поверхности подходят обломки крупного спутника, наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC data ports. Surface sources include large crashed satellite, crashed skimmer site."
+          },
+          {
+            "title": "Учебные материалы по боевой подготовке",
+            "englishTitle": "Combat Training Material",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC data ports."
+          },
+          {
+            "title": "Боевые характеристики",
+            "englishTitle": "Combatant Performance",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты HAB, SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check HAB, SEC data ports."
+          },
+          {
+            "title": "Финансовые прогнозы",
+            "englishTitle": "Financial Projections",
+            "text": "Ищите явно названную награду. Для рекомендации от Терры Веласкес сохраните 15 единиц. Проверяйте порты CMD, HAB, IND, EXT.",
+            "englishText": "Look for a named mission reward. Keep 15 for Terra Velasquez’s referral. Check CMD, HAB, IND, EXT data ports."
+          },
+          {
+            "title": "Данные по тайным агентам",
+            "englishTitle": "NOC Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC. Для поиска на поверхности подходят обломки малого спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC data ports. Surface sources include small crashed satellite."
+          },
+          {
+            "title": "Руководство по эксплуатации",
+            "englishTitle": "Operational Manual",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB, MED. Для поиска на поверхности подходят обломки малого спутника, обломки крупного спутника, наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB, MED data ports. Surface sources include small crashed satellite, large crashed satellite, crashed skimmer site."
+          },
+          {
+            "title": "Маршруты патрулирования",
+            "englishTitle": "Patrol Routes",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC. Для поиска на поверхности подходят наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC data ports. Surface sources include crashed skimmer site."
+          },
+          {
+            "title": "Оценка рисков",
+            "englishTitle": "Risk Assessments",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC, IND, LAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC, IND, LAB data ports."
+          },
+          {
+            "title": "Расходы на охрану",
+            "englishTitle": "Security Expenses",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC data ports."
+          },
+          {
+            "title": "Планы атак на поселение",
+            "englishTitle": "Settlement Assault Plans",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC data ports."
+          },
+          {
+            "title": "Планы обороны поселения",
+            "englishTitle": "Settlement Defence Plans",
+            "text": "Игроки находят этот файл в наградах. Для рекомендации от Hero Ferrari сохраните 5 единиц. Проверяйте порты SEC. Для поиска на поверхности подходят наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Players report this file as a mission reward. Keep 5 for Hero Ferrari’s referral. Check SEC data ports. Surface sources include crashed skimmer site."
+          },
+          {
+            "title": "Журналы наблюдения",
+            "englishTitle": "Surveillance Logs",
+            "text": "Ищите точное название в наградах пешей доски. Для поиска на поверхности подходят обломки малого спутника, наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Surface sources include small crashed satellite, crashed skimmer site."
+          },
+          {
+            "title": "Тактические планы",
+            "englishTitle": "Tactical Plans",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC data ports."
+          },
+          {
+            "title": "Топографические исследования",
+            "englishTitle": "Topographical Surveys",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты LAB. Для поиска на поверхности подходят обломки крупного спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check LAB data ports. Surface sources include large crashed satellite."
+          },
+          {
+            "title": "Отчет по развертыванию войск",
+            "englishTitle": "Troop Deployment Records",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC data ports."
+          },
+          {
+            "title": "Опись оружия и боеприпасов",
+            "englishTitle": "Weapon Inventory",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC data ports."
+          },
+          {
+            "title": "Сведения об испытаниях вооружения",
+            "englishTitle": "Weapon Test Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, SEC.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, SEC data ports."
+          }
+        ]
+      },
+      {
+        "key": "production-index",
+        "title": "Производственные и исследовательские файлы",
+        "englishTitle": "Production and research files",
+        "steps": [
+          {
+            "title": "Отчеты о качестве воздуха",
+            "englishTitle": "Air Quality Reports",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, HAB, SEC, IND, LAB, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, HAB, SEC, IND, LAB, PWR data ports."
+          },
+          {
+            "title": "Биометрические данные",
+            "englishTitle": "Biometric Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC, LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC, LAB, MED data ports."
+          },
+          {
+            "title": "Результаты анализа крови",
+            "englishTitle": "Blood Test Results",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC, MED data ports."
+          },
+          {
+            "title": "Данные о химических экспериментах",
+            "englishTitle": "Chemical Experiment Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB, MED data ports."
+          },
+          {
+            "title": "Химические формулы",
+            "englishTitle": "Chemical Formulae",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND data ports."
+          },
+          {
+            "title": "Опись химикатов",
+            "englishTitle": "Chemical Inventory",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB, MED data ports."
+          },
+          {
+            "title": "Химические патенты",
+            "englishTitle": "Chemical Patents",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, IND, LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, IND, LAB, MED data ports."
+          },
+          {
+            "title": "Результаты клинических испытаний",
+            "englishTitle": "Clinical Trial Records",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты LAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check LAB data ports."
+          },
+          {
+            "title": "Генетические данные работников",
+            "englishTitle": "Employee Genetic Data",
+            "text": "Проверяйте порты SEC, LAB, MED.",
+            "englishText": "Check SEC, LAB, MED data ports."
+          },
+          {
+            "title": "Алгоритм эвакуации",
+            "englishTitle": "Evacuation Protocols",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты HAB, SEC, LAB, MED, EXT, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check HAB, SEC, LAB, MED, EXT, PWR data ports."
+          },
+          {
+            "title": "Данные об объеме добычи",
+            "englishTitle": "Extraction Yield Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты EXT.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check EXT data ports."
+          },
+          {
+            "title": "Данные о секвенировании генов",
+            "englishTitle": "Gene Sequencing Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check LAB, MED data ports."
+          },
+          {
+            "title": "Материалы генетического исследования",
+            "englishTitle": "Genetic Research",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check MED data ports."
+          },
+          {
+            "title": "Журнал обслуживания",
+            "englishTitle": "Maintenance Logs",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, IND, LAB, MED, EXT, PWR. Для поиска на поверхности подходят наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, IND, LAB, MED, EXT, PWR data ports. Surface sources include crashed skimmer site."
+          },
+          {
+            "title": "Производственные инструкции",
+            "englishTitle": "Manufacturing Instructions",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, IND, LAB. Для поиска на поверхности подходят обломки малого спутника, обломки крупного спутника, наземная точка с разбитым сканером-скиммером.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, IND, LAB data ports. Surface sources include small crashed satellite, large crashed satellite, crashed skimmer site."
+          },
+          {
+            "title": "Медицинские карты",
+            "englishTitle": "Medical Records",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты SEC, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check SEC, MED data ports."
+          },
+          {
+            "title": "Результаты геологической разведки",
+            "englishTitle": "Mineral Survey",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB. Для поиска на поверхности подходят обломки крупного спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB data ports. Surface sources include large crashed satellite."
+          },
+          {
+            "title": "Анализ горнодобывающей промышленности",
+            "englishTitle": "Mining Analytics",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты EXT.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check EXT data ports."
+          },
+          {
+            "title": "Фармацевтические патенты",
+            "englishTitle": "Pharmaceutical Patents",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, MED data ports."
+          },
+          {
+            "title": "Отчеты о производстве",
+            "englishTitle": "Production Reports",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB data ports."
+          },
+          {
+            "title": "Производственный график",
+            "englishTitle": "Production Schedule",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB data ports."
+          },
+          {
+            "title": "Информация о радиоактивности",
+            "englishTitle": "Radioactivity Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, LAB, MED, PWR. Для поиска на поверхности подходят обломки крупного спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, LAB, MED, PWR data ports. Surface sources include large crashed satellite."
+          },
+          {
+            "title": "Оценка выходной мощности реактора",
+            "englishTitle": "Reactor Output Review",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, IND, LAB, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, IND, LAB, PWR data ports."
+          },
+          {
+            "title": "Журнал утилизации отходов",
+            "englishTitle": "Recycling Logs",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, HAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, HAB data ports."
+          },
+          {
+            "title": "Результаты спектрального анализа",
+            "englishTitle": "Spectral Analysis Data",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND data ports."
+          },
+          {
+            "title": "Журналы звездной активности",
+            "englishTitle": "Stellar Activity Logs",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты IND, LAB. Для поиска на поверхности подходят обломки крупного спутника.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check IND, LAB data ports. Surface sources include large crashed satellite."
+          }
+        ]
+      },
+      {
+        "key": "habitat-index",
+        "title": "Жилые файлы и материалы для рекомендаций",
+        "englishTitle": "Habitat and referral files",
+        "steps": [
+          {
+            "title": "Медиаконтент с котиками",
+            "englishTitle": "Cat Media",
+            "text": "Проверяйте порты CMD, HAB.",
+            "englishText": "Check CMD, HAB data ports."
+          },
+          {
+            "title": "Классические развлечения",
+            "englishTitle": "Classic Entertainment",
+            "text": "Проверяйте порты CMD, HAB.",
+            "englishText": "Check CMD, HAB data ports."
+          },
+          {
+            "title": "Рецепты коктейлей",
+            "englishTitle": "Cocktail Recipes",
+            "text": "Проверяйте порты HAB.",
+            "englishText": "Check HAB data ports."
+          },
+          {
+            "title": "Кулинарные рецепты",
+            "englishTitle": "Culinary Recipes",
+            "text": "Проверяйте порты HAB.",
+            "englishText": "Check HAB data ports."
+          },
+          {
+            "title": "Дизайнерский проект",
+            "englishTitle": "Digital Designs",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте порты CMD, HAB, LAB.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check CMD, HAB, LAB data ports."
+          },
+          {
+            "title": "Партнеры фракции",
+            "englishTitle": "Faction Associates",
+            "text": "Проверяйте порты CMD, HAB.",
+            "englishText": "Check CMD, HAB data ports."
+          },
+          {
+            "title": "Мультимедийные развлечения",
+            "englishTitle": "Multimedia Entertainment",
+            "text": "Проверяйте порты CMD, HAB.",
+            "englishText": "Check CMD, HAB data ports."
+          },
+          {
+            "title": "Опросы общественного мнения",
+            "englishTitle": "Opinion Polls",
+            "text": "Проверяйте порты CMD, HAB.",
+            "englishText": "Check CMD, HAB data ports."
+          },
+          {
+            "title": "Планы кампании по дискредитации",
+            "englishTitle": "Smear Campaign Plans",
+            "text": "Начните с пешей доски. Другой вариант — жилые порты HAB туристического поселения. Сохраните 5 единиц для продажи бармену по условию Ярден Бонд.",
+            "englishText": "Start with on-foot mission rewards. HAB ports at tourism settlements are another option. Keep 5 to sell to a bartender for Yarden Bond."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Update 18.08",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "CMDR discussion · low-combat Odyssey farming (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1tvrq1a/where_to_find_onfoot_materials_for_suit_and/"
+      },
+      {
+        "title": "CMDR discussion · mission boards and on-foot Operations (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1xbg73w/odyssey_data_material_grind/"
+      },
+      {
+        "title": "ED Odyssey Materials Helper · material source pools",
+        "url": "https://github.com/jixxed/ed-odyssey-materials-helper/blob/2e6d4c3e767d2b714ffddc5c9386831d66812916/application/src/main/java/nl/jixxed/eliteodysseymaterials/constants/SpawnConstants.java"
+      },
+      {
+        "title": "EDSM · Iah Bulu settlement directory",
+        "url": "https://www.edsm.net/en/system/stations/id/6726/name/Iah%2BBulu"
+      },
+      {
+        "title": "CMDR Dallicort · Habitat data ports and Hakimi layout",
+        "url": "https://www.dallicort.com/engineering/odyssey-hab-data-ports"
+      },
+      {
+        "title": "CMDR field discussion · unlock data and tourism habitats (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1wrgk01/fdev_needs_to_fix_an_odyssey_engineering_oversight/"
+      }
+    ]
+  },
+  {
+    "key": "farm-odyssey-goods",
+    "title": "Товары Odyssey и места крушения",
+    "englishTitle": "Odyssey goods and surface salvage",
+    "description": "Чертежи костюмов и оружия, медицинские товары, газы и предметы для инженеров. Как отличить контрактную награду от случайной добычи.",
+    "englishDescription": "Suit and Weapon Schematics, medical goods, gases and engineer items. Compare named mission rewards with random salvage.",
+    "keywords": [
+      "Goods",
+      "Schematics",
+      "Impact Site",
+      "Irregular Markers",
+      "Push",
+      "Ionised Gas",
+      "товары",
+      "чертежи",
+      "места крушения"
+    ],
+    "materials": [
+      "geneticsample",
+      "gmeds",
+      "healthmonitor",
+      "ionisedgas",
+      "geneticrepairmeds",
+      "insightentertainmentsuite",
+      "push",
+      "suitschematic",
+      "surveillanceequipment",
+      "weaponschematic",
+      "compressionliquefiedgas"
+    ],
+    "sections": [
+      {
+        "key": "schematics",
+        "title": "Чертежи и расходники для класса",
+        "englishTitle": "Schematics and grade-upgrade goods",
+        "steps": [
+          {
+            "title": "Suit Schematic и Weapon Schematic",
+            "englishTitle": "Suit Schematic and Weapon Schematic",
+            "text": "Проверьте награды за пешие задания. В поселении чертежи ищут в закрытых шкафчиках CMD и PWR. В заданиях на поиск тайника могут попадаться оружейные чертежи в контейнерах на поверхности. Название чертежа должно совпасть с типом предмета в рецепте.",
+            "englishText": "Check on-foot mission rewards. At settlements, search closed lockers in CMD and PWR. Surface caches in recovery missions can contain Weapon Schematics. Match the schematic type to the item in your recipe."
+          },
+          {
+            "title": "Health Monitor и газы",
+            "englishTitle": "Health Monitor and gases",
+            "text": "Для Health Monitor проверяйте награды и шкафчики HAB, MED, CMD. Для Ionised Gas подходят EXT, IND, LAB и PWR, а для Compression-Liquefied Gas ищите CMD, HAB, LAB и MED. Оба газа встречаются в наградах. Рецепт выбранного оружия показывает, какой нужен.",
+            "englishText": "For Health Monitor check rewards and HAB, MED or CMD lockers. For Ionised Gas try EXT, IND, LAB or PWR, while Compression-Liquefied Gas is found in CMD, HAB, LAB or MED. Both appear in mission rewards. Check the selected weapon recipe for the correct gas."
+          },
+          {
+            "title": "Power Regulator для задания",
+            "englishTitle": "Power Regulator for restoration",
+            "text": "Регулятор нужен для подачи питания в PWR при восстановлении. В обновлении 18.08 регуляторы убрали из рецептов инженерии. Если предмет нужен для миссии, следуйте её условиям и сдайте контракт с требуемым состоянием энергоблока.",
+            "englishText": "A regulator is used to power up PWR during restoration. Update 18.08 removed regulators from engineering recipes. When the mission needs one, follow the mission terms and hand it in with the required power state."
+          }
+        ]
+      },
+      {
+        "key": "salvage",
+        "title": "Пешая вылазка к сигналу",
+        "englishTitle": "Surface salvage run",
+        "steps": [
+          {
+            "title": "Выберите точку подходящего типа",
+            "englishTitle": "Choose the correct signal",
+            "text": "Сделайте DSS-съёмку тела, на котором можно высадиться. Impact Site с разбитым спутником даёт шанс найти порт данных. Для Push проверяйте Irregular Markers с тайниками и сигналы с обломками или разбитым ТРП. По контракту может быть показан отдельный маркер цели.",
+            "englishText": "Map a landable body with DSS. An Impact Site with a crashed satellite can have a data port. For Push, check Irregular Markers with caches and signal sources with wreckage or a crashed SRV. A contract can provide its own objective marker."
+          },
+          {
+            "title": "Подготовьте Maverick и оцените опасность",
+            "englishTitle": "Bring a Maverick and check the threat",
+            "text": "Садитесь рядом с точкой и смотрите на уровень угрозы, патрули и мародёров. Резак Maverick открывает предусмотренные панели. Перед вскрытием контейнера проверьте отметку собственности и размер свободного места в рюкзаке.",
+            "englishText": "Land near the marker and watch the threat rating, patrols and scavengers. The Maverick cutter opens supported access panels. Check ownership and free backpack space before opening a container."
+          },
+          {
+            "title": "Проверьте альтернативу у бармена авианосца",
+            "englishTitle": "Check player carrier bartenders as an alternative",
+            "text": "Игроки иногда выставляют товары и данные у барменов авианосцев за кредиты. Сверяйте наличие, цену, время наблюдения и доступ к посадке перед вылетом. Станционный обмен компонентов для этих предметов не применяется.",
+            "englishText": "Players sometimes list Goods and Data for credits at fleet carrier bartenders. Check stock, price, observation time and docking access before leaving. Station asset barter does not apply to these items."
+          }
+        ]
+      },
+      {
+        "key": "goods-index",
+        "title": "Товары по названиям",
+        "englishTitle": "Goods by item",
+        "steps": [
+          {
+            "title": "Биологический образец",
+            "englishTitle": "Biological Sample",
+            "text": "Проверяйте закрытые шкафчики CMD, HAB, SEC, IND, LAB, MED, EXT.",
+            "englishText": "Check closed lockers in CMD, HAB, SEC, IND, LAB, MED, EXT."
+          },
+          {
+            "title": "Сжиженный газ",
+            "englishTitle": "Compression-Liquefied Gas",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики CMD, HAB, LAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in CMD, HAB, LAB, MED."
+          },
+          {
+            "title": "G-препараты",
+            "englishTitle": "G-Meds",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики IND, MED, EXT.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in IND, MED, EXT."
+          },
+          {
+            "title": "Генно-репаративные препараты",
+            "englishTitle": "Genetic Repair Meds",
+            "text": "В подходящем большом поселении проверьте запертые медицинские шкафчики, в том числе в производственном здании. Препараты встречаются в шкафчиках разных размеров. Проверяйте закрытые шкафчики LAB, PWR.",
+            "englishText": "Check locked medical lockers at a suitable large settlement, including inside the site's work building. Both large and small lockers have yielded these meds. Check closed lockers in LAB, PWR."
+          },
+          {
+            "title": "Монитор здоровья",
+            "englishTitle": "Health Monitor",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики CMD, HAB, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in CMD, HAB, MED."
+          },
+          {
+            "title": "Развлекательное устройство Insight",
+            "englishTitle": "Insight Entertainment Suite",
+            "text": "Проверяйте закрытые шкафчики CMD, HAB.",
+            "englishText": "Check closed lockers in CMD, HAB."
+          },
+          {
+            "title": "Ионизированный газ",
+            "englishTitle": "Ionised Gas",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики IND, LAB, EXT, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in IND, LAB, EXT, PWR."
+          },
+          {
+            "title": "Рывок",
+            "englishTitle": "Push",
+            "text": "Для поиска на поверхности подходят наземная точка с разбитым сканером-скиммером, наземная точка с разбитым ТРП.",
+            "englishText": "Surface sources include crashed skimmer site, crashed SRV site."
+          },
+          {
+            "title": "Эскиз комбинезона",
+            "englishTitle": "Suit Schematic",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики CMD, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in CMD, PWR."
+          },
+          {
+            "title": "Оборудование для наблюдения",
+            "englishTitle": "Surveillance Equipment",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики CMD, SEC, MED.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in CMD, SEC, MED."
+          },
+          {
+            "title": "Чертеж оружия",
+            "englishTitle": "Weapon Schematic",
+            "text": "Ищите точное название в наградах пешей доски. Проверяйте закрытые шкафчики CMD, PWR.",
+            "englishText": "Look for the exact item name in on-foot mission rewards. Check closed lockers in CMD, PWR."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Update 18.08",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "ED Odyssey Materials Helper · material source pools",
+        "url": "https://github.com/jixxed/ed-odyssey-materials-helper/blob/2e6d4c3e767d2b714ffddc5c9386831d66812916/application/src/main/java/nl/jixxed/eliteodysseymaterials/constants/SpawnConstants.java"
+      },
+      {
+        "title": "CMDR discussion · low-combat Odyssey farming (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1tvrq1a/where_to_find_onfoot_materials_for_suit_and/"
+      },
+      {
+        "title": "CMDR discussion · mission boards and on-foot Operations (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1xbg73w/odyssey_data_material_grind/"
+      },
+      {
+        "title": "CMDR discussion · post-rebalance surface salvage",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1i19a4y/"
+      },
+      {
+        "title": "CMDR field report · Genetic Repair Meds (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1w98hj2/genetic_repair_meds_guide_2026/"
+      }
+    ]
+  },
+  {
+    "key": "farm-odyssey-unlocks",
+    "title": "Материалы для допуска и рекомендаций Odyssey",
+    "englishTitle": "Odyssey access and referral materials",
+    "description": "Какие товары и файлы сохранить для инженеров Пузыря и Colonia. Сверяйте, где требуется передача в мастерской, а где продажа бармену.",
+    "englishDescription": "Reserve the right Goods and Data for Bubble and Colonia engineers, and check whether the step needs a workshop hand-in or a bartender sale.",
+    "keywords": [
+      "Hero Ferrari",
+      "Kit Fowler",
+      "Wellington Beck",
+      "Oden Geiger",
+      "Yi Shen",
+      "Colonia",
+      "рекомендации",
+      "инженеры",
+      "допуск"
+    ],
+    "materials": [
+      "push",
+      "settlementdefenceplans",
+      "opinionpolls",
+      "catmedia",
+      "classicentertainment",
+      "multimediaentertainment",
+      "geneticrepairmeds",
+      "surveillanceequipment",
+      "smearcampaignplans",
+      "insightentertainmentsuite",
+      "financialprojections",
+      "geneticsample",
+      "employeegeneticdata",
+      "geneticresearch",
+      "culinaryrecipes",
+      "cocktailrecipes",
+      "factionassociates",
+      "digitaldesigns",
+      "manufacturinginstructions"
+    ],
+    "sections": [
+      {
+        "key": "bubble",
+        "title": "Инженеры Пузыря",
+        "englishTitle": "Bubble engineers",
+        "steps": [
+          {
+            "title": "Domino Green, Hero Ferrari и Jude Navarro",
+            "englishTitle": "Domino Green, Hero Ferrari and Jude Navarro",
+            "text": "Для рекомендации от Domino Green сохраните 5 Push из тайников. Для Hero Ferrari держите 5 Settlement Defence Plans. Проверьте награды и SEC, а на поверхности ищите подходящий тайник. Для Jude Navarro запасите 5 Genetic Repair Meds из запертых медицинских шкафчиков в подходящем большом поселении, например в LAB, PWR или производственном корпусе. Предметы передают в мастерской после выполнения условий доступа.",
+            "englishText": "Keep 5 Push from caches for Domino Green's referral. Hold 5 Settlement Defence Plans for Hero Ferrari. Check rewards and SEC ports, or look for a suitable surface cache. Keep 5 Genetic Repair Meds from locked medical lockers in a suitable large settlement, such as in LAB, PWR or a work building for Jude Navarro. Hand them in at the workshop once you meet its access requirements."
+          },
+          {
+            "title": "Kit Fowler и Wellington Beck",
+            "englishTitle": "Kit Fowler and Wellington Beck",
+            "text": "Для допуска Кит Фаулер продайте барменам 5 Opinion Polls, а для рекомендации от неё сохраните 5 Surveillance Equipment. Для допуска Веллингтона Бека продайте суммарно 15 файлов Cat Media, Classic Entertainment и Multimedia Entertainment. Для его рекомендации отложите 5 Insight Entertainment Suite. За развлекательными данными идите к портам HAB, а за устройством Insight проверяйте шкафчики CMD и HAB.",
+            "englishText": "Sell 5 Opinion Polls for Kit Fowler's access and keep 5 Surveillance Equipment for her referral. For Wellington Beck's access, sell 15 files in any mix of Cat Media, Classic Entertainment and Multimedia Entertainment. Keep 5 Insight Entertainment Suite for his referral. Try HAB ports for the files and CMD or HAB lockers for the device."
+          },
+          {
+            "title": "Yarden Bond, Terra Velasquez и Oden Geiger",
+            "englishTitle": "Yarden Bond, Terra Velasquez and Oden Geiger",
+            "text": "Для Ярден Бонд продайте 5 Smear Campaign Plans. Для рекомендации от Терры Веласкес передайте 15 Financial Projections. Для Одена Гейгера продайте суммарно 20 Biological Sample, Employee Genetic Data или Genetic Research. Проверяйте шкафчики и терминалы LAB и MED для генетических материалов и CMD для финансовых данных.",
+            "englishText": "Sell 5 Smear Campaign Plans for Yarden Bond. Hand in 15 Financial Projections for Terra Velasquez's referral. Sell a total of 20 Biological Sample, Employee Genetic Data or Genetic Research for Oden Geiger. Check LAB and MED lockers and ports for genetics items, and CMD ports for financial Data."
+          }
+        ]
+      },
+      {
+        "key": "colonia",
+        "title": "Маршрут перед вылетом в Colonia",
+        "englishTitle": "Before leaving for Colonia",
+        "steps": [
+          {
+            "title": "Запаситесь для трёх рекомендаций",
+            "englishTitle": "Pack for three referrals",
+            "text": "Для открытия Yi Shen нужны рекомендации от трёх инженеров. Сохраните 10 Faction Associates для Baltanos, 10 Digital Designs для Eleanor Bresa и 10 Manufacturing Instructions для Rosa Dayette. Добывайте их по доске и портам HAB, CMD, LAB или IND в зависимости от файла.",
+            "englishText": "Unlocking Yi Shen requires referrals from three engineers. Keep 10 Faction Associates for Baltanos, 10 Digital Designs for Eleanor Bresa and 10 Manufacturing Instructions for Rosa Dayette. Find them on mission boards and at HAB, CMD, LAB or IND ports according to the file."
+          },
+          {
+            "title": "Сдайте рецепты в нужной системе",
+            "englishTitle": "Sell the recipes in the right system",
+            "text": "Для доступа Rosa Dayette продайте суммарно 10 Culinary Recipes или Cocktail Recipes барменам в системе Colonia. Их можно скачать из HAB. Для трёх рекомендаций откройте мастерские и сдайте каждый резерв своему инженеру.",
+            "englishText": "For Rosa Dayette's access, sell 10 Culinary Recipes or Cocktail Recipes in total to bartenders in the Colonia system. HAB ports can supply both. Unlock the workshops and hand each reserve to its engineer for the three referrals.",
+            "system": "Colonia"
+          },
+          {
+            "title": "Проверьте порядок действий",
+            "englishTitle": "Check the order of steps",
+            "text": "Перед продажей откройте карточку инженера и проверьте стадию доступа. Продажа и личная передача записываются по-разному. После сдачи посмотрите статус в игре, затем обновите план из журнала.",
+            "englishText": "Before selling, open the engineer card and check the access stage. A bartender sale and a workshop hand-in are different events. After delivery, check in-game progress and refresh the plan from the journal."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "title": "Frontier Developments · Update 18.08",
+        "url": "https://store.steampowered.com/news/posts/?appids=359320&enddate=1723724684&feed=steam_community_announcements"
+      },
+      {
+        "title": "ED Odyssey Materials Helper · material source pools",
+        "url": "https://github.com/jixxed/ed-odyssey-materials-helper/blob/2e6d4c3e767d2b714ffddc5c9386831d66812916/application/src/main/java/nl/jixxed/eliteodysseymaterials/constants/SpawnConstants.java"
+      },
+      {
+        "title": "CMDR Dallicort · Habitat data ports and Hakimi layout",
+        "url": "https://www.dallicort.com/engineering/odyssey-hab-data-ports"
+      },
+      {
+        "title": "CMDR discussion · mission boards and on-foot Operations (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1xbg73w/odyssey_data_material_grind/"
+      },
+      {
+        "title": "CMDR field report · Genetic Repair Meds (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1w98hj2/genetic_repair_meds_guide_2026/"
+      },
+      {
+        "title": "CMDR field discussion · unlock data and tourism habitats (2026)",
+        "url": "https://www.reddit.com/r/EliteDangerous/comments/1wrgk01/fdev_needs_to_fix_an_odyssey_engineering_oversight/"
+      }
+    ]
+  }
+]

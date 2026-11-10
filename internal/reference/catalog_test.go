@@ -17,7 +17,7 @@ import (
 
 func TestCatalogCoverage(t *testing.T) {
 	s := Catalog()
-	want := map[string]int{"articles": 96, "ships": 49, "engineers": 38, "modules": 39, "materials": 137, "blueprints": 36, "experimentals": 60, "commodities": 412, "systems": 38}
+	want := map[string]int{"articles": 115, "ships": 49, "engineers": 38, "modules": 49, "materials": 238, "blueprints": 39, "experimentals": 61, "commodities": 412, "systems": 38}
 	for _, category := range s.categories {
 		t.Logf("%s=%d", category.ID, category.Count)
 		if n, ok := want[category.ID]; ok && n != category.Count {
@@ -41,10 +41,28 @@ func TestCatalogCoverage(t *testing.T) {
 		id := "engineer/" + v.Str(raw["key"])
 		t.Run(id, func(t *testing.T) {
 			e, ok := s.Entry(id)
-			if !ok || e.Image == nil || len(e.Sections) != 3 || len(e.Sections[0].Items) < 3 || len(e.Sections[1].Rows) == 0 {
+			if !ok || e.Image == nil || len(e.Sections) < 4 || len(e.Sections[0].Items) < 2 || len(e.Sections[1].Rows) == 0 {
 				t.Fatalf("incomplete ship engineer %s", id)
 			}
-			checkJPEG(t, e.Image, 400, 400, 150000)
+		})
+	}
+	portraits, previews := map[string]string{}, map[string]string{}
+	for _, summary := range s.List(Query{Category: "engineers", Limit: 48}).Entries {
+		t.Run(summary.ID+"/portrait", func(t *testing.T) {
+			entry, ok := s.Entry(summary.ID)
+			if !ok || entry.Image == nil || summary.Image == nil {
+				t.Fatal("missing engineer portrait or preview")
+			}
+			checkJPEG(t, entry.Image, 1080, 740, 230000)
+			checkJPEG(t, summary.Image, 220, 160, 12000)
+			if previous := portraits[entry.Image.Src]; previous != "" {
+				t.Errorf("portrait reused from %s", previous)
+			}
+			if previous := previews[summary.Image.Src]; previous != "" {
+				t.Errorf("preview reused from %s", previous)
+			}
+			portraits[entry.Image.Src] = summary.ID
+			previews[summary.Image.Src] = summary.ID
 		})
 	}
 }
@@ -64,6 +82,30 @@ func checkJPEG(t *testing.T, image *Image, maxWidth, maxHeight, maxBytes int) {
 	}
 	if cfg.Width < 48 || cfg.Height < 32 || cfg.Width > maxWidth || cfg.Height > maxHeight || len(raw) > maxBytes {
 		t.Fatalf("bad image %dx%d %d bytes", cfg.Width, cfg.Height, len(raw))
+	}
+}
+
+func TestEngineerPagesShareRoadmapRequirementsAndLink(t *testing.T) {
+	s := Catalog()
+	for _, raw := range v.Rows(data.Object("engineering-roadmap.json")["engineers"]) {
+		key := v.Str(raw["key"])
+		e, ok := s.Entry("engineer/" + key)
+		if !ok || e.Properties[0].Value != v.Str(raw["system"]) || e.Properties[1].Value != v.Str(raw["base"]) {
+			t.Fatalf("engineer %s has no matching base in the reference", key)
+		}
+		requirements := v.Rows(raw["requirements"])
+		items := e.Sections[0].Items
+		if len(items) != len(requirements) {
+			t.Fatalf("engineer %s reference has a different unlock chain", key)
+		}
+		for index, step := range requirements {
+			if items[index].Text != v.Str(step["text"]) || items[index].EnglishText != v.Str(step["english"]) {
+				t.Fatalf("engineer %s step %d diverged from the roadmap", key, index)
+			}
+		}
+		if len(e.Actions) != 2 || e.Actions[1].Type != "engineering-roadmap" || e.Actions[1].EngineerKey != key {
+			t.Fatalf("engineer %s does not link to its own roadmap", key)
+		}
 	}
 }
 
@@ -207,9 +249,13 @@ func TestSummaryPayloadAndOfflineMedia(t *testing.T) {
 		if len(raw) > 300000 {
 			t.Fatalf("list payload too big: %s %d", category, len(raw))
 		}
+		maxWidth, maxHeight := 160, 120
+		if category == "engineers" {
+			maxWidth, maxHeight = 220, 160
+		}
 		for _, e := range list.Entries {
 			if e.Image != nil {
-				checkJPEG(t, e.Image, 160, 120, 12000)
+				checkJPEG(t, e.Image, maxWidth, maxHeight, 12000)
 			}
 		}
 	}
@@ -257,7 +303,14 @@ func TestModifierCoverageAndDescriptions(t *testing.T) {
 			t.Run(key+"/G"+grade, func(t *testing.T) {
 				features := v.Obj(v.Obj(v.Obj(stats["blueprints"])[key])[grade])
 				out := blueprintModifiers(stats, key, v.Int(grade))
-				if len(features) == 0 || len(features) != len(out) {
+				if len(features) == 0 {
+					out = catalogueModifiers(raw, v.Int(grade))
+					features = v.Obj(v.At(raw, "gradeStats", grade))
+					count := len(v.Rows(features["features"])) + len(v.Obj(features["damageDistribution"]))
+					if count == 0 || len(out) != count {
+						t.Fatalf("lost catalogue feature: %d -> %d", count, len(out))
+					}
+				} else if len(features) != len(out) {
 					t.Fatalf("lost feature: %d -> %d", len(features), len(out))
 				}
 				for _, property := range out {

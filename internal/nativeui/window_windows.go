@@ -38,6 +38,8 @@ type Options struct {
 	Smoke             bool
 	Demo              bool
 	ReadmeScreenshots bool
+	SmokeFixture      *SmokeFixture
+	Soak              *SoakFixture
 }
 type Window struct {
 	modern                                                 *modernShell
@@ -177,6 +179,10 @@ func Run(backend Controller, options Options) error {
 	defer u.dispose()
 	u.main.Show()
 	u.applyMode(v.Text(v.At(u.state, "desktop", "displayMode"), "windowed"))
+	if options.Soak != nil {
+		win.ShowWindow(u.main.Handle(), win.SW_SHOWNOACTIVATE)
+		go u.modern.runSoak()
+	}
 	if options.Smoke || options.Demo {
 		// A hidden launcher can supply STARTF_USESHOWWINDOW/SW_HIDE. Its
 		// first ShowWindow is consumed by Windows, so make isolated GUI
@@ -719,7 +725,7 @@ func (u *Window) execute(action p.Action, values M) {
 	}()
 }
 func (u *Window) quit() {
-	if u.quitting {
+	if u.quitting || u.dialogOpen {
 		return
 	}
 	u.quitting = true
@@ -727,7 +733,13 @@ func (u *Window) quit() {
 		u.modern.flushDesktop()
 	}
 	u.saveBounds()
-	u.backend.Close()
+	if saver, ok := u.backend.(profileExitSaver); ok {
+		if err := saver.CloseWithSave(); err != nil {
+			ResolveProfileSaveFailure(u.main, saver, p.Language(u.state), err)
+		}
+	} else {
+		u.backend.Close()
+	}
 	u.disposed.Store(true)
 	close(u.stop)
 	if u.hud != nil {

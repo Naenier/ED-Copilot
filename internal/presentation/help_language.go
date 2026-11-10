@@ -102,11 +102,11 @@ Select a planet to inspect its signals and estimated value range. Sampling requi
 First footfall and bonuses require confirmation. Unsold values are estimates; Vista Genomics sales confirm the actual payment. Save useful planets and compare your finds and sales in the statistics views.`,
 	"engineering": `Engineering
 
-Add the modules, blueprints, experimental effects and planned rolls you need. Materials are calculated for the specified number of attempts, not an assumed guaranteed completion. Zero rolls skip a completed grade.
+Start in Progression. Select engineers or filter by module and blueprint. The steps include the referral, invitation, permit and workshop requirements in the order you can complete them. The recipe shows the quantities and the known stock. Equipment recorded in the journal can be used as the starting point.
 
-Compare the plan with observed raw, manufactured and encoded stocks. Unknown inventory remains unknown. Material Trader calculations respect trading families, storage limits and protected materials required by the plan. Some materials cannot be traded at ordinary material traders.
+Use Plan for a shopping list across several ship upgrades. Enter the number of rolls and choose an experimental effect for each module. Zero rolls skip a completed grade. The Materials and Material trading views use the same stock and planned quantities.
 
-The engineer reference lists locations, access requirements, supported modules and maximum grades. Your personal access mark can be replaced with journal-derived status. Save or load a plan without changing your actual ship loadout.`,
+The journal records engineer access and observed equipment. For tasks without a recorded counter, verify progress in the game. Costs that depend on reputation are marked as estimates.`,
 	"colonization": `Colonisation
 
 First check an inhabited origin system, choose an eligible station and its controlling faction, then search nearby candidate systems. Public observations can be incomplete; confirm claim availability and restrictions in the game. Adding a personal plan does not purchase a claim.

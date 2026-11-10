@@ -280,6 +280,9 @@ func BuildSnapshotEvents(state, context v.M, now time.Time) []Event {
 	if allKnown && len(materials) > 0 {
 		rows := []v.M{}
 		for _, row := range materials {
+			if row["category"] == "currency" {
+				continue
+			}
 			if _, ok := integer(row["owned"]); !ok {
 				allKnown = false
 			}

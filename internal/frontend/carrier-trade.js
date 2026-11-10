@@ -51,11 +51,11 @@ function opportunityKey(C){
  const commander=C.state?.commander||{};
  const services=o.carrierType!=='squadron'&&carrier.owned&&carrier.space;
  const squadronFuel=o.carrierType==='squadron'?(m.legs||[]).map(leg=>leg.tritiumTons):null;
- return JSON.stringify([opportunityFilters(C),departureSystem(C),services?.crewTons,services?.shipPacksTons,
-  services?.modulePacksTons,commander.shipModel,commander.shipType,
-  commander.cargoCapacity,pilot.credits,o.carrierType,o.servicesTons,
+ return JSON.stringify([m.opportunityScope,opportunityFilters(C),departureSystem(C),services?.crewTons,services?.shipPacksTons,
+  services?.modulePacksTons,commander.shipModel,commander.shipType,commander.ship,
+  commander.system,commander.vehicle,commander.cargoCapacity,pilot.credits,o.carrierType,o.servicesTons,
   o.haulerPad,o.haulerCapacity,o.unloadHaulerPad,o.unloadHaulerCapacity,squadronFuel,o.tritiumPrice,
-  o.weeklyUpkeep,o.durationHours,o.extraCosts,o.maxQuoteAgeHours,o.demandRatio,o.holidayConfirmed]);
+  o.weeklyUpkeep,o.durationHours,o.extraCosts,o.maxQuoteAgeHours,o.demandRatio,o.preset,o.holidayConfirmed]);
 }
 function matchingOpportunities(C){
  const result=model(C).opportunities||{},request=result.options||{},filters=opportunityFilters(C);

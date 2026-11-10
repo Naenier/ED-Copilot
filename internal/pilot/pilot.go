@@ -263,6 +263,12 @@ func (t *Tracker) Apply(event, context M) {
 		}
 	}
 }
+func (t *Tracker) Credits() any {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	return t.credits
+}
+
 func (t *Tracker) Snapshot() M {
 	t.mu.RLock()
 	defer t.mu.RUnlock()

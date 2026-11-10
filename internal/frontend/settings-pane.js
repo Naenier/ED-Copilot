@@ -76,6 +76,24 @@ function render(C,u,mainHTML){
  if(!active(C))return mainHTML;
  return '<div class="settings-workspace'+(C.inspector?' has-help':'')+'" data-settings-workspace><div class="settings-main">'+mainHTML+'</div>'+(C.inspector?pane(C,u):'')+'</div>';
 }
+function renderProfile(u){
+ return '<section class="settings-group"><h3>'+u.icon('shield-check')+th("Резервная копия профиля")+'</h3>'+
+  '<p class="info-note">'+th("В копию входят настройки, планы и прогресс. Восстановление создаёт отдельный профиль в пустой папке.")+'</p>'+
+  u.btn("Сохранить копию профиля",'profile-export','','quiet')+' '+
+  u.btn("Восстановить из копии",'profile-import','','quiet')+'</section>';
+}
+async function handleProfile(action,button,u){
+ button.disabled=true;
+ try {
+  const result=await u.call('native',{action});
+  if(result?.cancelled)return;
+  if(action==='profile-export'){u.toast(t("Копия профиля сохранена"));return;}
+  u.dialog(t("Профиль восстановлен"),'<div class="prose-small"><p>'+u.esc(result.folder)+'</p><p>'+
+   th("Для запуска этого профиля укажите его папку в параметре --data-dir.")+'</p></div>');
+ }finally{
+  button.disabled=false;
+ }
+}
 function topicFor(target,C,u,host){
  const control=target?.closest?.('button,input,select,textarea');
  if(!control)return '';
@@ -112,5 +130,5 @@ function init(C,u){
  });
  host.addEventListener('focusin',event=>select(topicFor(event.target,binding.C,binding.u,host)));
 }
-window.SettingsPaneUI={active,canToggle,render,init};
+window.SettingsPaneUI={active,canToggle,render,renderProfile,handleProfile,init};
 })();

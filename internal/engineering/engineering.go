@@ -179,6 +179,7 @@ type Planner struct {
 	uncertain map[string]bool
 	at        M
 	progress  map[string]M
+	roadmap   roadmapObservations
 }
 
 func New(saved M) *Planner {
@@ -190,7 +191,7 @@ func New(saved M) *Planner {
 	}
 	p.configure(v.Obj(saved["options"]))
 	for k, x := range v.Obj(saved["manualEngineers"]) {
-		if engineers[k] != nil {
+		if roadmapData.engineers[k] != nil {
 			if _, ok := x.(bool); ok {
 				p.manual[k] = x
 			}
@@ -205,6 +206,7 @@ func (p *Planner) reset() {
 	p.uncertain = map[string]bool{}
 	p.at = M{}
 	p.progress = map[string]M{}
+	p.resetRoadmap()
 }
 func (p *Planner) Reset() { p.mu.Lock(); defer p.mu.Unlock(); p.reset() }
 func (p *Planner) ExportSettings() M {
@@ -277,7 +279,7 @@ func (p *Planner) Update(body M) error {
 		return p.configure(body)
 	case "engineer":
 		key := v.Text(body["key"], body["id"])
-		if engineers[key] == nil {
+		if roadmapData.engineers[key] == nil {
 			return errors.New("Инженер не найден")
 		}
 		if body["unlocked"] == nil {
@@ -327,6 +329,7 @@ func (p *Planner) Apply(event, context M) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	kind := v.Str(event["event"])
+	p.observeRoadmap(kind, event)
 	switch kind {
 	case "Materials":
 		for field, group := range map[string]string{"Raw": "raw", "Manufactured": "manufactured", "Encoded": "encoded"} {
@@ -382,16 +385,11 @@ func (p *Planner) Apply(event, context M) {
 			rows = []M{event}
 		}
 		for _, r := range rows {
-			key := v.Str(r["EngineerID"])
-			if engineers[key] == nil {
-				for id, e := range engineers {
-					if v.Key(e["english"]) == v.Key(r["Engineer"]) {
-						key = id
-						break
-					}
-				}
+			key := roadmapEngineerKey(r["EngineerID"], r["Engineer"])
+			if key == "" {
+				continue
 			}
-			if engineers[key] == nil {
+			if at := v.Time(event["timestamp"]); !at.IsZero() && at.Before(v.Time(p.progress[key]["timestamp"])) {
 				continue
 			}
 			x := v.Merge(v.Copy(p.progress[key]), M{"timestamp": event["timestamp"]})
@@ -406,6 +404,10 @@ func (p *Planner) Apply(event, context M) {
 			}
 			if s := v.Str(r["Progress"]); s != "" {
 				x["status"] = s
+				if !strings.EqualFold(s, "Unlocked") && !strings.EqualFold(s, "Barred") {
+					delete(x, "rank")
+					delete(x, "progress")
+				}
 			} else if v.Num(r["Rank"]) > 0 {
 				x["status"] = "Unlocked"
 			}
@@ -465,7 +467,7 @@ func (p *Planner) Snapshot(context M) M {
 		r["owned"] = owned
 		r["needed"] = need
 		r["updatedAt"] = p.at[group]
-		r["categoryName"] = map[string]string{"raw": "Сырьё", "manufactured": "Производственные материалы", "encoded": "Данные"}[group]
+		r["categoryName"] = map[string]string{"raw": "Сырьё", "manufactured": "Производственные материалы", "encoded": "Данные", "currency": "Валюта"}[group]
 		r["familyName"] = familyNames[group+":"+v.Str(r["family"])]
 		if owned != nil {
 			r["missing"] = max(0, need-v.Int(owned))

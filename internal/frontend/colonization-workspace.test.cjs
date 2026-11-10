@@ -16,7 +16,10 @@ function fixture(){
   renderPage(){renders++;},loadView:async()=>{loads++;},toast:value=>toasts.push(value),
   context:()=>({tab:C.tab,mode:C.mode,selected:C.selected,query:C.query}),$:selector=>nodes.get(selector),
  };
- vm.runInNewContext(fs.readFileSync(path.join(__dirname,'colonization-workspace.js'),'utf8'),{window});
+ const scope=vm.createContext({window});
+ for(const file of ['freshness.js','colonization-workspace.js']){
+  vm.runInContext(fs.readFileSync(path.join(__dirname,file),'utf8'),scope);
+ }
  const api=window.ColonyWorkspaceUI;
  const origin=(name='Home system')=>C.state.colonization.search={running:false,origin:{name,faction:'System controlling faction'},options:{originSystem:name},factions:[{name:'Station Faction'},{name:'System controlling faction'}],claimStations:[{marketId:9001,name:'Home port',system:name,faction:'Station Faction',hasColonisationContact:true,distanceLs:0,type:'Coriolis'},{marketId:9002,name:'Other port',system:name,faction:'Other Station Faction',hasColonisationContact:null}]};
  return {window,C,ui,api,calls,toasts,nodes,origin,setRPC(value){rpc=value;},get renders(){return renders;},get loads(){return loads;}};
@@ -283,20 +286,26 @@ test('colony budget values belong only to the selected colony and distinguish to
 test('budget unknown totals remain lower bounds and a bounded purchase estimate is separate from a confirmed zero',()=>{
  const f=fixture();f.C.mode='Бюджет';const p=budgetProject('a','Synthetic');f.C.state.colonization.activeProject=p;
  p.costSummary.required=costMetric(5000,false,{unpricedCommodityCount:2});p.costSummary.unknownBills=1;
+ Object.assign(p.costSummary,{commodityCount:3,pricedCommodityCount:1,stalePriceCount:1,oldestPriceAt:'2026-11-01T12:00:00Z'});
  p.costSummary.missing=costMetric(0,false,{unpricedCommodityCount:2});p.costSummary.toBuy=costMetric(0,false,{unknownQuantityCount:1});p.costSummary.toBuyAtMost=costMetric(7000);
  let html=f.api.render(f.C,f.ui);
  assert.match(html,/Полная смета ресурсов<\/span><strong>Не менее 5000 кр\./);assert.match(html,/Осталось доставить<\/span><strong>Неизвестно/);
- assert.match(html,/Нужно закупить<\/span><strong>Не более 7000 кр\./);assert.match(html,/Неизвестных смет: 1 · Без средней цены: 2/);
+ assert.match(html,/Нужно закупить<\/span><strong>Не более 7000 кр\./);assert.match(html,/Неизвестных смет: 1/);
+ assert.match(html,/class="freshness-detail is-warning"><summary>Неполная оценка<\/summary>/);
+ assert.match(html,/Цен старше 7 дней<\/dt><dd>1<\/dd>/);
+ assert.match(html,/Товаров без средней цены<\/dt><dd>2<\/dd>/);
  assert.doesNotMatch(html,/Неполные оценки помечены границами/);
  p.costSummary.toBuy=costMetric(0);html=f.api.render(f.C,f.ui);assert.match(html,/Нужно закупить<\/span><strong>0 кр\./);assert.doesNotMatch(html,/Нужно закупить<\/span><strong>Не более/);
 });
 
 test('budget renders fully in English without translating user records and never creates a network request',()=>{
  const f=fixture();f.C.mode='Бюджет';f.C.state.colonization.activeProject=budgetProject('a','Личная колония');
+ Object.assign(f.C.state.colonization.activeProject.costSummary,{commodityCount:1,pricedCommodityCount:1,stalePriceCount:1,oldestPriceAt:'2026-11-01T12:00:00Z'});
  const dictionary={};for(const filename of fs.readdirSync(path.join(__dirname,'../localization')).filter(x=>x.endsWith('_en.json')).sort())Object.assign(dictionary,JSON.parse(fs.readFileSync(path.join(__dirname,'../localization',filename),'utf8')));
  f.window.CopilotI18n={t:key=>dictionary[key]??key,locale:()=> 'en-GB'};
  const html=f.api.render(f.C,f.ui),budget=html.split('<section class="colony-budget"')[1]||'';
  assert.match(html,/Личная колония/);assert.match(budget,/Colony resource budget/);assert.match(budget,/Full resource bill/);assert.match(budget,/Procurement budget/);
+ assert.match(budget,/<summary>Outdated estimate<\/summary>/);
  assert.doesNotMatch(budget,/[\p{Script=Cyrillic}]/u);assert.equal(f.calls.length,0);
 });
 

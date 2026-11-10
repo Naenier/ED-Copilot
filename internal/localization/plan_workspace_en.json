@@ -1,0 +1,15 @@
+{
+  "Владелец плана": "Plan owner",
+  "Текущий командир": "Current commander",
+  "Все командиры": "All commanders",
+  "Удалить выбранную цель?": "Delete the selected objective?",
+  "Командир сменился. Откройте действие заново.": "The commander changed. Open this action again.",
+  "Для личного плана нужен командир из журнала игры.": "A personal plan requires a commander from the game journal.",
+  "Выберите область плана.": "Choose who owns the plan.",
+  "У этого владельца уже есть такой рейс.": "This owner already has this trade run.",
+  "Личный рейс": "Personal run",
+  "Общий рейс": "Shared run",
+  "Сделать общим": "Share with all commanders",
+  "Сделать личным": "Assign to current commander",
+  "Владелец рейса изменён": "Trade run owner updated"
+}

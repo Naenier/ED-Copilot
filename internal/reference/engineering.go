@@ -151,7 +151,11 @@ func (s *Store) buildEngineering() {
 				continue
 			}
 			ingredients := recipeIngredients(recipe, materials)
-			grades = append(grades, Grade{Grade: grade, Title: fmt.Sprintf("Класс G%d: один ролл", grade), Materials: ingredients, Effects: blueprintModifiers(stats, v.Str(raw["key"]), grade)})
+			modifiers := blueprintModifiers(stats, v.Str(raw["key"]), grade)
+			if len(modifiers) == 0 {
+				modifiers = catalogueModifiers(raw, grade)
+			}
+			grades = append(grades, Grade{Grade: grade, Title: fmt.Sprintf("Класс G%d: один ролл", grade), Materials: ingredients, Effects: modifiers})
 			for _, item := range ingredients {
 				if mat := s.records[item.EntryID]; mat != nil {
 					mat.relatedIDs = append(mat.relatedIDs, id)
@@ -199,7 +203,7 @@ func recipeIngredients(rows []v.M, materials map[string]v.M) []Ingredient {
 
 func (s *Store) addMaterial(m v.M) {
 	category := v.Str(m["category"])
-	title := map[string]string{"raw": "Сырьё", "manufactured": "Произведённые материалы", "encoded": "Данные"}[category]
+	title := map[string]string{"raw": "Сырьё", "manufactured": "Произведённые материалы", "encoded": "Данные", "currency": "Валюта"}[category]
 	description := map[string]string{"raw": "Природный инженерный элемент. Хранится в отдельном запасе сырья, не занимает грузовой трюм и применяется в чертежах и синтезе.", "manufactured": "Компонент для инженерных модификаций. Собирается и учитывается в запасе материалов отдельно от товарного груза.", "encoded": "Инженерные данные, получаемые при сканировании и выполнении задач. Они хранятся отдельно от грузового трюма."}[category]
 	gather := map[string]string{"raw": "Проверяйте элементный состав тела. Для наземного сбора нужны посадка и подходящие образования; сырьё некоторых видов также получается при добыче астероидов.", "manufactured": "Ищите подходящие источники сигналов, обломки кораблей и награды заданий. Тип сигнала, фракция и состояние системы влияют на доступные компоненты.", "encoded": "Используйте подходящий тип сканирования: обычные корабельные сканы, сканирование следов FSD, точки данных и награды миссий дают разные наборы данных."}[category]
 	key := v.Str(m["key"])
@@ -224,7 +228,12 @@ func (s *Store) addMaterial(m v.M) {
 		if exchangeKnown {
 			e.Badges = append(e.Badges, Badge{Label: "Не обменивается"})
 			guardian := strings.HasPrefix(key, "guardian") || strings.HasPrefix(key, "ancient")
-			if guardian {
+			if key == "mercenarycoin" {
+				e.Description = "Валюта операций. Используется для покупки и улучшения снаряжения наёмников и отдельных корабельных чертежей."
+				e.Sections[0].Paragraphs = []string{"Получайте монеты наёмников за выполнение операций."}
+				e.Properties = []Property{{Label: "Категория", Value: "Валюта"}, {Label: "Обмен у торговца", Value: exchange}}
+				e.Badges = []Badge{{Label: "Валюта"}}
+			} else if guardian {
 				e.Description = "Материал или данные Стражей для связанных технологий. Хранятся в отдельном запасе материалов и не занимают товарный трюм. Обмен у обычных торговцев материалами недоступен."
 				e.Sections[0].Paragraphs[0] = "Ищите на древних объектах и в руинах Стражей. Способы получения компонентов, данных и фрагментов чертежей различаются."
 			} else {
@@ -244,10 +253,10 @@ func (s *Store) addMaterial(m v.M) {
 }
 
 func moduleGroup(key string) string {
-	if strings.Contains(" bl c fc mc mr nl pa pl rg tp ul ", " "+key+" ") {
+	if strings.Contains(" bl c fc mc mr ml nl pa pl rg tp ul guardian-gauss guardian-plasma guardian-shard ", " "+key+" ") {
 		return "module-weapons"
 	}
-	if strings.Contains(" fsd t pp pd ls s bh ", " "+key+" ") {
+	if strings.Contains(" fsd t pp pd ls s bh guardian-pp guardian-pd ", " "+key+" ") {
 		return "module-core"
 	}
 	if strings.Contains(" ch csl ec hs kw po sb ws cs ", " "+key+" ") {

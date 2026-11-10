@@ -67,16 +67,29 @@ function warehouseTime(item,u){
  if(item.awaitingConfirmation&&item.updatedAt&&item.updatedAt!==item.receivedAt)text+=' · '+th('Скорректировано по журналу ')+u.esc(date(item.updatedAt));
  return text;
 }
+function budgetPriceQuality(C,cost,u){
+ const freshness=window.FreshnessUI;
+ if(!freshness||!cost.commodityCount)return '';
+ const stale=Number(cost.stalePriceCount)||0,undated=Number(cost.undatedPriceCount)||0;
+ const missing=Math.max(0,Number(cost.commodityCount)-(Number(cost.pricedCommodityCount)||0));
+ const language=C.state?.settings?.language==='ru'?'ru':'en';
+ const lines=[];
+ if(stale)lines.push([t('Цен старше 7 дней'),u.fmt(stale)]);
+ if(undated)lines.push([t('Цен неизвестного возраста'),u.fmt(undated)]);
+ if(missing)lines.push([t('Товаров без средней цены'),u.fmt(missing)]);
+ const oldest=freshness.formatDate(cost.oldestPriceAt,language);
+ if(oldest)lines.push([t('Дата самой старой цены'),oldest]);
+ return freshness.details(t(missing?'Неполная оценка':stale?'Устаревшая оценка':undated?'Возраст цен неизвестен':'Даты цен'),lines,u.esc,!!(stale||undated||missing));
+}
 function budget(C,u){
  const project=C.state?.colonization?.activeProject,cost=project?.costSummary;
  if(!project?.id||!cost)return '';
- const unknownBills=Number(cost.unknownBills)||0,unpriced=Number(cost.required?.unpricedCommodityCount)||0,manualBills=Number(cost.manualBills)||0;
+ const unknownBills=Number(cost.unknownBills)||0,manualBills=Number(cost.manualBills)||0;
  const warnings=[];
  if(unknownBills)warnings.push(t('Неизвестных смет: ')+u.fmt(unknownBills));
- if(unpriced)warnings.push(t('Без средней цены: ')+u.fmt(unpriced));
  if(manualBills)warnings.push(t('Ручных смет: ')+u.fmt(manualBills));
  const covered=[metric(t('Принято стройками'),budgetValue(cost.delivered,u),t('Стоимость уже принятых ресурсов по тем же ценам'),u),metric(t('Покрыто грузом корабля'),budgetValue(cost.cargoCovered,u),t('Груз ещё нужно передать на стройку'),u),metric(t('Покрыто складом флотоносца'),budgetValue(cost.carrierCovered,u),t('В пределах потребности и включённого учёта'),u)].join('');
- return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><p class="colony-budget-basis">'+th('По средним ценам галактики')+'</p><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ')+'</p></details></section>';
+ return '<section class="colony-budget" data-colony-budget="'+u.esc(project.id)+'"><header><div><h3>'+th('Бюджет ресурсов колонии')+'</h3></div><span class="colony-budget-scope">'+th('В плане: ')+u.esc(u.fmt(cost.plannedBuildings||0))+' · '+th('Строятся: ')+u.esc(u.fmt(cost.buildingBuildings||0))+'</span></header><div class="colony-budget-basis"><span>'+th('По средним ценам галактики')+'</span>'+budgetPriceQuality(C,cost,u)+'</div><div class="colony-budget-metrics">'+metric(t('Полная смета ресурсов'),budgetValue(cost.required,u),t('Все ресурсы запланированных и строящихся объектов'),u)+metric(t('Осталось доставить'),budgetValue(cost.missing,u),t('Стоимость ресурсов, ещё не принятых стройками'),u)+metric(t('Нужно закупить'),budgetValue(cost.toBuy,u,cost.toBuyAtMost),t('После учёта корабля и включённых складов'),u)+'</div>'+(warnings.length?'<p class="colony-budget-warning" role="status">'+u.esc(warnings.join(' · '))+'</p>':'')+'<details class="colony-budget-breakdown"><summary>'+th('Из чего складывается бюджет')+'</summary><div class="colony-budget-metrics">'+covered+'</div><p>'+th('Готовые, отменённые и неудавшиеся объекты исключены. Запас распределяется один раз между потребностями этой колонии; между разными колониями он не резервируется. ')+'</p></details></section>';
 }
 function warehouseOptions(C,u){
  const colony=C.state?.colonization||{},r=state(C),enabled=colony.includeCarrierWarehouse===true,canConfirm=!!stockAccessScope(C);

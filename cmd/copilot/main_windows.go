@@ -3,8 +3,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/Naenier/ED-Copilot/internal/app"
@@ -30,6 +32,7 @@ func main() {
 	journalDir := flag.String("journal-dir", "", "Папка игровых журналов")
 	version := flag.Bool("version", false, "Версия приложения")
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
+	soak := flag.Duration("smoke-soak", 0, "Измерить задержку оверлея и память на синтетическом профиле (15s–1h)")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
 	demo := flag.Bool("demo", false, "Открыть демонстрацию с новым временным профилем и без сети")
 	readmeScreens := flag.Bool("readme-screenshots", false, "Capture README pages in an isolated offline profile")
@@ -46,7 +49,13 @@ func main() {
 		fail(err, "")
 		return
 	}
-	isolated := *smoke || *headless || *demo || *readmeScreens
+	soakRequested := false
+	flag.Visit(func(f *flag.Flag) { soakRequested = soakRequested || f.Name == "smoke-soak" })
+	if soakRequested && (*soak < 15*time.Second || *soak > time.Hour || *smoke || *headless || *demo || *readmeScreens) {
+		fail(errors.New("--smoke-soak принимает длительность от 15s до 1h и запускается отдельно от других сценариев"), "")
+		return
+	}
+	isolated := *smoke || *soak != 0 || *headless || *demo || *readmeScreens
 	if *stress && !isolated {
 		fail(fmt.Errorf("--stress используется только с --demo или --smoke"), "")
 		return
@@ -96,7 +105,44 @@ func main() {
 	if *dataDir == "" {
 		*dataDir = profile.DefaultDir()
 	}
-	engine, err := app.New(app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: isolated})
+	var smokeFixture *nativeui.SmokeFixture
+	var soakFixture *nativeui.SoakFixture
+	if *smoke || *soak != 0 {
+		journalFile := filepath.Join(*journalDir, "Journal.synthetic.01.log")
+		fixture, readErr := os.ReadFile(journalFile)
+		if readErr != nil {
+			fail(readErr, *dataDir)
+			return
+		}
+		name := "standard"
+		if *stress {
+			name = "large"
+		}
+		smokeFixture = &nativeui.SmokeFixture{
+			Name: name, JournalEvents: bytes.Count(fixture, []byte{'\n'}), JournalBytes: len(fixture), Started: time.Now(),
+		}
+		if *soak != 0 {
+			soakFixture = &nativeui.SoakFixture{Duration: *soak, JournalFile: journalFile, Fixture: *smokeFixture}
+			smokeFixture = nil
+		}
+	}
+	options := app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: isolated}
+	engine, err := app.New(options)
+	if smokeFixture != nil {
+		smokeFixture.BackendElapsed = time.Since(smokeFixture.Started)
+	}
+	var recovery *profile.RecoveryError
+	if !isolated && errors.As(err, &recovery) && !errors.Is(err, profile.ErrUnsupportedSettingsVersion) && len(recovery.Generations) != 0 {
+		restored, restoreErr := nativeui.RestoreProfileOnStartup(*dataDir, recovery)
+		if restoreErr != nil {
+			fail(restoreErr, *dataDir)
+			return
+		}
+		if !restored {
+			return
+		}
+		engine, err = app.New(options)
+	}
 	if err != nil {
 		fail(err, *dataDir)
 		return
@@ -135,6 +181,12 @@ func main() {
 			fail(err, *dataDir)
 			return
 		}
+		if soakFixture != nil {
+			if _, err = engine.Do("/api/settings", v.M{"overlayEnabled": true, "activity": "flight"}); err != nil {
+				fail(err, *dataDir)
+				return
+			}
+		}
 		if *headless {
 			state := engine.Snapshot()
 			result := v.M{"ok": len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true}
@@ -154,12 +206,15 @@ func main() {
 			return
 		}
 	}
-	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens})
+	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens, SmokeFixture: smokeFixture, Soak: soakFixture})
 	if err != nil {
+		if saveErr := engine.CloseWithSave(); saveErr != nil && !isolated {
+			nativeui.ResolveProfileSaveFailure(nil, engine, engine.Language(), saveErr)
+		}
 		fail(err, *dataDir)
+		return
 	}
-	engine.Close()
-	if !isolated {
+	if saveErr := engine.CloseWithSave(); !isolated && saveErr == nil {
 		if err := engine.ApplyPendingUpdate(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

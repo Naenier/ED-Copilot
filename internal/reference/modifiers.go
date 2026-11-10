@@ -5,8 +5,45 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Naenier/ED-Copilot/internal/data"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
+
+// EngineeringRecipeFacts uses the same descriptions and grades as the
+// encyclopedia for the one recipe currently open in the planner.
+func EngineeringRecipeFacts(blueprintKey, effectKey string) (string, string, map[int][]Property) {
+	catalog := data.Object("engineering-data.json")
+	stats := data.Object("encyclopedia-engineering-stats.json")
+	grades := map[int][]Property{}
+	description, experimental := "", ""
+	if blueprintKey != "" {
+		for _, blueprint := range v.Rows(catalog["blueprints"]) {
+			if blueprint["key"] != blueprintKey {
+				continue
+			}
+			description = blueprintDescription(v.Str(blueprint["english"]))
+			for grade := 1; grade <= 5; grade++ {
+				properties := blueprintModifiers(stats, blueprintKey, grade)
+				if len(properties) == 0 {
+					properties = catalogueModifiers(blueprint, grade)
+				}
+				if len(properties) != 0 {
+					grades[grade] = properties
+				}
+			}
+			break
+		}
+	}
+	if effectKey != "" {
+		for _, effect := range v.Rows(catalog["experimentals"]) {
+			if effect["key"] == effectKey {
+				experimental = experimentalDescription(v.Str(effect["english"]))
+				break
+			}
+		}
+	}
+	return description, experimental, grades
+}
 
 func blueprintModifiers(stats v.M, recipe string, grade int) []Property {
 	features := v.Obj(v.Obj(v.Obj(stats["blueprints"])[recipe])[fmt.Sprint(grade)])
@@ -54,6 +91,31 @@ func blueprintModifiers(stats v.M, recipe string, grade int) []Property {
 	return out
 }
 
+func catalogueModifiers(blueprint v.M, grade int) []Property {
+	stats := v.Obj(v.At(blueprint, "gradeStats", fmt.Sprint(grade)))
+	out := []Property{}
+	labels := map[string]string{"RefuelRate": "Скорость забора топлива", "PowerDraw": "Потребление энергии", "Damage": "Урон"}
+	for _, feature := range v.Rows(stats["features"]) {
+		key := v.Str(feature["label"])
+		if key == "GuardianModuleResistance" {
+			out = append(out, Property{Label: "Защита от антистражевых полей", Value: "Включена"})
+			continue
+		}
+		label := v.Text(labels[key], key)
+		low, high := fmt.Sprintf("%+.4g%%", v.Num(feature["min"])*100), fmt.Sprintf("%+.4g%%", v.Num(feature["max"])*100)
+		if low != high {
+			high = low + " → " + high
+		}
+		out = append(out, Property{Label: label, Value: high})
+	}
+	for _, damage := range []struct{ key, title string }{{"thermal", "Термический урон"}, {"absolute", "Абсолютный урон"}, {"kinetic", "Кинетический урон"}, {"explosive", "Взрывной урон"}} {
+		if share, ok := v.Number(v.At(stats, "damageDistribution", damage.key)); ok {
+			out = append(out, Property{Label: damage.title, Value: fmt.Sprintf("%.4g%%", share*100)})
+		}
+	}
+	return out
+}
+
 var modifierLabels = map[string]string{
 	"ammo": "Общий боезапас", "angle": "Угол сканирования", "boot": "Время запуска", "brokenregen": "Восстановление разрушенного щита", "burst": "Выстрелов в очереди", "burstrof": "Темп внутри очереди", "cargo": "Грузовой запас", "clip": "Ёмкость магазина", "damage": "Урон", "distdraw": "Расход энергии распределителя", "duration": "Продолжительность работы", "eff": "Тепловой коэффициент силовой установки", "engcap": "Ёмкость ENG", "engrate": "Пополнение ENG", "explres": "Взрывное сопротивление", "facinglimit": "Угол захвата", "falloff": "Дальность начала падения урона", "fallofffromrange": "Начало падения урона", "hullboost": "Усиление корпуса", "hullreinforcement": "Добавленная прочность корпуса", "integrity": "Целостность модуля", "jitter": "Разброс", "kinres": "Кинетическое сопротивление", "mass": "Масса", "optmass": "Оптимальная масса", "optmul": "Оптимальный множитель двигателя", "pgen": "Выработка энергии", "piercing": "Бронепробитие", "power": "Потребление энергии", "proberadius": "Покрытие зонда", "range": "Дальность", "ranget": "Дальность захвата", "reload": "Время перезарядки", "rof": "Скорострельность", "scantime": "Время сканирования", "shieldboost": "Усиление щита", "shieldreinforcement": "Добавленный запас щита", "shotspeed": "Скорость снаряда", "spinup": "Время подготовки", "syscap": "Ёмкость SYS", "sysrate": "Пополнение SYS", "thermload": "Тепловая нагрузка", "thermres": "Термическое сопротивление", "wepcap": "Ёмкость WEP", "weprate": "Пополнение WEP",
 }
@@ -61,6 +123,9 @@ var modifierLabels = map[string]string{
 // descriptions describe the mechanic. Numerical module-specific tradeoffs live
 // alongside the relevant grade; families are not incorrectly treated as equal.
 var blueprintDescriptions = map[string]string{
+	"Anti-Guardian Zone Resistance":  "Защищает совместимый модуль Стражей от деградации в антистражевом поле.",
+	"Plasma conversion":              "Переводит часть урона лазера в абсолютный урон. Меняет потребление энергии и общий урон.",
+	"Scoop rate enhanced":            "Повышает скорость забора топлива за счёт дополнительного энергопотребления.",
 	"Ammo capacity":                  "Увеличивает запас зарядов совместимого устройства. Компромисс по массе и другим характеристикам зависит от типа пусковой установки.",
 	"Armoured":                       "Укрепляет силовую установку и меняет её энергетические и тепловые характеристики. Повышенная прочность не делает установку неуязвимой, а увеличение массы влияет на полёт.",
 	"Blast resistant":                "Усиливает взрывную защиту совместимого защитного модуля. Сопоставляйте её с кинетическим и термическим сопротивлением всей сборки.",

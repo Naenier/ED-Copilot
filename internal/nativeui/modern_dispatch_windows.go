@@ -11,6 +11,7 @@ import (
 
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	"github.com/Naenier/ED-Copilot/internal/frontend"
+	"github.com/Naenier/ED-Copilot/internal/localization"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/reference"
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -42,6 +43,15 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return M{"entries": []M{}, "total": 0, "limit": 12}, nil
 	case "exobiology":
 		return backend.Do("/api/exobiology", v.Obj(input["values"]))
+	case "engineering-roadmap":
+		if provider, ok := backend.(interface{ EngineeringRoadmap(M) (M, error) }); ok {
+			result, err := provider.EngineeringRoadmap(input)
+			if err == nil {
+				enrichEngineeringRecipe(v.Obj(result["recipe"]), webLanguage(backend))
+			}
+			return result, err
+		}
+		return nil, errors.New("План прокачки недоступен")
 	case "system-search":
 		if provider, ok := backend.(interface{ QuerySystems(M) (M, error) }); ok {
 			return provider.QuerySystems(input)
@@ -145,7 +155,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		state := snapshotForWeb(backend, "reference")
 		modes := []string{"Статьи", "Корабли", "Инженеры", "Товары", "Модули", "Материалы", "Чертежи", "Эффекты", "Экзобиология"}
 		if tab == "engineering" {
-			modes = []string{"План", "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана", "Обмен", "Инженеры"}
+			modes = p.EngineeringModes()
 		}
 		if tab == "targets" {
 			modes = []string{"Личные цели", "Места добычи", "Сохранённые места", "Навигация", "Инженеры"}
@@ -155,6 +165,13 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		}
 		page := p.LocalizePage(tab, p.Page{Title: p.Title(tab), Description: "Справочник командира", Modes: modes, Columns: []string{}, Rows: []p.Row{}}, state)
 		return M{"page": page, "actions": []M{}, "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
+	}
+	if op == "view" && tab == "engineering" && (mode == "" || mode == p.EngineeringProgression) {
+		state := snapshotForWeb(backend, "engineering-roadmap")
+		page := p.Build(tab, p.EngineeringProgression, "", state)
+		viewState := webState(state)
+		viewState["engineeringRoadmapRevision"] = state["engineeringRoadmapRevision"]
+		return M{"page": page, "actions": []M{}, "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": p.EngineeringProgression, "selected": ""}}, nil
 	}
 	state := snapshotForWeb(backend, tab)
 	if op == "boot" {
@@ -203,6 +220,11 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	case "view":
 		return M{"page": page, "actions": webActions(actions), "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}, nil
 	case "action":
+		if strings.HasPrefix(v.Str(input["actionId"]), "goal.") {
+			if expected, present := input["planWorkspace"]; present && expected != v.Str(v.At(state, "planWorkspace", "key")) {
+				return nil, errors.New("Командир сменился. Откройте действие заново.")
+			}
+		}
 		for _, a := range actions {
 			if a.ID != v.Str(input["actionId"]) {
 				continue
@@ -266,6 +288,25 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	return nil, errors.New("Неизвестный запрос интерфейса")
 }
 
+func enrichEngineeringRecipe(recipe M, language string) {
+	if recipe["kind"] != "ship" {
+		return
+	}
+	description, effect, grades := reference.EngineeringRecipeFacts(v.Str(recipe["blueprintKey"]), v.Str(recipe["experimentalKey"]))
+	recipe["description"] = localization.T(language, description)
+	recipe["experimentalDescription"] = localization.T(language, effect)
+	for _, grade := range v.Rows(recipe["grades"]) {
+		properties := grades[v.Int(grade["grade"])]
+		for i := range properties {
+			properties[i].Label = localization.T(language, properties[i].Label)
+			properties[i].Value = localization.Text(language, properties[i].Value)
+		}
+		if len(properties) > 0 {
+			grade["effects"] = properties
+		}
+	}
+}
+
 func webLanguage(backend Controller) string {
 	if provider, ok := backend.(interface{ Language() string }); ok {
 		return provider.Language()
@@ -282,7 +323,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "planWorkspace", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
 		out[key] = state[key]
 	}
 	return p.LocalizeWebState(redactWebSecrets(out))

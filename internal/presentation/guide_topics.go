@@ -82,9 +82,9 @@ Check the tritium tank, free warehouse space and the time of each snapshot. Only
 	"carrier-route": {guideCarrier, "Carrier route and tritium planning", `Choose a departure, destination, any intermediate stops and the reserve you want on arrival. Import your carrier's known mass, tank and warehouse tritium. Set a tritium price to estimate fuel cost.
 
 After calculation, check the next jump, fuel use, transfers and refuelling stops. Copy the next system to the galaxy map. Queue times can extend the arrival estimate.`},
-	"engineering": {guideEngineer, "Planning engineering upgrades", `In Engineering → Plan, add each module, blueprint, number of rolls and experimental effect. Enter zero rolls to skip a completed grade.
+	"engineering": {guideEngineer, "Planning engineering upgrades", `Open Engineering → Progression to see engineer referrals, invitations, permits and workshop requirements in order. Select engineers, a module and a blueprint to compare providers and calculate the material list for one upgrade. Selecting observed equipment starts the calculation from its recorded modifications.
 
-Materials combines raw, manufactured and encoded stock with the plan's needs and shortfalls. Select a material for a trade calculation. Use Engineers to check access, supported upgrades and maximum grades.`},
+Use Engineering → Plan for a shopping list across several upgrades. Set the number of rolls per grade and select any experimental effect. Materials compares the list with recorded stock and opens the material trader calculation.`},
 	"material-trader": {guideEngineer, "Calculating a Material Trader exchange", `Open Engineering → Material trading. Enter the material and the additional quantity you need, or start with a missing material from the Materials view.
 
 Check each proposed exchange against trader categories, exchange rates, stock, storage limits and materials needed by the rest of your plan. Complete the trade in the game.`},

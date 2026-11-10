@@ -42,7 +42,7 @@ func TestSpecialMaterialsNeverRecommendAnOrdinaryMaterialTrader(t *testing.T) {
 			}
 		})
 	}
-	if special != 29 {
+	if special != 32 {
 		t.Fatalf("special-material coverage changed unexpectedly: %d", special)
 	}
 }

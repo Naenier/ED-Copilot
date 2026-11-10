@@ -350,6 +350,11 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err := e.Engineering.Update(body); err != nil {
 			return nil, err
 		}
+		if body["action"] == "engineer" {
+			e.mu.Lock()
+			e.engineeringRoadmapRevision++
+			e.mu.Unlock()
+		}
 	case "/api/mining/plan":
 		e.domainMu.Lock()
 		err := e.Mining.Update(body)
@@ -452,9 +457,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			return nil, err
 		}
 	case "/api/trading/saved-routes":
-		e.domainMu.Lock()
-		result, err := e.Trading.SaveRoute(body)
-		e.domainMu.Unlock()
+		result, err := e.saveWorkspaceRoute(body)
 		if err != nil {
 			return nil, err
 		}
@@ -589,10 +592,14 @@ func (e *Engine) Do(path string, body M) (M, error) {
 func (e *Engine) objective(body M) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	owner := e.planWorkspace.key
+	if err := validatePlanWorkspace(body, owner); err != nil {
+		return err
+	}
 	id := v.Str(body["id"])
 	index := -1
 	for i, r := range e.objectives {
-		if v.Str(r["id"]) == id {
+		if key := v.Str(r["planOwner"]); v.Str(r["id"]) == id && (key == "" || key == owner) {
 			index = i
 			break
 		}
@@ -606,6 +613,13 @@ func (e *Engine) objective(body M) error {
 		if err != nil {
 			return err
 		}
+		key, err := goalOwner(body, owner, owner)
+		if err != nil {
+			return err
+		}
+		if key != "" {
+			r["planOwner"] = key
+		}
 		e.objectives = append(e.objectives, r)
 	case "update":
 		if index < 0 {
@@ -614,6 +628,13 @@ func (e *Engine) objective(body M) error {
 		r, err := pilot.NormalizeObjective(body, e.objectives[index])
 		if err != nil {
 			return err
+		}
+		key, err := goalOwner(body, owner, v.Str(e.objectives[index]["planOwner"]))
+		if err != nil {
+			return err
+		}
+		if key != "" {
+			r["planOwner"] = key
 		}
 		e.objectives[index] = r
 	case "complete", "reopen", "remove":

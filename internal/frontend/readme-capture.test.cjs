@@ -12,7 +12,7 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
  const window={COPILOT_README:true,COPILOT_SMOKE:true,ReferenceUI:{async open(id){C.reference.entryId=id;C.reference.entry={id};}}};
  const document={documentElement:{lang:language},body:{innerText:bodyText},images:[]};
  const u={
-  $(selector){if(selector==='#page-scroll')return {scrollTop:100};if(selector==='#toasts')return {replaceChildren(){}};if(selector.startsWith('[data-commander-section='))return C.tab==='commander'?{}:null;if(selector==='[data-click="sidebar"]')return {dataset:{click:'sidebar'}};return null;},
+  $(selector){if(selector==='#page-scroll')return {scrollTop:100};if(selector==='#toasts')return {replaceChildren(){}};if(selector.startsWith('[data-commander-section='))return C.tab==='commander'?{}:null;if(selector==='[data-click="sidebar"]')return {dataset:{click:'sidebar'}};if(selector==='.ref-farm-route button[data-system]'||selector==='[data-reference="entry"] [data-reference-image]')return C.reference?.entryId==='article/farm-guardian'?{}:null;return null;},
   $$(selector){if(selector==='[data-rank-card]')return Array.from({length:8},()=>({}));if(selector==='.rail [data-click="settings-nav"]')return [{}];if(selector==='.sidebar [data-nav="settings"]')return [];return [];},
   async call(op,body){calls.push({op,body});if(op==='window'&&body.action==='status')return {displayMode:'fullscreen'};if(op==='reference.list')return {entries:[{id:'article/example'}]};return {};},
   async navigate(tab,options={}){C.tab=tab;C.mode=options.mode||'';if(tab==='deals')C.dealsUI={};if(tab==='encyclopedia')C.reference={loading:false,entryLoading:false,list:{entries:[]}};},
@@ -31,8 +31,8 @@ test('true documentation flags still reject real commanders and invalid language
 
 test('English and Russian capture flows visit commander sections and restore compact navigation',async()=>{
  for(const language of ['en','ru']){
-  const f=fixture(language);await f.run();const report=f.report();assert.equal(report.ok,true,JSON.stringify(report.problems));assert.equal(report.language,language);assert.equal(f.captures.length,17);assert.equal(new Set(f.captures).size,17);
-  for(const name of ['readme-commander','readme-ranks','readme-fleet','readme-inventory','readme-navigation','readme-navigation-compact'])assert.ok(f.captures.includes(name));
+  const f=fixture(language);await f.run();const report=f.report();assert.equal(report.ok,true,JSON.stringify(report.problems));assert.equal(report.language,language);assert.equal(f.captures.length,18);assert.equal(new Set(f.captures).size,18);
+  for(const name of ['readme-commander','readme-ranks','readme-fleet','readme-inventory','readme-navigation','readme-navigation-compact','readme-farming'])assert.ok(f.captures.includes(name));
   assert.deepEqual(f.calls.filter(row=>row.op==='sidebar').map(row=>row.collapsed),[true,false]);assert.equal(f.C.collapsed,false);assert.ok(report.pages.every(page=>page.language===language));
   const article=f.calls.find(row=>row.op==='reference.list'&&row.body.category==='articles');assert.equal(article.body.query,language==='en'?'Tritium':'Тритий');
   assert.equal(f.calls.filter(row=>row.op==='window'&&row.body.action==='fullscreen').length,1);

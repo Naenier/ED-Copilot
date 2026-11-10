@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -78,8 +80,11 @@ func TestCarrierTradeOpportunityHandoffChecksContextAndKeepsLogistics(t *testing
 		{"station": "Synthetic Purchase", "quantity": 100}, {"station": "Synthetic Secondary", "quantity": 200}}}
 	outbound["route"] = M{"fuelPurchaseTons": 50, "fuelMarket": M{"station": "Synthetic Fuel"}}
 	engine.mu.Lock()
-	engine.network[carrierTradeOpportunityJob] = v.Copy(M{"options": request, "context": carrier.TradeOpportunityContext(trade, state, request),
-		"updatedAt": now, "results": []M{offer}})
+	engine.carrierTradeSearch = &carrierTradeSearch{
+		request: carrierTradeSearchRequest{system: "Synthetic A", credits: 15000000},
+		context: carrier.TradeOpportunityContext(trade, state, request),
+		view:    M{"updatedAt": now, "results": []M{offer}},
+	}
 	engine.mu.Unlock()
 	doOK(t, engine, "/api/carrier/trade", M{"action": "apply-opportunity", "id": "synthetic"})
 	plan := engine.CarrierTrade.ExportSettings()
@@ -91,6 +96,170 @@ func TestCarrierTradeOpportunityHandoffChecksContextAndKeepsLogistics(t *testing
 	doOK(t, engine, "/api/carrier/trade", M{"options": M{"tritiumPrice": 49000}})
 	if _, err := engine.Do("/api/carrier/trade", M{"action": "apply-opportunity", "id": "synthetic"}); err == nil {
 		t.Fatal("stale option replaced a changed plan")
+	}
+}
+
+func TestCarrierTradeOpportunityRejectsMalformedInput(t *testing.T) {
+	for _, input := range []M{
+		{"system": 42}, {"system": strings.Repeat("a", 151)}, {"system": "a\nb"},
+		{"credits": "15000000"}, {"credits": -1}, {"credits": math.Inf(1)}, {"credits": 1e16},
+		{"force": "true"}, {"scenario": "unexpected"},
+	} {
+		if _, _, err := parseCarrierTradeSearch(input); err == nil {
+			t.Errorf("invalid search input accepted: %v", input)
+		}
+	}
+	request, force, err := parseCarrierTradeSearch(M{"system": "  Sagittarius A* ", "credits": 15000000, "force": true})
+	if err != nil || !force || request.system != "Sagittarius A*" || request.credits != 15000000 {
+		t.Fatal("valid search options were not normalized", request, force, err)
+	}
+}
+
+func TestCarrierTradeOpportunityRedirectsStayOnHTTPSOrigin(t *testing.T) {
+	for _, tc := range []struct {
+		location string
+		follows  bool
+	}{
+		{"/api/stations/search", true},
+		{"http://spansh.co.uk/api/stations/search", false},
+		{"https://example.test/api/stations/search", false},
+		{"https://spansh.co.uk:8443/api/stations/search", false},
+	} {
+		t.Run(tc.location, func(t *testing.T) {
+			calls := 0
+			client := carrierTradeHTTPClient(&http.Client{Transport: economyRoundTripper(func(request *http.Request) (*http.Response, error) {
+				calls++
+				header := http.Header{}
+				status := http.StatusOK
+				if calls == 1 {
+					header.Set("Location", tc.location)
+					status = http.StatusFound
+				}
+				return &http.Response{StatusCode: status, Header: header, Body: io.NopCloser(strings.NewReader(""))}, nil
+			})})
+			response, err := client.Get("https://spansh.co.uk/api/search/systems")
+			if err != nil {
+				t.Fatal(err)
+			}
+			response.Body.Close()
+			if (calls == 2) != tc.follows {
+				t.Fatalf("redirect made %d HTTP calls, follow expected %t", calls, tc.follows)
+			}
+		})
+	}
+}
+
+func TestCarrierTradeOpportunityCancelsOnReplacementAndCommanderChange(t *testing.T) {
+	engine, _, _ := fixtureEngine(t, nil)
+	requests := make(chan *http.Request, 4)
+	engine.opts.DisableNetwork = false
+	engine.opts.HTTPClient = &http.Client{Transport: economyRoundTripper(func(request *http.Request) (*http.Response, error) {
+		requests <- request
+		<-request.Context().Done()
+		return nil, request.Context().Err()
+	})}
+	start := func(system string) (*http.Request, *carrierTradeSearch) {
+		t.Helper()
+		doOK(t, engine, "/api/carrier/trade", M{"action": "opportunities", "system": system, "credits": 1000000})
+		select {
+		case request := <-requests:
+			engine.mu.RLock()
+			job := engine.carrierTradeSearch
+			engine.mu.RUnlock()
+			return request, job
+		case <-time.After(3 * time.Second):
+			t.Fatal("opportunity search did not reach transport")
+			return nil, nil
+		}
+	}
+	expectCanceled := func(request *http.Request) {
+		t.Helper()
+		select {
+		case <-request.Context().Done():
+		case <-time.After(3 * time.Second):
+			t.Fatal("superseded request remained active")
+		}
+	}
+	view := func() M {
+		return v.Obj(engine.SnapshotForUI("carrier-trade")["carrierTrade"])
+	}
+	first, old := start("First Contract System")
+	duplicate := doOK(t, engine, "/api/carrier/trade", M{"action": "opportunities", "system": "First Contract System", "credits": 1000000})
+	if !v.Bool(duplicate["cached"]) {
+		t.Fatal("identical live request started twice", duplicate)
+	}
+	second, edited := start("Second Contract System")
+	expectCanceled(first)
+	// Even a producer that failed to propagate cancellation cannot overwrite its successor.
+	engine.publishCarrierTradeSearch(context.Background(), old, M{"status": "superseded"}, false, nil)
+	if v.At(view(), "opportunities", "options", "system") != "Second Contract System" {
+		t.Fatal("old request replaced the new UI snapshot")
+	}
+	doOK(t, engine, "/api/carrier/trade", M{"options": M{"tritiumPrice": 52000}})
+	expectCanceled(second)
+	engine.publishCarrierTradeSearch(context.Background(), edited, M{"status": "changed"}, false, nil)
+	if view()["opportunities"] != nil {
+		t.Fatal("planner edit preserved a search under the old assumptions")
+	}
+	third, other := start("Third Contract System")
+	before := v.Num(view()["opportunityScope"])
+	engine.Apply(testEvent("Commander", M{"FID": "OTHER"}), nil)
+	expectCanceled(third)
+	engine.Apply(testEvent("Commander", M{"FID": "FSYNTHETIC"}), nil)
+	engine.publishCarrierTradeSearch(context.Background(), other, M{"status": "previous owner"}, false, nil)
+	after := view()
+	if after["opportunities"] != nil || v.Num(after["opportunityScope"]) <= before {
+		t.Fatal("a commander switch preserved another session's opportunity cache", after["opportunities"])
+	}
+	fourth, closing := start("Fourth Contract System")
+	engine.Close()
+	expectCanceled(fourth)
+	engine.publishCarrierTradeSearch(context.Background(), closing, M{"status": "closed"}, false, nil)
+	if view()["opportunities"] != nil {
+		t.Fatal("closed search still visible")
+	}
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "opportunities"}); err == nil {
+		t.Fatal("new search accepted after close")
+	}
+	if _, err := engine.Do("/api/carrier/trade", M{"action": "apply-opportunity", "id": "synthetic"}); err == nil {
+		t.Fatal("handoff accepted after close")
+	}
+}
+
+func TestCarrierTradeOpportunityViewIsDetachedAndRejectsChangedInputs(t *testing.T) {
+	engine, _, _ := fixtureEngine(t, nil)
+	state := engine.SnapshotForUI("carrier-trade")
+	request := carrierTradeSearchRequest{system: "Sol", credits: 10}
+	job := &carrierTradeSearch{request: request, context: carrier.TradeOpportunityContext(v.Obj(state["carrierTrade"]), state, request.options())}
+	engine.mu.Lock()
+	engine.carrierTradeSearch = job
+	engine.mu.Unlock()
+	result := M{"results": []M{{"id": "example", "legs": []M{{"id": "outbound"}}, "buy": M{
+		"station": "Original", "sourceUrl": "https://example.test/",
+		"orders": []M{{"station": "Supplier", "quantity": 1, "providerPayload": "internal"}},
+	}}}, "context": M{"fid": "internal"}}
+	engine.publishCarrierTradeSearch(context.Background(), job, result, true, nil)
+	snapshot := func() M {
+		return v.Obj(v.At(engine.SnapshotForUI("carrier-trade"), "carrierTrade", "opportunities"))
+	}
+	visible := snapshot()
+	rows := v.Rows(visible["results"])
+	if visible["context"] != nil || len(rows) != 1 {
+		t.Fatal("UI should expose only the public operation view", visible)
+	}
+	orders := v.Rows(v.At(rows[0], "buy", "orders"))
+	if rows[0]["legs"] != nil || v.At(rows[0], "buy", "sourceUrl") != nil ||
+		len(orders) != 1 || orders[0]["providerPayload"] != nil {
+		t.Fatal("private fields escaped through the nested trade result", rows[0])
+	}
+	v.Obj(rows[0]["buy"])["station"] = "Modified"
+	if v.At(v.Rows(snapshot()["results"])[0], "buy", "station") != "Original" {
+		t.Fatal("mutating a UI snapshot changed the stored search result")
+	}
+	doOK(t, engine, "/api/carrier/trade", M{"options": M{"tritiumPrice": 52000}})
+	engine.publishCarrierTradeSearch(context.Background(), job, M{"status": "outdated"}, false, nil)
+	if len(snapshot()) != 0 {
+		t.Fatal("a late result became visible under new planning options")
 	}
 }
 

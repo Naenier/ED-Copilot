@@ -39,7 +39,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.4"
+const Version = "2.8.6"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -66,6 +66,8 @@ type Engine struct {
 	Carrier                                         *carrier.Tracker
 	Calculator                                      *carrier.Calculator
 	CarrierTrade                                    *carrier.TradePlanner
+	carrierTradeSearch                              *carrierTradeSearch
+	carrierTradeScope                               uint64
 	Learning                                        *learning.Library
 	Route                                           *carrier.RoutePlanner
 	clipboardCommand                                M
@@ -76,6 +78,9 @@ type Engine struct {
 	Inara                                           *inara.Manager
 	commander, game, settings, appearance, desktop  M
 	objectives, bookmarks                           []M
+	planWorkspace, replayedPlanWorkspace            planWorkspace
+	planReplay                                      bool
+	planSession                                     string
 	navigation                                      []string
 	manualPrices, prices, cargoSync, galacticPrices M
 	statsSince                                      string
@@ -86,10 +91,13 @@ type Engine struct {
 	jobIDs                                          map[string]uint64
 	notices                                         []M
 	revision                                        uint64
+	engineeringRoadmapRevision                      uint64
 	updates                                         chan struct{}
 	callback                                        *http.Server
 	listener                                        net.Listener
 	closed                                          bool
+	closeDone                                       chan struct{}
+	closeErr                                        error
 	onlineCache                                     *onlineCache
 	UpdateManager                                   *updater.Manager
 	updateNotice                                    M
@@ -105,11 +113,8 @@ func New(o Options) (*Engine, error) {
 	if e := os.MkdirAll(o.DataDir, 0700); e != nil {
 		return nil, e
 	}
-	saved, e := profile.Read(filepath.Join(o.DataDir, "settings-go-v2.json"))
-	if os.IsNotExist(e) {
-		saved, e = profile.Read(filepath.Join(o.DataDir, "settings.json"))
-	}
-	if e != nil && !os.IsNotExist(e) {
+	saved, e := profile.LoadSettings(o.DataDir)
+	if e != nil {
 		return nil, e
 	}
 	if saved == nil {
@@ -177,7 +182,10 @@ func New(o Options) (*Engine, error) {
 	}
 	x.resetObserved()
 	x.Reader = journal.New(o.JournalDir, x.Apply, x.resetObserved)
-	x.Reader.AfterReplay = x.restoreRemoteCache
+	x.Reader.AfterReplay = func() {
+		x.finishPlanReplay()
+		x.restoreRemoteCache()
+	}
 	x.Reader.Poll()
 	if !o.DisableNetwork {
 		port := o.CallbackPort
@@ -227,7 +235,12 @@ func (e *Engine) resetObserved() {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
 	e.mu.Lock()
+	e.engineeringRoadmapRevision++
+	e.resetCarrierTradeSearchLocked()
 	e.commander = M{"name": "", "fid": "", "system": "", "vehicle": "unknown", "docked": false}
+	e.planWorkspace, e.replayedPlanWorkspace = planWorkspace{}, planWorkspace{}
+	e.planReplay = true
+	e.planSession = ""
 	e.game = M{"live": false, "isBeta": false}
 	e.clipboardCommand = nil
 	e.prices = M{}
@@ -262,10 +275,13 @@ func (e *Engine) applyLocked(event, meta M) {
 	switch kind {
 	case "Fileheader":
 		version := v.Str(event["gameversion"])
-		e.game = M{"version": version, "build": event["build"], "isBeta": strings.Contains(strings.ToLower(version), "beta"), "live": strings.HasPrefix(version, "4.") && !strings.Contains(strings.ToLower(version), "beta")}
+		e.game = M{"version": version, "build": event["build"], "isBeta": strings.Contains(strings.ToLower(version), "beta"), "live": journal.GameMode(version) == "live"}
 	case "Commander", "LoadGame":
 		cmd["name"] = v.Text(event["Name"], event["Commander"], cmd["name"])
 		cmd["fid"] = v.First(event["FID"], cmd["fid"])
+		if previousFID != v.Str(cmd["fid"]) {
+			e.resetCarrierTradeSearchLocked()
+		}
 		if kind == "LoadGame" {
 			for _, f := range []string{"Horizons", "Odyssey"} {
 				if x, ok := event[f].(bool); ok {
@@ -328,6 +344,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	case "DockSRV":
 		cmd["vehicle"] = "ship"
 	}
+	e.observePlanWorkspaceLocked(kind, event, meta)
 	cmd = ships.ApplyEvent(cmd, event)
 	if event["CargoCapacity"] != nil && (kind == "LoadGame" || kind == "Loadout") {
 		cmd["cargoCapacity"] = event["CargoCapacity"]
@@ -354,6 +371,9 @@ func (e *Engine) applyLocked(event, meta M) {
 	cmdCopy := v.Copy(cmd)
 	running := e.gameRunning
 	e.revision++
+	if affectsEngineeringRoadmap(event) {
+		e.engineeringRoadmapRevision++
+	}
 	e.mu.Unlock()
 	if (kind == "Commander" || kind == "LoadGame") && previousFID != v.Str(cmdCopy["fid"]) {
 		e.cancelFrontierRequest()
@@ -417,7 +437,8 @@ func (e *Engine) Snapshot() M {
 	e.mu.RLock()
 	cmd, settings, game := v.Copy(e.commander), v.Copy(e.settings), v.Copy(e.game)
 	appearance, desktop := v.Copy(e.appearance), v.Copy(e.desktop)
-	goals, bookmarks := v.Clone(e.objectives), v.Clone(e.bookmarks)
+	workspace := e.planWorkspace
+	goals, bookmarks := goalsForWorkspace(e.objectives, workspace), v.Clone(e.bookmarks)
 	nav := append([]string(nil), e.navigation...)
 	network := map[string]M{}
 	for k, m := range e.network {
@@ -489,9 +510,11 @@ func (e *Engine) Snapshot() M {
 		connection = e.Reader.State()
 	}
 	connection["gameRunning"] = running
-	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "savedTradeRoutes": e.Trading.SavedRoutesSnapshot(), "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
+	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
+	state["planWorkspace"] = workspace.snapshot()
+	state["savedTradeRoutes"] = e.Trading.SavedRoutesFor(workspace.key)
 	state["carrierCalculator"] = e.Calculator.Snapshot()
-	state["carrierTrade"] = e.carrierTradeSnapshot(c)
+	state["carrierTrade"] = e.carrierTradeSnapshot(state)
 	state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
 	state["ranks"] = e.Ranks.SnapshotForLanguage(v.Str(settings["language"]))
 	state["engineeringInventory"] = e.Engineering.InventorySnapshot()
@@ -519,7 +542,23 @@ func (e *Engine) Snapshot() M {
 func (e *Engine) Save() error {
 	e.saveMu.Lock()
 	defer e.saveMu.Unlock()
+	saved, desktop := e.persistenceSnapshot()
+	if err := profile.SaveSettings(e.opts.DataDir, saved); err != nil {
+		return err
+	}
+	return profile.Write(filepath.Join(e.opts.DataDir, "desktop-go-v2.json"), desktop)
+}
+
+func (e *Engine) ExportProfile(file string) error {
+	e.saveMu.Lock()
+	defer e.saveMu.Unlock()
+	saved, _ := e.persistenceSnapshot()
+	return profile.ExportPortable(file, saved)
+}
+
+func (e *Engine) persistenceSnapshot() (M, M) {
 	e.domainMu.Lock()
+	defer e.domainMu.Unlock()
 	e.mu.RLock()
 	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 3, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
 	saved["galacticPrices"] = v.Copy(e.galacticPrices)
@@ -537,11 +576,7 @@ func (e *Engine) Save() error {
 	saved["exobiology"] = e.Exobiology.ExportSettings()
 	saved["mining"] = e.Mining.ExportSettings()
 	v.Merge(saved, e.Trading.ExportSettings())
-	e.domainMu.Unlock()
-	if err := profile.Write(filepath.Join(e.opts.DataDir, "settings-go-v2.json"), saved); err != nil {
-		return err
-	}
-	return profile.Write(filepath.Join(e.opts.DataDir, "desktop-go-v2.json"), desktop)
+	return saved, desktop
 }
 func (e *Engine) Notice(text string) {
 	e.mu.Lock()
@@ -574,12 +609,19 @@ func (e *Engine) handleCallback(w http.ResponseWriter, r *http.Request) {
 	e.Notify()
 }
 func (e *Engine) Close() {
+	_ = e.CloseWithSave()
+}
+
+func (e *Engine) CloseWithSave() error {
 	e.mu.Lock()
 	if e.closed {
+		done := e.closeDone
 		e.mu.Unlock()
-		return
+		<-done
+		return e.closeErr
 	}
 	e.closed = true
+	e.closeDone = make(chan struct{})
 	for _, cancel := range e.cancelJobs {
 		cancel()
 	}
@@ -604,6 +646,8 @@ func (e *Engine) Close() {
 		_ = e.callback.Shutdown(ctx)
 		cancel()
 	}
-	_ = e.Save()
+	e.closeErr = e.Save()
+	close(e.closeDone)
+	return e.closeErr
 }
 func rows(m M, path ...string) []M { return v.Rows(v.At(m, path...)) }

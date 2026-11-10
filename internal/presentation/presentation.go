@@ -286,12 +286,13 @@ func buildPage(tab, mode, query string, s M) Page {
 			sub := Build("engineering", "Инженеры", query, s)
 			p.Columns, p.Rows, p.Summary = sub.Columns, sub.Rows, sub.Summary
 		default:
-			p.Columns = []string{"Цель", "Занятие", "Приоритет", "Система", "Статус"}
+			p.Columns = []string{"Цель", "Занятие", "Приоритет", "Система", "Статус", "Владелец плана"}
+			p.Summary = planWorkspaceTitle(s)
 			for _, r := range rowsByPath(s, "objectives") {
 				if !contains(query, r["title"], r["system"], r["notes"]) {
 					continue
 				}
-				p.Rows = append(p.Rows, row(r, []string{v.Str(r["title"]), Label(r["kind"]), Label(r["priority"]), v.Str(r["system"]), Label(r["status"])}, fields(r, "station", "Станция", "body", "Тело", "notes", "Заметки")))
+				p.Rows = append(p.Rows, row(r, []string{v.Str(r["title"]), Label(r["kind"]), Label(r["priority"]), v.Str(r["system"]), Label(r["status"]), goalOwnerLabel(r)}, fields(r, "station", "Станция", "body", "Тело", "notes", "Заметки")))
 			}
 		}
 	case "sale":
@@ -423,7 +424,7 @@ func buildPage(tab, mode, query string, s M) Page {
 		case "Бюджет":
 			p.Columns = []string{"Товар", "Полная потребность, т", "Осталось, т", "Средняя по галактике, кр./т", "Полная стоимость, кр.", "Стоимость остатка, кр.", "Закупить, кр.", "Цена получена"}
 			for _, r := range v.Rows(project["supplies"]) {
-				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), Number(r["galacticAveragePrice"]), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
+				p.Rows = append(p.Rows, row(r, []string{v.Text(r["name"], r["commodity"]), Number(r["required"]), Number(r["missing"]), colonyEstimatePrice(r), Number(r["requiredCost"]), Number(r["missingCost"]), colonyProcurement(r["toBuyCost"], r["toBuyAtMostCost"]), Date(r["galacticAveragePriceAt"])}, colonyCostDetails(r)))
 			}
 		case "Снабжение", "Поставки":
 			p.Columns = []string{"Время", "Товар", "Объём, т"}
@@ -454,10 +455,14 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 		}
 	case "engineering":
-		p.Modes = []string{"План", "Материалы", "Обмен", "Инженеры"}
+		p.Modes = EngineeringModes()
 		e := v.Obj(s["engineering"])
 		p.Summary = "Нужно материалов: " + Number(v.At(e, "shopping", "neededUnits")) + " · Не хватает: " + Number(v.At(e, "shopping", "missingUnits"))
 		switch mode {
+		case "", EngineeringProgression:
+			p.Columns = nil
+			p.Summary = ""
+			p.Description = "Открытие инженеров, доступ к классам и материалы для выбранного улучшения."
 		case "Материалы", "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана":
 			p.Columns = []string{"Материал", "Категория", "Уровень", "Есть", "Нужно", "Не хватает"}
 			category, planOnly, _ := materialView(mode)
