@@ -27,6 +27,7 @@ func TestCatalogCoverage(t *testing.T) {
 			t.Errorf("empty category %s", category.ID)
 		}
 	}
+	atlases := make(map[string]string)
 	for _, raw := range objectRows("encyclopedia-ships.json") {
 		id := "ship/" + v.Str(raw["key"])
 		t.Run(id, func(t *testing.T) {
@@ -34,7 +35,14 @@ func TestCatalogCoverage(t *testing.T) {
 			if !ok || len(e.Sections) < 2 || e.Description == "" || e.Image == nil {
 				t.Fatalf("incomplete ship %s: found=%v", id, ok)
 			}
-			checkJPEG(t, e.Image, 640, 420, 150000)
+			if e.Image.Layout != "ship-atlas" {
+				t.Fatal("missing full-width ship atlas")
+			}
+			checkJPEG(t, e.Image, 1600, 1000, 200000)
+			if previous := atlases[e.Image.Src]; previous != "" {
+				t.Errorf("ship atlas reused from %s", previous)
+			}
+			atlases[e.Image.Src] = id
 		})
 	}
 	for _, raw := range v.Rows(data.Object("engineering-data.json")["engineers"]) {

@@ -92,7 +92,8 @@
       "file": "ship.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "3cdc74b7859250c710d8a62c3d0b97b814ce7eec93d67b3ba320d9a825f33f8f"
+      "sha256": "44363558207a0fff959a5552b80fce78e1aaf718fefbbd97c8aaa8bef373510d",
+      "applicationVersion": "2.8.10"
     },
     {
       "file": "engineer.png",

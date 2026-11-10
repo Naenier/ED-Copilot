@@ -100,7 +100,15 @@ func (s *Store) Entry(id string) (Entry, bool) {
 		return Entry{}, false
 	}
 	out := cloneEntry(r.entry)
-	out.Image = s.image(r.imageKey, false, out.Title)
+	if out.Category == "ships" {
+		out.Image = s.image("ship-atlas-"+strings.TrimPrefix(r.imageKey, "ship-"), false, out.Title)
+		if out.Image != nil {
+			out.Image.Layout = "ship-atlas"
+		}
+	}
+	if out.Image == nil {
+		out.Image = s.image(r.imageKey, false, out.Title)
+	}
 	for i := range out.Sections {
 		section := &out.Sections[i]
 		if image := s.image(section.figureKey, false, section.Title); image != nil {

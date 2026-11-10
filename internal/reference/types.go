@@ -24,9 +24,10 @@ type Group struct {
 }
 
 type Image struct {
-	Src string `json:"src"`
-	Alt string `json:"alt"`
-	Fit string `json:"fit,omitempty"`
+	Src    string `json:"src"`
+	Alt    string `json:"alt"`
+	Fit    string `json:"fit,omitempty"`
+	Layout string `json:"layout,omitempty"`
 }
 
 type Property struct {

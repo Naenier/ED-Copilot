@@ -81,6 +81,13 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const src = imageSource(entry.image), fit = entry.category === 'ships' ? 'contain' : entry.image?.fit === 'cover' || entry.category === 'engineers' ? 'cover' : 'contain';
     return `<div class="ref-art ${hero ? 'ref-art-hero' : ''} ref-art-${ui.esc(entry.category || 'entity')} ${src ? 'has-image' : 'no-image'}"><span class="ref-image-placeholder" ${src ? 'hidden' : ''}>${ui.icon(categoryIcon(entry.category))}</span>${src ? `<img data-reference-image src="${ui.esc(src)}" alt="${text(ui, entry.image?.alt || entry.title)}" class="ref-image-${fit}" loading="${hero ? 'eager' : 'lazy'}" decoding="async">` : ''}</div>`;
   }
+  function shipAtlas(entry, ui) {
+    if (entry.category !== 'ships' || entry.image?.layout !== 'ship-atlas') return '';
+    const src = imageSource(entry.image);
+    if (!src) return '';
+    const alt = `${text(ui, entry.image.alt || entry.title)} · ${th("Цветной вид, проекции сверху и снизу")}`;
+    return `<figure class="ref-ship-atlas"><img data-reference-image src="${ui.esc(src)}" alt="${alt}" decoding="async"><figcaption><div class="ref-ship-projections"><span>${th("Вид сверху")}</span><span>${th("Вид снизу")}</span></div><small>${th("Изображения из Elite Dangerous используются с разрешения Frontier Developments plc.")}</small></figcaption></figure>`;
+  }
   function internalLink(item, ui, className = '') {
     const id = item.entryId || item.id, label = item.title || item.name || item.label || t("Открыть");
     return validID(id) ? `<button type="button" class="ref-inline-link ${className}" data-click="reference-open" data-id="${ui.esc(id)}">${text(ui, label)}${ui.icon('arrow-up-right')}</button>` : text(ui, label);
@@ -213,11 +220,14 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     const showReferenceContent = !galaxy || galaxy.isOverview(r);
     const sections = (entry.sections || []).filter(section => sectionIsVisible(section) && (!galaxy || section.id !== 'next'));
     const description = (!galaxy || showReferenceContent && sections.length) && (entry.description || entry.summary);
-    const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${imageSource(entry.image) ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${description ? `<p class="ref-entry-lead">${text(ui, description)}</p>` : ''}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${imageSource(entry.image) ? imageHTML(entry, ui, true) : ''}</header>`;
+    const atlas = shipAtlas(entry, ui);
+    const inlineImage = !atlas && imageSource(entry.image);
+    const lead = description ? `<p class="ref-entry-lead">${text(ui, description)}</p>` : '';
+    const hero = `<header class="ref-entry-hero ${article ? 'ref-article-hero' : ''} ${inlineImage ? 'with-image' : ''}"><div class="ref-hero-copy"><div class="eyebrow">${text(ui, entry.groupTitle || categoryTitle(r, entry.category))}</div><h1>${text(ui, entry.title)}</h1>${entry.subtitle ? `<div class="ref-entry-subtitle">${text(ui, entry.subtitle)}</div>` : ''}${atlas ? '' : lead}${entry.badges?.length ? `<div class="ref-entry-badges">${entry.badges.map(item => `<span class="ref-tag">${text(ui, typeof item === 'string' ? item : item.label)}</span>`).join('')}</div>` : ''}</div>${inlineImage ? imageHTML(entry, ui, true) : ''}</header>`;
     const related = (entry.related || []).filter(item => validID(item.id || item.entryId));
     const properties = galaxy ? (entry.properties || []).filter(item => item.value !== entry.title) : entry.properties;
     const referenceContent = showReferenceContent ? `${properties?.length ? facts(properties, ui, 'ref-hero-properties') : ''}${personalBanner(r, entry, ui)}${engineerRoadmap(entry, ui)}<div class="ref-reader-layout"><article class="ref-entry-content">${sections.map((section, index) => renderSection(section, index, ui, r)).join('')}${trading(r, entry, ui)}${related.length ? `<section class="ref-entry-section"><h2>${th("Связанные записи")}</h2><div class="ref-related-grid">${related.map(item => `<button type="button" data-click="reference-open" data-id="${ui.esc(item.id || item.entryId)}" class="ref-related">${ui.icon(categoryIcon(item.category))}<span><strong>${text(ui, item.title)}</strong>${item.subtitle ? `<small>${text(ui, item.subtitle)}</small>` : ''}</span>${ui.icon('arrow-up-right')}</button>`).join('')}</div></section>` : ''}</article>${sections.filter(section => section.title).length > 2 ? `<aside class="ref-entry-toc" aria-label="${th("На этой странице")}"><strong>${th("На этой странице")}</strong>${sections.map((section, index) => section.title ? `<button type="button" data-click="reference-section" data-id="${index}">${text(ui, section.title)}</button>` : '').join('')}</aside>` : ''}</div>` : '';
-    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${galaxy ? galaxy.renderReader(r, ui) : ''}${referenceContent}</section>`;
+    return `<section class="reference-root ref-reader ${article ? 'ref-article-reader' : ''} ${atlas ? 'ref-ship-reader' : ''}" data-reference="entry" data-entry-id="${ui.esc(entry.id)}">${back}${hero}${atlas ? atlas + lead : ''}${galaxy ? galaxy.renderReader(r, ui) : ''}${referenceContent}</section>`;
   }
 
   function render(C, ui) { const r = state(C); return r.entryId ? entity(r, ui) : catalogue(r, ui, C); }

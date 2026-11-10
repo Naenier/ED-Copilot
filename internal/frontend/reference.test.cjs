@@ -83,6 +83,23 @@ test('an engineer card opens the progression screen with its stable engineer key
   assert.deepEqual(f.navigation,[{id:'engineering',opts:{mode:'Прокачка'}}]);
 });
 
+test('ship atlas replaces the small hero and labels both projections in the selected language', async () => {
+  const f = fixture();
+  const ship = entry();
+  ship.image.layout = 'ship-atlas';
+  f.setRPC(async () => ({ entry: ship }));
+  await f.api.open(ship.id, f.C, f.ui);
+  const russian = f.api.render(f.C, f.ui);
+  assert.match(russian, /class="ref-ship-atlas"/);
+  assert.match(russian, /Вид сверху.*Вид снизу/);
+  assert.doesNotMatch(russian, /ref-art-hero/);
+  assert.equal((russian.match(/<img /g) || []).length, 1);
+  const english = JSON.parse(fs.readFileSync(path.join(__dirname, '../localization/reference_en.json'), 'utf8'));
+  f.window.CopilotI18n = { t: value => english[value] ?? value };
+  assert.match(f.api.render(f.C, f.ui), /Top view.*Bottom view/);
+  assert.match(f.api.render(f.C, f.ui), /Assets borrowed from Elite Dangerous/);
+});
+
 test('reference renders immediately and lazily loads one bounded catalogue request without blocking controls', async () => {
   const f = fixture({ autoInit: true }), pending = deferred();
   f.setRPC(() => pending.promise);
