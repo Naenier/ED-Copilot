@@ -55,6 +55,7 @@ var modernPreviewNames = map[string]bool{
 	"readme-overview": true, "readme-carrier-trade": true, "readme-ships": true, "readme-ship": true, "readme-engineer": true, "readme-article": true, "readme-colonization": true, "readme-academy": true,
 	"readme-commander": true, "readme-ranks": true, "readme-fleet": true, "readme-inventory": true, "readme-navigation": true, "readme-navigation-compact": true,
 	"readme-farming": true,
+	"readme-galaxy":  true, "readme-system": true, "readme-engineering": true, "readme-material-exchange": true, "readme-material": true,
 }
 
 type modernPreviewCapture struct {
@@ -202,7 +203,12 @@ func (m *modernShell) smokeVisualState(report M) {
 	complete := true
 	required := []string{"overview", "academy", "reader", "calculator", "calculator-squadron", "colonization", "settings", "ranks-en", "ranks-ru", "politics-en", "politics-ru", "politics-factions", "politics-goals"}
 	if m.owner != nil && m.owner.options.ReadmeScreenshots {
-		required = []string{"readme-overview", "readme-deals", "readme-carrier-trade", "route-details", "readme-ships", "readme-ship", "readme-engineer", "readme-article", "readme-colonization", "readme-academy", "exobiology"}
+		required = []string{
+			"readme-overview", "readme-deals", "readme-carrier-trade", "route-details",
+			"readme-galaxy", "readme-system", "readme-ships", "readme-ship", "readme-engineer",
+			"readme-engineering", "readme-material-exchange", "readme-material", "readme-article",
+			"readme-colonization", "readme-academy", "exobiology",
+		}
 	}
 	for _, name := range required {
 		complete = complete && completed[name]

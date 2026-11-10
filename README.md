@@ -4,36 +4,40 @@
 
 **English** · [Русский](README.ru.md)
 
-A desktop companion for Elite Dangerous: trading, mining, exobiology, fleet carriers and colonisation. Plan your next task, compare opportunities and keep useful guidance visible while you play.
+A desktop companion for Elite Dangerous. Look up star systems, plan engineering and colonisation, compare trading and mining opportunities, manage fleet carrier routes, and track exobiology.
 
 **[Download for Windows](https://github.com/Naenier/ED-Copilot/releases/latest)** · [User guide (RU)](docs/USER-GUIDE.md) · [Installation and updates (RU)](docs/INSTALLATION.md)
 
 ![Commander overview in ED Copilot](docs/screenshots/en/overview.png)
 
-*All screenshots in this README use a demonstration profile with fictional data. Balances and market quotes illustrate the interface.*
+*Screenshots show ED Copilot 2.8.7 with a demonstration profile. Commander data, balances, and market quotes are fictional.*
 
 ## Getting started
 
 1. Install the **Windows Setup** from the latest release, or extract the portable archive and run `ED Copilot.exe`.
 2. Start Elite Dangerous. Copilot reads the game journals; choose their folder in Settings if it is not detected automatically.
-3. Choose a workspace using the icons on the far left, then open a tool from that workspace’s sidebar. Use **…** to customise the visible tools.
+3. Choose a workspace using the icons on the far left, then open a tool from its sidebar. Use **View → Customise menu** to change the visible sections in Workspace, Fleet carriers, and Library.
 4. Select an activity for the overlay and start working through your plan.
 
 Windows 10/11 x64 is supported. The application window requires Microsoft Edge WebView2 Runtime; the installer offers to install it if needed. You do not need Go, Python or Node.js. You can choose the installation folder, including `C:\Games\ED Copilot`.
 
 ## Workspaces and your commander
 
-The slim left rail groups tools into Work, Trading, Industry and development, Exploration, Fleet carriers, Galaxy, Library and Connections. The sidebar shows the selected group. Collapse it when you need more space; the group icons remain available. **Settings** has one permanent button at the bottom of the rail. **Ctrl+K** finds a tool across all groups.
+The left rail groups tools into Workspace, Trading, Colonisation, Mining, Engineering, Exobiology, Fleet carriers, Galaxy, and Library. Collapse the sidebar to free up space while keeping the group icons available. **Settings** is at the bottom of the rail. **Ctrl+K** finds a tool across all groups.
 
-Your avatar opens **Commander**: summary, ranks, finances, inventory, property, fleet, statistics, reputation and journal. Review the current ship alongside observed stored ships, modules, cargo, engineering materials, ship locker and backpack. Each inventory distinguishes an unknown stock from a confirmed empty one.
+Your avatar opens **Commander**, with pages for Summary, Ranks, Finances, Inventory, Assets, Fleet, Statistics, and Journal. Superpower reputation is part of Summary. The inventory distinguishes unknown stock from confirmed empty stock.
 
 ![Commander summary and grouped navigation](docs/screenshots/en/commander.png)
 
 ## Star system search
 
-Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. Nearby results show their provider when the search falls back to Spansh.
+Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. When nearby search falls back to Spansh, the results identify the provider and include up to 50 of the nearest systems.
 
 Star system fields offer up to twenty suggestions from Spansh and EDSM. Type three characters and select a name with the mouse or ↑/↓ and Enter. In multiline route stops, selecting a suggestion replaces only the current line. You can also enter a name manually.
+
+![Galaxy system search with nearby results and filters](docs/screenshots/en/galaxy.png)
+
+![System page showing celestial bodies and surface materials](docs/screenshots/en/system.png)
 
 ## Exobiology
 
@@ -85,7 +89,7 @@ Browse by category, search by name and narrow results by group. Ships and engine
 
 ![Complete ship page](docs/screenshots/en/ship.png)
 
-Engineers are also accessible from engineering plans. Their pages show introduction requirements and supported upgrades. Material pages include your known inventory, while blueprint families bring together grade recipes and experimental effects.
+Engineer pages show invitation and unlock requirements, workshop locations, and supported upgrades. Module pages link to compatible blueprints and experimental effects. Material pages show known inventory, how to collect the material, trade ratios, and recipes that use it.
 
 ![Engineer page](docs/screenshots/en/engineer.png)
 
@@ -93,19 +97,29 @@ Read articles in a spacious layout with a table of contents. Commodity pages off
 
 ![Reference article](docs/screenshots/en/article.png)
 
-## Colonies, engineering and personal plans
+## Colonies
 
 Manage multiple colonies independently. Choose a system using your preferred starting faction, plan the construction order and supply queue, then compare bills of materials with accepted deliveries. The overlay shows the next task for the selected colony.
 
 Start with an origin system and its stations, then select the station and controlling faction. Candidate systems show population, permit requirements, known signs of settlement and colonisation, permanent station counts and observation dates.
 
-Carrier stock is optional. Enable **Use fleet carrier stock** to include known personal-carrier cargo; enable **Squadron cargo is available** as well when you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
+Enable **Include carrier warehouse** to include known personal carrier cargo. Enable **Squadron cargo is available to me** if you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
 
 The **Budget** view values every commodity at its latest observed galactic average price, with full, remaining and procurement totals for all planned and active construction in the selected colony. Missing bills and prices remain explicit. The overlay stays focused on logistics: up to ten outstanding commodities, excluding requirements already covered by fresh accessible carrier stock when carrier accounting is enabled. Fully covered commodities remain visible in the application.
 
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
-Engineering plans combine material requirements for multiple modules and upgrades. Compare requirements with your inventory, work out material trades and save your list. Overview, objectives, missions and statistics keep current tasks together.
+## Engineering
+
+Use **Engineering → Progression** to follow unlock steps and filter engineers by module, blueprint, or experimental effect. The plan links each requirement to the corresponding reference page and compares recipe costs with known inventory. **Engineering → Plan** combines requirements for multiple upgrades.
+
+![Engineering progression and links to upgrade requirements](docs/screenshots/en/engineering.png)
+
+Open **Engineering → Materials** to review stock or select **Calculate material trade**. The calculator compares exchange options for the selected material and shows which ones your available stock can cover.
+
+![Materials inventory and exchange options](docs/screenshots/en/material-exchange.png)
+
+![Material reference with collection sources and trade guidance](docs/screenshots/en/material.png)
 
 ## Commander ranks and galactic politics
 
@@ -145,7 +159,7 @@ This README is also available [in Russian](README.ru.md).
 
 ## Connections and updates
 
-Sign in with Frontier once to retrieve supported account information and keep it refreshed automatically in the background. To send supported events to Inara, add your personal API key and enable sending in Synchronization.
+In **Settings → Connections**, sign in to Frontier to refresh supported account information in the background. Under **Inara**, add your personal API key and enable event sending.
 
 Automatic updates are enabled by default and can be switched off in Settings. Stable GitHub releases download quietly and are checked against published SHA256 digests. Installation waits until you fully exit Copilot; the next launch shows the changes. Setup provides separate Start Menu and desktop shortcut choices and preserves them during updates.
 
@@ -153,4 +167,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new](docs/RELEASE-2.8.4.md) · [Build and delivery](docs/DELIVERY.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.8.7](docs/RELEASE-2.8.7.md) · [Build and delivery](docs/DELIVERY.md)

@@ -61,6 +61,17 @@ func TestDocumentationControllerRequiresSyntheticTemporaryProfileAndAdaptsOnlyEn
 	if v.At(controller.SnapshotForUI("overview"), "commander", "name") != "Demo Commander" || engine.Commander()["name"] != "Тестовый командир" {
 		t.Fatal("returning to English did not preserve raw fixture observations")
 	}
+	nearby := v.Rows(controller.Galaxy("galaxy.nearby", v.M{"name": "Demo Colony Alpha", "radius": 25})["rows"])
+	if len(nearby) < 2 || nearby[1]["name"] != "Demo Atlas" {
+		t.Fatal("documentation does not show the fictional nearby systems", nearby)
+	}
+	if engine.Galaxy("galaxy.nearby", v.M{"name": "Demo Colony Alpha", "radius": 25})["status"] != "disabled" {
+		t.Fatal("documentation fixture did not keep the engine offline")
+	}
+	bodies := v.Rows(controller.Galaxy("galaxy.system", v.M{"name": "Demo Atlas", "section": "bodies"})["rows"])
+	if len(bodies) != 3 || len(v.Rows(bodies[1]["materials"])) == 0 {
+		t.Fatal("documentation body details are missing", bodies)
+	}
 }
 
 func TestDocumentationLanguageOptionIsRestrictedToTheCaptureMode(t *testing.T) {

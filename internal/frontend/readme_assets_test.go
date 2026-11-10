@@ -77,10 +77,7 @@ func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 			t.Fatalf("%s no longer matches its published %s SHA256", item.File, name)
 		}
 	}
-	baseline := []string{"overview.png", "deals.png", "carrier-trade.png", "route.png", "ships.png", "ship.png", "engineer.png", "article.png", "colonization.png", "academy.png"}
-	if english {
-		baseline = append(baseline, "exobiology.png")
-	}
+	baseline := []string{"overview.png", "deals.png", "carrier-trade.png", "route.png", "ships.png", "ship.png", "engineer.png", "article.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png"}
 	for _, name := range baseline {
 		if !images[name] {
 			t.Fatalf("%s gallery lost a baseline documentation screenshot: %s", language, name)
@@ -140,7 +137,7 @@ func TestReadmeImagesExistAndKeepLanguageGalleriesSeparate(t *testing.T) {
 					referenced[file] = true
 				}
 			}
-			for _, file := range []string{"overview.png", "commander.png", "ranks.png", "colonization.png", "academy.png"} {
+			for _, file := range []string{"overview.png", "commander.png", "ranks.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png"} {
 				if !referenced[file] {
 					t.Fatalf("%s omits a required product workflow screenshot: %s", name, file)
 				}

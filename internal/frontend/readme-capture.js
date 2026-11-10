@@ -7,6 +7,15 @@ async function run(C,u){
  const scenarios=[],pages=[],problems=[];
  const check=(name,ok)=>{scenarios.push({name,ok:!!ok});if(!ok)problems.push(name);};
  const ready=async()=>{const until=Date.now()+20000;while(Date.now()<until){const r=C.reference;if(r?.error||r?.entryError)throw Error(r.error||r.entryError);if(r&&!r.loading&&!r.entryLoading&&(r.entryId?r.entry:r.list))return;await new Promise(resolve=>setTimeout(resolve,30));}throw Error('Reference page timed out');};
+ const visible=async selector=>{
+  const until=Date.now()+20000;
+  while(Date.now()<until){
+   const node=u.$(selector);
+   if(node)return node;
+   await new Promise(resolve=>setTimeout(resolve,30));
+  }
+  throw Error('Documentation view did not render: '+selector);
+ };
  const capture=async name=>{
   window.TooltipUI?.hide?.();
   if(C.tab==='ranks'||C.tab==='commander'&&C.mode==='Сводка')await window.RankInsignia?.load?.(C.state.ranks?.disciplines||[],u,C);
@@ -40,9 +49,34 @@ async function run(C,u){
   await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
   await u.navigate('carrier-trade',{mode:'Рейс'});await capture('readme-carrier-trade');
   await u.navigate('route');await capture('route-details');
+  await u.navigate('encyclopedia',{mode:'Системы'});await ready();
+  const nearbySystem=await visible('#galaxy-directory-table tbody tr:nth-child(2) [data-id^="system/"]');
+  check('Systems shows nearby results and filters',!!u.$('[data-galaxy-filter="allegiance"]'));
+  await capture('readme-galaxy');
+  await window.ReferenceUI.open(nearbySystem.dataset.id,C,u);await ready();
+  const bodiesTab=await visible('.galaxy-tabs [data-id="bodies"]');
+  await u.handleClick('reference-galaxy-tab',bodiesTab);
+  const bodyDetails=await visible('#galaxy-reader-table tbody tr:nth-child(2) details');
+  bodyDetails.open=true;
+  check('System reader shows body details',!!u.$('#galaxy-reader-table .galaxy-tags'));
+  await capture('readme-system');
   await category('ships');await capture('readme-ships');
   await entry('ships','Python');await capture('readme-ship');
   await entry('engineers','Felicity Farseer');await capture('readme-engineer');
+  await u.navigate('engineering',{mode:'Прокачка'});
+  await visible('.eng-card h3 [data-reference-id^="engineer/"]');
+  await capture('readme-engineering');
+  await u.navigate('engineering',{mode:'Материалы'});
+  await visible('[data-action-id="engineering.trade"]');
+  await u.call('action',{tab:'engineering',mode:'Материалы',actionId:'engineering.trade',values:{
+   tradeTargetKey:'carbon',tradeTargetAmount:15,protectPlan:true,showAllTrades:false,
+  }});
+  await u.loadView();
+  await visible('.eng-exchange tbody [data-reference-id^="material/"]');
+  check('Material exchange shares the inventory view',!!u.$('.data-split .table-panel')&&!u.$('[data-nav-mode="Обмен"]'));
+  await capture('readme-material-exchange');
+  await category('materials');await window.ReferenceUI.open('material/carbon',C,u);await ready();
+  await capture('readme-material');
   await entry('articles',language==='en'?'Tritium':'Тритий');await capture('readme-article');
   await category('articles');await window.ReferenceUI.open('article/farm-guardian',C,u);await ready();
   check('Farming route has a diagram and a copyable destination',!!u.$('.ref-farm-route button[data-system]')&&!!u.$('[data-reference="entry"] [data-reference-image]'));

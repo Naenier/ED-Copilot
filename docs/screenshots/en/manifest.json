@@ -1,5 +1,5 @@
 {
-  "applicationVersion": "2.7.0",
+  "applicationVersion": "2.8.7",
   "language": "en",
   "data": "synthetic",
   "displayMode": "fullscreen",
@@ -8,103 +8,139 @@
       "file": "overview.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "5fbc03850bf0df792e837bce5db4c1357e124194a85001e0484255c80f429ab9"
+      "sha256": "1665946109df7ed1fb1d62ea3ab40f1bbe6ce67219d355158427f4dcf65a611c"
     },
     {
       "file": "commander.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "4f068be8011b9938e9dcb3574332699b2e8284d5eb0f43c14d61330ea8f446f4"
+      "sha256": "865de393ba6f1d5a8987d45ea7804badbedc2c70e58886bcbd966cf8b4aac4d0"
     },
     {
       "file": "ranks.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "a8cb580faec81a5825ca2edae1ac30871b45616b9dbc9207f2e502162a83e69c"
+      "sha256": "7c3d90fe31e6d72041c043eb3c42165dc87ddf4b290abf29e2a0d3a01039b3aa"
     },
     {
       "file": "fleet.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "246608815be0be394acb7924cbb5330f8be1ea390a467693806bec70c5263554"
+      "sha256": "8388fb692e18634c94ce514e37526970ff71b5ea98cbe4f69f44d539f7c2be24"
     },
     {
       "file": "inventory.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "9dc32bb34fdfb9308d162fac86d80c6eee29e222c799590d45702307e26d6c07"
+      "sha256": "6bdb5ebc84f427acb0a1ca53491ee59779ccec8082132e297dc142afcbc5247a"
     },
     {
       "file": "navigation.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "9a4c049692c34df7aea6f504fbb24c07b2c43c42be9c54bdfda6260be4f4161a"
+      "sha256": "1665946109df7ed1fb1d62ea3ab40f1bbe6ce67219d355158427f4dcf65a611c"
     },
     {
       "file": "navigation-compact.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "b9f8b28f97c3fcc0aed8db72c775b87ee9d0260c9544501160f29875630d13be"
+      "sha256": "7037757aabece7de0da05d9dc751e743358a903579eb2a931eaad4a4d6433e3a"
     },
     {
       "file": "deals.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "484acb0aa8b68fd9d59a133886f5dd5b0f359a826db0d7ebb593ee7ca0164b91"
+      "sha256": "737644bee2a70ed7fc2c38d59892016741bb7d228025cf0ee7feef309dcc0fc1"
     },
     {
       "file": "carrier-trade.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "4310fa9a1c1f7b7976bde27ce5334a53b3708608fb75375184e880a0ada86af5"
+      "sha256": "1d0dedd9189d11a33802ed0c4e6fb6c2a9c2458c2594e9483f341f78ef0092f0"
     },
     {
       "file": "route.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "959e18370beec32ebc3b7182e0d966ca9828f8eada32585090e4a8573e516793"
+      "sha256": "3f1b9d34a9ec9f3ced6b5bcac569b60bcca6de49371e146c95c6d97020a1aed6"
+    },
+    {
+      "file": "galaxy.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "ffae16604849495bc4c632d2bcdfbd158567c66103ffd6978498c9d2b432fa68"
+    },
+    {
+      "file": "system.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "235520a664568c31b6c9e138724a39ceaf7c3c54f59cfd7ca9365137b469652a"
     },
     {
       "file": "ships.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "074f79076c795dd44a4853e99e0645ce886cb0bb81d1396a2bec5814371619b2"
+      "sha256": "469e99594d3794fcd96b87df850c83f951310344d5e1b0a1cd1c7dbd49d05a37"
     },
     {
       "file": "ship.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "e4af4bf7038148ccac0a6ed3467cd9b7b6dd9362dc63077ffb4c8468a48cf442"
+      "sha256": "3cdc74b7859250c710d8a62c3d0b97b814ce7eec93d67b3ba320d9a825f33f8f"
     },
     {
       "file": "engineer.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "fdb5b151435a85fdb17d9cecef6f2d849fd7f2027d5b0b3ace08018a279317f9"
+      "sha256": "29dcd001ee1b53616df4e141d3cb9f649a14dd3bfeb83df7d6d0439aa10700c4"
+    },
+    {
+      "file": "engineering.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "d9a370d71262c495e08e58a1e411e06fe67fd136c1e19fd825747020fcc045ca"
+    },
+    {
+      "file": "material-exchange.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "6d573678a8ccd581a298ea8e183f0050f47d746ff794eb45354306322245d700"
+    },
+    {
+      "file": "material.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "80f003faf19a16c6ea145a6dee26ac6708fec64d4e4e08d83b28901266a9f45e"
     },
     {
       "file": "article.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "28aec8bef83d42bfb75c03f353ea71aee8ac8f166e936e25094aa50c702679df"
+      "sha256": "299e22ba1c4cf5ccb509dc231d8b29ba459d537cef8cedea0f9dc212ad5ed0dd"
+    },
+    {
+      "file": "farming.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "8e122c4addc561e67c86f2dfea2755e04d847f1bd2faca7faa13dfab7b937da4"
     },
     {
       "file": "colonization.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "d1b6597ceb785081d7d3ffd83c95323f2e7ed3664d202dfaa35037ee3140e319"
+      "sha256": "222ec35a303cbb04a7e3c40ae6201d14854b4d222cb31db6007e968f9c20f1a5"
     },
     {
       "file": "academy.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "e669714d6f1b11b103f332e57627dc663596c14d229ace40d82e1ab7a50b1fb5"
+      "sha256": "9fea719a7962d72d3524bc23c1a5cb186a71a2b056631d27aa895a9bb1d8a6dd"
     },
     {
       "file": "exobiology.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "22ca503913ed717f8fc270b41d887e728b135c931e89a09fff337efd6650c3c3"
+      "sha256": "ffffe512f276eec8592dba5e469071630efd49230385bbf611075667c48d683c"
     }
   ]
 }
