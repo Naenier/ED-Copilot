@@ -40,6 +40,10 @@ func (e *Engine) snapshotScoped(tab string) M {
 	cmd["locationUpdatedAt"], cmd["cargoUpdatedAt"] = e.locationAt, e.cargoAt
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	activity, hud, syncOnly := v.Text(settings["activity"], "flight"), tab == "hud", tab == "sync"
+	var richesState M
+	if oneOf(tab, "riches", "overview") || hud && activity == "flight" {
+		richesState = e.richesSnapshotLocked(tab == "riches")
+	}
 	appearance, desktop := M{}, M{}
 	workspace := e.planWorkspace
 	var navigation []string
@@ -83,6 +87,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	state["desktop"], state["theme"], state["navigation"] = desktop, M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, M{"tabs": navigation}
 	state["objectives"], state["bookmarks"], state["notices"] = goals, bookmarks, notices
 	state["planWorkspace"] = workspace.snapshot()
+	if richesState != nil {
+		state["riches"] = richesState
+	}
 	ledger := e.Trading.Snapshot(M{"commander": cmd, "marketOptions": v.Obj(network["trading"])["options"], "now": v.ISO(time.Now())})
 	cargo, tons := v.Rows(ledger["inventory"]), float64(0)
 	for _, row := range cargo {

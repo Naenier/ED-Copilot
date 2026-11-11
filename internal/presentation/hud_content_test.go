@@ -92,6 +92,41 @@ func TestHUDDockedNavigationModeDoesNotClaimTheShipIsFlying(t *testing.T) {
 		t.Fatal("docked fuel panel claims an active flight", doc)
 	}
 }
+
+func TestHUDRoadToRichesShowsCurrentBodyAndNextStopUntilFinished(t *testing.T) {
+	progress := M{
+		"completedJumps": 3, "remainingJumps": 4, "nextSystem": "Станция", "totalMappingCredits": 2750000,
+		"target": M{"name": "Груз A 1", "mappingCredits": 1250000},
+	}
+	s := M{
+		"settings":  M{"activity": "flight", "language": "en"},
+		"commander": M{"system": "Alpha"},
+		"pilot":     M{"navTarget": M{"system": "Unrelated"}, "fuel": M{"mainTons": 5}},
+		"riches":    M{"progress": progress},
+	}
+	doc := BuildHUD(s, hudFixtureNow)
+	card := hudSection(doc, "ROAD TO RICHES")
+	if card == nil || len(card.Lines) != 4 || card.Lines[0].Text != "Груз A 1" || card.Lines[0].Value != "≈ 1 250 000 Cr" ||
+		card.Lines[1].Value != "Станция" || card.Lines[2].Value != "≈ 2 750 000 Cr" || card.Lines[3].Value != "3 / ≈ 4" {
+		t.Fatalf("incorrect Road to Riches summary %+v", doc)
+	}
+	if strings.Contains(hudProse(doc), "Unrelated") || !strings.Contains(hudProse(doc), "Fuel") {
+		t.Fatalf("flight cards conflict with the active exploration route %+v", doc)
+	}
+
+	delete(progress, "nextSystem")
+	progress["remainingJumps"] = 0
+	card = hudSection(BuildHUD(s, hudFixtureNow), "ROAD TO RICHES")
+	if card == nil || card.Lines[0].Text != "Груз A 1" || card.Lines[len(card.Lines)-1].Value != "3 / 0" {
+		t.Fatalf("last planet disappeared on arrival %+v", card)
+	}
+
+	progress["finished"] = true
+	doc = BuildHUD(s, hudFixtureNow)
+	if hudSection(doc, "ROAD TO RICHES") != nil || !strings.Contains(hudProse(doc), "Unrelated") {
+		t.Fatalf("finished route obscures the regular navigation card %+v", doc)
+	}
+}
 func TestHUDAsteroidCurrentContextValuableCompositionAndPreparation(t *testing.T) {
 	s := M{"settings": M{"activity": "asteroid", "minTier": "medium"}, "commander": M{"system": "Alpha", "body": "Alpha 1", "cargoTons": 0, "cargoCapacity": 100}, "mining": M{"cargo": M{"limpets": nil}, "current": M{"refinedTons": 0, "tonsPerHour": 0}}, "prospect": M{"system": "Alpha", "body": "Alpha 1", "decision": "mine", "remaining": 80, "materials": []M{{"name": "Cheap water", "tier": "low", "percent": 70}, {"name": "Useful ore", "tier": "high", "percent": 5}}}}
 	doc := BuildHUD(s, hudFixtureNow)

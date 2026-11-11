@@ -1,0 +1,310 @@
+.riches-page {
+  display: grid;
+  gap: var(--section-gap, 20px);
+  min-width: 0;
+}
+
+.riches-page > * {
+  margin-block: 0;
+  min-width: 0;
+}
+
+.riches-planning-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.riches-plan,
+.riches-scanner,
+.riches-summary,
+.riches-results {
+  min-width: 0;
+  padding: 19px 21px;
+}
+
+.riches-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.riches-section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.riches-section-head h2 .icon {
+  width: 17px;
+  height: 17px;
+  color: var(--accent);
+}
+
+.riches-section-head > span,
+.riches-field > span:first-child {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.riches-plan form,
+.riches-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.riches-plan form {
+  gap: 13px;
+}
+
+.riches-distance-fields {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: 12px;
+}
+
+.riches-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.riches-unit-input {
+  position: relative;
+}
+
+.riches-unit-input input {
+  padding-right: 59px;
+}
+
+.riches-unit-input > span {
+  position: absolute;
+  inset-inline-end: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.riches-plan-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.riches-plan > p,
+.riches-scanner > p,
+.riches-results > p {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.riches-source {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.riches-source .icon {
+  width: 11px;
+  height: 11px;
+}
+
+.riches-spectrum {
+  padding: 7px 11px 2px;
+  border: 1px solid #304553;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 24px, #47708425 24px 25px),
+    repeating-linear-gradient(0deg, transparent 0 17px, #47708425 17px 18px),
+    #101d26;
+}
+
+.riches-spectrum svg {
+  display: block;
+  width: 100%;
+  height: 61px;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.riches-spectrum path {
+  vector-effect: non-scaling-stroke;
+}
+
+.riches-spectrum-base { stroke: #57728266; }
+.riches-spectrum-wave { stroke: #6797ac88; }
+.riches-spectrum-earth { stroke: #87d99d; }
+.riches-spectrum-water { stroke: #77c2fa; }
+.riches-earth { color: #87d99d; }
+.riches-water { color: #77c2fa; }
+
+.riches-fss-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 17px;
+  margin-top: 10px;
+}
+
+.riches-fss-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.riches-fss-legend svg {
+  width: 20px;
+  height: 23px;
+}
+
+.riches-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, .8fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.riches-metric {
+  padding: 10px 13px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface, var(--panel));
+}
+
+.riches-metric dt,
+.riches-metric small,
+.riches-progress {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.riches-metric dd {
+  margin: 5px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.riches-metric small {
+  display: block;
+  margin-top: 3px;
+}
+
+.riches-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+.riches-progress progress {
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.riches-progress progress::-webkit-progress-bar { background: var(--border); }
+.riches-progress progress::-webkit-progress-value { background: var(--accent); }
+
+.riches-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.riches-status.is-error { color: var(--danger, #f0a596); }
+.riches-status .icon { width: 15px; height: 15px; flex-shrink: 0; }
+
+.riches-table-scroll {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.riches-table {
+  width: 100%;
+  min-width: 765px;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.riches-table th,
+.riches-table td {
+  padding: 10px 11px;
+  vertical-align: top;
+}
+
+.riches-table thead {
+  background: var(--raised);
+  color: var(--muted);
+}
+
+.riches-table th { font-weight: 550; }
+.riches-table .riches-number { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.riches-table .riches-map-value { font-weight: 600; }
+.riches-stop { border-top: 1px solid var(--border); }
+.riches-stop tr + tr td { border-top: 1px solid var(--border); }
+.riches-stop.is-current,
+.riches-stop.is-next { background: var(--raised); }
+.riches-stop.is-current th { box-shadow: inset 3px 0 0 var(--accent); }
+.riches-stop.is-visited th { color: var(--muted); }
+.riches-stop small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+
+.riches-system {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.riches-system .pill {
+  flex-shrink: 0;
+  padding: 3px 5px;
+  min-height: 23px;
+}
+
+.riches-system .pill .icon { width: 12px; height: 12px; }
+.riches-body-name { font-weight: 600; }
+.riches-body-status .icon { width: 10px; height: 10px; margin-right: 3px; }
+.riches-world-type { white-space: nowrap; }
+
+@media (max-width: 1170px) {
+  .riches-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .riches-planning-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 680px) {
+  .riches-plan,
+  .riches-scanner,
+  .riches-summary,
+  .riches-results { padding: 15px; }
+  .riches-distance-fields,
+  .riches-metrics { grid-template-columns: minmax(0, 1fr); }
+}

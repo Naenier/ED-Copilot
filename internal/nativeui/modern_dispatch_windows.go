@@ -65,6 +65,23 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			return provider.CancelSystems(input)
 		}
 		return M{"ok": true}, nil
+	case "riches.plan":
+		values := v.Obj(input["values"])
+		if len(values) == 0 {
+			values = input
+		}
+		return backend.Do("/api/riches/route", values)
+	case "riches.cancel":
+		return backend.Do("/api/riches/route/cancel", nil)
+	case "riches.clear":
+		return backend.Do("/api/riches/route/clear", nil)
+	case "riches.copy":
+		return backend.Do("/api/riches/route/copy", nil)
+	case "riches.status":
+		if provider, ok := backend.(interface{ RichesStatus() M }); ok {
+			return provider.RichesStatus(), nil
+		}
+		return v.Obj(snapshotForWeb(backend, "riches")["riches"]), nil
 	case "deals-search":
 		return backend.Do("/api/trading/routes", v.Obj(input["values"]))
 	case "deals-cancel":
@@ -329,7 +346,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "planWorkspace", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
+	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "riches", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "planWorkspace", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
 		out[key] = state[key]
 	}
 	return p.LocalizeWebState(redactWebSecrets(out))

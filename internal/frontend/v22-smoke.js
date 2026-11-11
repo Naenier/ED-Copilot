@@ -15,6 +15,10 @@ async function run(C,u){
   await u.navigate('overview');
   check('Баланс командира без имени Status.json',!u.$('#page').textContent.includes('Status.json'));
   check('Обзор содержит топливо без отдельного экрана состояния',!!u.$('.overview-page .ov-metrics')&&!C.page.Modes.includes('Состояние'));
+  await u.navigate('riches');
+  check('Дорога к богатству открывает форму маршрута и схему FSS',!!u.$('#riches-route-form #riches-origin')&&!!u.$('.riches-spectrum'));
+  const riches=await u.call('riches.status');
+  check('Дорога к богатству сохраняет автономность тестового профиля',riches.networkDisabled===true);
   await u.navigate('carrier-trade',{mode:'Рейс'});check('Демонстрационный рейс содержит рассчитанную прибыль',C.state.carrierTrade?.summary?.profit!=null&&Number.isFinite(Number(C.state.carrierTrade.summary.profit)));await capture('readme-carrier-trade');
   await category('ships');check('Корабли представлены карточками',!!u.$('.ref-grid-ships'));await capture('readme-ships');
   await openFirst('ships','Python');check('Корабль открывается на отдельной странице',!!u.$('[data-reference="entry"]')&&!u.$('.inspector'));await capture('readme-ship');

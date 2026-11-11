@@ -8,7 +8,7 @@ const groups=[
  {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['План','target'],['Материалы','package'],['Инженеры','users']]},
  {id:'exobiology',title:'Экзобиология',icon:'leaf',tabs:['exobiology'],modes:[['Обзор','house'],['Планеты','orbit'],['Образцы','leaf'],['Продажи','wallet'],['Находки','target'],['Места','map-pin'],['Статистика','chart-no-axes-combined']]},
  {id:'fleet',title:'Флотоносцы',icon:'ship',tabs:['carrier','route','carrier-calculator']},
- {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics']},
+ {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics','riches']},
  {id:'knowledge',title:'Библиотека',icon:'book-open',tabs:['encyclopedia','learning','help']},
  {id:'commander',title:'Командир',icon:'users',tabs:['commander','ranks']},
 ];
@@ -19,7 +19,8 @@ function entries(C,id){
  if(id==='commander')return commanderModes.map(([title,icon])=>({tab:title==='Ранги'?'ranks':'commander',mode:title==='Ранги'?'':title,title,icon}));
  if(id==='galaxy'){
   const politics=window.PoliticsUI?.navigationModes?.(C)||[['Политика','orbit'],['Цели сообщества','target'],['Пауэрплей','shield-check']].map(([title,icon])=>({tab:'politics',mode:title,title,icon}));
-  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...politics];
+  const riches=C.tabs.some(tab=>tab.ID==='riches')?[{tab:'riches',mode:'',title:'Дорога к богатству',icon:'route'}]:[];
+  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...riches,...politics];
  }
  const g=group(id);
  if(g.modes)return g.modes.map(([title,icon])=>({tab:g.tabs[0],mode:title,title,icon}));

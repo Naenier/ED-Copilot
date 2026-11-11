@@ -15,6 +15,7 @@ func HelpForLanguage(tab, language string) string {
 }
 
 var englishSectionHelp = map[string]string{
+	"riches": "Enter a starting system, your ship's jump range and a search radius. Plan a route to water and Earth-like worlds.\n\nPress Ctrl+V in the galaxy map search and plot the route in the game. ED Copilot copies the next system after each arrival. Check the planet's designation in the table and map it with the DSS.",
 	"commander": `Commander centre
 
 Use the views to inspect observed finances, inventory, possessions, ships, statistics, reputation and recent journal activity. A dash means no confirmed observation is available; zero means a known zero value.

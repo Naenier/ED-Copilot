@@ -44,7 +44,7 @@ func hudCargo(s M, empty, limpets bool) []HUDLine {
 	}
 	return rows
 }
-func hudFlight(doc *HUDDocument, s M) {
+func hudFlightNavigation(doc *HUDDocument, s M) {
 	cmd := v.Obj(s["commander"])
 	target := v.Obj(v.At(s, "pilot", "navTarget"))
 	if v.Str(target["system"]) == "" || hudEqual(target["system"], cmd["system"]) {
@@ -86,6 +86,12 @@ func hudFlight(doc *HUDDocument, s M) {
 				break
 			}
 		}
+	}
+}
+
+func hudFlight(doc *HUDDocument, s M) {
+	if !hudRiches(doc, v.Obj(v.At(s, "riches", "progress"))) {
+		hudFlightNavigation(doc, s)
 	}
 	fuel := v.Obj(v.At(s, "pilot", "fuel"))
 	rows := []HUDLine{}

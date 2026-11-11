@@ -110,7 +110,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	if len(v.Rows(v.At(s, "pilot", "recent"))) == 0 {
 		v.Obj(s["pilot"])["recent"] = []M{{"timestamp": "2026-11-07T12:00:00Z", "event": "LoadGame", "label": "Начало сеанса", "system": "Synthetic A"}}
 	}
-	if len(Tabs) != 22 {
+	if len(Tabs) != 23 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {
@@ -128,6 +128,12 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 				if tab.ID == "engineering" && (mode == "" || mode == EngineeringProgression) {
 					if len(p.Columns) != 0 || len(p.Rows) != 0 || p.Modes[0] != EngineeringProgression {
 						t.Fatal("custom progression view got a legacy table")
+					}
+					return
+				}
+				if tab.ID == "riches" {
+					if len(p.Columns) != 0 || len(p.Rows) != 0 {
+						t.Fatal("Road to Riches has its own route table")
 					}
 					return
 				}

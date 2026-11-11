@@ -18,8 +18,8 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"targets", "Цели", false}, {"sale", "Рынки", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
-var DefaultTabs = []string{"overview", "ranks", "politics", "targets", "deals", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"riches", "Дорога к богатству", false}, {"targets", "Цели", false}, {"sale", "Рынки", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var DefaultTabs = []string{"overview", "ranks", "politics", "riches", "targets", "deals", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
 
 type Choice struct{ Value, Label string }
@@ -216,6 +216,9 @@ func buildPage(tab, mode, query string, s M) Page {
 		return RanksPage(s)
 	case "politics":
 		return PoliticsPage(s)
+	case "riches":
+		p.Columns = nil
+		return p
 	case "exobiology":
 		return ExobiologyPage(mode, query, s)
 	case "learning":
@@ -664,6 +667,9 @@ func encyclopedia(mode, query string, s M) Page {
 	return p
 }
 func HelpFor(tab string) string {
+	if tab == "riches" {
+		return "Введите стартовую систему, дальность прыжка корабля и радиус поиска. Постройте маршрут к водным и землеподобным мирам.\n\nВставьте скопированную систему в поиск галактической карты через Ctrl+V и постройте маршрут в игре. После прибытия ED Copilot скопирует следующую систему. Сверьте обозначение планеты в таблице и картографируйте её с помощью DSS."
+	}
 	if text := newSectionHelp[tab]; text != "" {
 		return text
 	}

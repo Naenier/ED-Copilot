@@ -166,7 +166,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		}
 		e.settings = next
 		if disabled, exists := next["routeAutoCopyNext"]; exists && !v.Bool(disabled) {
-			e.clipboardCommand = nil
+			e.clearClipboardLocked("carrier-route")
 		}
 		if _, changed := body["autoUpdateEnabled"]; changed && e.UpdateManager != nil {
 			e.UpdateManager.SetEnabled(v.Bool(next["autoUpdateEnabled"]))
@@ -436,6 +436,15 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		}
 		e.Reader.Rescan()
 		go e.Reader.Poll()
+	case "/api/riches/route":
+		return e.startRichesRoute(body)
+	case "/api/riches/route/cancel":
+		e.cancelJob(richesJob)
+		return M{"ok": true}, nil
+	case "/api/riches/route/clear":
+		return M{"ok": true}, e.clearRichesRoute()
+	case "/api/riches/route/copy":
+		return M{"ok": true}, e.copyRichesDestination()
 	case "/api/carrier/route":
 		if err := e.networkAllowed(); err != nil {
 			return nil, err

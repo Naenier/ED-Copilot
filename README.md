@@ -10,7 +10,7 @@ A desktop companion for Elite Dangerous. Look up star systems, plan engineering 
 
 ![Commander overview in ED Copilot](docs/screenshots/en/overview.png)
 
-*Screenshots show ED Copilot 2.8.7 with a demonstration profile. Commander data, balances, and market quotes are fictional.*
+*Screenshots use a demonstration profile. Commander data, balances, market quotes, and the sample mapping route are fictional.*
 
 ## Getting started
 
@@ -38,6 +38,14 @@ Star system fields offer up to twenty suggestions from Spansh and EDSM. Type thr
 ![Galaxy system search with nearby results and filters](docs/screenshots/en/galaxy.png)
 
 ![System page showing celestial bodies and surface materials](docs/screenshots/en/system.png)
+
+## Road to Riches
+
+Open **Galaxy → Road to Riches**, then enter a starting system, your ship's jump range and a search radius. The planner builds a route through water worlds and Earth-like worlds, showing planet designations, arrival distances and estimated FSS and DSS rewards. The FSS signal diagrams help identify both planet types in the scanner.
+
+Copilot copies the next system when the route is ready and after you arrive at each stop. Paste it into the in-game galaxy map with **Ctrl+V**. Overview and the flight overlay show your mapping target, next system, estimated payout and jump progress.
+
+![Road to Riches route, FSS signals and mapping targets](docs/screenshots/en/road-to-riches.png)
 
 ## Exobiology
 

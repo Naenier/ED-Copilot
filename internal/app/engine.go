@@ -22,6 +22,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/presentation"
 	"github.com/Naenier/ED-Copilot/internal/profile"
 	"github.com/Naenier/ED-Copilot/internal/ranks"
+	"github.com/Naenier/ED-Copilot/internal/riches"
 	"github.com/Naenier/ED-Copilot/internal/ships"
 	"github.com/Naenier/ED-Copilot/internal/systems"
 	"github.com/Naenier/ED-Copilot/internal/theme"
@@ -40,7 +41,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.11"
+const Version = "2.8.12"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -71,6 +72,8 @@ type Engine struct {
 	carrierTradeScope                               uint64
 	Learning                                        *learning.Library
 	Route                                           *carrier.RoutePlanner
+	richesPlanner                                   *riches.Planner
+	richesJourneys                                  map[string]*richesJourney
 	clipboardCommand                                M
 	clipboardSequence                               uint64
 	Mining                                          *mining.Service
@@ -175,6 +178,8 @@ func New(o Options) (*Engine, error) {
 		x.Route.Client = o.HTTPClient
 	}
 	x.Route.OnUpdate = func(M) { x.Notify() }
+	x.richesPlanner = riches.NewPlanner(o.HTTPClient)
+	x.richesJourneys = restoreRichesJourneys(saved["richesRoutes"])
 	x.Mining = mining.New(v.Obj(saved["mining"]))
 	systemOptions := systems.Options{HTTPClient: o.HTTPClient}
 	if !o.DisableNetwork {
@@ -244,6 +249,7 @@ func (e *Engine) resetObserved() {
 	e.mu.Lock()
 	e.engineeringRoadmapRevision++
 	e.resetCarrierTradeSearchLocked()
+	e.resetRichesSearchLocked()
 	e.commander = M{"name": "", "fid": "", "system": "", "vehicle": "unknown", "docked": false}
 	e.planWorkspace, e.replayedPlanWorkspace = planWorkspace{}, planWorkspace{}
 	e.planReplay = true
@@ -279,6 +285,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	e.mu.Lock()
 	cmd := e.commander
 	previousFID := v.Str(cmd["fid"])
+	previousWorkspace := e.planWorkspace.key
 	switch kind {
 	case "Fileheader":
 		version := v.Str(event["gameversion"])
@@ -352,11 +359,21 @@ func (e *Engine) applyLocked(event, meta M) {
 		cmd["vehicle"] = "ship"
 	}
 	e.observePlanWorkspaceLocked(kind, event, meta)
+	if previousWorkspace != e.planWorkspace.key {
+		e.resetRichesSearchLocked()
+		e.adoptRichesJourneyLocked()
+	}
 	cmd = ships.ApplyEvent(cmd, event)
+	if kind == "Loadout" {
+		cmd["jumpRangeLy"] = event["MaxJumpRange"]
+	} else if kind == "LoadGame" {
+		delete(cmd, "jumpRangeLy")
+	}
 	if event["CargoCapacity"] != nil && (kind == "LoadGame" || kind == "Loadout") {
 		cmd["cargoCapacity"] = event["CargoCapacity"]
 	}
 	e.commander = cmd
+	e.observeRichesLocked(kind, event, meta)
 	if kind == "Cargo" && event["Inventory"] != nil {
 		vessel := trading.Vessel(v.First(event["Vessel"], cmd["vehicle"]))
 		e.cargoSync[vessel] = M{"inventory": v.Clone(event["Inventory"]), "timestamp": at}
@@ -445,6 +462,7 @@ func (e *Engine) Snapshot() M {
 	cmd, settings, game := v.Copy(e.commander), v.Copy(e.settings), v.Copy(e.game)
 	appearance, desktop := v.Copy(e.appearance), v.Copy(e.desktop)
 	workspace := e.planWorkspace
+	richesState := e.richesSnapshotLocked(true)
 	goals, bookmarks := goalsForWorkspace(e.objectives, workspace), v.Clone(e.bookmarks)
 	nav := append([]string(nil), e.navigation...)
 	network := map[string]M{}
@@ -519,6 +537,7 @@ func (e *Engine) Snapshot() M {
 	connection["gameRunning"] = running
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["planWorkspace"] = workspace.snapshot()
+	state["riches"] = richesState
 	state["savedTradeRoutes"] = e.Trading.SavedRoutesFor(workspace.key)
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(state)
@@ -567,8 +586,9 @@ func (e *Engine) persistenceSnapshot() (M, M) {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
 	e.mu.RLock()
-	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 3, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
+	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 4, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
 	saved["galacticPrices"] = v.Copy(e.galacticPrices)
+	saved["richesRoutes"] = v.Clone(e.richesJourneys)
 	desktop := v.Copy(e.desktop)
 	e.mu.RUnlock()
 	saved["carrier"] = e.Carrier.ExportSettings()

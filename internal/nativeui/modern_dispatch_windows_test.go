@@ -81,6 +81,8 @@ func TestDirectWebCommandsDoNotBuildOrSnapshotDomains(t *testing.T) {
 		{"learning", "/api/learning", M{"values": M{"action": "bookmark", "lessonId": "wmm.basics"}}, M{"action": "bookmark", "lessonId": "wmm.basics"}},
 		{"calculator", "/api/carrier/calculator", M{"values": M{"jumpsPerWeek": 4}}, M{"jumpsPerWeek": 4}},
 		{"select-colony", "/api/colonization", M{"id": "synthetic-colony"}, M{"action": "select-project", "id": "synthetic-colony"}},
+		{"riches.plan", "/api/riches/route", M{"tab": "riches", "values": M{"origin": "Sol", "jumpRangeLy": 25, "radiusLy": 100}}, M{"origin": "Sol", "jumpRangeLy": 25, "radiusLy": 100}},
+		{"riches.copy", "/api/riches/route/copy", M{"tab": "riches"}, M{}},
 	} {
 		t.Run(test.op, func(t *testing.T) {
 			backend := &dispatchProbeController{}

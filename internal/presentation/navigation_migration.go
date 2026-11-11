@@ -5,6 +5,10 @@ import v "github.com/Naenier/ED-Copilot/internal/value"
 // MigrateNavigation upgrades only the unmodified old default, preserving a
 // pilot's explicitly customized order and visibility.
 func MigrateNavigation(raw any, version int) []string {
+	previousDefault := []string{"overview", "ranks", "politics", "targets", "deals", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
+	if version < 4 && sameNavigation(raw, previousDefault) {
+		return append([]string(nil), DefaultTabs...)
+	}
 	previous := []string{"overview", "targets", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
 	if version < 3 && sameNavigation(raw, previous) {
 		return append([]string(nil), DefaultTabs...)

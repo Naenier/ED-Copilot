@@ -55,8 +55,12 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 			page := result["page"].(p.Page)
 			referencePage := tab.ID == "encyclopedia" || (tab.ID == "engineering" || tab.ID == "targets") && mode == "Инженеры"
 			progressionPage := tab.ID == "engineering" && mode == p.EngineeringProgression
-			if page.Title == "" || len(page.Columns) == 0 && !referencePage && !progressionPage {
+			richesPage := tab.ID == "riches"
+			if page.Title == "" || len(page.Columns) == 0 && !referencePage && !progressionPage && !richesPage {
 				t.Fatalf("empty %s/%s", tab.ID, mode)
+			}
+			if richesPage && v.At(result, "state", "riches", "networkDisabled") != true {
+				t.Fatal("Road to Riches view has no planner state")
 			}
 			if progressionPage {
 				roadmap, err := dispatchWeb(engine, "engineering-roadmap", M{"tab": tab.ID})

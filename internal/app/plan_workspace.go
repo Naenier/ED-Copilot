@@ -66,6 +66,7 @@ func (e *Engine) finishPlanReplay() {
 	defer e.mu.Unlock()
 	if e.planReplay {
 		e.planWorkspace = e.replayedPlanWorkspace
+		e.adoptRichesJourneyLocked()
 		e.replayedPlanWorkspace = planWorkspace{}
 		e.planReplay = false
 		e.Notify()
