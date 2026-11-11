@@ -451,7 +451,11 @@ async function smoke(){
    if(['overview','learning','colonization','settings'].includes(tab.ID))await smokeCapture(({learning:'academy'})[tab.ID]||tab.ID);
    const modes=[...(C.page.Modes?.length?C.page.Modes:[''])];
    for(const mode of modes){
-    C.mode=mode;C.selected='';await loadView();add(tab.ID+' / '+(mode||'Основной экран'),referenceActive()||C.tab==='exobiology'||window.EngineeringRoadmapUI?.active(C)?!!$('#page h1'):!!C.page.Columns?.length);
+    C.mode=mode;C.selected='';await loadView();
+    const mainScreenReady=tab.ID==='riches'
+     ? !!$('#riches-route-form #riches-origin')
+     : referenceActive()||C.tab==='exobiology'||window.EngineeringRoadmapUI?.active(C)?!!$('#page h1'):!!C.page.Columns?.length;
+    add(tab.ID+' / '+(mode||'Основной экран'),mainScreenReady);
     if(tab.ID==='colonization'&&mode==='Строительство'){
      const building=$('.colony-building-cost'),table=$('.colony-construction-main>.table-panel');
      if(building&&table){const gap=building.getBoundingClientRect().top-table.getBoundingClientRect().bottom;add('Construction requirements follow the queue without a large empty gap',gap>=0&&gap<=30);}
