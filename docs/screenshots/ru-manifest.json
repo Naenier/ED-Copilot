@@ -71,6 +71,13 @@
       "sha256": "3b199fe6edaffc11fb90339936ae22f9fdb57ce6884fc325e5c78453badc685e"
     },
     {
+      "file": "road-to-riches.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "4d513258ec6ceaef97d31a353d86cd17e6531a86047bbce04bb630535a0b55d3",
+      "applicationVersion": "2.8.12"
+    },
+    {
       "file": "galaxy.png",
       "width": 1920,
       "height": 1080,
