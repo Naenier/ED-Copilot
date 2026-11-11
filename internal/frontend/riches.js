@@ -9,15 +9,43 @@
   const number = (u, value, unit = '') => known(value) ? u.esc(u.fmt(value)) + (unit ? text(u, unit) : '') : '—';
   const credits = (u, value) => number(u, value, ' кр.');
   const field = node => node?.dataset?.richesField;
+  const numericFields = {
+    jumpRangeLy: { label: 'Дальность прыжка', unit: ' св. л.', min: 0.1, max: 500 },
+    radiusLy: { label: 'Радиус поиска', unit: ' св. л.', min: 1, max: 5000 },
+    maxResults: { label: 'Максимум систем', min: 1, max: 2000, integer: true },
+    maxDistanceLs: { label: 'Макс. расстояние от точки прибытия', unit: ' св. с.', min: 0, max: 1000000 },
+    minMappingValue: { label: 'Минимальная награда DSS', unit: ' кр.', min: 0, max: 1000000000, integer: true },
+  };
+  const checkboxFields = {
+    useMappingValue: 'Подбирать планеты по награде DSS',
+    avoidThargoids: 'Избегать известных систем с таргоидами',
+    loop: 'Вернуться в стартовую систему',
+  };
+  const formKeys = ['origin', 'destination', ...Object.keys(numericFields), ...Object.keys(checkboxFields)];
+  const pageSize = 50;
 
   function draft(C) {
-    if (!C.richesDraft) C.richesDraft = {};
-    const { route = {}, suggestedJumpRangeLy } = state(C);
+    const owner = C.state?.planWorkspace?.key || '';
+    if (!C.richesDraft || C.richesDraftOwner !== owner) {
+      C.richesDraft = {};
+      C.richesDraftOwner = owner;
+      C.richesSearchHidden = false;
+      C.richesPage = 0;
+    }
+    const { route, search, suggestedJumpRangeLy } = state(C);
+    const oldRoute = { origin: route?.origin, jumpRangeLy: route?.jumpRangeLy, radiusLy: route?.radiusLy };
+    const saved = { ...(route?.maxResults ? route : oldRoute), ...route?.options, ...search?.options, ...C.richesDraft };
     return {
-      origin: C.state?.commander?.system || route.origin || '',
-      jumpRangeLy: route.jumpRangeLy || suggestedJumpRangeLy || 30,
-      radiusLy: route.radiusLy || 100,
-      ...C.richesDraft,
+      origin: saved.origin ?? C.state?.commander?.system ?? '',
+      destination: saved.destination ?? '',
+      jumpRangeLy: saved.jumpRangeLy ?? suggestedJumpRangeLy ?? 30,
+      radiusLy: saved.radiusLy ?? 100,
+      maxResults: saved.maxResults ?? 100,
+      maxDistanceLs: saved.maxDistanceLs ?? 10000,
+      minMappingValue: saved.minMappingValue ?? 1000000,
+      useMappingValue: saved.useMappingValue ?? true,
+      avoidThargoids: saved.avoidThargoids ?? true,
+      loop: saved.loop ?? true,
     };
   }
 
@@ -35,8 +63,10 @@
     const completedStops = known(progress.completedStops) ? progress.completedStops : 0;
     const totalStops = known(progress.totalStops) ? progress.totalStops : route?.stops?.length || 0;
     const targetName = target?.name || target?.designation;
+    const mappingBasis = progress.useMappingValue !== false;
+    const targetReward = mappingBasis ? target?.mappingCredits : target?.scanCredits;
     const targetDetails = targetName
-      ? [u.t(typeLabels[target.type] || target.type), u.t('Оценка DSS {credits}', { credits: known(target.mappingCredits) ? u.fmt(target.mappingCredits) + u.t(' кр.') : '—' })].filter(Boolean).join(' · ')
+      ? [u.t(typeLabels[target.type] || target.type), u.t(mappingBasis ? 'Оценка DSS {credits}' : 'Оценка FSS {credits}', { credits: known(targetReward) ? u.fmt(targetReward) + u.t(' кр.') : '—' })].filter(Boolean).join(' · ')
       : '';
     const nextName = nextSystem || (finished ? u.t('Маршрут завершён') : '—');
     const actions = overview
@@ -49,7 +79,7 @@
       <dl class="riches-metrics">
         ${metric(u, progress.target ? 'Планета в текущей системе' : 'Планета в следующей системе', u.esc(targetName || '—'), u.esc(targetDetails))}
         ${metric(u, 'Следующая система', u.esc(nextName))}
-        ${metric(u, 'Оценка всего маршрута', credits(u, progress.totalMappingCredits), text(u, 'По наградам DSS'))}
+        ${metric(u, 'Оценка всего маршрута', credits(u, progress.totalRewardCredits ?? progress.totalMappingCredits), text(u, mappingBasis ? 'По наградам DSS' : 'По наградам FSS'))}
         ${metric(u, 'Прыжки · сделано / осталось', number(u, completed) + ' / ' + number(u, remaining), remaining ? text(u, 'Остаток по оценке') : '')}
       </dl>
       ${totalStops > 0 ? `<div class="riches-progress">
@@ -95,26 +125,39 @@
     const values = draft(C);
     const busy = Boolean(C.richesPending || search.running);
     const disabled = busy || networkDisabled ? 'disabled' : '';
-    const fields = [
-      ['jumpRangeLy', 'Дальность прыжка', ' св. л.'],
-      ['radiusLy', 'Радиус поиска от стартовой системы', ' св. л.'],
-    ];
+    const hidden = Boolean(C.richesSearchHidden);
+    const systemInput = (key, label, required = false) => `<label class="riches-field">
+      <span>${text(u, label)}</span>
+      <input id="riches-${key}" name="${key}" data-riches-field="${key}" data-system-search="single" value="${u.esc(values[key])}" type="text" maxlength="160" autocomplete="off" ${required ? 'required' : ''} ${disabled}>
+    </label>`;
+    const numericInput = ([key, { label, unit, integer }]) => `<label class="riches-field">
+      <span>${text(u, label)}</span><span class="${unit ? 'riches-unit-input' : ''}">
+        <input id="riches-${key}" name="${key}" data-riches-field="${key}" type="text" inputmode="${integer ? 'numeric' : 'decimal'}" maxlength="12" value="${u.esc(values[key])}" required ${disabled}>${unit ? `<span>${text(u, unit)}</span>` : ''}
+      </span>
+    </label>`;
     return `<section class="panel riches-plan" aria-labelledby="riches-plan-title">
-      <header class="riches-section-head"><h2 id="riches-plan-title">${u.icon('compass')}${text(u, 'План маршрута')}</h2></header>
-      <form id="riches-route-form">
-        <label class="riches-field">
-          <span>${text(u, 'Стартовая система')}</span>
-          <input id="riches-origin" name="origin" data-riches-field="origin" data-system-search="single" value="${u.esc(values.origin)}" type="text" maxlength="160" autocomplete="off" required ${disabled}>
-        </label>
-        <div class="riches-distance-fields">
-          ${fields.map(([key, label, unit]) => `<label class="riches-field">
-            <span>${text(u, label)}</span><span class="riches-unit-input">
-              <input id="riches-${key}" name="${key}" data-riches-field="${key}" type="text" inputmode="decimal" maxlength="12" value="${u.esc(values[key])}" required ${disabled}><span>${text(u, unit)}</span>
-            </span>
+      <header class="riches-section-head">
+        <h2 id="riches-plan-title">${u.icon('compass')}${text(u, 'План маршрута')}</h2>
+        ${route?.stops?.length && !busy ? u.btn(hidden ? 'Показать поиск' : 'Скрыть поиск', 'riches-toggle-search', hidden ? 'chevron-down' : 'arrow-up', 'quiet', `aria-expanded="${!hidden}" aria-controls="riches-route-form"`) : ''}
+      </header>
+      <form id="riches-route-form" ${hidden && !busy ? 'hidden' : ''}>
+        <div class="riches-system-fields">
+          ${systemInput('origin', 'Стартовая система', true)}
+          ${systemInput('destination', 'Конечная система (необязательно)')}
+        </div>
+        <div class="riches-form-fields">
+          ${Object.entries(numericFields).map(numericInput).join('')}
+        </div>
+        <div class="riches-form-options">
+          ${Object.entries(checkboxFields).map(([key, label]) => `<label class="riches-option">
+            <input id="riches-${key}" type="checkbox" name="${key}" data-riches-field="${key}" ${values[key] ? 'checked' : ''} ${disabled}>
+            <span>${text(u, label)}</span>
           </label>`).join('')}
         </div>
+        <p class="riches-form-hint muted">${text(u, 'Возврат действует, если конечная система не указана. Ноль в поле награды DSS или расстояния снимает ограничение.')}</p>
         <div class="riches-plan-actions">
           ${u.btn('Построить маршрут', 'riches-submit', 'route', 'primary', `type="submit" ${disabled}`)}
+          ${u.btn('Поменять местами', 'riches-swap', 'arrow-left-right', 'quiet', `data-riches-swap ${disabled || !(String(values.origin).trim() && String(values.destination).trim()) ? 'disabled' : ''}`)}
           ${search.running ? u.btn('Отменить поиск', 'riches-cancel', 'x', 'quiet', C.richesPending ? 'disabled' : '') : ''}
           ${route?.stops?.length && !busy ? u.btn('Очистить маршрут', 'riches-clear', 'x', 'quiet') : ''}
         </div>
@@ -138,25 +181,41 @@
     return '';
   }
 
-  function bodyRows(stop, progress, u) {
+  function copySystemButton(system, u) {
+    return u.btn('', 'riches-copy-system', 'copy', 'icon-only quiet', `data-system="${u.esc(system)}" title="${text(u, 'Копировать систему')}" aria-label="${text(u, 'Копировать систему {system}', { system })}"`);
+  }
+
+  function transitLabel(stop, route) {
+    return stop.system === route.origin ? 'Возврат в стартовую систему' : 'Конечная система';
+  }
+
+  function bodyRows(stop, index, route, progress, C, u) {
     const bodies = Array.isArray(stop.bodies) ? stop.bodies : [];
-    if (!bodies.length) return '';
-    const current = stop.system === progress.currentSystem;
-    const next = stop.system === progress.nextSystem;
+    if (!bodies.length && !stop.transit) return '';
+    const current = stop.system === progress.currentSystem && (!stop.transit || stop.visited);
+    const next = stop.system === progress.nextSystem && (!known(progress.completedStops) || index === progress.completedStops);
     const tone = current ? 'is-current' : next ? 'is-next' : stop.visited ? 'is-visited' : '';
     const tag = current ? 'Вы здесь' : next ? 'Следующая система' : '';
-    const system = `<th scope="rowgroup" rowspan="${bodies.length}"><span class="riches-system"><strong>${u.esc(stop.system)}</strong>
-      ${u.btn('', 'riches-copy-system', 'copy', 'icon-only quiet', `data-system="${u.esc(stop.system)}" title="${text(u, 'Копировать систему')}" aria-label="${text(u, 'Копировать систему {system}', { system: stop.system })}"`)}
+    const rowSpan = Math.max(bodies.length, 1);
+    const system = `<th scope="rowgroup" rowspan="${rowSpan}"><span class="riches-system"><strong>${u.esc(stop.system)}</strong>
+      ${copySystemButton(stop.system, u)}
       </span>${tag ? `<small>${text(u, tag)}</small>` : ''}</th>`;
-    const hops = `<td class="riches-number" rowspan="${bodies.length}">${number(u, stop.estimatedJumps)}</td>`;
+    const hops = `<td class="riches-number" rowspan="${rowSpan}">${number(u, stop.estimatedJumps)}</td>`;
+    if (!bodies.length) {
+      return `<tbody class="riches-stop ${tone}"><tr><td class="riches-done">—</td>${system}<td colspan="6" class="riches-transit">${text(u, transitLabel(stop, route))}</td>${hops}</tr></tbody>`;
+    }
     return `<tbody class="riches-stop ${tone}">${bodies.map((body, i) => {
       const status = body.mapped ? 'Картографировано' : body.scanned ? 'Сканировано' : '';
       const type = typeLabels[body.type] || body.type;
       const designation = body.designation || body.name;
+      const done = body.completed || body.mapped;
+      const fromJournal = body.journalCompleted || body.mapped;
       return `<tr>
+        <td class="riches-done"><input type="checkbox" data-click="riches-complete-body" data-system="${u.esc(stop.system)}" data-body="${u.esc(body.name)}" aria-label="${text(u, 'Отметить планету {body}', { body: body.name })}" ${done ? 'checked' : ''} ${fromJournal || C.richesPending ? 'disabled' : ''}></td>
         ${i === 0 ? system : ''}
         <td><span class="riches-body-name">${u.esc(designation)}</span>${body.name && designation !== body.name ? `<small>${u.esc(body.name)}</small>` : ''}${status ? `<small class="riches-body-status">${u.icon('check')}${text(u, status)}</small>` : ''}</td>
         <td><span class="riches-world-type ${body.type === 'earthLike' ? 'riches-earth' : 'riches-water'}">${text(u, type)}</span></td>
+        <td>${body.terraformable == null ? '—' : text(u, body.terraformable ? 'Да' : 'Нет')}</td>
         <td class="riches-number">${number(u, body.distanceLs, ' св. с.')}</td>
         <td class="riches-number">${credits(u, body.scanCredits)}</td>
         <td class="riches-number riches-map-value">${credits(u, body.mappingCredits)}</td>
@@ -167,19 +226,76 @@
 
   function results(C, u) {
     const { route, progress = {} } = state(C);
-    if (!route?.stops?.some(stop => stop.bodies?.length)) return '';
-    const columns = ['Система', 'Планета', 'Тип планеты', 'От звезды', 'Награда FSS', 'Награда DSS', 'Прыжки (оценка)'];
-    const origin = route.origin ? `<span>${text(u, 'Старт · {system}', { system: route.origin })}</span>` : '';
+    if (!route?.stops?.length) return '';
+    const hasTargets = route.stops.some(stop => stop.bodies?.length);
+    const columns = ['Готово', 'Система', 'Планета', 'Тип планеты', 'Терраформируемая', 'От звезды', 'Награда FSS', 'Награда DSS', 'Прыжки (оценка)'];
+    const { origin, destination, maxResults } = { ...route, ...route.options };
+    const endpoints = [origin && u.t('Старт · {system}', { system: origin }), destination && u.t('Финиш · {system}', { system: destination })].filter(Boolean);
+    const disabled = C.richesPending ? 'disabled' : '';
+    const pages = Math.ceil(route.stops.length / pageSize);
+    const page = Math.min(C.richesPage || 0, pages - 1);
+    const offset = page * pageSize;
+    const stops = route.stops.slice(offset, offset + pageSize);
     return `<section class="panel riches-results" aria-labelledby="riches-results-title">
-      <header class="riches-section-head"><h2 id="riches-results-title">${u.icon('route')}${text(u, 'Цели картографирования')}</h2>${origin}</header>
+      <header class="riches-section-head"><h2 id="riches-results-title">${u.icon('route')}${text(u, 'Цели картографирования')}</h2><span>${u.esc(endpoints.join(' / '))}</span></header>
+      <div class="riches-result-actions">
+        ${u.btn('Показать маршрут', 'riches-show-route', 'route', '', disabled)}
+        ${u.btn('Сохранить CSV', 'riches-export-csv', 'arrow-down', 'quiet', disabled)}
+        ${u.btn('Сохранить JSON', 'riches-export-json', 'arrow-down', 'quiet', disabled)}
+      </div>
       <div class="riches-table-scroll" tabindex="0" role="region" aria-labelledby="riches-results-title">
-        <table class="riches-table"><thead><tr>${columns.map((label, i) => `<th scope="col" class="${i >= 3 ? 'riches-number' : ''}">${text(u, label)}</th>`).join('')}</tr></thead>
-          ${route.stops.map(stop => bodyRows(stop, progress, u)).join('')}
+        <table class="riches-table"><thead><tr>${columns.map((label, i) => `<th scope="col" class="${i >= 5 ? 'riches-number' : ''}">${text(u, label)}</th>`).join('')}</tr></thead>
+          ${stops.map((stop, index) => bodyRows(stop, offset + index, route, progress, C, u)).join('')}
         </table>
       </div>
-      <p class="muted">${text(u, 'Награда DSS — оценка выплаты за планету после картографирования. Фактический маршрут между точками рассчитывает галактическая карта.')}</p>
-      ${route.truncated ? `<p class="muted">${text(u, 'Показано до 100 ближайших систем с подходящими планетами.')}</p>` : ''}
+      ${pages > 1 ? `<div class="riches-pages">
+        ${u.btn('Назад', 'riches-page-back', 'chevron-left', 'quiet', page ? '' : 'disabled')}
+        <span>${text(u, 'Страница {page} из {pages}', { page: u.fmt(page + 1), pages: u.fmt(pages) })}</span>
+        ${u.btn('Вперёд', 'riches-page-next', 'chevron-right', 'quiet', page + 1 < pages ? '' : 'disabled')}
+      </div>` : ''}
+      <p class="muted">${text(u, hasTargets ? 'Награда DSS — оценка выплаты за планету после картографирования. Фактический маршрут между точками рассчитывает галактическая карта.' : 'По заданным фильтрам планеты не найдены.')}</p>
+      ${route.truncated ? `<p class="muted">${text(u, 'Показано до {max} систем с подходящими планетами.', { max: u.fmt(maxResults || 100) })}</p>` : ''}
     </section>`;
+  }
+
+  function routeDiagram(route, progress, u) {
+    const origin = route.stops[0]?.system === route.origin ? [] : [route.originCoordinates];
+    const coordinates = [...origin, ...route.stops.map(stop => stop.coordinates)];
+    const points = coordinates.filter(point => Array.isArray(point) && [point[0], point[2]].every(Number.isFinite));
+    if (points.length < 2) return '';
+    const xs = points.map(point => point[0]), zs = points.map(point => point[2]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+    if (minX === maxX && minZ === maxZ) return '';
+    const scale = Math.min(440 / (maxX - minX), 134 / (maxZ - minZ));
+    const project = point => [(240 + (point[0] - (minX + maxX) / 2) * scale).toFixed(1), (85 - (point[2] - (minZ + maxZ) / 2) * scale).toFixed(1)];
+    const plot = points.map(project);
+    const end = (name, point) => `<circle class="${name}" cx="${point[0]}" cy="${point[1]}" r="4"/>`;
+    const next = route.stops[progress.completedStops]?.coordinates;
+    return `<svg class="riches-itinerary-map" viewBox="0 0 480 170" role="img" aria-label="${text(u, 'Схема маршрута в плоскости X/Z')}">
+      <polyline points="${plot.map(point => point.join(',')).join(' ')}"/>
+      ${end('riches-map-start', plot[0])}${end('riches-map-end', plot.at(-1))}
+      ${points.includes(next) ? end('riches-map-next', project(next)) : ''}
+    </svg>`;
+  }
+
+  function showRoute(C, u) {
+    const { route, progress = {} } = state(C);
+    if (!route?.stops?.length) return;
+    const start = route.stops[0].system === route.origin ? '' : `<li>
+      <strong>${u.esc(route.origin)}</strong><small>${text(u, 'Стартовая система')}</small>${copySystemButton(route.origin, u)}
+    </li>`;
+    const stops = route.stops.map((stop, index) => {
+      const next = index === progress.completedStops && stop.system === progress.nextSystem;
+      const details = [
+        stop.transit ? text(u, transitLabel(stop, route)) : text(u, 'Цели · {count}', { count: u.fmt(stop.bodies?.length || 0) }),
+        known(stop.distanceLy) ? number(u, stop.distanceLy, ' св. л.') : '',
+        known(stop.estimatedJumps) ? text(u, 'Прыжки (оценка) · {count}', { count: u.fmt(stop.estimatedJumps) }) : '',
+      ].filter(Boolean).join(' · ');
+      return `<li ${next ? 'aria-current="step"' : ''}>
+        <strong>${u.esc(stop.system)}</strong><small>${details}</small>${copySystemButton(stop.system, u)}
+      </li>`;
+    }).join('');
+    u.dialog(u.t('Маршрут по системам'), `${routeDiagram(route, progress, u)}<ol class="riches-itinerary">${start}${stops}</ol>`, '', true);
   }
 
   function render(C, u) {
@@ -196,27 +312,33 @@
   function handleInput(event, C) {
     if (C.tab !== 'riches') return false;
     const key = field(event.target);
-    if (!['origin', 'jumpRangeLy', 'radiusLy'].includes(key)) return false;
+    if (!formKeys.includes(key)) return false;
     draft(C);
-    C.richesDraft[key] = event.target.value;
+    C.richesDraft[key] = Object.hasOwn(checkboxFields, key) ? event.target.checked : event.target.value;
+    if (key === 'origin' || key === 'destination') {
+      const swap = event.target.form?.querySelector('[data-riches-swap]');
+      const values = draft(C);
+      if (swap) swap.disabled = !(String(values.origin).trim() && String(values.destination).trim());
+    }
     return true;
   }
 
-  function positiveNumber(value, u, label, min, max) {
+  function parseNumber(value, u, { label, min, max, integer }) {
     const raw = String(value ?? '').trim().replace(',', '.');
     const result = Number(raw);
-    if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(raw) || !Number.isFinite(result) || result < min || result > max) {
-      throw new Error(u.t('Для поля «{field}» допустимы значения от {min} до {max}.', { field: u.t(label), min: u.fmt(min), max: u.fmt(max) }));
+    if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(raw) || !Number.isFinite(result) || result < min || result > max || (integer && !Number.isInteger(result))) {
+      const message = integer ? 'Для поля «{field}» введите целое число от {min} до {max}.' : 'Для поля «{field}» допустимы значения от {min} до {max}.';
+      throw new Error(u.t(message, { field: u.t(label), min: u.fmt(min), max: u.fmt(max) }));
     }
     return result;
   }
 
-  async function mutate(C, u, operation, values) {
+  async function mutate(C, u, operation, params) {
     if (C.richesPending) return;
     C.richesPending = operation;
     u.renderPage();
     try {
-      await u.call(operation, values ? { values } : {});
+      await u.call(operation, params || {});
     } finally {
       delete C.richesPending;
       if (C.tab === 'riches' || C.tab === 'overview') {
@@ -228,14 +350,24 @@
 
   async function submit(formNode, C, u) {
     if (C.tab !== 'riches' || state(C).search?.running || state(C).networkDisabled || C.richesPending) return;
-    const values = Object.fromEntries(['origin', 'jumpRangeLy', 'radiusLy'].map(key => [key, formNode.elements.namedItem(key)?.value || '']));
+    const values = draft(C);
+    for (const key of formKeys) {
+      const input = formNode.elements.namedItem(key);
+      if (input) values[key] = (Object.hasOwn(checkboxFields, key) ? input.checked : input.value) ?? values[key];
+    }
     C.richesDraft = values;
-    const origin = values.origin.trim();
+    const origin = String(values.origin).trim();
     if (!origin) throw new Error(u.t('Укажите стартовую систему.'));
-    const jumpRangeLy = positiveNumber(values.jumpRangeLy, u, 'Дальность прыжка', 0.1, 500);
-    const radiusLy = positiveNumber(values.radiusLy, u, 'Радиус поиска от стартовой системы', 1, 5000);
-    const expectedPlanWorkspace = C.state.planWorkspace?.key;
-    await mutate(C, u, 'riches.plan', { origin, jumpRangeLy, radiusLy, ...(expectedPlanWorkspace ? { expectedPlanWorkspace } : {}) });
+    const destination = String(values.destination).trim();
+    const numbers = Object.fromEntries(Object.entries(numericFields).map(([key, field]) => [key, parseNumber(values[key], u, field)]));
+    const options = Object.fromEntries(Object.keys(checkboxFields).map(key => [key, Boolean(values[key])]));
+    C.richesPage = 0;
+    await mutate(C, u, 'riches.plan', { values: { origin, destination, ...numbers, ...options, ...workspaceToken(C) } });
+  }
+
+  function workspaceToken(C) {
+    const expectedPlanWorkspace = C.state?.planWorkspace?.key;
+    return typeof expectedPlanWorkspace === 'string' ? { expectedPlanWorkspace } : {};
   }
 
   async function handleClick(action, button, C, u) {
@@ -245,6 +377,25 @@
     } else if (action === 'riches-copy-system' && button.dataset.system) {
       await u.call('native', { action: 'copy', text: button.dataset.system });
       u.toast(u.t('Система скопирована'));
+    } else if (action === 'riches-toggle-search') {
+      C.richesSearchHidden = !C.richesSearchHidden;
+      u.renderPage();
+    } else if (action === 'riches-swap') {
+      const { origin, destination } = draft(C);
+      if (!String(origin).trim() || !String(destination).trim()) return;
+      Object.assign(C.richesDraft, { origin: destination, destination: origin });
+      u.renderPage();
+    } else if (action === 'riches-show-route') {
+      showRoute(C, u);
+    } else if (action === 'riches-export-csv' || action === 'riches-export-json') {
+      const exported = await u.call('native', { action: 'export', kind: 'riches', json: action === 'riches-export-json' });
+      if (!exported?.cancelled) u.toast(exported?.file ? u.t('Файл сохранён: ') + exported.file : u.t('Файл сохранён'));
+    } else if (action === 'riches-page-back' || action === 'riches-page-next') {
+      const pages = Math.ceil((state(C).route?.stops?.length || 1) / pageSize);
+      C.richesPage = Math.min(pages - 1, Math.max(0, (C.richesPage || 0) + (action === 'riches-page-next' ? 1 : -1)));
+      u.renderPage();
+    } else if (action === 'riches-complete-body' && button.dataset.system && button.dataset.body) {
+      await mutate(C, u, 'riches.complete', { system: button.dataset.system, body: button.dataset.body, completed: button.checked, ...workspaceToken(C) });
     } else if (action === 'riches-cancel') {
       await mutate(C, u, 'riches.cancel');
     } else if (action === 'riches-clear') {

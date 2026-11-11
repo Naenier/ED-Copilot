@@ -77,6 +77,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/riches/route/clear", nil)
 	case "riches.copy":
 		return backend.Do("/api/riches/route/copy", nil)
+	case "riches.complete":
+		return backend.Do("/api/riches/route/complete", input)
 	case "riches.status":
 		if provider, ok := backend.(interface{ RichesStatus() M }); ok {
 			return provider.RichesStatus(), nil

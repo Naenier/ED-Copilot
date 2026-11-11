@@ -2,6 +2,15 @@
 # No commands run when this file is dot-sourced.
 Set-StrictMode -Version Latest
 $script:EDDeliveryRepository = 'Naenier/ED-Copilot'
+$script:EDSmokeKinds = @('headless','native','stress','installer')
+
+function Get-EDPublicArtifactNames {
+    param([string]$Version,[int]$SchemaVersion)
+    "ED-Copilot-$Version-Setup.exe"
+    "ED-Copilot-$Version-windows-amd64.zip"
+    'SHA256SUMS.txt'
+    if ($SchemaVersion -eq 1) { $script:EDSmokeKinds | ForEach-Object { "smoke-$_.json" } }
+}
 
 function Get-EDSafePath {
     param([Parameter(Mandatory)][string]$Path)
@@ -94,15 +103,18 @@ function New-EDReleaseManifest {
     $version = Get-EDCopilotVersion $Root
     if ($Commit -and $Commit -notmatch '^[0-9a-f]{40}$') { throw 'Invalid source commit.' }
     $source = Get-EDSourceState $Root
-    $names = @('ED Copilot.exe',"ED-Copilot-$version-Setup.exe","ED-Copilot-$version-windows-amd64.zip",'SHA256SUMS.txt','smoke-headless.json','smoke-native.json','smoke-stress.json','smoke-installer.json')
+    $schemaVersion = 2
+    $published = @(Get-EDPublicArtifactNames $version $schemaVersion)
+    $reports = @($script:EDSmokeKinds | ForEach-Object { "smoke-$_.json" })
+    $names = @('ED Copilot.exe') + $published + $reports
     $artifacts = @()
     foreach ($name in $names) {
         $file = Join-Path $Directory $name
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Release artifact missing: $name" }
-        $artifacts += [ordered]@{name=$name;bytes=(Get-Item -LiteralPath $file).Length;sha256=(Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant();published=$name -ne 'ED Copilot.exe'}
+        $artifacts += [ordered]@{name=$name;bytes=(Get-Item -LiteralPath $file).Length;sha256=(Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant();published=$name -in $published}
     }
-    foreach ($kind in @('headless','native','stress','installer')) { Assert-EDSmokeReport (Get-Content -LiteralPath (Join-Path $Directory "smoke-$kind.json") -Raw | ConvertFrom-Json) $version $kind }
-    $manifest = [ordered]@{schemaVersion=1;version=$version;sourceCommit=$Commit;sourceTreeSHA256=$source.treeSHA256;sourceDigestFormat='paths+text-lf-sha256-v1';sourceFiles=$source.files.Count;platform='windows';architecture='amd64';testsPassed=$TestsPassed;artifacts=$artifacts}
+    foreach ($kind in $script:EDSmokeKinds) { Assert-EDSmokeReport (Get-Content -LiteralPath (Join-Path $Directory "smoke-$kind.json") -Raw | ConvertFrom-Json) $version $kind }
+    $manifest = [ordered]@{schemaVersion=$schemaVersion;version=$version;sourceCommit=$Commit;sourceTreeSHA256=$source.treeSHA256;sourceDigestFormat='paths+text-lf-sha256-v1';sourceFiles=$source.files.Count;platform='windows';architecture='amd64';testsPassed=$TestsPassed;artifacts=$artifacts}
     Write-EDDeliveryJSON (Join-Path $Directory 'release-manifest.json') $manifest
     return $manifest
 }
@@ -118,29 +130,35 @@ function Read-EDChecksums {
 }
 
 function Test-EDReleaseDirectory {
-    param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$ExpectedCommit,[string]$SourceRoot='')
+    param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$ExpectedCommit,[string]$SourceRoot='', [switch]$RequireSmokeReports)
     if ($ExpectedCommit -notmatch '^[0-9a-f]{40}$') { throw 'A full expected source commit is required.' }
     $Directory=Get-EDSafePath $Directory
     $m = Get-Content -LiteralPath (Join-Path $Directory 'release-manifest.json') -Raw | ConvertFrom-Json
-    if ($m.schemaVersion -ne 1 -or $m.version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $m.sourceCommit -ne $ExpectedCommit -or $m.sourceTreeSHA256 -notmatch '^[0-9a-f]{64}$' -or $m.sourceDigestFormat -ne 'paths+text-lf-sha256-v1' -or $m.platform -ne 'windows' -or $m.architecture -ne 'amd64' -or $m.testsPassed -isnot [bool] -or -not $m.testsPassed) { throw 'Release provenance or validation manifest is invalid.' }
+    if ($m.schemaVersion -notin @(1,2) -or $m.version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $m.sourceCommit -ne $ExpectedCommit -or $m.sourceTreeSHA256 -notmatch '^[0-9a-f]{64}$' -or $m.sourceDigestFormat -ne 'paths+text-lf-sha256-v1' -or $m.platform -ne 'windows' -or $m.architecture -ne 'amd64' -or $m.testsPassed -isnot [bool] -or -not $m.testsPassed) { throw 'Release provenance or validation manifest is invalid.' }
     if ($SourceRoot -and ((Get-EDSourceState $SourceRoot).treeSHA256 -ne $m.sourceTreeSHA256 -or (Get-EDCopilotVersion $SourceRoot) -ne $m.version)) { throw 'Release does not match the checked-out source.' }
-    $expected = @('ED Copilot.exe',"ED-Copilot-$($m.version)-Setup.exe","ED-Copilot-$($m.version)-windows-amd64.zip",'SHA256SUMS.txt','smoke-headless.json','smoke-native.json','smoke-stress.json','smoke-installer.json')
+    $published = @(Get-EDPublicArtifactNames $m.version $m.schemaVersion)
+    $reports = @($script:EDSmokeKinds | ForEach-Object { "smoke-$_.json" })
+    $expected = @('ED Copilot.exe') + @(Get-EDPublicArtifactNames $m.version 2) + $reports
     $entries=@{}
     foreach ($a in $m.artifacts) {
-        if ($a.name -notin $expected -or $entries.ContainsKey($a.name) -or $a.bytes -le 0 -or $a.bytes -gt 268435456 -or $a.sha256 -notmatch '^[0-9a-f]{64}$' -or $a.published -isnot [bool] -or $a.published -ne ($a.name -ne 'ED Copilot.exe')) { throw 'Invalid or duplicate artifact manifest entry.' }
+        if ($a.name -notin $expected -or $entries.ContainsKey($a.name) -or $a.bytes -le 0 -or $a.bytes -gt 268435456 -or $a.sha256 -notmatch '^[0-9a-f]{64}$' -or $a.published -isnot [bool] -or $a.published -ne ($a.name -in $published)) { throw 'Invalid or duplicate artifact manifest entry.' }
         $entries[$a.name]=$a
         $path=Get-EDSafePath (Join-Path $Directory $a.name)
         if (Test-Path -LiteralPath $path -PathType Leaf) {
             if ((Get-Item -LiteralPath $path).Length -ne $a.bytes -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $a.sha256) { throw "Artifact hash/size mismatch: $($a.name)" }
-        } elseif ($a.published) { throw "Missing release artifact: $($a.name)" }
+        } elseif ($a.published -or ($RequireSmokeReports -and $a.name -in $reports)) { throw "Missing release artifact: $($a.name)" }
     }
     if ($entries.Count -ne $expected.Count) { throw 'Incomplete release manifest.' }
     $sums=Read-EDChecksums (Join-Path $Directory 'SHA256SUMS.txt')
     foreach ($name in @('ED Copilot.exe',"ED-Copilot-$($m.version)-Setup.exe","ED-Copilot-$($m.version)-windows-amd64.zip")) { if ($sums[$name] -ne $entries[$name].sha256) { throw 'Release checksum sources disagree.' } }
-    foreach ($kind in @('headless','native','stress','installer')) { Assert-EDSmokeReport (Get-Content -LiteralPath (Join-Path $Directory "smoke-$kind.json") -Raw | ConvertFrom-Json) $m.version $kind }
+    foreach ($kind in $script:EDSmokeKinds) {
+        $report = Join-Path $Directory "smoke-$kind.json"
+        if (Test-Path -LiteralPath $report -PathType Leaf) { Assert-EDSmokeReport (Get-Content -LiteralPath $report -Raw | ConvertFrom-Json) $m.version $kind }
+    }
     # Inspect the one executable entry as a stream; never extract arbitrary ZIP paths.
     $zip=[IO.Compression.ZipFile]::OpenRead((Join-Path $Directory "ED-Copilot-$($m.version)-windows-amd64.zip"))
     try {
+        if ($m.schemaVersion -eq 2 -and @($zip.Entries | Where-Object Name -In $reports).Count) { throw 'Portable package includes CI smoke reports.' }
         $found=@($zip.Entries | Where-Object FullName -EQ 'ED Copilot.exe')
         if ($found.Count -ne 1 -or $found[0].Length -ne $entries['ED Copilot.exe'].bytes) { throw 'Portable executable is missing or duplicated.' }
         $stream=$found[0].Open();$hash=[Security.Cryptography.SHA256]::Create()
@@ -298,24 +316,30 @@ function Save-EDReleaseAssets {
     if($Release.draft -or $Release.prerelease -or $version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $Release.tag_name -ne "v$version" -or $Release.html_url -ne "https://github.com/$script:EDDeliveryRepository/releases/tag/v$version"){throw 'Invalid stable release identity.'}
     $Directory=Get-EDSafePath $Directory
     [IO.Directory]::CreateDirectory($Directory)|Out-Null
-    $names=@('release-manifest.json',"ED-Copilot-$version-Setup.exe","ED-Copilot-$version-windows-amd64.zip",'SHA256SUMS.txt','smoke-headless.json','smoke-native.json','smoke-stress.json','smoke-installer.json')
+    Save-EDPublicReleaseAsset $Release $version 'release-manifest.json' $Directory $Download
+    $m=Get-Content -LiteralPath (Join-Path $Directory 'release-manifest.json') -Raw|ConvertFrom-Json
+    if($m.sourceCommit -ne $ExpectedCommit -or $m.version -ne $version){throw 'Release manifest belongs to different source.'}
+    if($m.schemaVersion -notin @(1,2)){throw 'Unsupported release manifest schema.'}
+    $names=@(Get-EDPublicArtifactNames $version $m.schemaVersion)
+    if($m.schemaVersion -eq 2 -and @($Release.assets | Where-Object { $_.name -notin ($names + 'release-manifest.json') }).Count){throw 'Unexpected public release asset.'}
     foreach($name in $names){
-        $matching=@($Release.assets|Where-Object name -EQ $name)
-        $limit=if($name -match '\.(exe|zip)$'){268435456}else{8388608}
-        if($matching.Count -ne 1){throw "Missing or duplicate GitHub release asset: $name"}
-        $a=$matching[0]
-        $expectedURL="https://github.com/$script:EDDeliveryRepository/releases/download/v$version/$name"
-        if($a.state -ne 'uploaded' -or $a.browser_download_url -ne $expectedURL -or $a.size -le 0 -or $a.size -gt $limit -or $a.digest -notmatch '^sha256:[0-9a-f]{64}$'){throw 'Invalid GitHub asset identity, size or digest.'}
-        $path=Get-EDSafePath (Join-Path $Directory $name)
-        $cached=(Test-Path -LiteralPath $path -PathType Leaf) -and (Get-Item -LiteralPath $path).Length -eq $a.size -and (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -eq $a.digest.Substring(7)
-        if(-not $cached){& $Download $expectedURL $path $limit}
-        if(-not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item -LiteralPath $path).Length -ne $a.size -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $a.digest.Substring(7)){throw "Downloaded GitHub artifact verification failed: $name"}
-        if($name -eq 'release-manifest.json'){
-            $m=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json
-            if($m.sourceCommit -ne $ExpectedCommit -or $m.version -ne $version){throw 'Release manifest belongs to different source.'}
-        }
+        Save-EDPublicReleaseAsset $Release $version $name $Directory $Download
     }
     return Test-EDReleaseDirectory $Directory $ExpectedCommit
+}
+
+function Save-EDPublicReleaseAsset {
+    param($Release,[string]$Version,[string]$Name,[string]$Directory,[scriptblock]$Download)
+    $matching=@($Release.assets|Where-Object name -EQ $Name)
+    $limit=if($Name -match '\.(exe|zip)$'){268435456}else{8388608}
+    if($matching.Count -ne 1){throw "Missing or duplicate GitHub release asset: $Name"}
+    $asset=$matching[0]
+    $expectedURL="https://github.com/$script:EDDeliveryRepository/releases/download/v$Version/$Name"
+    if($asset.state -ne 'uploaded' -or $asset.browser_download_url -ne $expectedURL -or $asset.size -le 0 -or $asset.size -gt $limit -or $asset.digest -notmatch '^sha256:[0-9a-f]{64}$'){throw 'Invalid GitHub asset identity, size or digest.'}
+    $path=Get-EDSafePath (Join-Path $Directory $Name)
+    $cached=(Test-Path -LiteralPath $path -PathType Leaf) -and (Get-Item -LiteralPath $path).Length -eq $asset.size -and (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -eq $asset.digest.Substring(7)
+    if(-not $cached){& $Download $expectedURL $path $limit}
+    if(-not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item -LiteralPath $path).Length -ne $asset.size -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $asset.digest.Substring(7)){throw "Downloaded GitHub artifact verification failed: $Name"}
 }
 
 function Invoke-EDDeliveryChild {

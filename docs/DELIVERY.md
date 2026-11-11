@@ -49,11 +49,14 @@ explicit `-ExpectedCommit <full-sha>` is also supported. The command waits for
 that exact source revision, not a previous `latest`
 release. GitHub runs the race detector and the full build/check command once.
 The release job downloads the already verified workflow artifact and publishes
-those exact files without rebuilding. A newer `main` commit stops an obsolete
-release. Version, tag, asset names and release notes are derived automatically.
+the Setup, portable ZIP, checksums and release manifest without rebuilding.
+The four smoke reports stay in the workflow artifact. A newer `main` commit
+stops an obsolete release. Version, tag, asset names and release notes are derived
+automatically.
 
 Delivery then checks the successful workflow run, tag-to-commit mapping, release
-manifest, GitHub SHA256 digests, checksum file, ZIP executable and smoke reports.
+manifest, GitHub SHA256 digests, checksum file and ZIP executable. The workflow
+validates all smoke reports before it publishes the release.
 Repeated runs reuse verified downloads. Installation checks the final EXE hash
 and version, uninstall registration, critical profile preservation and an isolated
 headless startup. One JSON report records the final result; manual checksum

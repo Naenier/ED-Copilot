@@ -98,6 +98,10 @@ Name: "{autodesktop}\ED Copilot"; Filename: "{app}\ED Copilot.exe"; WorkingDir: 
 #endif
 
 [InstallDelete]
+Type: files; Name: "{app}\smoke-headless.json"
+Type: files; Name: "{app}\smoke-native.json"
+Type: files; Name: "{app}\smoke-stress.json"
+Type: files; Name: "{app}\smoke-installer.json"
 #ifdef TestAppId
 Type: files; Name: "{app}\smoke-start-menu\ED Copilot.lnk"; Tasks: not startmenuicon
 Type: files; Name: "{app}\smoke-desktop\ED Copilot.lnk"; Tasks: not desktopicon

@@ -28,7 +28,7 @@ function Refresh-Fixture {
 }
 try{
     Refresh-Fixture
-    Check 'Complete package/source/ZIP/smokes validate' {$m=Test-EDReleaseDirectory $artifacts $commit $source;Must ($m.version -eq '2.3.4') 'Wrong version.'}
+    Check 'Complete package/source/ZIP/smokes validate' {$m=Test-EDReleaseDirectory $artifacts $commit $source -RequireSmokeReports;Must ($m.version -eq '2.3.4' -and $m.schemaVersion -eq 2) 'Wrong version or schema.';Must (@($m.artifacts | Where-Object published).Count -eq 3) 'Release exposes internal reports.'}
     Check 'Different source commit rejected' {Reject {Test-EDReleaseDirectory $artifacts ('b'*40)} 'provenance'}
     Check 'Modified source rejected' {[IO.File]::WriteAllText((Join-Path $source 'README.md'),'modified');Reject {Test-EDReleaseDirectory $artifacts $commit $source} 'source';[IO.File]::WriteAllText((Join-Path $source 'README.md'),'')}
     Check 'Tampered setup rejected' {$p=Join-Path $artifacts 'ED-Copilot-2.3.4-Setup.exe';$old=[IO.File]::ReadAllBytes($p);[IO.File]::WriteAllText($p,'tampered');Reject {Test-EDReleaseDirectory $artifacts $commit} 'mismatch';[IO.File]::WriteAllBytes($p,$old)}
@@ -46,12 +46,51 @@ try{
     Check 'Foreign and plaintext download hosts rejected' {foreach($u in @('http://github.com/Naenier/ED-Copilot/releases/download/v2.3.4/x','https://evil.example/x','https://github.com/another/project/releases/download/v2.3.4/x','https://user@github.com/Naenier/ED-Copilot/releases/download/v2.3.4/x')){Reject {Assert-EDPublicURL ([uri]$u)} 'Untrusted'}}
     Check 'Approved public release redirect allowed' {Assert-EDPublicURL ([uri]'https://release-assets.githubusercontent.com/fixture')}
     $release=[pscustomobject]@{tag_name='v2.3.4';html_url='https://github.com/Naenier/ED-Copilot/releases/tag/v2.3.4';draft=$false;prerelease=$false;assets=@()}
-    foreach($file in Get-ChildItem -LiteralPath $artifacts -File|Where-Object Name -NE 'ED Copilot.exe'){$release.assets+= [pscustomobject]@{name=$file.Name;state='uploaded';size=$file.Length;digest='sha256:'+(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant();browser_download_url='https://github.com/Naenier/ED-Copilot/releases/download/v2.3.4/'+$file.Name}}
+    function Get-FixtureAssets($Directory, $Names) {
+        foreach($name in $Names){
+            $file=Get-Item -LiteralPath (Join-Path $Directory $name)
+            [pscustomobject]@{name=$file.Name;state='uploaded';size=$file.Length;digest='sha256:'+(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant();browser_download_url='https://github.com/Naenier/ED-Copilot/releases/download/v2.3.4/'+$file.Name}
+        }
+    }
+    $release.assets=@(Get-FixtureAssets $artifacts (@('release-manifest.json') + @(Get-EDPublicArtifactNames '2.3.4' 2)))
     $calls=@{n=0}
     $mock={param($url,$path,$limit) $calls['n']++;$name=[IO.Path]::GetFileName(([uri]$url).AbsolutePath);[IO.File]::WriteAllBytes($path,[IO.File]::ReadAllBytes((Join-Path $artifacts $name)))}
     $downloaded=Join-Path $temp 'downloaded'
-    Check 'Mock public download verifies eight assets' {$null=Save-EDReleaseAssets $release $commit $downloaded $mock;Must ($calls.n -eq 8) 'Some release assets were not verified.'}
-    Check 'Verified cache avoids repeated downloads' {$null=Save-EDReleaseAssets $release $commit $downloaded $mock;Must ($calls.n -eq 8) 'Identical assets downloaded twice.'}
+    Check 'Public download verifies four assets without smoke reports' {
+        $null=Save-EDReleaseAssets $release $commit $downloaded $mock
+        Must ($calls.n -eq 4 -and @(Get-ChildItem -LiteralPath $downloaded -Filter 'smoke-*.json').Count -eq 0) 'Public delivery fetched internal reports or missed a public asset.'
+    }
+    Check 'CI verification requires internal reports' {Reject {Test-EDReleaseDirectory $downloaded $commit -RequireSmokeReports} 'Missing release artifact: smoke-'}
+    Check 'Public ZIP cannot embed an internal report' {
+        $old=[IO.File]::ReadAllBytes($zipPath)
+        try {
+            $z=[IO.Compression.ZipFile]::Open($zipPath,[IO.Compression.ZipArchiveMode]::Update)
+            try { $null=$z.CreateEntry('diagnostics/smoke-native.json') } finally { $z.Dispose() }
+            Refresh-Fixture
+            Reject {Test-EDReleaseDirectory $artifacts $commit} 'includes CI smoke reports'
+        } finally { [IO.File]::WriteAllBytes($zipPath,$old);Refresh-Fixture }
+    }
+    Check 'Schema two rejects a smoke report attached publicly' {
+        $extra=$release.PSObject.Copy()
+        $extra.assets=@($release.assets)+@(Get-FixtureAssets $artifacts @('smoke-native.json'))
+        Reject {Save-EDReleaseAssets $extra $commit $downloaded $mock} 'Unexpected public release asset'
+    }
+    Check 'Verified cache avoids repeated downloads' {$null=Save-EDReleaseAssets $release $commit $downloaded $mock;Must ($calls.n -eq 4) 'Identical assets downloaded twice.'}
+    Check 'Legacy release still downloads and verifies all eight assets' {
+        $legacy=Join-Path $temp 'legacy';[IO.Directory]::CreateDirectory($legacy)|Out-Null
+        foreach($file in Get-ChildItem -LiteralPath $artifacts -File){Copy-Item -LiteralPath $file.FullName -Destination $legacy}
+        $manifestPath=Join-Path $legacy 'release-manifest.json'
+        $legacyManifest=Get-Content -LiteralPath $manifestPath -Raw|ConvertFrom-Json
+        $legacyManifest.schemaVersion=1
+        foreach($entry in $legacyManifest.artifacts){$entry.published=$entry.name -ne 'ED Copilot.exe'}
+        Write-EDDeliveryJSON $manifestPath $legacyManifest
+        $legacyRelease=$release.PSObject.Copy()
+        $legacyRelease.assets=@(Get-FixtureAssets $legacy (@('release-manifest.json')+@(Get-EDPublicArtifactNames '2.3.4' 1)))
+        $legacyCalls=@{n=0}
+        $downloadLegacy={param($url,$path,$limit) $legacyCalls.n++;$name=[IO.Path]::GetFileName(([uri]$url).AbsolutePath);Copy-Item -LiteralPath (Join-Path $legacy $name) -Destination $path}
+        $m=Save-EDReleaseAssets $legacyRelease $commit (Join-Path $temp 'legacy-download') $downloadLegacy
+        Must ($m.schemaVersion -eq 1 -and $legacyCalls.n -eq 8) 'Legacy release verification no longer works.'
+    }
     Check 'GitHub checksum disagreement rejected' {$old=$release.assets[0].digest;$release.assets[0].digest='sha256:'+('0'*64);Reject {Save-EDReleaseAssets $release $commit $downloaded $mock} 'verification failed';$release.assets[0].digest=$old}
     Check 'Mock API resolves exact tag commit' {$request={param($url) return ,[Text.Encoding]::UTF8.GetBytes('{"object":{"type":"commit","sha":"'+$commit+'"}}')};Must ((Resolve-EDReleaseCommit 'v2.3.4' $request) -eq $commit) 'Tag identity lost.'}
     Check 'Orphan tag for different commit blocks publication' {$request={param($url) return ,[Text.Encoding]::UTF8.GetBytes('{"object":{"type":"commit","sha":"'+('b'*40)+'"}}')};Reject {Test-EDReleaseTag 'v2.3.4' $commit $request} 'different source'}

@@ -4,7 +4,7 @@ param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$Ex
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'delivery-lib.ps1')
 $publisherRequest={param($url) Invoke-EDPublicDownload -URL $url -PublisherMetadata}
-$manifest=Test-EDReleaseDirectory -Directory $Directory -ExpectedCommit $ExpectedCommit -SourceRoot $SourceRoot
+$manifest=Test-EDReleaseDirectory -Directory $Directory -ExpectedCommit $ExpectedCommit -SourceRoot $SourceRoot -RequireSmokeReports
 $head=Get-EDPublicJSON 'git/ref/heads/main' $publisherRequest
 if($head.object.sha -ne $ExpectedCommit){Write-Output 'A newer source commit superseded this build; publication skipped.';return}
 $version=$manifest.version
@@ -17,6 +17,7 @@ $existing=$null
 try{$existing=Get-EDPublicJSON "releases/tags/v$version" $publisherRequest}catch{if($_.Exception.Message -notmatch 'HTTP 404\.$'){throw}}
 if($null -ne $existing){
     if($existing.draft -or $existing.prerelease -or -not $tagExists){throw 'Existing release version has invalid provenance; increment app.Version.'}
+    if($existing.assets.Count -ne $assets.Count){throw 'Existing immutable release has a different set of assets; increment app.Version.'}
     foreach($file in $assets){
         $name=[IO.Path]::GetFileName($file)
         $remote=@($existing.assets|Where-Object name -EQ $name)

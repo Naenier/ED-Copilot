@@ -18,7 +18,7 @@ const (
 	searchURL       = "https://spansh.co.uk/api/bodies/search"
 	systemSearchURL = "https://spansh.co.uk/api/search/systems"
 	pageSize        = 250
-	maxPages        = 4
+	maxPages        = 20
 	maxPageBytes    = 4 << 20
 )
 
@@ -36,17 +36,23 @@ func NewPlanner(client *http.Client) *Planner {
 }
 
 type bodySearch struct {
-	ReferenceSystem string           `json:"reference_system"`
+	ReferenceSystem string           `json:"reference_system,omitempty"`
+	ReferenceRoute  *referenceRoute  `json:"reference_route,omitempty"`
 	Filters         map[string]any   `json:"filters"`
 	Sort            []map[string]any `json:"sort"`
 	Size            int              `json:"size"`
 	Page            int              `json:"page"`
 }
 
+type referenceRoute struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+}
+
 type searchResult struct {
-	Count     int        `json:"count"`
-	Reference *reference `json:"reference"`
-	Results   []bodyRow  `json:"results"`
+	Count     int             `json:"count"`
+	Reference json.RawMessage `json:"reference"`
+	Results   []bodyRow       `json:"results"`
 }
 
 type reference struct {
@@ -58,17 +64,18 @@ type reference struct {
 }
 
 type bodyRow struct {
-	System       string      `json:"system_name"`
-	Address      json.Number `json:"system_id64"`
-	X            *float64    `json:"system_x"`
-	Y            *float64    `json:"system_y"`
-	Z            *float64    `json:"system_z"`
-	ID           *int        `json:"body_id"`
-	Name         string      `json:"name"`
-	Subtype      string      `json:"subtype"`
-	DistanceLS   *float64    `json:"distance_to_arrival"`
-	ScanValue    *int64      `json:"estimated_scan_value"`
-	MappingValue *int64      `json:"estimated_mapping_value"`
+	System            string      `json:"system_name"`
+	Address           json.Number `json:"system_id64"`
+	X                 *float64    `json:"system_x"`
+	Y                 *float64    `json:"system_y"`
+	Z                 *float64    `json:"system_z"`
+	ID                *int        `json:"body_id"`
+	Name              string      `json:"name"`
+	Subtype           string      `json:"subtype"`
+	DistanceLS        *float64    `json:"distance_to_arrival"`
+	ScanValue         *int64      `json:"estimated_scan_value"`
+	MappingValue      *int64      `json:"estimated_mapping_value"`
+	TerraformingState string      `json:"terraforming_state"`
 }
 
 // The native Road to Riches router omits many systems near inhabited space.
@@ -78,71 +85,171 @@ func (p *Planner) Plan(ctx context.Context, opts Options) (Route, error) {
 	if err := Validate(opts); err != nil {
 		return Route{}, err
 	}
-	query := bodySearch{
-		ReferenceSystem: strings.Join(strings.Fields(opts.Origin), " "),
-		Filters: map[string]any{
-			"subtype":  map[string][]string{"value": {"Earth-like world", "Water world"}},
-			"distance": map[string]float64{"min": 0, "max": opts.RadiusLY},
-		},
-		Sort: []map[string]any{
-			{"distance": map[string]string{"direction": "asc"}},
-			{"name": map[string]string{"direction": "asc"}},
-		},
-		Size: pageSize,
-	}
-	route := Route{JumpRangeLY: opts.JumpRangeLY, RadiusLY: opts.RadiusLY}
+	route := normalize(opts)
+	query := newBodySearch(opts, route)
 	candidates := make(map[string]*Stop)
 	seenBodies := make(map[string]struct{})
 	var origin [3]float64
+	var destination *Stop
+	var blocked unsafeSystems
 	for page := 0; page < maxPages; page++ {
-		if err := ctx.Err(); err != nil {
-			return Route{}, err
-		}
 		query.Page = page
 		result, err := p.search(ctx, query)
 		if page == 0 && errors.Is(err, errUnknownOrigin) {
-			name, lookupErr := p.canonicalSystem(ctx, query.ReferenceSystem)
-			if lookupErr != nil {
-				return Route{}, lookupErr
-			}
-			if name != "" && name != query.ReferenceSystem {
-				query.ReferenceSystem = name
-				result, err = p.search(ctx, query)
-			}
+			result, err = p.retryCanonicalSearch(ctx, &query)
 		}
 		if err != nil {
 			return Route{}, err
 		}
 		if page == 0 {
-			ref := result.Reference
-			if ref == nil || ref.X == nil || ref.Y == nil || ref.Z == nil || strings.TrimSpace(ref.Name) == "" {
-				return Route{}, errors.New("Spansh не вернул координаты стартовой системы.")
+			start, end, err := parseReferences(result.Reference, query.ReferenceRoute != nil)
+			if err != nil {
+				return Route{}, err
 			}
-			route.Origin = strings.TrimSpace(ref.Name)
-			route.OriginSystemAddress = id64(ref.Address)
-			origin = [3]float64{*ref.X, *ref.Y, *ref.Z}
-			query.ReferenceSystem = route.Origin
+			route.Origin, route.OriginSystemAddress, origin = start.System, start.SystemAddress, start.Coordinates
+			route.OriginCoordinates = &origin
+			if end != nil {
+				route.Destination, route.DestinationSystemAddress, destination = end.System, end.SystemAddress, end
+				query.ReferenceRoute = &referenceRoute{Source: start.System, Destination: end.System}
+			} else {
+				query.ReferenceSystem = start.System
+				if strings.EqualFold(strings.TrimSpace(opts.Destination), route.Origin) {
+					route.Destination, route.DestinationSystemAddress, destination = start.System, start.SystemAddress, start
+				}
+			}
+			if route.AvoidThargoids {
+				blocked, err = p.thargoidSystems(ctx)
+				if err != nil {
+					return Route{}, err
+				}
+				final := destination
+				if final == nil && route.Loop {
+					final = start
+				}
+				if final != nil && blocked.contains(final.System, final.SystemAddress) {
+					return Route{}, errors.New("Конечная система отмечена в Spansh как затронутая таргоидами.")
+				}
+			}
 		}
 		for _, row := range result.Results {
-			appendBody(candidates, seenBodies, row, origin, opts.RadiusLY)
+			if !blocked.contains(row.System, id64(row.Address)) {
+				appendBody(candidates, seenBodies, row, origin, destination, route)
+			}
 		}
 		more := len(result.Results) == pageSize && (page+1)*pageSize < result.Count
-		if len(candidates) > MaxStops || !more || page == maxPages-1 {
-			route.Truncated = len(candidates) > MaxStops || more
+		if len(candidates) > route.MaxResults || !more || page == maxPages-1 {
+			route.Truncated = len(candidates) > route.MaxResults || more
 			break
 		}
 	}
-	route.Stops = orderStops(route.Origin, origin, candidates, opts.JumpRangeLY)
+	route.Stops = orderStops(route, origin, destination, candidates)
 	return route, nil
 }
 
-func appendBody(candidates map[string]*Stop, seen map[string]struct{}, row bodyRow, origin [3]float64, radius float64) {
+func newBodySearch(opts Options, route Route) bodySearch {
+	origin, destination := cleanSystemName(opts.Origin), cleanSystemName(opts.Destination)
+	ranking := "estimated_scan_value"
+	if route.UseMappingValue {
+		ranking = "estimated_mapping_value"
+	}
+	query := bodySearch{
+		ReferenceSystem: origin,
+		Filters: map[string]any{
+			"subtype":  map[string][]string{"value": {"Earth-like world", "Water world"}},
+			"distance": map[string]float64{"min": 0, "max": opts.RadiusLY},
+		},
+		Sort: []map[string]any{
+			{ranking: map[string]string{"direction": "desc"}},
+			{"distance": map[string]string{"direction": "asc"}},
+			{"name": map[string]string{"direction": "asc"}},
+		},
+		Size: pageSize,
+	}
+	if destination != "" && !strings.EqualFold(origin, destination) {
+		query.ReferenceRoute = &referenceRoute{Source: origin, Destination: destination}
+		query.ReferenceSystem = ""
+	}
+	if route.MaxDistanceLS > 0 {
+		query.Filters["distance_to_arrival"] = map[string]any{"comparison": "<=>", "value": []float64{0, route.MaxDistanceLS}}
+	}
+	if route.MinMappingValue > 0 {
+		query.Filters["estimated_mapping_value"] = map[string]any{"comparison": "<=>", "value": []int64{route.MinMappingValue, MaxMappingValue}}
+	}
+	return query
+}
+
+func cleanSystemName(name string) string { return strings.Join(strings.Fields(name), " ") }
+
+func parseReferences(raw json.RawMessage, corridor bool) (*Stop, *Stop, error) {
+	var origin, destination reference
+	if corridor {
+		var endpoints []reference
+		if err := json.Unmarshal(raw, &endpoints); err == nil && len(endpoints) == 2 {
+			origin, destination = endpoints[0], endpoints[1]
+		}
+	} else {
+		_ = json.Unmarshal(raw, &origin)
+	}
+	start, end := origin.stop(), destination.stop()
+	if start == nil {
+		return nil, nil, errors.New("Spansh не вернул координаты стартовой системы.")
+	}
+	if corridor && end == nil {
+		return nil, nil, errors.New("Spansh не вернул координаты системы назначения.")
+	}
+	return start, end, nil
+}
+
+func (r reference) stop() *Stop {
+	name := strings.TrimSpace(r.Name)
+	if name == "" || r.X == nil || r.Y == nil || r.Z == nil {
+		return nil
+	}
+	return &Stop{System: name, SystemAddress: id64(r.Address), Coordinates: [3]float64{*r.X, *r.Y, *r.Z}, Bodies: []Body{}, Transit: true}
+}
+
+func (p *Planner) retryCanonicalSearch(ctx context.Context, query *bodySearch) (searchResult, error) {
+	if query.ReferenceRoute == nil {
+		name, err := p.canonicalSystem(ctx, query.ReferenceSystem)
+		if err != nil {
+			return searchResult{}, err
+		}
+		if name == "" || name == query.ReferenceSystem {
+			return searchResult{}, errUnknownOrigin
+		}
+		query.ReferenceSystem = name
+		return p.search(ctx, *query)
+	}
+	source, err := p.canonicalSystem(ctx, query.ReferenceRoute.Source)
+	if err != nil {
+		return searchResult{}, err
+	}
+	destination, err := p.canonicalSystem(ctx, query.ReferenceRoute.Destination)
+	if err != nil {
+		return searchResult{}, err
+	}
+	if source == "" {
+		return searchResult{}, errUnknownOrigin
+	}
+	if destination == "" || source == query.ReferenceRoute.Source && destination == query.ReferenceRoute.Destination {
+		return searchResult{}, errors.New("Spansh не нашёл систему назначения.")
+	}
+	query.ReferenceRoute = &referenceRoute{Source: source, Destination: destination}
+	return p.search(ctx, *query)
+}
+
+func appendBody(candidates map[string]*Stop, seen map[string]struct{}, row bodyRow, origin [3]float64, destination *Stop, route Route) {
 	system, name, kind := strings.TrimSpace(row.System), strings.TrimSpace(row.Name), bodyType(row.Subtype)
 	if system == "" || name == "" || kind == "" || row.X == nil || row.Y == nil || row.Z == nil {
 		return
 	}
+	arrival, mapping := nonnegative(row.DistanceLS), nonnegative(row.MappingValue)
+	if route.MaxDistanceLS > 0 && (arrival == nil || *arrival > route.MaxDistanceLS) ||
+		route.MinMappingValue > 0 && (mapping == nil || *mapping < route.MinMappingValue) {
+		return
+	}
 	coords := [3]float64{*row.X, *row.Y, *row.Z}
-	if distance(origin, coords) > radius+1e-6 {
+	if searchDistance(coords, origin, destination) > route.RadiusLY+1e-6 {
 		return
 	}
 	key := strings.ToLower(system)
@@ -162,9 +269,10 @@ func appendBody(candidates map[string]*Stop, seen map[string]struct{}, row bodyR
 		Name:           name,
 		Designation:    designation(system, name),
 		Type:           kind,
-		DistanceLS:     nonnegative(row.DistanceLS),
+		DistanceLS:     arrival,
 		ScanCredits:    nonnegative(row.ScanValue),
-		MappingCredits: nonnegative(row.MappingValue),
+		MappingCredits: mapping,
+		Terraformable:  terraformable(row.TerraformingState),
 	})
 }
 

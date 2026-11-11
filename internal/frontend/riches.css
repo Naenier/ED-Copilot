@@ -11,7 +11,8 @@
 
 .riches-planning-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
   gap: 16px;
 }
 
@@ -63,11 +64,19 @@
   gap: 13px;
 }
 
-.riches-distance-fields {
+.riches-plan form[hidden] { display: none; }
+
+.riches-plan .riches-section-head:has(+ form[hidden]) { margin-bottom: 0; }
+
+.riches-system-fields,
+.riches-form-fields {
   display: grid;
-  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
   gap: 12px;
 }
+
+.riches-form-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .riches-field input {
   width: 100%;
@@ -92,13 +101,40 @@
   pointer-events: none;
 }
 
-.riches-plan-actions {
+.riches-form-options,
+.riches-plan-actions,
+.riches-result-actions,
+.riches-pages {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 2px;
 }
+
+.riches-form-options { gap: 8px 14px; }
+
+.riches-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.riches-option input,
+.riches-done input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.riches-form-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.riches-result-actions { margin: -3px 0 12px; }
+.riches-pages { justify-content: flex-end; margin-top: 9px; color: var(--muted); font-size: 11px; }
 
 .riches-plan > p,
 .riches-scanner > p,
@@ -249,7 +285,7 @@
 
 .riches-table {
   width: 100%;
-  min-width: 765px;
+  min-width: 910px;
   border-collapse: collapse;
   font-size: 12px;
   text-align: left;
@@ -294,6 +330,57 @@
 .riches-body-name { font-weight: 600; }
 .riches-body-status .icon { width: 10px; height: 10px; margin-right: 3px; }
 .riches-world-type { white-space: nowrap; }
+.riches-done { text-align: center; }
+.riches-transit { color: var(--muted); }
+
+.riches-itinerary {
+  display: grid;
+  gap: 8px;
+  padding-left: 28px;
+  margin: 0;
+}
+
+.riches-itinerary li {
+  position: relative;
+  padding: 9px 42px 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.riches-itinerary li[aria-current="step"] { border-color: var(--accent); }
+.riches-itinerary li::marker,
+.riches-itinerary small { color: var(--muted); }
+.riches-itinerary small { display: block; margin-top: 4px; }
+
+.riches-itinerary .pill {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.riches-itinerary-map {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  margin: 0 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: repeating-linear-gradient(90deg, transparent 0 23px, #75849824 23px 24px),
+    repeating-linear-gradient(0deg, transparent 0 23px, #75849824 23px 24px), var(--surface, var(--panel));
+}
+
+.riches-itinerary-map polyline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.riches-map-start { fill: #87d99d; }
+.riches-map-end { fill: var(--muted); }
+.riches-map-next { fill: var(--accent); }
 
 @media (max-width: 1170px) {
   .riches-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -305,6 +392,7 @@
   .riches-scanner,
   .riches-summary,
   .riches-results { padding: 15px; }
-  .riches-distance-fields,
+  .riches-system-fields,
+  .riches-form-fields,
   .riches-metrics { grid-template-columns: minmax(0, 1fr); }
 }

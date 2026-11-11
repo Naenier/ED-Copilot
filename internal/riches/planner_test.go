@@ -11,6 +11,8 @@ import (
 
 type transportFunc func(*http.Request) (*http.Response, error)
 
+func optionValue[T any](value T) *T { return &value }
+
 func (fn transportFunc) RoundTrip(r *http.Request) (*http.Response, error) {
 	return fn(r)
 }
@@ -48,7 +50,9 @@ func TestPlanFiltersBodiesAndOrdersTheRoute(t *testing.T) {
 				{"system_name":"Missing Position","system_x":1,"system_y":0,"name":"Missing Position 3","subtype":"Earth-like world"}
 			]}`)
 	})}
-	route, err := NewPlanner(client).Plan(context.Background(), Options{Origin: " Source ", JumpRangeLY: 7.5, RadiusLY: 20})
+	route, err := NewPlanner(client).Plan(context.Background(), Options{
+		Origin: " Source ", JumpRangeLY: 7.5, RadiusLY: 20, MaxDistanceLS: optionValue(0.0), MinMappingValue: optionValue(int64(0)),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +105,9 @@ func TestPlanContinuesPagedSearchForACompleteSystem(t *testing.T) {
 			return nil, nil
 		}
 	})}
-	route, err := NewPlanner(client).Plan(context.Background(), Options{Origin: "Origin", JumpRangeLY: 5, RadiusLY: 100})
+	route, err := NewPlanner(client).Plan(context.Background(), Options{
+		Origin: "Origin", JumpRangeLY: 5, RadiusLY: 100, MaxDistanceLS: optionValue(0.0), MinMappingValue: optionValue(int64(0)),
+	})
 	if err != nil || calls != 2 || len(route.Stops) != 1 || len(route.Stops[0].Bodies) != 2 || route.Truncated {
 		t.Fatalf("expected a complete system after two pages, route=%+v calls=%d err=%v", route, calls, err)
 	}

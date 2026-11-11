@@ -15,7 +15,7 @@ func HelpForLanguage(tab, language string) string {
 }
 
 var englishSectionHelp = map[string]string{
-	"riches": "Enter a starting system, your ship's jump range and a search radius. Plan a route to water and Earth-like worlds.\n\nPress Ctrl+V in the galaxy map search and plot the route in the game. ED Copilot copies the next system after each arrival. Check the planet's designation in the table and map it with the DSS.",
+	"riches": "Enter a starting system, ship jump range and search radius for water worlds and Earth-like worlds. Add a destination to search along the route toward it. For a return trip, leave the destination empty and enable Loop.\n\nSet the maximum number of systems and the distance from arrival to the planet. The default minimum DSS reward is 1,000,000 Cr. Use mapping value selects DSS estimates instead of FSS estimates when choosing targets.\n\nPress Ctrl+V in the galaxy map search. The app copies the next system when you arrive. Journal events mark completed bodies, and you can also mark them manually. Save the route as CSV or JSON from the results.",
 	"commander": `Commander centre
 
 Use the views to inspect observed finances, inventory, possessions, ships, statistics, reputation and recent journal activity. A dash means no confirmed observation is available; zero means a known zero value.

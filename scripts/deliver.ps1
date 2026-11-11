@@ -85,7 +85,7 @@ try{
     $directory=Join-Path $StateDirectory ("releases/$version-"+$ExpectedCommit.Substring(0,12))
     $manifest=Save-EDReleaseAssets -Release $metadata -ExpectedCommit $ExpectedCommit -Directory $directory
     if($Release){$null=Test-EDReleaseDirectory -Directory $directory -ExpectedCommit $ExpectedCommit -SourceRoot $root}
-    $result.release=$metadata.html_url;$result.directory=$directory;$result.status='verified';$result.verifiedAssets=8
+    $result.release=$metadata.html_url;$result.directory=$directory;$result.status='verified';$result.verifiedAssets=1+@($manifest.artifacts | Where-Object published).Count
     if($Install){
         $installed=Install-EDVerifiedRelease -Manifest $manifest -Directory $directory -InstallDirectory $InstallDirectory -StateDirectory $StateDirectory -WaitForExitMinutes $WaitForExitMinutes -AllowSameVersionRepair:$AllowSameVersionRepair
         $result.installation=$installed

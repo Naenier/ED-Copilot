@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
@@ -21,6 +22,8 @@ func (e *Engine) ExportCSVFor(kind, projectID string) (string, error) {
 		return e.Colonies.ExportCSV(projectID)
 	case "route":
 		return e.Route.ExportCSV()
+	case "riches":
+		return e.exportRichesCSV()
 	case "trading":
 		e.domainMu.Lock()
 		transactions := v.Rows(v.Clone(e.Trading.Transactions))
@@ -59,11 +62,50 @@ func (e *Engine) ExportPlanFor(kind, projectID string) ([]byte, error) {
 		return e.Colonies.ExportPlan(projectID)
 	case "engineering":
 		return encodeJSON(M{"format": "ed-copilot-engineering", "version": 1, "items": e.Engineering.ExportSettings()["items"]})
+	case "riches":
+		state := e.RichesStatus()
+		if state["route"] == nil {
+			return nil, errors.New("Сначала рассчитайте маршрут.")
+		}
+		return encodeJSON(M{"format": "ed-copilot-road-to-riches", "version": 1, "route": state["route"], "progress": state["progress"]})
 	case "objectives", "":
 		return encodeJSON(e.Snapshot()["objectives"])
 	default:
 		return nil, errors.New("Неизвестный вид плана для экспорта")
 	}
+}
+
+func (e *Engine) exportRichesCSV() (string, error) {
+	stops := v.Rows(v.At(e.RichesStatus(), "route", "stops"))
+	if len(stops) == 0 {
+		return "", errors.New("Сначала рассчитайте маршрут.")
+	}
+	english := e.Language() == "en"
+	header := []string{"№", "Система", "Планета", "Тип планеты", "Терраформируемая", "От точки прибытия, св. с.", "FSS, кр.", "DSS, кр.", "Прыжки (оценка)", "Завершено"}
+	types := map[string]string{"earthLike": "Землеподобная планета", "waterWorld": "Водная планета"}
+	if english {
+		header = []string{"Stop", "System", "Body", "Body type", "Terraformable", "Distance from arrival, ls", "FSS, Cr", "DSS, Cr", "Estimated jumps", "Complete"}
+		types = map[string]string{"earthLike": "Earth-like world", "waterWorld": "Water world"}
+	}
+	result := [][]string{header}
+	for index, stop := range stops {
+		order, system, jumps := strconv.Itoa(index+1), v.Str(stop["system"]), strconv.Itoa(v.Int(stop["estimatedJumps"]))
+		bodies := v.Rows(stop["bodies"])
+		if len(bodies) == 0 {
+			result = append(result, []string{order, system, "", "", "", "", "", "", jumps, ""})
+			continue
+		}
+		for _, body := range bodies {
+			terraformable := ""
+			if value, ok := body["terraformable"].(bool); ok {
+				terraformable = strconv.FormatBool(value)
+			}
+			result = append(result, []string{order, system, v.Str(body["name"]), types[v.Str(body["type"])], terraformable,
+				v.Str(body["distanceLs"]), v.Str(body["scanCredits"]), v.Str(body["mappingCredits"]), jumps, strconv.FormatBool(v.Bool(body["completed"]))})
+			jumps = ""
+		}
+	}
+	return exportRows(result)
 }
 
 func encodeJSON(value any) ([]byte, error) { return json.MarshalIndent(value, "", "  ") }

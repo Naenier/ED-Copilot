@@ -89,11 +89,6 @@ try {
         Copy-Item -LiteralPath 'README.ru.md' -Destination $stage
         Copy-Item -LiteralPath 'docs' -Destination $stage -Recurse
         Copy-Item -LiteralPath 'lib' -Destination $stage -Recurse
-        Copy-Item -LiteralPath 'dist/smoke-headless.json' -Destination $stage
-        if ($Smoke) {
-            Copy-Item -LiteralPath 'dist/smoke-native.json' -Destination $stage
-            Copy-Item -LiteralPath 'dist/smoke-stress.json' -Destination $stage
-        }
         if ($Package) {
             $archive = Join-Path $projectRoot "dist/ED-Copilot-$version-windows-amd64.zip"
             Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -CompressionLevel Optimal -Force

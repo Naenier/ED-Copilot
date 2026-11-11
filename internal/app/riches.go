@@ -23,6 +23,11 @@ func (e *Engine) RichesStatus() M {
 type richesBodyObservation struct {
 	Scanned bool `json:"scanned,omitempty"`
 	Mapped  bool `json:"mapped,omitempty"`
+	Manual  bool `json:"manual,omitempty"`
+}
+
+func (o richesBodyObservation) journalComplete(useMapping bool) bool {
+	return o.Mapped || !useMapping && o.Scanned
 }
 
 // A journey and its observations belong to one commander. Engine.mu protects
@@ -71,15 +76,11 @@ func (e *Engine) startRichesRoute(body M) (M, error) {
 	if err := validatePlanWorkspace(body, owner); err != nil {
 		return nil, err
 	}
-	opts := riches.Options{
-		Origin:      strings.TrimSpace(v.Text(body["origin"], currentSystem)),
-		JumpRangeLY: v.Num(body["jumpRangeLy"]),
-		RadiusLY:    v.Num(body["radiusLy"]),
-	}
-	if err := riches.Validate(opts); err != nil {
+	opts, err := richesOptions(body, currentSystem)
+	if err != nil {
 		return nil, err
 	}
-	input := M{"origin": opts.Origin, "jumpRangeLy": opts.JumpRangeLY, "radiusLy": opts.RadiusLY}
+	input := v.Obj(v.Clone(opts))
 	return e.start(richesJob, input, func(ctx context.Context, id uint64) (M, error) {
 		route, err := e.richesPlanner.Plan(ctx, opts)
 		if ctx.Err() != nil {
@@ -96,15 +97,61 @@ func (e *Engine) startRichesRoute(body M) (M, error) {
 		if ctx.Err() != nil || e.closed || e.jobIDs[richesJob] != id || e.planWorkspace.key != owner {
 			return nil, context.Canceled
 		}
-		journey := &richesJourney{Route: route, CreatedAt: time.Now().UTC()}
-		if matchesRichesSystem(route.Stops[0], v.Str(e.commander["system"]), v.Str(e.commander["systemAddress"])) {
-			journey.NextStop = 1
-		}
+		journey := e.newRichesJourneyLocked(route)
 		e.richesJourneys[owner] = journey
 		e.queueRichesClipboardLocked(journey)
 		e.revision++
 		return M{"status": "Маршрут построен", "options": input}, nil
 	}), nil
+}
+
+func richesOptions(body M, currentSystem string) (riches.Options, error) {
+	maxDistance, minMapping := float64(riches.DefaultMaxDistanceLS), int64(riches.DefaultMinMappingValue)
+	opts := riches.Options{
+		Origin: strings.TrimSpace(v.Text(body["origin"], currentSystem)), Destination: strings.TrimSpace(v.Str(body["destination"])),
+		JumpRangeLY: v.Num(body["jumpRangeLy"]), RadiusLY: v.Num(body["radiusLy"]),
+		MaxResults: riches.DefaultMaxResults, MaxDistanceLS: &maxDistance, MinMappingValue: &minMapping,
+		UseMappingValue: true, AvoidThargoids: true, Loop: true,
+	}
+	if raw, present := body["maxResults"]; present {
+		n, ok := v.Number(raw)
+		if !ok || n < 1 || n > riches.MaxStops || math.Trunc(n) != n {
+			return opts, errors.New("Укажите целое максимальное число систем.")
+		}
+		opts.MaxResults = int(n)
+	}
+	if raw, present := body["maxDistanceLs"]; present {
+		n, ok := v.Number(raw)
+		if !ok {
+			return opts, errors.New("Укажите расстояние от звезды в световых секундах.")
+		}
+		maxDistance = n
+	}
+	if raw, present := body["minMappingValue"]; present {
+		n, ok := v.Number(raw)
+		if !ok || n < 0 || n > riches.MaxMappingValue || math.Trunc(n) != n {
+			return opts, errors.New("Укажите целую минимальную награду за DSS в кредитах.")
+		}
+		minMapping = int64(n)
+	}
+	for key, flag := range map[string]*bool{"useMappingValue": &opts.UseMappingValue, "avoidThargoids": &opts.AvoidThargoids, "loop": &opts.Loop} {
+		if raw, present := body[key]; present {
+			checked, ok := raw.(bool)
+			if !ok {
+				return opts, errors.New("Параметры маршрута должны быть включены или выключены.")
+			}
+			*flag = checked
+		}
+	}
+	return opts, riches.Validate(opts)
+}
+
+func (e *Engine) newRichesJourneyLocked(route riches.Route) *richesJourney {
+	journey := &richesJourney{Route: route, CreatedAt: time.Now().UTC()}
+	if len(route.Stops) != 0 && matchesRichesSystem(route.Stops[0], v.Str(e.commander["system"]), v.Str(e.commander["systemAddress"])) {
+		journey.NextStop = 1
+	}
+	return journey
 }
 
 func (e *Engine) resetRichesSearchLocked() {
@@ -146,6 +193,54 @@ func (e *Engine) copyRichesDestination() error {
 	e.mu.Unlock()
 	e.Notify()
 	return nil
+}
+
+func (e *Engine) completeRichesBody(input M) error {
+	if err := e.setRichesBodyCompletion(input); err != nil {
+		return err
+	}
+	e.Notify()
+	return e.Save()
+}
+
+func (e *Engine) setRichesBodyCompletion(input M) error {
+	system, name := v.Str(input["system"]), v.Str(input["body"])
+	checked, valid := input["completed"].(bool)
+	if system == "" || name == "" || !valid {
+		return errors.New("Укажите планету и состояние её исследования.")
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	owner := e.planWorkspace.key
+	if err := validatePlanWorkspace(input, owner); err != nil {
+		return err
+	}
+	if journey := e.richesJourneys[owner]; journey != nil {
+		for _, stop := range journey.Route.Stops {
+			if !strings.EqualFold(stop.System, system) {
+				continue
+			}
+			for _, body := range stop.Bodies {
+				if !strings.EqualFold(body.Name, name) {
+					continue
+				}
+				key := richesBodyKey(stop, body)
+				observation := journey.Observed[key]
+				observation.Manual = checked
+				if observation == (richesBodyObservation{}) {
+					delete(journey.Observed, key)
+				} else {
+					if journey.Observed == nil {
+						journey.Observed = make(map[string]richesBodyObservation)
+					}
+					journey.Observed[key] = observation
+				}
+				e.revision++
+				return nil
+			}
+		}
+	}
+	return errors.New("Планета не найдена на текущем маршруте.")
 }
 
 func (e *Engine) queueRichesClipboardLocked(journey *richesJourney) {
@@ -265,6 +360,7 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 		out["route"] = route
 	}
 	var totalScan, totalMapping int64
+	useMapping := journey.Route.MaxResults == 0 || journey.Route.UseMappingValue
 	estimated, remaining := 0, 0
 	for i, stop := range journey.Route.Stops {
 		estimated += stop.EstimatedJumps
@@ -291,19 +387,26 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 				totalMapping += *body.MappingCredits
 			}
 			observation := journey.Observed[richesBodyKey(stop, body)]
+			journalCompleted := observation.journalComplete(useMapping)
+			completed := journalCompleted || observation.Manual
 			if includeRoute {
 				bodyRows[j]["scanned"], bodyRows[j]["mapped"] = observation.Scanned, observation.Mapped
+				bodyRows[j]["completed"], bodyRows[j]["manualCompleted"], bodyRows[j]["journalCompleted"] = completed, observation.Manual, journalCompleted
 			}
-			if current && !observation.Mapped && progress["target"] == nil {
+			if current && !completed && progress["target"] == nil {
 				progress["target"] = v.Clone(body)
 			}
-			if next && !observation.Mapped && progress["nextTarget"] == nil {
+			if next && !completed && progress["nextTarget"] == nil {
 				progress["nextTarget"] = v.Clone(body)
 			}
 		}
 	}
 	progress["estimatedJumps"], progress["remainingJumps"] = estimated, remaining
 	progress["totalScanCredits"], progress["totalMappingCredits"] = totalScan, totalMapping
+	progress["useMappingValue"], progress["totalRewardCredits"] = useMapping, totalScan
+	if useMapping {
+		progress["totalRewardCredits"] = totalMapping
+	}
 	progress["finished"] = progress["nextSystem"] == nil && progress["target"] == nil
 	out["progress"] = progress
 	return out

@@ -41,11 +41,13 @@ Star system fields offer up to twenty suggestions from Spansh and EDSM. Type thr
 
 ## Road to Riches
 
-Open **Galaxy → Road to Riches**, then enter a starting system, your ship's jump range and a search radius. The planner builds a route through water worlds and Earth-like worlds, showing planet designations, arrival distances and estimated FSS and DSS rewards. The FSS signal diagrams help identify both planet types in the scanner.
+Open **Galaxy → Road to Riches**, then enter your starting system, jump range and search radius. Set a destination or leave it blank to enable a return loop. Limit the number of systems and the distance from arrival to each planet, choose whether to rank targets by FSS or DSS reward, and skip known Thargoid systems. The minimum DSS reward defaults to **1,000,000 Cr**. Enter `0` to remove the minimum.
+
+The results list water worlds and Earth-like worlds with their arrival distances and estimated FSS and DSS rewards. Use the signal diagrams to identify both planet types in the FSS. View the route diagram, mark completed planets or export the route as CSV or JSON.
 
 Copilot copies the next system when the route is ready and after you arrive at each stop. Paste it into the in-game galaxy map with **Ctrl+V**. Overview and the flight overlay show your mapping target, next system, estimated payout and jump progress.
 
-![Road to Riches route, FSS signals and mapping targets](docs/screenshots/en/road-to-riches.png)
+![Road to Riches search filters, FSS signals and mapping targets](docs/screenshots/en/road-to-riches.png)
 
 ## Exobiology
 

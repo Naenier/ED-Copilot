@@ -11,9 +11,13 @@ func hudRiches(doc *HUDDocument, progress M) bool {
 	}
 
 	lines := make([]HUDLine, 0, 4)
+	rewardKey := "mappingCredits"
+	if useMapping, present := progress["useMappingValue"]; present && !v.Bool(useMapping) {
+		rewardKey = "scanCredits"
+	}
 	if body != "" {
 		var reward string
-		if credits := target["mappingCredits"]; hudKnown(credits) {
+		if credits := target[rewardKey]; hudKnown(credits) {
 			reward = "≈ " + Number(credits) + " кр."
 		}
 		lines = append(lines, hudValue(body, reward, "good"))
@@ -21,7 +25,7 @@ func hudRiches(doc *HUDDocument, progress M) bool {
 	if next != "" {
 		lines = append(lines, hudValue("Следующая система", next, "text"))
 	}
-	if total := progress["totalMappingCredits"]; hudKnown(total) {
+	if total := v.First(progress["totalRewardCredits"], progress["totalMappingCredits"]); hudKnown(total) {
 		lines = append(lines, hudValue("Оценка маршрута", "≈ "+Number(total)+" кр.", "text"))
 	}
 	done, remaining := progress["completedJumps"], progress["remainingJumps"]

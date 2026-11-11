@@ -33,7 +33,7 @@ func TestRichesJourneyFollowsShipJumpsAndMapping(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(engine.Close)
-	if _, err := engine.Do("/api/riches/route", M{"jumpRangeLy": 25, "radiusLy": 100}); err != nil {
+	if _, err := engine.Do("/api/riches/route", M{"jumpRangeLy": 25, "radiusLy": 100, "avoidThargoids": false, "loop": false, "minMappingValue": 0}); err != nil {
 		t.Fatal(err)
 	}
 	waitFrontierCondition(t, func() bool { return !v.Bool(v.At(engine.RichesStatus(), "search", "running")) })
@@ -72,6 +72,22 @@ func TestRichesJourneyFollowsShipJumpsAndMapping(t *testing.T) {
 		v.At(got, "target", "name") != "Riches A 1" || engine.PendingClipboard()["text"] != "Riches B" {
 		t.Fatalf("arrival did not advance the route: %v", got)
 	}
+	mark := M{"system": "Riches A", "body": "Riches A 1", "completed": true}
+	if _, err := engine.Do("/api/riches/route/complete", mark); err != nil || v.At(progress(), "target", "name") != "Riches A 2" {
+		t.Fatalf("manual completion did not advance the current body: %v", err)
+	}
+	data, err := engine.ExportPlan("riches")
+	if err != nil || !strings.Contains(string(data), `"manualCompleted": true`) {
+		t.Fatalf("route JSON omitted manual progress: %v", err)
+	}
+	dataCSV, err := engine.ExportCSV("riches")
+	if err != nil || !strings.Contains(dataCSV, "Riches A 1;Water world;;25;50;300;2;true") {
+		t.Fatalf("route CSV omitted target and progress: %v %q", err, dataCSV)
+	}
+	mark["completed"] = false
+	if _, err := engine.Do("/api/riches/route/complete", mark); err != nil || v.At(progress(), "target", "name") != "Riches A 1" {
+		t.Fatalf("unchecking a manual completion did not restore the body: %v", err)
+	}
 	add(event("SAAScanComplete", 4, M{"SystemAddress": 10, "BodyID": 1}))
 	if got := progress(); v.At(got, "target", "name") != "Riches A 2" {
 		t.Fatalf("mapping did not advance the current planet: %v", got)
@@ -98,5 +114,20 @@ func TestRichesJourneyFollowsShipJumpsAndMapping(t *testing.T) {
 	if got := v.Obj(reopened.RichesStatus()["progress"]); got["completedJumps"] != 3 ||
 		!v.Bool(got["finished"]) || reopened.PendingClipboard() != nil {
 		t.Fatalf("replay duplicated progress or copied a historical waypoint: %v", got)
+	}
+}
+
+func TestRichesRequestDefaultsAndExplicitOptions(t *testing.T) {
+	defaulted, err := richesOptions(M{"jumpRangeLy": 30, "radiusLy": 100}, "Sol")
+	if err != nil || defaulted.Origin != "Sol" || defaulted.MaxResults != 100 ||
+		*defaulted.MinMappingValue != 1_000_000 || *defaulted.MaxDistanceLS != 10_000 ||
+		!defaulted.UseMappingValue || !defaulted.AvoidThargoids || !defaulted.Loop {
+		t.Fatalf("unexpected defaults: %+v %v", defaulted, err)
+	}
+	explicit, err := richesOptions(M{"origin": "Sol", "destination": "Brestla", "jumpRangeLy": 30, "radiusLy": 100,
+		"maxResults": 3, "minMappingValue": 0, "maxDistanceLs": 0, "useMappingValue": false, "avoidThargoids": false, "loop": false}, "")
+	if err != nil || explicit.Destination != "Brestla" || explicit.MaxResults != 3 ||
+		*explicit.MinMappingValue != 0 || *explicit.MaxDistanceLS != 0 || explicit.UseMappingValue || explicit.AvoidThargoids || explicit.Loop {
+		t.Fatalf("explicit choices were lost: %+v %v", explicit, err)
 	}
 }

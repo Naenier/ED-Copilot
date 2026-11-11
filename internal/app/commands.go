@@ -445,6 +445,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return M{"ok": true}, e.clearRichesRoute()
 	case "/api/riches/route/copy":
 		return M{"ok": true}, e.copyRichesDestination()
+	case "/api/riches/route/complete":
+		return M{"ok": true}, e.completeRichesBody(body)
 	case "/api/carrier/route":
 		if err := e.networkAllowed(); err != nil {
 			return nil, err
