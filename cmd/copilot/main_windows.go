@@ -216,7 +216,17 @@ func main() {
 	}
 	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens, SmokeFixture: smokeFixture, Soak: soakFixture})
 	if err != nil {
-		if saveErr := engine.CloseWithSave(); saveErr != nil && !isolated {
+		saveErr := engine.CloseWithSave()
+		if *smoke || *readmeScreens || *soak != 0 {
+			b, _ := json.MarshalIndent(v.M{"ok": false, "version": app.Version, "problems": []string{err.Error()}}, "", "  ")
+			_ = os.MkdirAll(filepath.Dir(*report), 0700)
+			if reportErr := os.WriteFile(*report, b, 0600); reportErr != nil {
+				fmt.Fprintln(os.Stderr, errors.Join(err, reportErr))
+				os.Exit(1)
+			}
+			return
+		}
+		if saveErr != nil && !isolated {
 			nativeui.ResolveProfileSaveFailure(nil, engine, engine.Language(), saveErr)
 		}
 		fail(err, *dataDir)

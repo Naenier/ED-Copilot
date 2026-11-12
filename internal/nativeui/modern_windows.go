@@ -107,38 +107,15 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	u.main.Closing().Attach(func(cancelled *bool, reason walk.CloseReason) {
 		if !u.quitting {
 			*cancelled = true
+			if u.tray == nil {
+				u.main.Synchronize(u.quit)
+				return
+			}
 			u.saveBounds()
 			u.main.Hide()
 		}
 	})
-	u.tray, err = walk.NewNotifyIcon(u.main)
-	if err != nil {
-		u.dispose()
-		return nil, fmt.Errorf("Создание значка в области уведомлений: %w", err)
-	}
-	_ = u.tray.SetIcon(u.main.Icon())
-	_ = u.tray.SetToolTip("ED Copilot · помощник командира")
-	show := walk.NewAction()
-	_ = show.SetText("Открыть ED Copilot")
-	show.Triggered().Attach(func() { u.main.Show(); u.main.SetFocus() })
-	_ = u.tray.ContextMenu().Actions().Add(show)
-	hud := walk.NewAction()
-	_ = hud.SetText("Показать / скрыть оверлей")
-	hud.Triggered().Attach(func() {
-		u.execute(p.Action{Path: "/api/settings", Payload: M{"overlayEnabled": !v.Bool(v.At(u.state, "settings", "overlayEnabled"))}}, nil)
-	})
-	_ = u.tray.ContextMenu().Actions().Add(hud)
-	exit := walk.NewAction()
-	_ = exit.SetText("Выход")
-	exit.Triggered().Attach(u.quit)
-	_ = u.tray.ContextMenu().Actions().Add(exit)
-	u.tray.MouseDown().Attach(func(x, y int, b walk.MouseButton) {
-		if b == walk.LeftButton {
-			u.main.Show()
-			u.main.SetFocus()
-		}
-	})
-	_ = u.tray.SetVisible(true)
+	u.initModernTray()
 	u.applyNativeLanguage()
 	browser := edge.NewChromium()
 	u.modern.view = browser
@@ -200,6 +177,42 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	})
 	go u.watch()
 	return u, nil
+}
+
+func (u *Window) initModernTray() {
+	tray, err := walk.NewNotifyIcon(u.main)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Создание значка в области уведомлений:", err)
+		return
+	}
+	u.tray = tray
+	_ = tray.SetIcon(u.main.Icon())
+	_ = tray.SetToolTip("ED Copilot · помощник командира")
+	show := walk.NewAction()
+	_ = show.SetText("Открыть ED Copilot")
+	show.Triggered().Attach(func() { u.main.Show(); u.main.SetFocus() })
+	_ = tray.ContextMenu().Actions().Add(show)
+	hud := walk.NewAction()
+	_ = hud.SetText("Показать / скрыть оверлей")
+	hud.Triggered().Attach(func() {
+		u.execute(p.Action{Path: "/api/settings", Payload: M{"overlayEnabled": !v.Bool(v.At(u.state, "settings", "overlayEnabled"))}}, nil)
+	})
+	_ = tray.ContextMenu().Actions().Add(hud)
+	exit := walk.NewAction()
+	_ = exit.SetText("Выход")
+	exit.Triggered().Attach(u.quit)
+	_ = tray.ContextMenu().Actions().Add(exit)
+	tray.MouseDown().Attach(func(x, y int, b walk.MouseButton) {
+		if b == walk.LeftButton {
+			u.main.Show()
+			u.main.SetFocus()
+		}
+	})
+	if err := tray.SetVisible(true); err != nil {
+		fmt.Fprintln(os.Stderr, "Отображение значка в области уведомлений:", err)
+		tray.Dispose()
+		u.tray = nil
+	}
 }
 
 func (m *modernShell) close() {
@@ -785,8 +798,12 @@ func (m *modernShell) windowAction(action string) (M, error) {
 		}
 		u.saveBounds()
 	case "hide":
-		u.saveBounds()
-		u.main.Hide()
+		if u.tray != nil {
+			u.saveBounds()
+			u.main.Hide()
+			break
+		}
+		fallthrough
 	case "quit":
 		go func() { time.Sleep(40 * time.Millisecond); u.main.Synchronize(u.quit) }()
 	case "fullscreen", "windowed", "borderless":

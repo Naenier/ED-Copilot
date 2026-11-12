@@ -50,15 +50,19 @@ try {
         param([string]$Mode, [string]$ReportName, [switch]$StressRun)
         $report = Join-Path $projectRoot ('dist/' + $ReportName)
         if (Test-Path -LiteralPath $report) { Remove-Item -LiteralPath $report -Force }
+        $stderr = [IO.Path]::ChangeExtension($report, '.stderr.txt')
         $smokeArguments = @($Mode, '--smoke-report', ('"' + $report + '"'))
         if ($StressRun) { $smokeArguments += '--stress' }
-        $process = Start-Process -FilePath $binary -ArgumentList $smokeArguments -WindowStyle Hidden -PassThru
+        $process = Start-Process -FilePath $binary -ArgumentList $smokeArguments -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
         $timeoutMs = if ($Mode -eq '--smoke') { 180000 } else { 60000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id
             throw "Smoke timed out: $Mode"
         }
-        if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw "Smoke failed: $Mode" }
+        if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) {
+            Get-Content -LiteralPath $stderr -Tail 100
+            throw "Smoke failed: $Mode (exit $($process.ExitCode), report present: $(Test-Path -LiteralPath $report))"
+        }
         $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
         if (-not $result.ok) {
             # These reports belong to the isolated, network-disabled profile.
