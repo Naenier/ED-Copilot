@@ -74,6 +74,9 @@ func runHelper(ctx context.Context, manifest, helperPath string, system helperSy
 	if p.Applied {
 		return errors.New("update was already applied")
 	}
+	if _, blocked := unfinishedRecovery(root, p.Version); blocked {
+		return errors.New("this release already has an update recovery record")
+	}
 	if !system.installed(p.Executable) {
 		return errors.New("original installation no longer matches")
 	}
@@ -96,17 +99,31 @@ func runHelper(ctx context.Context, manifest, helperPath string, system helperSy
 	if err != nil || !newer(p.Version, actualVersion) {
 		return errors.New("staged release is not newer than the installed executable")
 	}
+	recovery, err := prepareRecovery(root, p.Executable, actualVersion, p.Version)
+	if err != nil {
+		return errors.Join(errors.New("cannot save the previous application and profile"), err)
+	}
 	setup := filepath.Join(root, p.Version, "setup.exe")
 	args := installerArguments(filepath.Dir(p.Executable), filepath.Join(root, p.Version, "install.log"))
 	code, err := system.install(ctx, setup, args)
 	if (err != nil && code != 3010) || (code != 0 && code != 3010) {
-		return errors.New("quiet update installation did not complete")
+		recovery.Status = recoveryFailed
+		return errors.Join(errors.New("quiet update installation did not complete"), writeRecovery(root, recovery))
 	}
 	actualVersion, err = system.fileVersion(p.Executable)
-	if err != nil || actualVersion != p.Version {
-		return errors.New("installed executable did not reach the verified target version")
+	if code == 3010 {
+		recovery.Status = recoveryReboot
+	} else if err != nil || actualVersion != p.Version {
+		recovery.Status = recoveryFailed
+		return errors.Join(errors.New("installed executable did not reach the verified target version"), writeRecovery(root, recovery))
+	} else {
+		recovery.Status = recoveryStarting
 	}
-	p.Applied = true
+	if err := writeRecovery(root, recovery); err != nil {
+		return err
+	}
+	p.FromVersion = recovery.FromVersion
+	p.Applied = err == nil && actualVersion == p.Version
 	if err = writeJSON(manifest, p); err != nil {
 		return errors.New("cannot record completed update")
 	}

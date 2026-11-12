@@ -9,7 +9,7 @@ function render(C,u){
  const metric=(label,value,description,ico)=>`<div class="metric"><div class="metric-label">${icon(ico)}${esc(label)}</div><div class="metric-value">${esc(value)}</div>${description?`<div class="metric-foot">${esc(description)}</div>`:''}</div>`;
  const modes=u.renderModes?u.renderModes(true):'';
  const riches=window.RichesUI?.renderOverview(C,u)||'';
- const openRiches=!riches&&C.tabs?.some(tab=>tab.ID==='riches')?btn(t('Дорога к богатству'),'navigate-riches','route','quiet'):'';
+ const openRiches=!riches&&C.tabs?.some(tab=>tab.ID==='riches')?btn(t('Картография'),'navigate-riches','route','quiet'):'';
  const page=body=>'<div class="overview-page">'+body+'</div>';
  const goals=(s.objectives||[]).filter(g=>!['complete','completed','cancelled'].includes(g.status)),fuel=p.fuel||{};
  const add=C.actions.find(a=>a.id.includes('add'))||C.actions[0];

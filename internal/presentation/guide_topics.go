@@ -66,6 +66,8 @@ Select Planetary mining in the overlay. Refined commodities go into cargo and ap
 Use Targets to find a gathering site and select Raw material gathering in the overlay. Review Material Trader exchanges before spending materials reserved for your plan.`},
 	"mining-analysis": {guideMining, "Mining runs, equipment and income", `Current run shows refined tonnage, observed rate and prospecting. Equipment checks the selected mining method against the known loadout. History lists past observations.
 
+Open Compare mining runs and select up to four runs. Compare time between the first and last mining entries with the trip from undocking to docking. Confirmed revenue follows identifiable cargo through recorded market sales. Estimated remaining value uses reference prices, including for identifiable cargo held on a carrier. For asteroid prospecting, compare hit rate, the average of measured finds and the average across all scans.
+
 Use Plan to estimate a run from cargo target, reference sale price, travel time and costs. Start a new run to track the next trip separately.`},
 	"trade": {guideTrade, "Buying and selling commodities", `Open Markets and choose whether to buy a commodity or sell cargo. Set the quantity, starting system, pad size, radius and quote-age limit.
 

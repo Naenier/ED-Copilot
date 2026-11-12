@@ -57,13 +57,56 @@ jobs:
             dist/smoke-native.json
             dist/smoke-stress.json
             dist/smoke-installer.json
-  release:
+            dist/application.cdx.json
+            dist/installer.cdx.json
+  attest:
     needs: verify
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
+    if: github.repository == 'Naenier/ED-Copilot' && github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')
+    runs-on: windows-2025
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: verified-windows-amd64-${{ github.sha }}
+          path: dist
+      - name: Verify exact tested bytes before attesting
+        shell: pwsh
+        run: ./scripts/verify-release.ps1 -Directory ./dist -ExpectedCommit $env:GITHUB_SHA -SourceRoot .
+      - name: Attest Windows package and release metadata provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            dist/ED Copilot.exe
+            dist/ED-Copilot-*-Setup.exe
+            dist/ED-Copilot-*-windows-amd64.zip
+            dist/SHA256SUMS.txt
+            dist/release-manifest.json
+      - name: Attest the application inventory
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            dist/ED Copilot.exe
+            dist/ED-Copilot-*-windows-amd64.zip
+          sbom-path: dist/application.cdx.json
+      - name: Attest the installer inventory
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/ED-Copilot-*-Setup.exe
+          sbom-path: dist/installer.cdx.json
+  release:
+    needs: attest
     runs-on: windows-2025
     timeout-minutes: 10
     permissions:
       contents: write
+      attestations: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

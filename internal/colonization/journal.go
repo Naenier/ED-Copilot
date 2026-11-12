@@ -22,6 +22,11 @@ func (p *Planner) Apply(event, context M) {
 		p.commander = fid
 		p.ensureSelectedLocked()
 	}
+	p.observeJournalSystem(event, context)
+	if typ == "Scan" || typ == "SAASignalsFound" {
+		p.observeDevelopmentBody(event, context)
+		return
+	}
 	if !has([]string{"ColonisationConstructionDepot", "ColonisationContribution", "ColonisationSystemClaim", "ColonisationSystemClaimRelease", "ColonisationBeaconDeployed", "Docked", "Location", "CargoTransfer", "MarketBuy", "MarketSell"}, typ) {
 		return
 	}
@@ -51,12 +56,18 @@ func (p *Planner) Apply(event, context M) {
 	if typ == "Docked" || typ == "Location" {
 		id := marketID(event["MarketID"])
 		if id != "" && station != "" {
+			observedAt := any(nil)
+			if value.Bool(value.At(context, "game", "live")) && !value.Bool(context["side"]) && !value.Bool(value.At(context, "game", "multicrew")) {
+				observedAt = validDate(event["timestamp"])
+			}
 			localized := text(firstText(event["StationName_Localised"], event["StationName_Localized"]), 200)
 			if localized == "" && p.stations[id]["name"] == station {
 				localized = str(p.stations[id]["displayName"])
 			}
-			p.stations[id] = M{"marketId": id, "name": station, "displayName": localized, "system": system, "systemAddress": marketID(firstText(event["SystemAddress"], commander["systemAddress"])), "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "type": text(event["StationType"], 200), "services": stringsOf(event["StationServices"]), "hasColonisationContact": colonisationContact(event, event["StationServices"]), "timestamp": timestamp, "visited": typ == "Docked" || value.Bool(event["Docked"])}
+			observed := M{"marketId": id, "name": station, "displayName": localized, "system": system, "systemAddress": marketID(firstText(event["SystemAddress"], commander["systemAddress"])), "faction": text(value.Obj(event["StationFaction"])["Name"], 200), "type": text(event["StationType"], 200), "services": stringsOf(event["StationServices"]), "hasColonisationContact": colonisationContact(event, event["StationServices"]), "timestamp": timestamp, "visited": typ == "Docked" || value.Bool(event["Docked"])}
+			p.stations[id] = developmentStationSnapshot(observed, p.stations[id], event, value.Time(timestamp))
 			if typ == "Docked" || value.Bool(event["Docked"]) {
+				p.stations[id]["historyAt"] = observedAt
 				p.discoverStationLocked(p.stations[id])
 			}
 		}
@@ -80,7 +91,11 @@ func (p *Planner) Apply(event, context M) {
 		}
 		progress, known := value.Number(event["ConstructionProgress"])
 		p.depots[id] = M{"marketId": id, "system": system, "systemAddress": marketID(firstText(event["SystemAddress"], commander["systemAddress"])), "station": station, "stationType": text(firstText(event["StationType"], p.stations[id]["type"]), 200), "stationDisplayName": stationDisplayName, "timestamp": timestamp, "sequence": sequence, "constructionProgress": value.Nullable(value.Clamp(progress, 0, 1), known), "complete": value.Bool(event["ConstructionComplete"]), "failed": value.Bool(event["ConstructionFailed"]), "requirements": rs}
+		if value.Bool(value.At(context, "game", "live")) && !value.Bool(context["side"]) && !value.Bool(value.At(context, "game", "multicrew")) {
+			p.depots[id]["historyAt"] = validDate(event["timestamp"])
+		}
 		p.discoverDepotLocked(p.depots[id])
+		p.reconcileSupplyReservations(context, id, value.Time(timestamp), nil)
 		return
 	}
 	if typ == "ColonisationContribution" {
@@ -104,6 +119,7 @@ func (p *Planner) Apply(event, context M) {
 			idEvent = eventID(context["file"], context["offset"])
 		}
 		p.contributions = append(p.contributions, M{"id": idEvent, "marketId": id, "system": system, "timestamp": timestamp, "sequence": sequence, "resources": rs, "source": "journal"})
+		p.reconcileSupplyReservations(context, id, value.Time(timestamp), rs)
 		return
 	}
 	target := text(firstText(event["SystemName"], event["StarSystem"], system), 200)

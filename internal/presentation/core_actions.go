@@ -168,6 +168,22 @@ func coreActions(tab, mode string, state, selected, prefill M) []Action {
 				usedCapacity = capacity - free
 			}
 		}
+		location := v.Str(v.At(c, "location", "system"))
+		if location != "" && strings.EqualFold(location, v.Text(o["sourceSystem"], location)) && !v.Bool(v.At(c, "fuel", "needsRefresh")) {
+			o = v.Copy(o)
+			if tank, known := v.Number(v.At(c, "fuel", "tankTons")); known {
+				o["tankTons"] = tank
+			}
+			if stock, known := v.Number(v.At(c, "fuel", "reserveTons")); known {
+				o["cargoTritiumTons"] = stock
+			}
+			if capacity, known := v.Number(v.At(c, "space", "capacityTons")); known {
+				if free, known := v.Number(v.At(c, "space", "freeTons")); known && free >= 0 && free <= capacity {
+					o["usedCapacityTons"] = capacity - free
+				}
+			}
+		}
+		usedCapacity = max(usedCapacity, v.Num(v.First(o["cargoTritiumTons"], v.At(c, "fuel", "reserveTons"))))
 		fields := []Field{textField("sourceSystem", "Откуда", v.First(o["sourceSystem"], v.At(c, "location", "system"), cmd["system"])), {Key: "destinationSystem", Label: "Куда", Kind: "text", Required: true, Default: o["destinationSystem"]}, {Key: "waypoints", Label: "Промежуточные системы — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["waypoints"]), "\r\n")}, {Key: "refuelSystems", Label: "Системы дозаправки — по одной в строке", Kind: "multiline", Default: strings.Join(toStrings(o["refuelSystems"]), "\r\n")}, boolField("calculateStartingFuel", "Рассчитать минимальный стартовый запас трития", minimumFuel), numberField("usedCapacityTons", "Занято вместимости флотоносца, т", v.First(o["usedCapacityTons"], usedCapacity), 0, 25000), numberField("tankTons", "Тритий в баке, т", v.First(o["tankTons"], v.At(c, "fuel", "tankTons"), 1000), 0, 1000), numberField("cargoTritiumTons", "Тритий на складе, т", v.First(o["cargoTritiumTons"], v.At(c, "fuel", "reserveTons"), 0), 0, 25000), numberField("reserveTritiumTons", "Оставить трития по прибытии, т", v.First(o["reserveTritiumTons"], v.At(c, "planning", "reserveTritium"), 0), 0, 26000), {Key: "departureTime", Label: "Начало маршрута", Kind: "datetime", Default: o["departureTime"], Help: "Пусто — начинать сейчас. Время в вашем часовом поясе."}, numberField("jumpMinutes", "Подготовка прыжка, мин", v.First(o["jumpMinutes"], 15), 1, 240), numberField("cooldownMinutes", "Восстановление, мин", v.First(o["cooldownMinutes"], 5), 0, 120), numberField("overheadMinutes", "Операции между прыжками, мин", v.First(o["overheadMinutes"], 1), 0, 240), numberField("maxQueueMinutes", "Возможная дополнительная очередь, мин", v.First(o["maxQueueMinutes"], 0), 0, 240), selectField("refuelMethod", "Пополнение трития", v.First(o["refuelMethod"], "mine"), ChoicePairs("mine", "Добывать", "buy", "Покупать", "manual", "Перегружать")), numberField("miningTonsPerHour", "Темп добычи трития, т/ч", v.First(o["miningTonsPerHour"], 150), 1, 10000), numberField("refuelMinutes", "Время получения и доставки трития на остановке, мин", v.First(o["refuelMinutes"], 0), 0, 10080), numberField("tritiumPrice", "Цена трития, кр./т", v.First(o["tritiumPrice"], 0), 0, 1e8)}
 		for i := range fields {
 			if fields[i].Key == "calculateStartingFuel" {
@@ -176,7 +192,7 @@ func coreActions(tab, mode string, state, selected, prefill M) []Action {
 		}
 		return []Action{newAction("route.calculate", "Рассчитать маршрут", "/api/carrier/route", nil, fields...), {ID: "route.visited", Title: "Пройдено до этой остановки", Path: "/api/carrier/route/visited", Payload: M{"index": selected["index"]}, Disabled: selected["index"] == nil, Confirm: "Отметить этот этап маршрута пройденным в личном плане?"}, export("route.export", "Экспорт маршрута CSV", "/api/carrier/route.csv"), newAction("route.cancel", "Остановить расчёт", "/api/carrier/route/cancel", nil), copySystem(v.First(selected["name"], selected["system"]))}
 	case "engineering":
-		if mode == "" || mode == EngineeringProgression {
+		if mode == "" || mode == EngineeringProgression || mode == EngineeringOdyssey {
 			return nil
 		}
 		e := v.Obj(state["engineering"])

@@ -26,7 +26,8 @@ type requestFailure struct {
 	failedAt    time.Time
 }
 
-func (f requestFailure) Error() string { return f.description }
+func (f requestFailure) Error() string      { return f.description }
+func (f requestFailure) RetryAt() time.Time { return f.retryAt }
 
 func failureDetails(err error, now time.Time) requestFailure {
 	var f requestFailure
@@ -86,6 +87,9 @@ func (s *Service) request(ctx context.Context, method, address string, body M) (
 		at, _ := http.ParseTime(retry)
 		if seconds, err := strconv.ParseInt(retry, 10, 64); err == nil && seconds > 0 {
 			at = s.opts.Now().Add(time.Duration(min(seconds, 3600)) * time.Second)
+		}
+		if floor := s.opts.Now().Add(time.Minute); at.Before(floor) {
+			at = floor
 		}
 		return nil, requestFailure{reason: freshness.RateLimited, description: "Public data HTTP 429", retryAt: at}
 	}
@@ -147,43 +151,11 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 		return M{"goals": goals}, nil
 	}
 	if kind == "system" {
-		names, err := s.request(ctx, "GET", base+"/systems/field_values/system_names?q="+url.QueryEscape(name), nil)
+		record, err := s.PublicSystem(ctx, name, "")
 		if err != nil {
 			return nil, err
 		}
-		if v.Arr(names["min_max"]) == nil {
-			return nil, incomplete("Public system name index is missing")
-		}
-		address := ""
-		for _, candidate := range boundedRows(names["min_max"], 30) {
-			if key(v.Str(candidate["name"])) == key(name) {
-				address = clean(candidate["id64"], 100)
-				break
-			}
-		}
-		if address == "" {
-			return nil, requestFailure{reason: freshness.NoMatch, description: "Exact system is not present in the public name index"}
-		}
-		for _, r := range address {
-			if r < '0' || r > '9' {
-				return nil, errors.New("Invalid public system address")
-			}
-		}
-		raw, err := s.request(ctx, "GET", base+"/system/"+address, nil)
-		if err != nil {
-			return nil, err
-		}
-		record := v.Obj(raw["record"])
-		if key(v.Str(record["name"])) != key(name) {
-			return nil, incomplete("Public system response does not match the requested name")
-		}
-		now := s.now()
-		normalized := NormalizePublicSystem(record, now)
-		if normalized == nil {
-			return nil, incomplete("Public system record is missing")
-		}
-		normalized["detailsFetchedAt"] = now
-		return M{"system": normalized}, nil
+		return M{"system": record}, nil
 	}
 	field := "power_state"
 	if kind == "thargoid" {
@@ -286,6 +258,57 @@ func (s *Service) fetch(ctx context.Context, kind, name, power, state, language 
 	search["fetchedAt"] = now
 	search["partial"] = len(entries) < len(v.Arr(items)) || search["total"] == nil
 	return M{"index": index, "search": search}, nil
+}
+
+// PublicSystem reads one public system snapshot without changing the user's
+// politics selection or cancelling an in-progress politics search.
+func (s *Service) PublicSystem(ctx context.Context, name, address string) (M, error) {
+	if s.opts.DisableNetwork {
+		return nil, errors.New("Public data is offline")
+	}
+	name = clean(name, 200)
+	if name == "" {
+		return nil, errors.New("Enter a system name")
+	}
+	base := strings.TrimRight(s.opts.SpanshURL, "/")
+	if address == "" {
+		names, err := s.request(ctx, "GET", base+"/systems/field_values/system_names?q="+url.QueryEscape(name), nil)
+		if err != nil {
+			return nil, err
+		}
+		if v.Arr(names["min_max"]) == nil {
+			return nil, incomplete("Public system name index is missing")
+		}
+		for _, candidate := range boundedRows(names["min_max"], 30) {
+			if key(v.Str(candidate["name"])) == key(name) {
+				address = clean(candidate["id64"], 100)
+				break
+			}
+		}
+		if address == "" {
+			return nil, requestFailure{reason: freshness.NoMatch, description: "Exact system is not present in the public name index"}
+		}
+	}
+	id, err := strconv.ParseUint(address, 10, 64)
+	if err != nil {
+		return nil, errors.New("Invalid public system address")
+	}
+	address = strconv.FormatUint(id, 10)
+	raw, err := s.request(ctx, "GET", base+"/system/"+address, nil)
+	if err != nil {
+		return nil, err
+	}
+	record := v.Obj(raw["record"])
+	if key(v.Str(record["name"])) != key(name) || v.Str(record["id64"]) != address {
+		return nil, incomplete("Public system response does not match the requested system")
+	}
+	now := s.now()
+	normalized := NormalizePublicSystem(record, now)
+	if normalized == nil {
+		return nil, incomplete("Public system record is missing")
+	}
+	normalized["detailsFetchedAt"] = now
+	return normalized, nil
 }
 
 func numericString(raw any) any {

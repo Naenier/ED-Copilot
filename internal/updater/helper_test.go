@@ -8,6 +8,9 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Naenier/ED-Copilot/internal/profile"
+	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
 type fakeHelper struct {
@@ -66,6 +69,9 @@ func (f *fakeHelper) restart(_ string, args []string) error {
 func stagedHelper(t *testing.T) (*updateFixture, string, string) {
 	t.Helper()
 	f := fixture(t)
+	if err := profile.SaveSettings(f.m.opts.DataDir, v.M{"objectives": []v.M{{"title": "Before the update"}}}); err != nil {
+		t.Fatal(err)
+	}
 	if err := f.m.Check(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -145,6 +151,111 @@ func TestHelperInstallerFailureDoesNotMarkApplied(t *testing.T) {
 	p, err := f.m.readPending()
 	if err != nil || p.Applied {
 		t.Fatal(p, err)
+	}
+	recovery, err := readRecovery(f.m.root)
+	if err != nil || recovery.Status != recoveryFailed {
+		t.Fatalf("failed installation did not keep a recovery record: %v %v", recovery, err)
+	}
+	second := &fakeHelper{}
+	if err := runHelper(context.Background(), manifest, helper, second); err == nil || len(second.calls) != 0 {
+		t.Fatalf("failed release was retried: %v %v", second.calls, err)
+	}
+	if err := f.m.Check(context.Background()); err != nil || f.m.Snapshot().Status != "recovery" || f.m.Snapshot().Staged {
+		t.Fatalf("the previous application should offer recovery instead of staging again: %v %v", f.m.Snapshot(), err)
+	}
+}
+
+func TestUpdateRecoveryRequiresWorkspaceAndPreservesNewerProfile(t *testing.T) {
+	f, manifest, helper := stagedHelper(t)
+	if err := runHelper(context.Background(), manifest, helper, &fakeHelper{}); err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := readRecovery(f.m.root)
+	if err != nil || recovery.Status != recoveryStarting || RecoveryLauncher(f.m.opts.DataDir, "2.7.0") == "" {
+		t.Fatalf("installer completion counted as desktop startup: %v %v", recovery, err)
+	}
+	latest, err := New(Options{CurrentVersion: "2.7.0", DataDir: f.m.opts.DataDir, Executable: f.m.opts.Executable})
+	if err != nil {
+		t.Fatal(err)
+	}
+	latest.installed = f.m.installed
+	if notice, err := latest.ConsumeNotice(); err != nil || notice != nil {
+		t.Fatalf("notice before a usable workspace: %v %v", notice, err)
+	}
+	if err := profile.SaveSettings(f.m.opts.DataDir, v.M{"objectives": []v.M{{"title": "After the update"}}}); err != nil {
+		t.Fatal(err)
+	}
+	previous := &fakeHelper{}
+	backup := filepath.Join(recovery.directory(f.m.root), recoveryBinary)
+	if err := launchRecovery(context.Background(), recovery.directory(f.m.root), backup, previous); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(previous.calls, []string{"mutex", "restart"}) || len(previous.restartArgs) != 2 || previous.restartArgs[0] != "--data-dir" {
+		t.Fatalf("manual recovery ran installation or used the main profile: %v %v", previous.calls, previous.restartArgs)
+	}
+	check := func(dir, want string) {
+		t.Helper()
+		settings, err := profile.LoadSettings(dir)
+		goals := v.Rows(settings["objectives"])
+		if err != nil || len(goals) != 1 || goals[0]["title"] != want {
+			t.Fatalf("wrong recovery contents: %v %v", goals, err)
+		}
+	}
+	check(previous.restartArgs[1], "Before the update")
+	check(f.m.opts.DataDir, "After the update")
+	if err := latest.MarkWorkspaceReady(); err != nil {
+		t.Fatal(err)
+	}
+	if current, err := readRecovery(f.m.root); err != nil || current.Status != recoveryReady {
+		t.Fatalf("successful first workspace did not mark the update ready: %v %v", current, err)
+	}
+	if notice, err := latest.ConsumeNotice(); err != nil || notice == nil || notice.Version != "2.7.0" {
+		t.Fatalf("missing update notice after workspace ready: %v %v", notice, err)
+	}
+}
+
+func TestUpdateRecoveryHandlesPendingWindowsRestart(t *testing.T) {
+	f, manifest, helper := stagedHelper(t)
+	system := &fakeHelper{code: 3010, postVersion: "2.6.0"}
+	if err := runHelper(context.Background(), manifest, helper, system); err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := readRecovery(f.m.root)
+	p, pendingErr := f.m.readPending()
+	if err != nil || pendingErr != nil || recovery.Status != recoveryReboot || p.Applied || len(system.restartArgs) != 0 {
+		t.Fatalf("unsafe handling of a pending reboot: %v %v %v %v", recovery, p, err, pendingErr)
+	}
+	f.m.opts.CurrentVersion = "2.7.0" // The new executable opened after Windows restarted.
+	if err := f.m.MarkWorkspaceReady(); err != nil {
+		t.Fatal(err)
+	}
+	if p, err := f.m.readPending(); err != nil || !p.Applied {
+		t.Fatalf("successful launch after reboot did not complete the update: %v %v", p, err)
+	}
+}
+
+func TestInterruptedUpdateRequiresVerifiedTargetAndActualWorkspace(t *testing.T) {
+	f, manifest, helper := stagedHelper(t)
+	recovery, err := prepareRecovery(f.m.root, f.m.opts.Executable, "2.6.1", "2.7.0")
+	if err != nil || recovery.Status != recoveryApplying {
+		t.Fatal(recovery, err)
+	}
+	system := &fakeHelper{}
+	if err := runHelper(context.Background(), manifest, helper, system); err == nil || len(system.calls) != 0 {
+		t.Fatalf("incomplete installation was restarted: %v %v", system.calls, err)
+	}
+	if err := f.m.MarkWorkspaceReady(); err != nil {
+		t.Fatal(err)
+	}
+	if current, _ := readRecovery(f.m.root); current.Status != recoveryApplying {
+		t.Fatal("old workspace confirmed the new version", current)
+	}
+	f.m.opts.CurrentVersion = "2.7.0"
+	if err := f.m.MarkWorkspaceReady(); err != nil {
+		t.Fatal(err)
+	}
+	if notice, err := f.m.ConsumeNotice(); err != nil || notice == nil || notice.FromVersion != "2.6.1" {
+		t.Fatalf("verified workspace could not complete an interrupted install: %v %v", notice, err)
 	}
 }
 func TestMalformedHelperFlagsAreHandledWithoutNormalStartup(t *testing.T) {

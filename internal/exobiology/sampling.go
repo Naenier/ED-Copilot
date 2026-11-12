@@ -57,7 +57,7 @@ func fixFrom(raw M, b *body, at string) M {
 	return out
 }
 
-func (s *Service) observeStatus(raw, cmd M) {
+func (s *Service) observeStatus(raw, cmd M, fromStatusFile bool) {
 	name := v.Text(raw["BodyName"], cmd["body"])
 	if name == "" {
 		s.liveFix = nil
@@ -74,6 +74,15 @@ func (s *Service) observeStatus(raw, cmd M) {
 		}
 	}
 	if b == nil {
+		if normal(v.Str(cmd["body"])) == normal(name) {
+			b = s.ensureBody(cmd["systemAddress"], numericBodyID(v.First(cmd["bodyId"], cmd["bodyID"])), name, v.Str(cmd["system"]), v.Str(raw["timestamp"]))
+		}
+		if b == nil {
+			s.liveFix = nil
+			return
+		}
+	}
+	if flags, known := v.Number(raw["Flags"]); fromStatusFile && known && uint64(flags)&(1<<21) == 0 {
 		s.liveFix = nil
 		return
 	}
@@ -85,6 +94,13 @@ func (s *Service) observeStatus(raw, cmd M) {
 	s.current = b.Key
 	s.liveFix = fix
 	s.fixSeen = time.Now()
+	at := v.Time(fix["at"])
+	if fromStatusFile && (at.IsZero() || s.fixSeen.Sub(at) > 15*time.Second || at.Sub(s.fixSeen) > 10*time.Second) {
+		s.fixSeen = time.Time{}
+	}
+	if !s.fixSeen.IsZero() {
+		s.recordRadarFix(fix, cmd)
+	}
 	if s.tracker != nil && s.tracker["phase"] == "tracking" {
 		tr := s.trackerSnapshot()
 		if tr["nearestSampleMeetsMin"] == true && s.tracker["distanceReadyNotified"] != true {

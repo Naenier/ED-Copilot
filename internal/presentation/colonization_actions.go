@@ -141,6 +141,10 @@ func ColonyActions(mode string, state M, selected M) []Action {
 		buildingID := v.Str(selectedBuild["id"])
 		bs := []Choice{{"planned", "В плане"}, {"building", "Строится"}, {"complete", "Построено"}, {"cancelled", "Отменено"}}
 		fields := []Field{{Key: "name", Label: "Имя объекта", Kind: "text", Default: selectedBuild["name"]}, {Key: "body", Label: "Небесное тело", Kind: "text", Default: selectedBuild["body"]}, {Key: "status", Label: "Личный статус", Kind: "select", Choices: bs, Default: v.Text(selectedBuild["manualStatus"], selectedBuild["status"], "planned")}, {Key: "tierOverride", Label: "Уровень по экрану архитектора", Kind: "select", Choices: []Choice{{"", "По каталогу"}, {"1", "T1"}, {"2", "T2"}, {"3", "T3"}}, Default: colonyOptionalText(selectedBuild["tierOverride"])}, colonyInteger("pointCostOverride", "Стоимость начала в очках — свой вариант", selectedBuild["pointCostOverride"], false, 0, 100000), colonyInteger("pointRewardOverride", "Очки за завершение — свой вариант", selectedBuild["pointRewardOverride"], false, 0, 100000), {Key: "notes", Label: "Заметки", Kind: "multiline", Default: selectedBuild["notes"]}}
+		typeChoices := colonyNamedChoices(catalog, "id", "name", false)
+		if len(typeChoices) > 0 {
+			fields = append([]Field{{Key: "typeId", Label: "Тип объекта", Kind: "select", Choices: typeChoices, Required: true, Default: v.Text(selectedBuild["catalogTypeId"], selectedBuild["typeId"])}}, fields...)
+		}
 		editBuild := post("colony.edit-building", "Изменить выбранный объект", "update-building", M{"id": buildingID}, fields...)
 		editBuild.Transform = func(body M) (M, error) {
 			for _, key := range []string{"tierOverride", "pointCostOverride", "pointRewardOverride"} {

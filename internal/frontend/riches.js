@@ -1,4 +1,4 @@
-/* Road to Riches shows the route and journal progress maintained by Go. */
+/* Cartography shows the route and journal progress maintained by Go. */
 (() => {
   'use strict';
 
@@ -74,7 +74,7 @@
       : (nextSystem ? u.btn('Копировать следующую систему', 'riches-copy-next', 'copy', 'quiet') : '');
     return `<section class="panel riches-summary" aria-labelledby="riches-summary-title">
       <header class="riches-section-head">
-        <h2 id="riches-summary-title">${u.icon(finished ? 'circle-check' : 'route')}${text(u, overview ? 'Дорога к богатству' : 'Прогресс маршрута')}</h2>${actions}
+        <h2 id="riches-summary-title">${u.icon(finished ? 'circle-check' : 'route')}${text(u, overview ? 'Картография' : 'Прогресс маршрута')}</h2>${actions}
       </header>
       <dl class="riches-metrics">
         ${metric(u, progress.target ? 'Планета в текущей системе' : 'Планета в следующей системе', u.esc(targetName || '—'), u.esc(targetDetails))}
@@ -301,7 +301,7 @@
   function render(C, u) {
     const description = 'Маршрут к водным и землеподобным мирам. ED Copilot копирует следующую систему при построении маршрута и по прибытии в каждую точку.';
     return `<div class="riches-page">
-      ${u.heading(u.t('Дорога к богатству'), u.t(description))}
+      ${u.heading(u.t('Картография'), u.t(description))}
       ${summary(C, u)}
       <div class="riches-planning-grid">${form(C, u)}${scanner(u)}</div>
       ${routeStatus(C, u)}

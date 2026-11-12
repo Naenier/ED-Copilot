@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Naenier/ED-Copilot/internal/carrier"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
@@ -21,7 +22,7 @@ func (e *Engine) ExportCSVFor(kind, projectID string) (string, error) {
 	case "colonization":
 		return e.Colonies.ExportCSV(projectID)
 	case "route":
-		return e.Route.ExportCSV()
+		return carrier.RouteCSV(v.Obj(e.SnapshotForUI("route")["carrierRoute"]))
 	case "riches":
 		return e.exportRichesCSV()
 	case "trading":

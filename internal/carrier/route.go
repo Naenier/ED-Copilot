@@ -63,8 +63,12 @@ func NormalizeRouteOptions(input, snapshot M) (M, error) {
 	for _, r := range [][3]string{{"tankTons", "fuel", "tankTons"}, {"cargoTritiumTons", "fuel", "reserveTons"}, {"reserveTritiumTons", "planning", "reserveTritium"}} {
 		if x := numeric(v.At(carrier, r[1], r[2])); x != nil {
 			options[r[0]] = x
+			if r[1] == "fuel" {
+				options["calculateStartingFuel"] = false
+			}
 		}
 	}
+	options["usedCapacityTons"] = math.Max(v.Num(options["usedCapacityTons"]), v.Num(options["cargoTritiumTons"]))
 	for _, k := range []string{"sourceSystem", "destinationSystem"} {
 		if input[k] != nil {
 			options[k] = strings.TrimSpace(v.Str(input[k]))
@@ -186,7 +190,7 @@ func PayloadForm(payload M) url.Values {
 	return form
 }
 func RouteAssumptions(options M) []string {
-	return []string{"Расход каждого прыжка и начальная загрузка рассчитаны Spansh для личного флотоносца: масса 25 000 т, вместимость 25 000 т, бак 1 000 т, дальность 500 св. лет.", "Складской тритий входит в занятую вместимость. Бак учитывается отдельно; перелив и пополнение выполняются в игре вручную.", fmt.Sprintf("Подготовка %g мин, перезарядка %g мин между прыжками, прочее %g мин. Очередь и задержки могут быть больше.", v.Num(options["jumpMinutes"]), v.Num(options["cooldownMinutes"]), v.Num(options["overheadMinutes"])), "Разрешения, свободная орбита, наличие трития и удобство добычи маршрутом не гарантируются."}
+	return []string{"Расход каждого прыжка и начальная загрузка рассчитаны Spansh для личного флотоносца: масса 25 000 т, вместимость 25 000 т, бак 1 000 т, дальность 500 св. лет.", "Бак в таблице показан по прибытии. Перелив со склада запланирован перед следующим прыжком, когда трития не хватает или в баке меньше 100 т.", fmt.Sprintf("Подготовка %g мин, перезарядка %g мин между прыжками, прочее %g мин. Очередь и задержки могут быть больше.", v.Num(options["jumpMinutes"]), v.Num(options["cooldownMinutes"]), v.Num(options["overheadMinutes"])), "Разрешения, свободная орбита, наличие трития и удобство добычи маршрутом не гарантируются."}
 }
 func sumRows(rows []M, key string) float64 {
 	total := float64(0)
@@ -236,9 +240,23 @@ func NormalizeProviderRoute(response, options, metadata M) (M, error) {
 		if math.Abs(expected-v.Num(current["tankTons"])-v.Num(current["cargoTritiumTons"])) > .01 {
 			return nil, errors.New("Баланс трития между прыжками не сходится.")
 		}
+		if v.Num(previous["tankTons"])-v.Num(current["fuelUsedTons"]) < -.01 {
+			return nil, errors.New("Прыжок не обеспечен топливом в баке.")
+		}
 	}
 	totalJumps := len(stops) - 1
 	first, last := stops[0], stops[len(stops)-1]
+	startTank, startCargo, ok := plannedStartingFuel(raw, first, options)
+	if !ok {
+		return nil, errors.New("Не удалось определить начальный запас трития.")
+	}
+	startRestock := v.Num(first["restockTons"])
+	if v.Bool(options["calculateStartingFuel"]) {
+		startRestock = 0
+	}
+	if !projectRouteFuel(stops, 0, startTank, startCargo, routeTritiumCapacity(v.First(raw["capacity_used"], options["usedCapacityTons"]), startCargo), startRestock) {
+		return nil, errors.New("Прыжок не обеспечен топливом в баке.")
+	}
 	restock := sumRows(stops[1:], "restockTons")
 	restockStops := 0
 	missingIce := false
@@ -265,26 +283,10 @@ func NormalizeProviderRoute(response, options, metadata M) (M, error) {
 	elapsed, maximum := float64(0), float64(0)
 	first["estimatedArrival"] = v.ISO(departure)
 	first["estimatedArrivalLatest"] = first["estimatedArrival"]
-	first["tankBeforeTopupTons"] = numeric(raw["fuel_loaded"])
-	first["transferTons"] = nil
-	if v.Num(first["restockTons"]) == 0 {
-		first["transferTons"] = math.Max(0, v.Num(first["tankTons"])-v.Num(raw["fuel_loaded"]))
-	}
 	at := func(minutes float64) string {
 		return v.ISO(departure.Add(time.Duration(minutes * float64(time.Minute))))
 	}
 	for index, stop := range stops {
-		if index > 0 {
-			before := v.Num(stops[index-1]["tankTons"]) - v.Num(stop["fuelUsedTons"])
-			if before < -0.01 {
-				return nil, errors.New("Прыжок не обеспечен топливом в баке.")
-			}
-			stop["tankBeforeTopupTons"] = before
-			stop["transferTons"] = nil
-			if v.Num(stop["restockTons"]) == 0 {
-				stop["transferTons"] = math.Max(0, v.Num(stop["tankTons"])-before)
-			}
-		}
 		stopMinutes := float64(0)
 		if index > 0 {
 			if options["refuelMethod"] == "mine" {
@@ -311,8 +313,8 @@ func NormalizeProviderRoute(response, options, metadata M) (M, error) {
 			stop["estimatedDeparture"] = nil
 		}
 	}
-	starting := v.Num(first["tankTons"]) + v.Num(first["cargoTritiumTons"])
-	arrival := v.Num(last["tankTons"]) + v.Num(last["cargoTritiumTons"])
+	starting := startTank + startCargo
+	arrival, _ := routeFuelTotal(last)
 	initial, acquire := v.Num(first["restockTons"]), sumRows(stops, "restockTons")
 	if v.Bool(options["calculateStartingFuel"]) {
 		initial = starting
@@ -325,7 +327,8 @@ func NormalizeProviderRoute(response, options, metadata M) (M, error) {
 		acquireCost = acquire * v.Num(options["tritiumPrice"])
 	}
 	shortfall := math.Max(0, v.Num(options["reserveTritiumTons"])-arrival)
-	summary := M{"totalJumps": totalJumps, "completedJumps": 0, "remainingJumps": totalJumps, "distanceLy": sumRows(stops, "distanceLy"), "directDistanceLy": trading.Distance(first["coordinates"], last["coordinates"]), "fuelTons": fuel, "startingTritiumTons": starting, "startingTankTons": first["tankTons"], "startingCargoTritiumTons": first["cargoTritiumTons"], "initialLoadTons": initial, "restockTons": restock, "acquireTritiumTons": acquire, "additionalTritiumNeededTons": math.Max(0, starting-v.Num(options["tankTons"])-v.Num(options["cargoTritiumTons"])) + restock, "restockStops": restockStops, "arrivalTankTons": last["tankTons"], "arrivalCargoTritiumTons": last["cargoTritiumTons"], "arrivalTritiumTons": arrival, "reserveTritiumTons": options["reserveTritiumTons"], "reserveShortfallTons": shortfall, "miningMinutes": miningMinutes, "refuelMinutes": refuelMinutes, "travelMinutes": travelMinutes, "totalMinutes": totalMinutes, "timeRange": M{"minMinutes": totalMinutes, "maxMinutes": maxMinutes, "bounded": false}, "departureTime": v.ISO(departure), "estimatedArrival": last["estimatedArrival"], "estimatedArrivalLatest": last["estimatedArrivalLatest"], "estimatedComplete": at(totalMinutes), "readyAgain": v.ISO(v.Time(last["estimatedArrival"]).Add(time.Duration(v.Num(options["cooldownMinutes"]) * float64(time.Minute)))), "fuelCost": fuelCost, "acquireCost": acquireCost, "minimumStartingTritiumTons": metadata["minimumStartingTritiumTons"]}
+	summary := M{"totalJumps": totalJumps, "completedJumps": 0, "remainingJumps": totalJumps, "distanceLy": sumRows(stops, "distanceLy"), "directDistanceLy": trading.Distance(first["coordinates"], last["coordinates"]), "fuelTons": fuel, "initialLoadTons": initial, "restockTons": restock, "acquireTritiumTons": acquire, "additionalTritiumNeededTons": math.Max(0, starting-v.Num(options["tankTons"])-v.Num(options["cargoTritiumTons"])) + restock, "restockStops": restockStops, "reserveTritiumTons": options["reserveTritiumTons"], "miningMinutes": miningMinutes, "refuelMinutes": refuelMinutes, "travelMinutes": travelMinutes, "totalMinutes": totalMinutes, "timeRange": M{"minMinutes": totalMinutes, "maxMinutes": maxMinutes, "bounded": false}, "departureTime": v.ISO(departure), "estimatedArrival": last["estimatedArrival"], "estimatedArrivalLatest": last["estimatedArrivalLatest"], "estimatedComplete": at(totalMinutes), "readyAgain": v.ISO(v.Time(last["estimatedArrival"]).Add(time.Duration(v.Num(options["cooldownMinutes"]) * float64(time.Minute)))), "fuelCost": fuelCost, "acquireCost": acquireCost, "minimumStartingTritiumTons": metadata["minimumStartingTritiumTons"]}
+	updateRouteFuelSummary(summary, stops)
 	warnings := []string{}
 	if shortfall > 0 {
 		warnings = append(warnings, fmt.Sprintf("По прибытии не хватает %g т до выбранного резерва.", shortfall))
@@ -343,7 +346,7 @@ func NormalizeProviderRoute(response, options, metadata M) (M, error) {
 		warnings = append(warnings, "Время приобретения и доставки трития не задано.")
 	}
 	job := v.Str(response["job"])
-	return M{"route": M{"stops": stops, "activeIndex": 1, "createdAt": v.First(metadata["createdAt"], v.ISO(time.Now())), "options": v.Copy(options), "sourceSystem": first["name"], "destinationSystem": last["name"], "jobId": job, "sourceUrl": "https://spansh.co.uk/fleet-carrier/results/" + url.PathEscape(job), "providerParameters": response["parameters"], "providerResult": raw, "mass": M{"baseTons": 25000, "capacityTons": 25000, "usedCapacityTons": raw["capacity_used"], "tankCapacityTons": 1000, "startingTotalMassTons": 25000 + v.Num(raw["capacity_used"]) - v.Num(raw["tritium_stored"]) + starting}}, "summary": summary, "warnings": warnings, "assumptions": RouteAssumptions(options)}, nil
+	return M{"route": M{"stops": stops, "fuelModel": "arrival", "activeIndex": 1, "createdAt": v.First(metadata["createdAt"], v.ISO(time.Now())), "options": v.Copy(options), "sourceSystem": first["name"], "destinationSystem": last["name"], "jobId": job, "sourceUrl": "https://spansh.co.uk/fleet-carrier/results/" + url.PathEscape(job), "providerParameters": response["parameters"], "providerResult": raw, "mass": M{"baseTons": 25000, "capacityTons": 25000, "usedCapacityTons": raw["capacity_used"], "tankCapacityTons": 1000, "startingTotalMassTons": 25000 + v.Num(raw["capacity_used"]) - v.Num(raw["tritium_stored"]) + starting + startRestock}}, "summary": summary, "warnings": warnings, "assumptions": RouteAssumptions(options)}, nil
 }
 func RouteCSV(state M) (string, error) {
 	stops := v.Rows(v.At(state, "route", "stops"))
@@ -354,7 +357,7 @@ func RouteCSV(state M) (string, error) {
 	b.WriteString("\ufeff")
 	w := csv.NewWriter(&b)
 	w.Comma = ';'
-	_ = w.Write([]string{"№", "Система", "ID64", "X", "Y", "Z", "Прыжок, св. лет", "Осталось, св. лет", "Расход, т", "Бак после пополнения, т", "Складской тритий, т", "Получить тритий, т", "Ледяные кольца", "Расчётное прибытие UTC", "Посещено"})
+	_ = w.Write([]string{"№", "Система", "ID64", "X", "Y", "Z", "Прыжок, св. лет", "Осталось, св. лет", "Расход, т", "Бак по прибытии, т", "Склад по прибытии, т", "Перелить со склада, т", "Получить извне, т", "Источник остатка в баке", "Ледяные кольца", "Расчётное прибытие UTC", "Посещено"})
 	safe := func(raw any) string {
 		s := v.Str(raw)
 		if strings.HasPrefix(s, "=") || strings.HasPrefix(s, "+") || strings.HasPrefix(s, "@") || strings.HasPrefix(s, "\t") || strings.HasPrefix(s, "\r") {
@@ -364,13 +367,28 @@ func RouteCSV(state M) (string, error) {
 	}
 	for _, stop := range stops {
 		coords := trading.Coords(stop["coordinates"])
+		var x, y, z string
+		if len(coords) == 3 {
+			x, y, z = fmt.Sprint(coords[0]), fmt.Sprint(coords[1]), fmt.Sprint(coords[2])
+		}
 		yes := func(raw any) string {
 			if v.Bool(raw) {
 				return "Да"
 			}
 			return "Нет"
 		}
-		_ = w.Write([]string{safe(stop["index"]), safe(stop["name"]), safe(stop["id64"]), fmt.Sprint(coords[0]), fmt.Sprint(coords[1]), fmt.Sprint(coords[2]), safe(stop["distanceLy"]), safe(stop["remainingLy"]), safe(stop["fuelUsedTons"]), safe(stop["tankTons"]), safe(stop["cargoTritiumTons"]), safe(stop["restockTons"]), yes(stop["hasIcyRing"]), safe(stop["estimatedArrival"]), yes(stop["visited"])})
+		var basis string
+		if stop["tankTons"] != nil {
+			switch {
+			case v.Bool(stop["tankObserved"]):
+				basis = "Замер"
+			case v.Bool(stop["tankEstimated"]):
+				basis = "Оценка"
+			default:
+				basis = "План"
+			}
+		}
+		_ = w.Write([]string{safe(stop["index"]), safe(stop["name"]), safe(stop["id64"]), x, y, z, safe(stop["distanceLy"]), safe(stop["remainingLy"]), safe(stop["fuelUsedTons"]), safe(stop["tankTons"]), safe(stop["cargoTritiumTons"]), safe(stop["transferTons"]), safe(stop["restockTons"]), basis, yes(stop["hasIcyRing"]), safe(stop["estimatedArrival"]), yes(stop["visited"])})
 	}
 	w.Flush()
 	return b.String(), w.Error()
@@ -403,6 +421,7 @@ func NewRoutePlanner(saved M) *RoutePlanner {
 		if hasRoute {
 			state["status"] = "ready"
 			progress["stage"], progress["label"] = "ready", "Сохранённый маршрут"
+			restoreRouteFuel(state)
 		}
 		state["progress"] = progress
 		state["error"] = nil
@@ -410,6 +429,11 @@ func NewRoutePlanner(saved M) *RoutePlanner {
 	return &RoutePlanner{state: state, Client: &http.Client{Timeout: 45 * time.Second}, BaseURL: "https://spansh.co.uk/api", PollInterval: 1500 * time.Millisecond, Timeout: 10 * time.Minute, Now: time.Now}
 }
 func (p *RoutePlanner) Snapshot(_ ...M) M { p.mu.Lock(); defer p.mu.Unlock(); return v.Copy(p.state) }
+func (p *RoutePlanner) SnapshotForCarrier(carrier M) M {
+	state := p.Snapshot()
+	applyLiveRouteFuel(state, carrier)
+	return state
+}
 func (p *RoutePlanner) ExportSettings() M { return M{"version": 1, "state": p.Snapshot()} }
 func (p *RoutePlanner) publish(update M) {
 	p.mu.Lock()

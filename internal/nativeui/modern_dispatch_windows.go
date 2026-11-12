@@ -37,6 +37,34 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "explorationQuery":
+		return backend.Do("/api/exploration/query", input)
+	case "exploration.update":
+		return backend.Do("/api/exploration/update", input)
+	case "exploration.export":
+		return backend.Do("/api/exploration/export", input)
+	case "ship-builds":
+		return backend.Do("/api/ship-builds", input)
+	case "ship-builds-update":
+		return backend.Do("/api/ship-builds/update", input)
+	case "ship-builds-export":
+		return backend.Do("/api/ship-builds/export", input)
+	case "engineering-itinerary":
+		return backend.Do("/api/engineering/itinerary", input)
+	case "engineering-itinerary-update":
+		return backend.Do("/api/engineering/itinerary/update", input)
+	case "ship-route":
+		return backend.Do("/api/ship-route", input)
+	case "ship-route.calculate":
+		return backend.Do("/api/ship-route/calculate", input)
+	case "notifications.view":
+		return backend.Do("/api/notifications", input)
+	case "notifications.update":
+		return backend.Do("/api/notifications/update", input)
+	case "second-screen.view":
+		return backend.Do("/api/second-screen", input)
+	case "second-screen.update":
+		return backend.Do("/api/second-screen/update", input)
 	case "rank.insignia":
 		return frontend.RankInsignia(input)
 	case "exo.sites":
@@ -55,6 +83,13 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			return result, err
 		}
 		return nil, errors.New("План прокачки недоступен")
+	case "odyssey.loadouts":
+		if provider, ok := backend.(interface{ OdysseyLoadouts(M) (M, error) }); ok {
+			return provider.OdysseyLoadouts(input)
+		}
+		return nil, errors.New("Снаряжение Odyssey недоступно.")
+	case "odyssey.loadout-update":
+		return backend.Do("/api/engineering/odyssey/loadout", input)
 	case "system-search":
 		if provider, ok := backend.(interface{ QuerySystems(M) (M, error) }); ok {
 			return provider.QuerySystems(input)
@@ -84,6 +119,23 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			return provider.RichesStatus(), nil
 		}
 		return v.Obj(snapshotForWeb(backend, "riches")["riches"]), nil
+	case "colony.supply-portfolio":
+		result, err := backend.Do("/api/colonization/portfolio", input)
+		if err != nil {
+			return nil, err
+		}
+		if language := webLanguage(backend); language == "en" {
+			for _, key := range []string{"supplies", "reservable", "reservations"} {
+				for _, row := range v.Rows(result[key]) {
+					row["name"] = localization.Text(language, v.Str(row["name"]))
+				}
+			}
+		}
+		return result, nil
+	case "colony.supply-reservation":
+		return backend.Do("/api/colonization/supply-reservation", input)
+	case "colony.supply-market":
+		return backend.Do("/api/colonization/supply-market", input)
 	case "deals-search":
 		return backend.Do("/api/trading/routes", v.Obj(input["values"]))
 	case "deals-cancel":
@@ -199,6 +251,35 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		viewState := webState(state)
 		viewState["engineeringRoadmapRevision"] = state["engineeringRoadmapRevision"]
 		return M{"page": page, "actions": []M{}, "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": p.EngineeringProgression, "selected": ""}}, nil
+	}
+	if op == "view" && tab == "engineering" && mode == p.EngineeringOdyssey {
+		state := snapshotForWeb(backend, "engineering-odyssey")
+		viewState := webState(state)
+		viewState["odysseyRevision"] = state["odysseyRevision"]
+		return M{"page": p.Build(tab, mode, "", state), "actions": []M{}, "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
+	}
+	if op == "view" {
+		scope := ""
+		switch {
+		case tab == "engineering" && (mode == p.EngineeringShipBuild || mode == p.EngineeringItinerary):
+			scope = "section-seven"
+		case tab == "exobiology" && mode == p.SurfaceRadarMode:
+			scope = "surface-radar"
+		case tab == "colonization" && mode == p.ColonyHistoryMode:
+			scope = "colony-history"
+		case tab == "ship-route":
+			scope = tab
+		case tab == "exploration", tab == "notifications", tab == "second-screen":
+			scope = "section-seven"
+		}
+		if scope != "" {
+			state := snapshotForWeb(backend, scope)
+			page := p.Build(tab, mode, "", state)
+			if mode == "" && len(page.Modes) > 0 {
+				mode = page.Modes[0]
+			}
+			return M{"page": page, "actions": []M{}, "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
+		}
 	}
 	state := snapshotForWeb(backend, tab)
 	if op == "boot" {
@@ -348,6 +429,11 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
+	for _, key := range []string{"shipRoute", "surfaceRadar", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory"} {
+		if value, exists := state[key]; exists {
+			out[key] = value
+		}
+	}
 	for _, key := range []string{"app", "commander", "connection", "settings", "desktop", "theme", "navigation", "resources", "goods", "tradePlan", "savedTradeRoutes", "tradeRoutes", "tradeLedger", "trading", "carrier", "carrierRoute", "carrierTrade", "colonization", "exobiology", "riches", "pilot", "mining", "stats", "learning", "carrierCalculator", "frontier", "integrations", "notices", "objectives", "planWorkspace", "commanderProfile", "engineeringInventory", "coloniesSelectors", "ranks", "politics", "politicsNetwork", "updates"} {
 		out[key] = state[key]
 	}

@@ -93,38 +93,67 @@ func TestHUDDockedNavigationModeDoesNotClaimTheShipIsFlying(t *testing.T) {
 	}
 }
 
-func TestHUDRoadToRichesShowsCurrentBodyAndNextStopUntilFinished(t *testing.T) {
+func TestHUDCartographyShowsEveryLocalTargetAndNextStop(t *testing.T) {
 	progress := M{
-		"completedJumps": 3, "remainingJumps": 4, "nextSystem": "Станция", "totalMappingCredits": 2750000,
-		"target": M{"name": "Груз A 1", "mappingCredits": 1250000},
+		"currentSystem": "Торговля", "completedJumps": 3, "remainingJumps": 4, "nextSystem": "Станция", "totalMappingCredits": 2750000, "totalScanCredits": 575000,
+		"targets": []M{
+			{"name": "Торговля A 1", "designation": "A 1", "distanceLs": 550, "mappingCredits": 1250000, "scanCredits": 275000, "completed": true},
+			{"name": "Торговля A 2", "designation": "A 2", "mappingCredits": 1500000},
+			{"name": "Груз A 3", "mappingCredits": 1750000},
+		},
 	}
 	s := M{
-		"settings":  M{"activity": "flight", "language": "en"},
-		"commander": M{"system": "Alpha"},
+		"settings":  M{"activity": "cartography", "language": "en"},
+		"commander": M{"system": "Торговля"},
 		"pilot":     M{"navTarget": M{"system": "Unrelated"}, "fuel": M{"mainTons": 5}},
 		"riches":    M{"progress": progress},
 	}
 	doc := BuildHUD(s, hudFixtureNow)
-	card := hudSection(doc, "ROAD TO RICHES")
-	if card == nil || len(card.Lines) != 4 || card.Lines[0].Text != "Груз A 1" || card.Lines[0].Value != "≈ 1 250 000 Cr" ||
-		card.Lines[1].Value != "Станция" || card.Lines[2].Value != "≈ 2 750 000 Cr" || card.Lines[3].Value != "3 / ≈ 4" {
-		t.Fatalf("incorrect Road to Riches summary %+v", doc)
+	card := hudSection(doc, "CARTOGRAPHY")
+	if card == nil || card.Subtitle != "Торговля" || len(card.Lines) != 3 ||
+		card.Lines[0].Text != "✓ A 1 · 550 ls" || card.Lines[0].Role != "muted" || card.Lines[0].Value != "≈ 1 250 000 Cr" ||
+		card.Lines[1].Text != "A 2" || card.Lines[2].Text != "Груз A 3" {
+		t.Fatalf("cartography lost a current-system target %+v", doc)
 	}
-	if strings.Contains(hudProse(doc), "Unrelated") || !strings.Contains(hudProse(doc), "Fuel") {
-		t.Fatalf("flight cards conflict with the active exploration route %+v", doc)
+	summary := hudSection(doc, "CARTOGRAPHY ROUTE")
+	if summary == nil || len(summary.Lines) != 3 || summary.Lines[0].Value != "Станция" ||
+		summary.Lines[1].Value != "≈ 2 750 000 Cr" || summary.Lines[2].Value != "3 / ≈ 4" {
+		t.Fatalf("incorrect cartography route summary %+v", doc)
+	}
+	if strings.Contains(hudProse(doc), "Unrelated") || strings.Contains(hudProse(doc), "Fuel") {
+		t.Fatalf("unrelated flight content appears in cartography %+v", doc)
 	}
 
-	delete(progress, "nextSystem")
-	progress["remainingJumps"] = 0
-	card = hudSection(BuildHUD(s, hudFixtureNow), "ROAD TO RICHES")
-	if card == nil || card.Lines[0].Text != "Груз A 1" || card.Lines[len(card.Lines)-1].Value != "3 / 0" {
-		t.Fatalf("last planet disappeared on arrival %+v", card)
+	progress["useMappingValue"] = false
+	doc = BuildHUD(s, hudFixtureNow)
+	if card, route := hudSection(doc, "CARTOGRAPHY"), hudSection(doc, "CARTOGRAPHY ROUTE"); card == nil || route == nil ||
+		card.Lines[0].Value != "≈ 275 000 Cr" || route.Lines[1].Value != "≈ 575 000 Cr" {
+		t.Fatalf("FSS route should show scan estimates %+v", doc)
 	}
 
 	progress["finished"] = true
+	delete(progress, "nextSystem")
 	doc = BuildHUD(s, hudFixtureNow)
-	if hudSection(doc, "ROAD TO RICHES") != nil || !strings.Contains(hudProse(doc), "Unrelated") {
-		t.Fatalf("finished route obscures the regular navigation card %+v", doc)
+	if len(doc.Sections) != 1 || doc.Sections[0].Title != "CARTOGRAPHY" || len(doc.Sections[0].Lines) != 3 {
+		t.Fatalf("target list disappeared on route completion %+v", doc)
+	}
+
+	v.Obj(s["settings"])["activity"] = "flight"
+	doc = BuildHUD(s, hudFixtureNow)
+	if hudSection(doc, "CARTOGRAPHY") != nil || !strings.Contains(hudProse(doc), "Unrelated") || !strings.Contains(hudProse(doc), "Fuel") {
+		t.Fatalf("flight HUD did not retain independent navigation %+v", doc)
+	}
+}
+
+func TestHUDCartographyCanShowAnUpcomingSystemWithoutLocalTargets(t *testing.T) {
+	s := M{
+		"settings": M{"activity": "cartography", "language": "en"},
+		"riches":   M{"progress": M{"nextSystem": "Beta", "targets": []M{}}},
+	}
+	doc := BuildHUD(s, hudFixtureNow)
+	card := hudSection(doc, "CARTOGRAPHY")
+	if card == nil || len(doc.Sections) != 1 || len(card.Lines) != 1 || card.Lines[0].Value != "Beta" {
+		t.Fatalf("waypoint navigation was lost while in transit %+v", doc)
 	}
 }
 func TestHUDAsteroidCurrentContextValuableCompositionAndPreparation(t *testing.T) {
@@ -272,7 +301,7 @@ func TestHUDCarrierPendingJumpFuelSafetyAndStalePlanIsolation(t *testing.T) {
 	v.Obj(v.At(s, "carrier", "fuel"))["tankTons"] = 0
 	v.Obj(v.At(s, "carrier", "fuel"))["needsRefresh"] = true
 	doc = BuildHUD(s, hudFixtureNow)
-	if hudHasWarning(doc, "Перелить") || !hudHasWarning(doc, "не обновлено") || strings.Contains(hudProse(doc), "Тритий в баке") {
+	if hudHasWarning(doc, "Перелить") || !hudHasWarning(doc, "Ожидаем данные о баке") || strings.Contains(hudProse(doc), "Тритий в баке") {
 		t.Fatal("stale inventory was treated as fresh fuel")
 	}
 	v.Obj(v.At(s, "carrier", "fuel"))["needsRefresh"] = false
@@ -293,6 +322,24 @@ func TestHUDEnglishCarrierKeepsTargetIdentityAndLocalizesPairedFacts(t *testing.
 	for _, want := range []string{"CARRIER JUMP", system, "Departure in: 5 min", "Transfer to tank: 92 t", "Distance and fuel use: 450 ly · 92 t"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in %q", want, got)
+		}
+	}
+}
+
+func TestHUDCarrierAccountFiguresStayWithFuelDuringRoute(t *testing.T) {
+	s := M{"settings": M{"activity": "carrier"}, "carrier": M{"owned": true,
+		"fuel":    M{"tankTons": 742, "reserveTons": 2079},
+		"finance": M{"balance": -1200, "weeklyMaintenance": 8300000, "weeklyMaintenanceEstimated": true},
+		"space":   M{"capacityTons": 25000, "freeTons": 18000}},
+		"carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Sothis"}, {"name": "HIP 19510", "fuelUsedTons": 87}}}}}
+	doc := BuildHUD(s, hudFixtureNow)
+	panel := hudSection(doc, "ФЛОТОНОСЕЦ")
+	if len(doc.Sections) != 2 || panel == nil || len(panel.Lines) != 5 {
+		t.Fatalf("expected five lines in the carrier card: %#v", doc)
+	}
+	for index, want := range []string{"Тритий в баке: 742 т", "Тритий на складе: 2 079 т", "Баланс носителя: -1 200 кр.", "Содержание в неделю: ≈ 8 300 000 кр.", "Вместимость: 7 000 / 25 000 т"} {
+		if got := hudLineProse(panel.Lines[index]); got != want {
+			t.Errorf("line %d = %q, want %q", index, got, want)
 		}
 	}
 }

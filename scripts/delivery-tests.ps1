@@ -3,6 +3,7 @@
 param()
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'delivery-lib.ps1')
+. (Join-Path $PSScriptRoot 'release-sbom.ps1')
 $count=0
 function Check([string]$Name,[scriptblock]$Body){& $Body;$script:count++;Write-Verbose "PASS $Name"}
 function Must([bool]$Condition,[string]$Message){if(-not $Condition){throw $Message}}
@@ -24,11 +25,58 @@ try{$entry=$zip.CreateEntry('ED Copilot.exe');$stream=$entry.Open();try{$stream.
 function Refresh-Fixture {
     $lines=@('ED Copilot.exe','ED-Copilot-2.3.4-Setup.exe','ED-Copilot-2.3.4-windows-amd64.zip')|ForEach-Object{(Get-FileHash -LiteralPath (Join-Path $artifacts $_) -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_}
     [IO.File]::WriteAllLines((Join-Path $artifacts 'SHA256SUMS.txt'),$lines)
+    $buildInfo = @{
+        Path='github.com/Naenier/ED-Copilot/cmd/copilot'; GoVersion='go1.27.3'
+        Settings=@(@{Key='GOOS';Value='windows'},@{Key='GOARCH';Value='amd64'},@{Key='CGO_ENABLED';Value='0'})
+        Deps=@(@{Path='github.com/fixture/module';Version='v1.2.3';Sum=('h1:'+('A'*43)+'=')})
+    }
+    $application = New-EDApplicationSBOM (Join-Path $artifacts 'ED Copilot.exe') '2.3.4' $buildInfo
+    $setup = New-EDSBOMFileComponent (Join-Path $artifacts 'ED-Copilot-2.3.4-Setup.exe') 'ED Copilot Setup' '2.3.4' 'ed-copilot-setup'
+    Write-EDDeliveryJSON (Join-Path $artifacts 'application.cdx.json') $application
+    Write-EDDeliveryJSON (Join-Path $artifacts 'installer.cdx.json') @{bomFormat='CycloneDX';specVersion='1.6';metadata=@{component=$setup};components=@($application.metadata.component)}
     $null=New-EDReleaseManifest -Root $source -Directory $artifacts -Commit $commit -TestsPassed $true
 }
 try{
     Refresh-Fixture
-    Check 'Complete package/source/ZIP/smokes validate' {$m=Test-EDReleaseDirectory $artifacts $commit $source -RequireSmokeReports;Must ($m.version -eq '2.3.4' -and $m.schemaVersion -eq 2) 'Wrong version or schema.';Must (@($m.artifacts | Where-Object published).Count -eq 3) 'Release exposes internal reports.'}
+    Check 'Complete package/source/ZIP/smokes and SBOMs validate' {$m=Test-EDReleaseDirectory $artifacts $commit $source -RequireBuildEvidence;Must ($m.version -eq '2.3.4' -and $m.schemaVersion -eq 3) 'Wrong version or schema.';Must (@($m.artifacts | Where-Object published).Count -eq 3) 'Release exposes internal evidence.'}
+    Check 'Inventory identifies the actual Go toolchain and compiled module' {
+        $bom=Get-Content -LiteralPath (Join-Path $artifacts 'application.cdx.json') -Raw | ConvertFrom-Json
+        Must ($bom.components[0].version -eq '1.27.3') 'Missing Go standard library version.'
+        Must ($bom.components[1].purl -eq 'pkg:golang/github.com/fixture/module@v1.2.3') 'Compiled Go module missing.'
+        Must ($bom.components[1].properties[0].value -eq ('h1:'+('A'*43)+'=')) 'Module checksum missing.'
+    }
+    Check 'An inventory with a mismatched executable digest is rejected' {
+        $path=Join-Path $artifacts 'application.cdx.json'
+        try {
+            $bom=Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+            $bom.metadata.component.hashes[0].content='0'*64
+            Write-EDDeliveryJSON $path $bom
+            $null=New-EDReleaseManifest $source $artifacts $commit $true
+            Reject {Test-EDReleaseDirectory $artifacts $commit} 'SBOM component'
+        } finally { Refresh-Fixture }
+    }
+    Check 'Release staging requires both inventories' {
+        $path=Join-Path $artifacts 'installer.cdx.json'
+        $bytes=[IO.File]::ReadAllBytes($path)
+        try {
+            [IO.File]::Delete($path)
+            Reject {Test-EDReleaseDirectory $artifacts $commit -RequireBuildEvidence} 'Missing release artifact: installer.cdx.json'
+        } finally { [IO.File]::WriteAllBytes($path,$bytes) }
+    }
+    Check 'Publication verifies provenance for every asset and SBOMs for both packages' {
+        $m=Test-EDReleaseDirectory $artifacts $commit -RequireBuildEvidence
+        $verified=[Collections.Generic.List[string]]::new()
+        $checkAttestation={
+            param($path,$predicate,$sourceDigest)
+            Must ($sourceDigest -eq $commit) 'Verification did not pin the checked source commit.'
+            $verified.Add(([IO.Path]::GetFileName($path)+': '+$predicate))
+        }
+        Assert-EDReleaseAttestations $artifacts $m $checkAttestation
+        Must ($verified.Count -eq 6) 'Unexpected number of attestation verifications.'
+        Must ($verified.Contains('release-manifest.json: https://slsa.dev/provenance/v1')) 'Manifest provenance verification missing.'
+        Must ($verified.Contains('ED-Copilot-2.3.4-Setup.exe: https://cyclonedx.org/bom') -and $verified.Contains('ED-Copilot-2.3.4-windows-amd64.zip: https://cyclonedx.org/bom')) 'Package inventory attestation verification missing.'
+        Reject {Assert-EDReleaseAttestations $artifacts $m {throw 'Fixture attestation invalid.'}} 'attestation invalid'
+    }
     Check 'Different source commit rejected' {Reject {Test-EDReleaseDirectory $artifacts ('b'*40)} 'provenance'}
     Check 'Modified source rejected' {[IO.File]::WriteAllText((Join-Path $source 'README.md'),'modified');Reject {Test-EDReleaseDirectory $artifacts $commit $source} 'source';[IO.File]::WriteAllText((Join-Path $source 'README.md'),'')}
     Check 'Tampered setup rejected' {$p=Join-Path $artifacts 'ED-Copilot-2.3.4-Setup.exe';$old=[IO.File]::ReadAllBytes($p);[IO.File]::WriteAllText($p,'tampered');Reject {Test-EDReleaseDirectory $artifacts $commit} 'mismatch';[IO.File]::WriteAllBytes($p,$old)}
@@ -56,21 +104,21 @@ try{
     $calls=@{n=0}
     $mock={param($url,$path,$limit) $calls['n']++;$name=[IO.Path]::GetFileName(([uri]$url).AbsolutePath);[IO.File]::WriteAllBytes($path,[IO.File]::ReadAllBytes((Join-Path $artifacts $name)))}
     $downloaded=Join-Path $temp 'downloaded'
-    Check 'Public download verifies four assets without smoke reports' {
+    Check 'Public download verifies four assets without downloading internal evidence' {
         $null=Save-EDReleaseAssets $release $commit $downloaded $mock
-        Must ($calls.n -eq 4 -and @(Get-ChildItem -LiteralPath $downloaded -Filter 'smoke-*.json').Count -eq 0) 'Public delivery fetched internal reports or missed a public asset.'
+        Must ($calls.n -eq 4 -and @(Get-ChildItem -LiteralPath $downloaded -Filter 'smoke-*.json').Count -eq 0 -and @(Get-ChildItem -LiteralPath $downloaded -Filter '*.cdx.json').Count -eq 0) 'Public delivery fetched internal evidence or missed a public asset.'
     }
-    Check 'CI verification requires internal reports' {Reject {Test-EDReleaseDirectory $downloaded $commit -RequireSmokeReports} 'Missing release artifact: smoke-'}
+    Check 'CI verification requires internal reports' {Reject {Test-EDReleaseDirectory $downloaded $commit -RequireBuildEvidence} 'Missing release artifact: smoke-'}
     Check 'Public ZIP cannot embed an internal report' {
         $old=[IO.File]::ReadAllBytes($zipPath)
         try {
             $z=[IO.Compression.ZipFile]::Open($zipPath,[IO.Compression.ZipArchiveMode]::Update)
             try { $null=$z.CreateEntry('diagnostics/smoke-native.json') } finally { $z.Dispose() }
             Refresh-Fixture
-            Reject {Test-EDReleaseDirectory $artifacts $commit} 'includes CI smoke reports'
+            Reject {Test-EDReleaseDirectory $artifacts $commit} 'includes CI-only evidence'
         } finally { [IO.File]::WriteAllBytes($zipPath,$old);Refresh-Fixture }
     }
-    Check 'Schema two rejects a smoke report attached publicly' {
+    Check 'Current releases reject internal evidence attached publicly' {
         $extra=$release.PSObject.Copy()
         $extra.assets=@($release.assets)+@(Get-FixtureAssets $artifacts @('smoke-native.json'))
         Reject {Save-EDReleaseAssets $extra $commit $downloaded $mock} 'Unexpected public release asset'
@@ -82,6 +130,7 @@ try{
         $manifestPath=Join-Path $legacy 'release-manifest.json'
         $legacyManifest=Get-Content -LiteralPath $manifestPath -Raw|ConvertFrom-Json
         $legacyManifest.schemaVersion=1
+        $legacyManifest.artifacts=@($legacyManifest.artifacts | Where-Object name -NotIn $script:EDReleaseSBOMNames)
         foreach($entry in $legacyManifest.artifacts){$entry.published=$entry.name -ne 'ED Copilot.exe'}
         Write-EDDeliveryJSON $manifestPath $legacyManifest
         $legacyRelease=$release.PSObject.Copy()

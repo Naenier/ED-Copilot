@@ -41,11 +41,16 @@ func (e *Engine) snapshotScoped(tab string) M {
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	activity, hud, syncOnly := v.Text(settings["activity"], "flight"), tab == "hud", tab == "sync"
 	var richesState M
-	if oneOf(tab, "riches", "overview") || hud && activity == "flight" {
+	if oneOf(tab, "riches", "overview") || hud && activity == "cartography" {
 		richesState = e.richesSnapshotLocked(tab == "riches")
 	}
 	appearance, desktop := M{}, M{}
 	workspace := e.planWorkspace
+	odysseyActive := hud && activity == "odyssey" && cmd["vehicle"] == "foot" && workspace.key != "" && workspace.branch == "live"
+	var recentPickups []M
+	if odysseyActive {
+		recentPickups = append([]M(nil), e.odysseyPickups...)
+	}
 	var navigation []string
 	var goals, bookmarks, notices any
 	manual, prices, network := M{}, M{}, map[string]M{}
@@ -76,6 +81,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	if tab == "engineering-roadmap" {
 		state["engineeringRoadmapRevision"] = engineeringRevision
 	}
+	if tab == "engineering-odyssey" {
+		state["odysseyRevision"] = engineeringRevision
+	}
 	if syncOnly {
 		state["engineering"] = e.Engineering.InventorySnapshot()
 		return state
@@ -87,8 +95,55 @@ func (e *Engine) snapshotScoped(tab string) M {
 	state["desktop"], state["theme"], state["navigation"] = desktop, M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, M{"tabs": navigation}
 	state["objectives"], state["bookmarks"], state["notices"] = goals, bookmarks, notices
 	state["planWorkspace"] = workspace.snapshot()
+	if tab == "colony-history" {
+		state["colonization"] = e.Colonies.SelectorSnapshot()
+		state["colonyHistory"] = e.Colonies.SystemHistorySnapshot()
+		return state
+	}
+	if tab == "section-seven" {
+		state["shipBuildRevision"], state["engineeringItineraryRevision"] = engineeringRevision, engineeringRevision
+		state["explorationRevision"] = e.section7.explorationRevision
+		state["colonization"] = e.Colonies.SelectorSnapshot()
+		return state
+	}
 	if richesState != nil {
 		state["riches"] = richesState
+	}
+	if tab == "ship-route" || hud && activity == "flight" {
+		if hud {
+			state["shipRoute"] = e.section7.routes.HUD(workspace.key)
+		} else {
+			e.mu.RLock()
+			routeCtx := e.shipRouteContext(cmd, v.Obj(state["pilot"]))
+			e.mu.RUnlock()
+			state["shipRoute"] = e.section7.routes.Snapshot(workspace.key, routeCtx)
+			state["colonization"] = e.Colonies.SelectorSnapshot()
+			return state
+		}
+	}
+	if hud && activity == "engineering" {
+		state["engineeringStop"] = v.At(e.sectionSevenItinerary(workspace.key), "currentStop")
+	}
+	if hud {
+		state["notificationHUD"] = v.Clone(e.section7.notifications.HUD(time.Now()))
+	}
+	if tab == "surface-radar" {
+		radar := e.Exobiology.SnapshotSurfaceRadar()
+		state["surfaceRadar"], state["exobiology"] = radar, M{"surfaceRadar": radar}
+		state["colonization"] = e.Colonies.SelectorSnapshot()
+		return state
+	}
+	if odysseyActive {
+		locker, backpack := e.CommanderProfile.OdysseyInventorySnapshot(v.Str(cmd["fid"]))
+		keys := make([]string, 0, len(recentPickups))
+		for _, pickup := range recentPickups {
+			keys = append(keys, v.Str(pickup["key"]))
+		}
+		odyssey := e.Engineering.OdysseyHUD(M{"planWorkspace": workspace.key, "shipLocker": locker, "backpack": backpack, "game": game, "recentPickupKeys": keys})
+		if len(odyssey) != 0 {
+			odyssey["recentPickups"] = recentPickups
+			state["odyssey"] = odyssey
+		}
 	}
 	ledger := e.Trading.Snapshot(M{"commander": cmd, "marketOptions": v.Obj(network["trading"])["options"], "now": v.ISO(time.Now())})
 	cargo, tons := v.Rows(ledger["inventory"]), float64(0)
@@ -140,6 +195,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	ctx["engineering"] = eng
+	if oneOf(tab, "colonization", "overview") {
+		ctx["includeDevelopment"] = true
+	}
 	if tab == "exobiology" || tab == "statistics" {
 		state["exobiology"] = e.Exobiology.Snapshot()
 	} else if hud && activity == "exobiology" {
@@ -160,10 +218,15 @@ func (e *Engine) snapshotScoped(tab string) M {
 	} else if settings["activity"] == "colonization" || !hud {
 		state["colonization"] = e.Colonies.SelectorSnapshot()
 	}
-	if tab == "route" || hud && activity == "carrier" {
+	if tab == "route" {
+		state["carrierRoute"] = e.Route.SnapshotForCarrier(v.Obj(state["carrier"]))
+	} else if hud && activity == "carrier" {
 		state["carrierRoute"] = e.Route.Snapshot()
 	}
 	if tab == "mining" || tab == "targets" || hud && oneOf(activity, "asteroid", "surface", "trade") {
+		if tab == "mining" {
+			ctx["miningCargo"] = e.Trading.MiningInventory(e.Mining.RunIDs())
+		}
 		ms := e.Mining.SnapshotForUI(ctx, tab == "targets")
 		state["mining"], state["prospect"], state["surface"], state["targets"] = ms, ms["prospect"], ms["surface"], ms["targets"]
 	}

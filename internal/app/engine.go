@@ -41,7 +41,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.13"
+const Version = "2.8.14"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -50,6 +50,7 @@ type Options struct {
 	DisableNetwork, ManualPolling bool
 }
 type Engine struct {
+	section7                                        sectionSeven
 	mu                                              sync.RWMutex
 	domainMu                                        sync.Mutex
 	saveMu                                          sync.Mutex
@@ -97,6 +98,7 @@ type Engine struct {
 	notices                                         []M
 	revision                                        uint64
 	engineeringRoadmapRevision                      uint64
+	odysseyPickups                                  []M
 	updates                                         chan struct{}
 	callback                                        *http.Server
 	listener                                        net.Listener
@@ -187,6 +189,7 @@ func New(o Options) (*Engine, error) {
 		systemOptions.EDSM = x.EDSM
 	}
 	x.Systems = systems.NewClient(systemOptions)
+	x.initSectionSeven(saved)
 	var cacheErr error
 	x.onlineCache, cacheErr = openOnlineCache(o.DataDir)
 	if cacheErr != nil {
@@ -232,6 +235,10 @@ func New(o Options) (*Engine, error) {
 	}
 	x.initializeUpdates()
 	x.startAutomaticFrontier()
+	x.startColonyHistory()
+	if !o.DisableNetwork {
+		x.startSectionSeven()
+	}
 	return x, nil
 }
 func (e *Engine) Notify() {
@@ -258,10 +265,12 @@ func (e *Engine) resetObserved() {
 	e.clipboardCommand = nil
 	e.prices = M{}
 	e.cargoSync = M{}
+	e.odysseyPickups = nil
 	e.gameRunning = nil
 	e.locationAt = ""
 	e.cargoAt = ""
 	e.mu.Unlock()
+	e.resetSectionSevenObservations()
 	e.Carrier.Reset()
 	e.Trading.Reset()
 	e.Mining.Reset()
@@ -289,12 +298,16 @@ func (e *Engine) applyLocked(event, meta M) {
 	switch kind {
 	case "Fileheader":
 		version := v.Str(event["gameversion"])
+		if journal.GameMode(version) != journal.GameMode(v.Str(e.game["version"])) {
+			e.cargoSync, e.cargoAt = M{}, ""
+		}
 		e.game = M{"version": version, "build": event["build"], "isBeta": strings.Contains(strings.ToLower(version), "beta"), "live": journal.GameMode(version) == "live"}
 	case "Commander", "LoadGame":
 		cmd["name"] = v.Text(event["Name"], event["Commander"], cmd["name"])
 		cmd["fid"] = v.First(event["FID"], cmd["fid"])
 		if previousFID != v.Str(cmd["fid"]) {
 			e.resetCarrierTradeSearchLocked()
+			e.cargoSync, e.cargoAt = M{}, ""
 		}
 		if kind == "LoadGame" {
 			for _, f := range []string{"Horizons", "Odyssey"} {
@@ -373,7 +386,10 @@ func (e *Engine) applyLocked(event, meta M) {
 		cmd["cargoCapacity"] = event["CargoCapacity"]
 	}
 	e.commander = cmd
+	clipboardBefore := e.clipboardSequence
 	e.observeRichesLocked(kind, event, meta)
+	richesCopied := clipboardBefore != e.clipboardSequence
+	e.observeOdysseyPickupsLocked(event, meta, previousWorkspace)
 	if kind == "Cargo" && event["Inventory"] != nil {
 		vessel := trading.Vessel(v.First(event["Vessel"], cmd["vehicle"]))
 		e.cargoSync[vessel] = M{"inventory": v.Clone(event["Inventory"]), "timestamp": at}
@@ -393,6 +409,10 @@ func (e *Engine) applyLocked(event, meta M) {
 	settings, game := v.Copy(e.settings), v.Copy(e.game)
 	since := e.statsSince
 	cmdCopy := v.Copy(cmd)
+	workspace := e.planWorkspace.key
+	if v.Bool(meta["replay"]) {
+		workspace = e.replayedPlanWorkspace.key
+	}
 	running := e.gameRunning
 	e.revision++
 	if affectsEngineeringRoadmap(event) {
@@ -402,7 +422,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	if (kind == "Commander" || kind == "LoadGame") && previousFID != v.Str(cmdCopy["fid"]) {
 		e.cancelFrontierRequest()
 	}
-	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "side": meta["side"]}
+	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "side": meta["side"], "planWorkspace": workspace}
 	if previousFID != "" && v.Str(cmdCopy["fid"]) != previousFID && (kind == "Commander" || kind == "LoadGame") {
 		// Reader normally resets all observations before changing FID. Keep
 		// direct journal dispatch equally safe for owner-scoped projections.
@@ -410,15 +430,30 @@ func (e *Engine) applyLocked(event, meta M) {
 		e.Pilot.Reset()
 	}
 	e.Carrier.Apply(event, ctx)
+	if !v.Bool(meta["replay"]) && e.Carrier.OwnerID != "" &&
+		((kind == "CarrierJump" || kind == "CarrierLocation" || kind == "CarrierDepositFuel") &&
+			v.Text(event["CarrierID"], event["MarketID"]) == e.Carrier.OwnerID ||
+			(kind == "CargoTransfer" || kind == "MarketBuy" || kind == "MarketSell") && e.Carrier.IsOwnDockedMarket(event["MarketID"])) {
+		e.wakeFrontier()
+	}
 	ctx["carrierId"] = v.First(event["CarrierID"], e.Carrier.OwnerID)
 	if kind == "CargoTransfer" {
 		ctx["carrierId"] = v.First(event["CarrierID"], e.Carrier.DockedCarrierID)
 	}
 	ctx["ownMarket"] = e.Carrier.IsOwnDockedMarket(v.First(event["MarketID"], cmdCopy["marketId"]))
 	ctx["station"] = cmdCopy["station"]
+	if kind == "MiningRefined" {
+		e.Mining.Apply(event, ctx)
+		if run := e.Mining.RefinedRunID(event, ctx); run != "" {
+			ctx["miningRunId"] = run
+		}
+	}
 	tradeResult := e.Trading.Apply(event, ctx)
 	ctx["tradeResult"] = tradeResult
-	e.Mining.Apply(event, ctx)
+	if kind != "MiningRefined" {
+		e.Mining.Apply(event, ctx)
+	}
+	e.Mining.ApplyTradeResult(tradeResult, ctx)
 	e.Engineering.Apply(event, ctx)
 	e.Exobiology.Apply(event, v.Merge(v.Copy(meta), ctx))
 	e.Pilot.Apply(event, ctx)
@@ -426,6 +461,10 @@ func (e *Engine) applyLocked(event, meta M) {
 	e.Ranks.Apply(event, ctx)
 	e.Politics.Apply(event)
 	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
+	if previousWorkspace != e.planWorkspace.key {
+		e.sectionSevenContext()
+	}
+	e.observeSectionSeven(workspace, event, v.Merge(v.Copy(meta), ctx), richesCopied)
 	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
 	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
 		e.queueNextRouteClipboard()
@@ -528,6 +567,7 @@ func (e *Engine) Snapshot() M {
 	ctx := M{"commander": cmd, "settings": settings, "resources": resources, "gameRunning": running, "now": v.ISO(time.Now()), "game": game, "statsSince": statsSince}
 	c := e.Carrier.Snapshot(ctx)
 	ctx["carrier"] = c
+	ctx["miningCargo"] = e.Trading.MiningInventory(e.Mining.RunIDs())
 	ms := e.Mining.Snapshot(ctx)
 	palette, _ := theme.Palette(appearance)
 	connection := M{}
@@ -535,6 +575,7 @@ func (e *Engine) Snapshot() M {
 		connection = e.Reader.State()
 	}
 	connection["gameRunning"] = running
+	ctx["includeDevelopment"] = true
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "desktop": desktop, "connection": connection, "theme": M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, "navigation": M{"tabs": nav}, "objectives": goals, "bookmarks": bookmarks, "resources": resources, "goods": goods, "tradeLedger": ledger, "tradePlan": ledger["plan"], "carrier": c, "carrierRoute": e.Route.Snapshot(), "engineering": eng, "exobiology": e.Exobiology.Snapshot(), "pilot": e.Pilot.Snapshot(), "colonization": e.Colonies.Snapshot(ctx), "mining": ms, "targets": ms["targets"], "prospect": ms["prospect"], "surface": ms["surface"], "stats": ms["stats"], "world": e.Mining.WorldSnapshot(), "trading": network["trading"], "tradeRoutes": network["tradeRoutes"], "search": network["search"], "notices": notices}
 	state["planWorkspace"] = workspace.snapshot()
 	state["riches"] = richesState
@@ -602,6 +643,7 @@ func (e *Engine) persistenceSnapshot() (M, M) {
 	saved["engineering"] = e.Engineering.ExportSettings()
 	saved["exobiology"] = e.Exobiology.ExportSettings()
 	saved["mining"] = e.Mining.ExportSettings()
+	e.saveSectionSeven(saved)
 	v.Merge(saved, e.Trading.ExportSettings())
 	return saved, desktop
 }
@@ -654,6 +696,7 @@ func (e *Engine) CloseWithSave() error {
 	}
 	e.mu.Unlock()
 	e.cancel()
+	e.section7.screens.Stop()
 	if e.frontierAuto != nil && e.frontierAuto.done != nil {
 		<-e.frontierAuto.done
 	}

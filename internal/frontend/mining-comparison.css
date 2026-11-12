@@ -1,0 +1,20 @@
+.mining-compare-panel{display:grid;gap:14px;padding:18px;margin-bottom:16px}
+.mining-compare-panel h2,.mining-compare-panel p{margin:0}
+.mining-compare-panel>header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.mining-compare-panel>header>span,.mining-compare-panel>header label,.mining-compare-choice small,.mining-compare-table small{color:var(--muted);font-size:12px}
+.mining-compare-panel>header label{display:flex;align-items:center;gap:8px}
+.mining-compare-panel select{max-width:min(260px,48vw)}
+.mining-compare-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:8px;max-height:230px;overflow:auto;padding:3px}
+.mining-compare-choice{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer}
+.mining-compare-choice:hover,.mining-compare-choice:focus-within{background:var(--hover)}
+.mining-compare-choice:has(:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.mining-compare-choice:has(:disabled){opacity:.55;cursor:default}
+.mining-compare-choice strong,.mining-compare-choice small,.mining-compare-table small{display:block;overflow:hidden;text-overflow:ellipsis}
+.mining-compare-choice span:last-child{white-space:nowrap}
+.mining-compare-table{overflow:auto;border:1px solid var(--border);border-radius:8px}
+.mining-compare-table table{width:100%;border-collapse:collapse}
+.mining-compare-table th,.mining-compare-table td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);min-width:138px}
+.mining-compare-table thead{background:color-mix(in srgb,var(--text) 5%,transparent)}
+.mining-compare-table tbody th{font-weight:500;color:var(--muted)}
+.mining-compare-table tbody tr:last-child>*{border-bottom:0}
+.mining-compare-table td{font-variant-numeric:tabular-nums}

@@ -61,7 +61,7 @@ func TestTrackerOwnershipFinanceStockAndFreshness(t *testing.T) {
 	if v.At(state, "jump", "pending") != nil || !v.Bool(v.At(state, "fuel", "needsRefresh")) {
 		t.Fatal("arrival/fuel invalidation failed")
 	}
-	tracker.Apply(ce("CarrierDepositFuel", M{"Total": 900, "Amount": 100}), M{})
+	tracker.Apply(ce("CarrierDepositFuel", M{"timestamp": "2026-11-07T12:16:01Z", "Total": 900, "Amount": 100}), M{})
 	if v.Bool(v.At(tracker.Snapshot(nil), "fuel", "needsRefresh")) {
 		t.Fatal("fuel snapshot not refreshed")
 	}

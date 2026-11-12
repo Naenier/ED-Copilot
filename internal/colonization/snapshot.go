@@ -23,6 +23,9 @@ func (p *Planner) snapshotLocked(context M) M {
 			continue
 		}
 		row := p.projectSnapshot(project, cargo, cargoKnown, warehouse)
+		if context["includeDevelopment"] == true {
+			row["development"] = p.developmentProjection(row, rows(row["buildings"]), str(row["id"]) == p.selected)
+		}
 		projects = append(projects, row)
 		if str(row["id"]) == p.selected {
 			active = row
@@ -85,7 +88,7 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 	ports := int(num(project["externalPortCount"]))
 	bs := rows(project["buildings"])
 	for _, b := range bs {
-		t := typesByID[str(b["typeId"])]
+		t := buildingCatalogType(b)
 		tier := firstAny(b["tierOverride"], t["tier"])
 		if str(t["kind"]) == "port" && num(tier) >= 2 && !value.Bool(b["isPrimary"]) && has([]string{"building", "complete"}, p.statusOf(b)) {
 			ports++
@@ -94,50 +97,12 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 	buildings := []M{}
 	warnings := []string{}
 	for index, b := range bs {
-		t := typesByID[str(b["typeId"])]
+		t := buildingCatalogType(b)
 		tier := firstAny(b["tierOverride"], t["tier"])
 		status := p.statusOf(b)
 		d := p.depots[str(b["marketId"])]
-		manual := map[string]float64{}
-		for _, r := range rows(project["deliveries"]) {
-			if str(r["buildingId"]) == str(b["id"]) {
-				manual[str(r["commodity"])] += num(r["count"])
-			}
-		}
-		own := []M{}
-		for _, r := range p.contributions {
-			if str(r["marketId"]) == str(b["marketId"]) {
-				own = append(own, r)
-			}
-		}
-		resources := []M{}
-		if d != nil {
-			for _, r := range rows(d["requirements"]) {
-				row := copyM(r)
-				pending := float64(0)
-				for _, contribution := range own {
-					if num(contribution["sequence"]) > num(d["sequence"]) {
-						for _, part := range rows(contribution["resources"]) {
-							if str(part["commodity"]) == str(r["commodity"]) {
-								pending += num(part["count"])
-							}
-						}
-					}
-				}
-				delivered := num(r["delivered"]) + pending
-				source := "journal"
-				if pending > 0 {
-					source += "+contribution"
-				}
-				merge(row, M{"observedDelivered": r["delivered"], "pendingOwn": pending, "delivered": delivered, "missing": max0(num(r["required"]) - delivered), "manualDelivered": manual[str(r["commodity"])], "source": source, "updatedAt": d["timestamp"]})
-				resources = append(resources, row)
-			}
-		} else {
-			for _, r := range rows(b["resourcePlan"]) {
-				key := str(r["commodity"])
-				resources = append(resources, merge(copyM(r), M{"delivered": manual[key], "manualDelivered": manual[key], "missing": max0(num(r["required"]) - manual[key]), "source": "manual", "sourceNote": b["sourceNote"], "authoritative": false}))
-			}
-		}
+		own := p.buildingContributions(b)
+		resources := buildingRequirements(project, b, d, own)
 		for _, row := range resources {
 			key := str(row["commodity"])
 			row["cargoAvailable"] = nullableCount(cargo, key, cargoKnown)
@@ -195,17 +160,18 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		reward := firstAny(b["pointRewardOverride"], t["pointReward"])
 		before := copyM(points)
 		if status == "planned" {
-			if num(tier) == 2 || num(tier) == 3 {
+			costTier := num(firstAny(t["costTier"], tier))
+			if costTier == 2 || costTier == 3 {
 				key := "tier2"
-				if num(tier) == 3 {
+				if costTier == 3 {
 					key = "tier3"
 				}
 				if cost != nil && num(cost) == 0 {
 				} else if cost == nil || points[key] == nil {
-					ownWarnings = append(ownWarnings, "Баланс очков T"+formatNumber(tier)+" неизвестен. Введите текущий баланс по экрану архитектора.")
+					ownWarnings = append(ownWarnings, "Баланс очков T"+formatNumber(costTier)+" неизвестен. Введите текущий баланс по экрану архитектора.")
 				} else {
 					if num(points[key]) < num(cost) {
-						ownWarnings = append(ownWarnings, "Не хватает "+formatNumber(num(cost)-num(points[key]))+" очк. T"+formatNumber(tier)+" для начала строительства.")
+						ownWarnings = append(ownWarnings, "Не хватает "+formatNumber(num(cost)-num(points[key]))+" очк. T"+formatNumber(costTier)+" для начала строительства.")
 					}
 					points[key] = num(points[key]) - num(cost)
 				}
@@ -216,7 +182,9 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		}
 		if status == "planned" || status == "building" {
 			key := ""
-			if num(tier) == 1 {
+			if num(t["rewardTier"]) == 3 {
+				key = "tier3"
+			} else if num(tier) == 1 {
 				key = "tier2"
 			} else if num(tier) == 2 {
 				key = "tier3"
@@ -241,7 +209,7 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		} else if len(resources) > 0 {
 			billSource = "manual"
 		}
-		buildings = append(buildings, merge(copyM(b), M{"name": displayBuildingName(b), "displayName": displayBuildingName(b), "manualStatus": b["status"], "tier": tier, "kind": t["kind"], "location": t["location"], "economy": t["economy"], "status": status, "effectiveStatus": status, "pointCost": cost, "pointReward": reward, "pointsBefore": before, "pointsAfter": copyM(points), "pointSource": pointSource, "requirements": resources, "authoritative": d != nil, "billSource": billSource, "warnings": ownWarnings, "prerequisites": value.Clone(t["prerequisites"]), "progress": d["constructionProgress"], "depotUpdatedAt": d["timestamp"], "ownDelivered": ownDelivered}))
+		buildings = append(buildings, merge(copyM(b), M{"name": displayBuildingName(b), "displayName": displayBuildingName(b), "catalogTypeId": t["id"], "manualStatus": b["status"], "tier": tier, "kind": t["kind"], "location": t["location"], "economy": t["economy"], "status": status, "effectiveStatus": status, "pointCost": cost, "pointReward": reward, "pointsBefore": before, "pointsAfter": copyM(points), "pointSource": pointSource, "requirements": resources, "authoritative": d != nil, "billSource": billSource, "warnings": ownWarnings, "prerequisites": value.Clone(t["prerequisites"]), "progress": d["constructionProgress"], "depotUpdatedAt": d["timestamp"], "ownDelivered": ownDelivered}))
 	}
 	if points0 := value.Obj(project["points"]); points0["tier2"] == nil || points0["tier3"] == nil {
 		warnings = append(warnings, "Укажите текущие доступные очки T2/T3. Уже построенные объекты включены в этот баланс и повторно очки не начисляют.")
@@ -349,6 +317,54 @@ func (p *Planner) projectSnapshot(project M, cargo map[string]float64, cargoKnow
 		claimValue = copyM(claim)
 	}
 	return merge(copyM(project), M{"status": status, "manualStatus": project["status"], "cargoCapacity": capacity, "buildings": buildings, "supplyQueue": queue, "supplies": supplies, "aggregateSupplies": supplies, "operationalSupplies": operational, "claimedAt": claimedAt, "deadline": deadline, "primaryComplete": primaryComplete, "deadlineActive": deadlineActive, "effectiveDeadline": effectiveDeadline, "deadlineSource": deadlineSource, "beaconDeadline": beacon, "claimObservation": claimValue, "pointsProjected": points, "warnings": warnings, "concurrent": concurrent, "unknownBills": unknownBills, "totalRequired": totalRequired, "totalMissing": totalMissing, "manualDeliveries": value.Clone(project["deliveries"]), "journalDeliveries": journalDeliveries, "economyPlan": economyPlan(str(project["goalEconomy"]), buildings), "buildAdvice": buildAdvice(primaryProject, buildings), "nextTask": taskValue})
+}
+
+func (p *Planner) buildingContributions(building M) []M {
+	var own []M
+	market := str(building["marketId"])
+	for _, contribution := range p.contributions {
+		if str(contribution["marketId"]) == market {
+			own = append(own, contribution)
+		}
+	}
+	return own
+}
+
+func buildingRequirements(project, building, depot M, contributions []M) []M {
+	manual := map[string]float64{}
+	for _, row := range rows(project["deliveries"]) {
+		if str(row["buildingId"]) == str(building["id"]) {
+			manual[str(row["commodity"])] += num(row["count"])
+		}
+	}
+	resources := []M{}
+	if depot == nil {
+		for _, row := range rows(building["resourcePlan"]) {
+			delivered := manual[str(row["commodity"])]
+			resources = append(resources, merge(copyM(row), M{"delivered": delivered, "manualDelivered": delivered, "missing": max0(num(row["required"]) - delivered), "source": "manual", "sourceNote": building["sourceNote"], "authoritative": false}))
+		}
+		return resources
+	}
+
+	pending := map[string]float64{}
+	for _, contribution := range contributions {
+		if num(contribution["sequence"]) <= num(depot["sequence"]) {
+			continue
+		}
+		for _, part := range rows(contribution["resources"]) {
+			pending[str(part["commodity"])] += num(part["count"])
+		}
+	}
+	for _, row := range rows(depot["requirements"]) {
+		key := str(row["commodity"])
+		delivered := num(row["delivered"]) + pending[key]
+		source := "journal"
+		if pending[key] > 0 {
+			source += "+contribution"
+		}
+		resources = append(resources, merge(copyM(row), M{"observedDelivered": row["delivered"], "pendingOwn": pending[key], "delivered": delivered, "missing": max0(num(row["required"]) - delivered), "manualDelivered": manual[key], "source": source, "updatedAt": depot["timestamp"]}))
+	}
+	return resources
 }
 
 type stock struct {

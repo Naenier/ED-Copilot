@@ -22,8 +22,15 @@ test('trade opens its ready routes first and shows the related tools together',(
  assert.match(html,/data-nav="carrier-trade"/);
  assert.doesNotMatch(html,/nav-additional|data-nav="learning"|data-nav="settings"/);
 });
-test('colony tools appear as five sidebar views without duplicate supply screens',()=>{
+test('colony tools include system history without duplicate supply screens',()=>{
  const C={tab:'colonization',mode:'Строительство',tabs:[],nav:[]};
- assert.deepEqual(Array.from(nav.entries(C,'colonization'),item=>item.mode),['Обзор','Выбор системы','Строительство','Журнал снабжения','Бюджет']);
+ assert.deepEqual(Array.from(nav.entries(C,'colonization'),item=>item.mode),['Обзор','Выбор системы','Строительство','Журнал снабжения','Бюджет','Динамика системы']);
  assert.equal(nav.entries(C,'colonization').filter(item=>nav.selected(C,item)).length,1);
+});
+test('Cartography appears in Galaxy and keeps the existing planner route',()=>{
+ const C={tab:'riches',mode:'',group:'galaxy',tabs:[{ID:'riches',Title:'Картография'}],nav:[]};
+ assert.equal(nav.groupFor('riches'),'galaxy');
+ const html=nav.sidebar(C,{t:x=>x,esc:x=>x,icon:()=>'',tabIcons:{}});
+ assert.match(html,/data-nav="riches"[^>]*aria-current="page"[^>]*><span>Картография<\/span>/);
+ assert.equal(nav.entries(C,'work').some(item=>item.tab==='riches'),false);
 });

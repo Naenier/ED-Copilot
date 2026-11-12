@@ -61,6 +61,9 @@ type Service struct {
 	fixSeen                                                            time.Time
 	targetCache                                                        []M
 	targetRevision                                                     uint64
+	radarTracks                                                        []radarTrack
+	radarPrefs                                                         map[string]radarPreference
+	radarShip                                                          M
 }
 
 func DefaultSettings() M {
@@ -69,6 +72,7 @@ func DefaultSettings() M {
 
 func New(saved M) *Service {
 	s := &Service{settings: DefaultSettings(), selected: v.Str(saved["selectedBodyKey"]), statsSince: v.Str(saved["statsSince"])}
+	s.restoreRadar(saved)
 	_ = s.configure(v.Obj(saved["settings"]))
 	for _, row := range v.Rows(saved["surfaceMarks"]) {
 		if mark := cleanMark(row); mark != nil {
@@ -104,6 +108,7 @@ func (s *Service) reset() {
 	s.alerts = []M{}
 	s.tracker = nil
 	s.liveFix = nil
+	s.radarShip = nil
 	s.current = ""
 	s.currentSystem = ""
 	s.seen = map[string]bool{}
@@ -116,7 +121,7 @@ func (s *Service) reset() {
 func (s *Service) ExportSettings() M {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return M{"schemaVersion": SchemaVersion, "settings": v.Copy(s.settings), "selectedBodyKey": s.selected, "statsSince": s.statsSince, "surfaceMarks": v.Clone(s.marks), "bookmarks": v.Clone(s.bookmarks)}
+	return M{"schemaVersion": SchemaVersion, "settings": v.Copy(s.settings), "selectedBodyKey": s.selected, "statsSince": s.statsSince, "surfaceMarks": v.Clone(s.marks), "bookmarks": v.Clone(s.bookmarks), "surfaceTracks": v.Clone(s.radarTracks), "radarPreferences": v.Clone(s.radarPrefs)}
 }
 
 func (s *Service) configure(values M) error {
@@ -156,6 +161,8 @@ func (s *Service) Update(input M) error {
 	defer s.mu.Unlock()
 	s.targetCache = nil
 	switch v.Text(input["action"], "configure") {
+	case "radar-target", "radar-scale", "radar-clear-track":
+		return s.updateRadar(input)
 	case "configure":
 		before := v.Copy(s.settings)
 		if err := s.configure(input); err != nil {
@@ -312,7 +319,7 @@ func cleanMark(raw M) M {
 		return nil
 	}
 	out := M{}
-	for _, key := range []string{"id", "bodyKey", "kind", "runKey", "speciesId", "slot", "at", "owner", "label", "planetRadiusM", "heading", "temperatureK", "gravityG", "elevationM", "altitudeAboveGroundM", "pitch", "locationBasis"} {
+	for _, key := range []string{"id", "bodyKey", "kind", "runKey", "speciesId", "slot", "at", "owner", "label", "planetRadiusM", "heading", "temperatureK", "gravityG", "elevationM", "altitudeAboveGroundM", "pitch", "locationBasis", "uncertaintyM"} {
 		if value, exists := raw[key]; exists {
 			if text, ok := value.(string); ok && len([]rune(text)) > 1000 {
 				continue

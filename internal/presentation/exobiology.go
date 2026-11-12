@@ -7,9 +7,11 @@ import (
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
+const SurfaceRadarMode = "Радар поверхности"
+
 func ExobiologyPage(mode, query string, state M) Page {
 	ex := v.Obj(state["exobiology"])
-	p := Page{Title: "Экзобиология", Description: "Планеты, генетические образцы и продажа данных Vista Genomics.", Modes: []string{"Обзор", "Планеты", "Образцы", "Продажи", "Находки", "Места", "Статистика"}, Columns: []string{"Планета", "Система", "Биосигналы", "Картографирована", "Первый след"}}
+	p := Page{Title: "Экзобиология", Description: "Планеты, генетические образцы и продажа данных Vista Genomics.", Modes: []string{"Обзор", "Планеты", "Образцы", "Продажи", "Находки", "Места", "Статистика", SurfaceRadarMode}, Columns: []string{"Планета", "Система", "Биосигналы", "Картографирована", "Первый след"}}
 	summary := v.Obj(ex["summary"])
 	p.Summary = fmt.Sprintf("Планет: %s · Образцов к продаже: %s · Оценка: %s кр.", Number(summary["bodies"]), Number(summary["pendingSamples"]), Number(summary["pendingEstimatedCredits"]))
 	add := func(r M, cells []string, details string) {
@@ -18,6 +20,8 @@ func ExobiologyPage(mode, query string, state M) Page {
 		}
 	}
 	switch mode {
+	case SurfaceRadarMode:
+		p.Columns = nil
 	case "Образцы", "Продажи", "Находки":
 		path := "pending"
 		if mode == "Продажи" {
@@ -104,9 +108,12 @@ func hudExobiology(doc *HUDDocument, state M) {
 		hudExobiologySample(doc, tracker, body)
 	}
 	if !docked {
+		radar := hudExobiologyRadar(doc, v.Obj(ex["surfaceRadar"]))
 		if len(body) > 0 {
 			hudExobiologyBody(doc, body, sampling && hudSameSampleBody(tracker, body))
-			hudExobiologyMarks(doc, ex)
+			if !radar {
+				hudExobiologyMarks(doc, ex)
+			}
 		} else {
 			hudExobiologySurvey(doc, ex)
 		}
@@ -125,6 +132,36 @@ func hudExobiology(doc *HUDDocument, state M) {
 			hudCard(doc, "bio", "ДАННЫЕ VISTA GENOMICS", "", 0, rows...)
 		}
 	}
+}
+
+func hudExobiologyRadar(doc *HUDDocument, raw M) bool {
+	if raw["available"] != true || v.Num(raw["scaleM"]) <= 0 {
+		return false
+	}
+	radar := &HUDRadar{Scale: v.Num(raw["scaleM"]), Heading: v.Num(raw["heading"]), HeadingUp: v.Bool(raw["headingUp"]), Stale: v.Bool(raw["stale"])}
+	for _, row := range v.Rows(raw["points"]) {
+		radar.Points = append(radar.Points, HUDRadarPoint{X: v.Num(row["x"]), Y: v.Num(row["y"]), Kind: v.Str(row["kind"]), Basis: v.Str(row["locationBasis"]),
+			Uncertainty: v.Num(row["uncertaintyM"]), Exclusion: v.Num(row["exclusionM"]), Target: v.Bool(row["target"])})
+	}
+	for _, row := range v.Rows(raw["trail"]) {
+		radar.Trail = append(radar.Trail, HUDRadarPoint{X: v.Num(row["x"]), Y: v.Num(row["y"]), Break: v.Bool(row["break"])})
+	}
+	if len(radar.Points) == 0 && len(radar.Trail) < 2 {
+		return false
+	}
+	section := HUDSection{Kind: "radar", Title: "РАДАР ПОВЕРХНОСТИ", Subtitle: Number(radar.Scale) + " м", Radar: radar}
+	target := v.Obj(raw["target"])
+	if radar.Stale {
+		section.Lines = append(section.Lines, HUDLine{Text: "Позиция не обновляется", Role: "warn"})
+	} else if target["id"] != nil {
+		value := Number(target["distanceM"]) + " м · " + Number(target["bearing"]) + "°"
+		if target["uncertaintyM"] != nil {
+			value = "≈ " + value
+		}
+		section.Lines = append(section.Lines, hudValue(v.Text(target["label"], "Точка поверхности"), value, "good"))
+	}
+	doc.Sections = append(doc.Sections, section)
+	return true
 }
 
 func hudExobiologySample(doc *HUDDocument, tracker, body M) {

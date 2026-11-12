@@ -200,4 +200,11 @@ func (platformHelper) install(ctx context.Context, path string, args []string) (
 	}
 	return -1, err
 }
-func (platformHelper) restart(path string, args []string) error { return launchDetached(path, args) }
+func (platformHelper) restart(path string, args []string) error {
+	cmd := exec.Command(path, args...)
+	cmd.Dir = filepath.Dir(path)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
+}

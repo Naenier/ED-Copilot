@@ -77,6 +77,9 @@ func (e *Engine) Do(path string, body M) (M, error) {
 	if body == nil {
 		body = M{}
 	}
+	if result, err, handled := e.sectionSevenCommand(path, body); handled {
+		return result, err
+	}
 	switch path {
 	case "/api/updates/dismiss":
 		e.mu.Lock()
@@ -126,7 +129,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 	case "/api/settings":
 		e.mu.Lock()
 		next := v.Copy(e.settings)
-		for k, allowed := range map[string][]string{"language": {"ru", "en"}, "minTier": {"low", "medium", "high"}, "method": {"all", "laser", "core", "subsurface", "surface", "surface-planet", "raw"}, "activity": {"flight", "asteroid", "surface", "raw", "trade", "carrier", "engineering", "colonization", "exobiology"}} {
+		for k, allowed := range map[string][]string{"language": {"ru", "en"}, "minTier": {"low", "medium", "high"}, "method": {"all", "laser", "core", "subsurface", "surface", "surface-planet", "raw"}, "activity": {"flight", "cartography", "asteroid", "surface", "raw", "trade", "carrier", "engineering", "odyssey", "colonization", "exobiology"}} {
 			if raw, ok := body[k]; ok {
 				valid := false
 				for _, x := range allowed {
@@ -165,6 +168,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			}
 		}
 		e.settings = next
+		e.section7.notifications.Context(e.planWorkspace.key, v.Str(next["activity"]), v.Str(next["language"]))
+		e.section7.screens.Invalidate()
 		if disabled, exists := next["routeAutoCopyNext"]; exists && !v.Bool(disabled) {
 			e.clearClipboardLocked("carrier-route")
 		}
@@ -328,6 +333,12 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		if err := e.Colonies.Update(body); err != nil {
 			return nil, err
 		}
+	case "/api/colonization/portfolio":
+		return e.colonySupplyPortfolio(body)
+	case "/api/colonization/supply-reservation":
+		return e.updateColonySupplyReservation(body)
+	case "/api/colonization/supply-market":
+		return e.colonySupplyMarket(body)
 	case "/colonization/resource-row":
 		if err := e.colonyResource(body); err != nil {
 			return nil, err
@@ -347,14 +358,22 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		e.cancelJob("colonizationSearch")
 		return M{"ok": true}, nil
 	case "/api/engineering":
-		if err := e.Engineering.Update(body); err != nil {
-			return nil, err
-		}
-		if body["action"] == "engineer" {
+		e.domainMu.Lock()
+		err := e.Engineering.Update(body)
+		if err == nil {
+			e.section7.itineraryCache = nil
+			e.section7.engineeringReady = false
+			e.section7.notifications.ClearNonurgent("engineering")
 			e.mu.Lock()
 			e.engineeringRoadmapRevision++
 			e.mu.Unlock()
 		}
+		e.domainMu.Unlock()
+		if err != nil {
+			return nil, err
+		}
+	case "/api/engineering/odyssey/loadout":
+		return e.updateOdysseyLoadout(body)
 	case "/api/mining/plan":
 		e.domainMu.Lock()
 		err := e.Mining.Update(body)
@@ -657,8 +676,12 @@ func (e *Engine) objective(body M) error {
 		} else {
 			r := e.objectives[index]
 			if body["action"] == "complete" {
+				at := time.Now()
+				if r["status"] != "completed" {
+					e.notifyGoalCompleted(owner, r, at)
+				}
 				r["status"] = "completed"
-				r["completedAt"] = v.ISO(time.Now())
+				r["completedAt"] = v.ISO(at)
 			} else {
 				r["status"] = "active"
 				r["completedAt"] = nil

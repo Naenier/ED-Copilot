@@ -24,7 +24,9 @@ func (s *Service) Apply(event, context M) {
 		return
 	}
 	if typ == "Status" {
-		s.observeStatus(event, cmd)
+		if !v.Bool(context["replay"]) {
+			s.observeStatus(event, cmd, v.Bool(context["side"]))
+		}
 		return
 	}
 	allowed := map[string]bool{"Location": true, "FSDJump": true, "CarrierJump": true, "Scan": true, "FSSBodySignals": true, "SAASignalsFound": true, "SAAScanComplete": true, "FSSDiscoveryScan": true, "FSSAllBodiesFound": true, "ScanOrganic": true, "SellOrganicData": true, "CodexEntry": true, "Disembark": true, "Disembarked": true, "Touchdown": true, "Liftoff": true, "SupercruiseEntry": true, "Died": true}
@@ -69,6 +71,7 @@ func (s *Service) Apply(event, context M) {
 		if typ != "Location" {
 			s.current = ""
 			s.liveFix = nil
+			s.radarShip = nil
 		}
 	}
 	if typ == "FSSAllBodiesFound" || typ == "FSSDiscoveryScan" {
@@ -91,10 +94,12 @@ func (s *Service) Apply(event, context M) {
 	}
 	if typ == "Died" {
 		s.loseData(at)
+		s.radarShip = nil
 		return
 	}
 	if typ == "SupercruiseEntry" || typ == "Liftoff" {
 		s.liveFix = nil
+		s.radarShip = nil
 		if typ == "SupercruiseEntry" {
 			s.current = ""
 		}
@@ -185,7 +190,12 @@ func (s *Service) Apply(event, context M) {
 	case "Touchdown":
 		s.current = b.Key
 		if fix := fixFrom(event, b, at); fix != nil {
-			s.addMark(v.Merge(fix, M{"id": id, "kind": "ship", "bodyKey": b.Key, "label": "Корабль", "at": at, "owner": s.commander}))
+			s.radarShip = v.Merge(fix, M{"id": id, "kind": "ship", "bodyKey": b.Key, "label": "Корабль", "at": at, "owner": s.commander})
+			if !v.Bool(context["replay"]) {
+				s.addMark(v.Copy(s.radarShip))
+			}
+		} else {
+			s.radarShip = nil
 		}
 	case "CodexEntry":
 		s.codex(event, context, b, id, at)

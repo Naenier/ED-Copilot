@@ -18,6 +18,19 @@ func (p *Planner) Update(body M) error {
 		p.projects, p.config, p.selected = oldProjects, oldConfig, oldSelected
 		return err
 	}
+	switch body["action"] {
+	case "remove-project", "update-project", "remove-building", "update-building":
+		p.releaseClosedSupplyReservations()
+	}
+	if body["action"] == "remove-project" {
+		delete(p.history, str(body["id"]))
+	}
+	if body["action"] == "update-project" {
+		id := str(body["id"])
+		if history := p.history[id]; history != nil && !history.target.matches(historyTarget(p.projectLocked(id))) {
+			delete(p.history, id)
+		}
+	}
 	return nil
 }
 func (p *Planner) updateLocked(body M) error {
@@ -339,7 +352,11 @@ func (p *Planner) updateLocked(body M) error {
 		}
 		b["marketId"] = id
 	case "update-building":
-		next := cleanBuilding(merge(copyM(b), body, M{"id": b["id"], "typeId": b["typeId"]}))
+		typeID := firstText(body["typeId"], b["typeId"])
+		if typesByID[typeID] == nil {
+			return errors.New("Выберите тип объекта из каталога.")
+		}
+		next := cleanBuilding(merge(copyM(b), body, M{"id": b["id"], "typeId": typeID}))
 		if e := p.uniqueDepot(str(next["marketId"]), b); e != nil {
 			return e
 		}

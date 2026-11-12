@@ -1,0 +1,19 @@
+{
+  "Укажите название комплекта длиной до 100 символов.": "Enter a loadout name of up to 100 characters.",
+  "Добавьте от одного до четырёх предметов снаряжения.": "Add one to four items to the loadout.",
+  "Выберите модель костюма или оружия из справочника.": "Select a suit or weapon model from the catalogue.",
+  "Один экземпляр снаряжения можно включить в комплект только один раз.": "Each owned item can appear only once in a loadout.",
+  "Исходный класс: требуется целое число от 1 до 5": "Starting grade must be a whole number from 1 to 5.",
+  "Целевой класс: требуется целое число от 1 до 5": "Target grade must be a whole number from 1 to 5.",
+  "Целевой класс ниже исходного.": "Target grade must be at least the starting grade.",
+  "На целевом классе не хватает ячеек для выбранных модификаций.": "The target grade has too few slots for the selected modifications.",
+  "Выберите совместимые модификации без повторов.": "Select compatible modifications once each.",
+  "В комплекте больше оружия, чем позволяет выбранный костюм.": "The selected suit has too few weapon slots for this loadout.",
+  "Укажите, нужно ли резервировать материалы комплекта.": "Choose whether to reserve materials for this loadout.",
+  "Для комплекта Odyssey нужен командир из журнала игры.": "Start a game session to load your commander before saving an Odyssey loadout.",
+  "Достигнут предел профилей с комплектами Odyssey.": "The profile limit for Odyssey loadouts has been reached.",
+  "Комплект Odyssey не найден.": "Odyssey loadout not found.",
+  "Достигнут предел комплектов Odyssey.": "The Odyssey loadout limit has been reached.",
+  "Неизвестное действие с комплектом Odyssey.": "Unknown Odyssey loadout action.",
+  "Наблюдаемое снаряжение не соответствует выбранной модели.": "The item observed in the journal does not match the selected model."
+}

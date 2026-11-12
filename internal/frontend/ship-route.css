@@ -1,0 +1,27 @@
+.ship-route-panel{display:grid;gap:14px;margin-bottom:16px;padding:18px}
+.ship-route-panel h2,.ship-route-panel p{margin:0}
+.ship-route-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.ship-route-bar header p,.ship-route-bar label,.ship-route-metrics small,.ship-route-table small{color:var(--muted)}
+.ship-route-panel details{border-top:1px solid var(--border);padding-top:10px}
+.ship-route-panel summary{cursor:pointer;color:var(--text)}
+.ship-route-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px;margin-top:10px;align-items:end}
+.ship-route-form>label:not(.check-label){display:grid;gap:6px;color:var(--muted)}
+.ship-route-form input,.ship-route-form select,.ship-route-form textarea{width:100%;min-width:0}
+.ship-route-form input[type=checkbox]{width:auto}
+.ship-route-form button{justify-self:start}
+.ship-route-form fieldset{min-width:0;border:1px solid var(--border);border-radius:8px;padding:10px}
+.ship-route-form [hidden]{display:none}
+.ship-route-wide{grid-column:1/-1}
+.ship-route-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.ship-route-metrics>div{display:grid;align-content:start;gap:5px;padding:12px;border:1px solid var(--border);border-radius:8px}
+.ship-route-metrics strong{overflow-wrap:anywhere;font-size:16px}
+.ship-route-table{overflow:auto;max-height:580px;border:1px solid var(--border);border-radius:8px}
+.ship-route-table table{width:100%;border-collapse:collapse}
+.ship-route-table thead{position:sticky;top:0;background:var(--panel)}
+.ship-route-table th,.ship-route-table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);min-width:90px;vertical-align:top}
+.ship-route-table tbody th{min-width:175px}
+.ship-route-table tbody th .pill{display:block;margin:4px 0 0}
+.ship-route-table small{display:block}
+.ship-route-table .is-visited{color:var(--muted)}
+.ship-route-table .is-next{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.ship-route-pagination{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted)}

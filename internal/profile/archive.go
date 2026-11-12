@@ -192,7 +192,8 @@ func portableField(key string) bool {
 	case "settings", "appearance", "navigation", "objectives", "bookmarks", "tradePlan",
 		"tradingDestination", "savedTradeRoutes", "manualPrices", "statsSince", "carrier",
 		"carrierCalculator", "carrierRouteGo", "carrierTrade", "colonization", "engineering",
-		"exobiology", "richesRoutes", "learning", "ranks", "politics", "mining":
+		"exobiology", "richesRoutes", "learning", "ranks", "politics", "mining",
+		"shipBuilds", "engineeringItineraries", "exploration", "shipRoutes", "notifications":
 		return true
 	default:
 		return false

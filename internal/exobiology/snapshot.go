@@ -32,6 +32,7 @@ func (s *Service) snapshot(hud bool) M {
 		}
 	}
 	if hud {
+		out["surfaceRadar"] = s.surfaceRadar(20, 48)
 		out["targets"] = s.targets(5)
 		out["surfaceMarks"] = s.marksSnapshotLimit(current, 3)
 		out["alerts"] = recent(s.alerts, 3)

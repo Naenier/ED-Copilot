@@ -83,5 +83,5 @@ func (p *Planner) discoverStationLocked(station M) {
 	if project == nil || address == "" || str(project["systemAddress"]) != address {
 		return
 	}
-	p.discoverDepotLocked(M{"marketId": station["marketId"], "system": station["system"], "systemAddress": address, "station": station["name"], "stationType": station["type"], "stationDisplayName": station["displayName"], "timestamp": station["timestamp"], "complete": true, "source": "station"})
+	p.discoverDepotLocked(M{"marketId": station["marketId"], "system": station["system"], "systemAddress": address, "station": station["name"], "stationType": station["type"], "stationDisplayName": station["displayName"], "timestamp": station["timestamp"], "historyAt": station["historyAt"], "complete": true, "source": "station"})
 }

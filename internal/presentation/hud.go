@@ -19,6 +19,18 @@ type HUDSection struct {
 	Title, Subtitle, Kind string
 	Lines                 []HUDLine
 	More                  int
+	Radar                 *HUDRadar
+}
+type HUDRadar struct {
+	Scale, Heading   float64
+	HeadingUp, Stale bool
+	Points           []HUDRadarPoint
+	Trail            []HUDRadarPoint
+}
+type HUDRadarPoint struct {
+	X, Y, Uncertainty, Exclusion float64
+	Kind, Basis                  string
+	Target, Break                bool
 }
 type HUDLine struct{ Text, Role, Value string }
 type HUDRect struct{ X, Y, Width, Height int }

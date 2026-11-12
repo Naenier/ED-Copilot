@@ -4,9 +4,10 @@ param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$Ex
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'delivery-lib.ps1')
 $publisherRequest={param($url) Invoke-EDPublicDownload -URL $url -PublisherMetadata}
-$manifest=Test-EDReleaseDirectory -Directory $Directory -ExpectedCommit $ExpectedCommit -SourceRoot $SourceRoot -RequireSmokeReports
+$manifest=Test-EDReleaseDirectory -Directory $Directory -ExpectedCommit $ExpectedCommit -SourceRoot $SourceRoot -RequireBuildEvidence
 $head=Get-EDPublicJSON 'git/ref/heads/main' $publisherRequest
 if($head.object.sha -ne $ExpectedCommit){Write-Output 'A newer source commit superseded this build; publication skipped.';return}
+Assert-EDReleaseAttestations $Directory $manifest
 $version=$manifest.version
 $notes=Join-Path $SourceRoot "docs/RELEASE-$version.md"
 if(-not(Test-Path -LiteralPath $notes -PathType Leaf)){throw 'Release notes for this version are missing.'}

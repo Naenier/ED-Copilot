@@ -50,9 +50,19 @@ that exact source revision, not a previous `latest`
 release. GitHub runs the race detector and the full build/check command once.
 The release job downloads the already verified workflow artifact and publishes
 the Setup, portable ZIP, checksums and release manifest without rebuilding.
-The four smoke reports stay in the workflow artifact. A newer `main` commit
-stops an obsolete release. Version, tag, asset names and release notes are derived
-automatically.
+The four smoke reports and the two CycloneDX inventories stay in the workflow
+artifact. A newer `main` commit stops an obsolete release. Version, tag, asset
+names and release notes are derived automatically.
+
+Before publication, a separate GitHub Actions job attests the exact package
+and release metadata bytes with a short-lived Sigstore certificate. It also
+attests the CycloneDX inventory for each package. The inventories record the
+linked Go modules from the executable's build information. The installer
+inventory also records the Inno Setup engine and the exact bundled Microsoft
+WebView2 bootstrapper. The release job verifies these attestations against
+this repository, the Windows workflow, the `main` branch and the exact source
+commit before creating the release. Windows Authenticode signing requires a
+separate code-signing certificate.
 
 Delivery then checks the successful workflow run, tag-to-commit mapping, release
 manifest, GitHub SHA256 digests, checksum file and ZIP executable. The workflow
@@ -94,6 +104,23 @@ Source tree comparison normalizes CRLF to LF in UTF-8 text to match Git checkout
 rules. Uploaded Git blob hashes and every downloadable artifact remain checked
 against their exact bytes. `release-manifest.json` records the digest format.
 
+## Verify a downloaded package
+
+For releases carrying attestations, GitHub CLI can verify the installer or ZIP
+directly. Set `$package` to the downloaded file and `$commit` to the release
+tag's full source commit. A nonzero exit means verification failed. [GitHub CLI
+attestation verification](https://cli.github.com/manual/gh_attestation_verify)
+
+```powershell
+gh attestation verify $package --repo Naenier/ED-Copilot `
+    --signer-workflow Naenier/ED-Copilot/.github/workflows/windows.yml `
+    --source-ref refs/heads/main --source-digest $commit --deny-self-hosted-runners
+```
+
+The inventory is available through the same verification command with
+`--predicate-type https://cyclonedx.org/bom --format json`. The package can
+then be installed using the normal installer, or extracted as a portable ZIP.
+
 ## Tests
 
 ```powershell
@@ -101,6 +128,7 @@ against their exact bytes. `release-manifest.json` records the digest format.
 ```
 
 Contract tests use mocked downloads and temporary synthetic packages/profiles.
-They cover provenance, tampering, ZIP contents, source hashing, cache reuse,
-same-version behavior, downgrades, URL policy and profile preservation. They make
-no network requests and never install into a real application directory.
+They cover the package and inventory relationship, attestation requirements,
+tampering, ZIP contents, source hashing, cache reuse, same-version behavior,
+downgrades, URL policy and profile preservation. They make no network requests
+and never install into a real application directory.

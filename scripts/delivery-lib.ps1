@@ -3,6 +3,7 @@
 Set-StrictMode -Version Latest
 $script:EDDeliveryRepository = 'Naenier/ED-Copilot'
 $script:EDSmokeKinds = @('headless','native','stress','installer')
+$script:EDReleaseSBOMNames = @('application.cdx.json','installer.cdx.json')
 
 function Get-EDPublicArtifactNames {
     param([string]$Version,[int]$SchemaVersion)
@@ -103,10 +104,10 @@ function New-EDReleaseManifest {
     $version = Get-EDCopilotVersion $Root
     if ($Commit -and $Commit -notmatch '^[0-9a-f]{40}$') { throw 'Invalid source commit.' }
     $source = Get-EDSourceState $Root
-    $schemaVersion = 2
+    $schemaVersion = 3
     $published = @(Get-EDPublicArtifactNames $version $schemaVersion)
     $reports = @($script:EDSmokeKinds | ForEach-Object { "smoke-$_.json" })
-    $names = @('ED Copilot.exe') + $published + $reports
+    $names = @('ED Copilot.exe') + $published + $reports + $script:EDReleaseSBOMNames
     $artifacts = @()
     foreach ($name in $names) {
         $file = Join-Path $Directory $name
@@ -129,16 +130,46 @@ function Read-EDChecksums {
     return $sums
 }
 
+function Assert-EDSBOMComponent {
+    param($Component,[string]$Reference,[string]$Version,[string]$SHA256)
+    if (-not $Component -or $Component['bom-ref'] -cne $Reference -or $Component.version -cne $Version -or
+        @($Component.hashes | Where-Object { $_.alg -ceq 'SHA-256' -and $_.content -ceq $SHA256 }).Count -ne 1) {
+        throw 'SBOM component does not match the release executable.'
+    }
+}
+
+function Assert-EDReleaseSBOMs {
+    param([string]$Directory,[string]$Version,$Entries)
+    $executable = $Entries['ED Copilot.exe'].sha256
+    $setup = $Entries["ED-Copilot-$Version-Setup.exe"].sha256
+    foreach ($name in $script:EDReleaseSBOMNames) {
+        $path = Join-Path $Directory $name
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+        $bom = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable
+        if ($bom.bomFormat -cne 'CycloneDX' -or $bom.specVersion -cne '1.6') { throw "Unsupported SBOM format: $name" }
+        if ($name -eq 'application.cdx.json') {
+            Assert-EDSBOMComponent $bom.metadata.component 'ed-copilot' $Version $executable
+        } else {
+            Assert-EDSBOMComponent $bom.metadata.component 'ed-copilot-setup' $Version $setup
+            $payload = @($bom.components | Where-Object { $_['bom-ref'] -ceq 'ed-copilot' })
+            if ($payload.Count -ne 1) { throw 'Installer SBOM lacks the executable component.' }
+            Assert-EDSBOMComponent $payload[0] 'ed-copilot' $Version $executable
+        }
+    }
+}
+
 function Test-EDReleaseDirectory {
-    param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$ExpectedCommit,[string]$SourceRoot='', [switch]$RequireSmokeReports)
+    param([Parameter(Mandatory)][string]$Directory,[Parameter(Mandatory)][string]$ExpectedCommit,[string]$SourceRoot='', [Alias('RequireSmokeReports')][switch]$RequireBuildEvidence)
     if ($ExpectedCommit -notmatch '^[0-9a-f]{40}$') { throw 'A full expected source commit is required.' }
     $Directory=Get-EDSafePath $Directory
     $m = Get-Content -LiteralPath (Join-Path $Directory 'release-manifest.json') -Raw | ConvertFrom-Json
-    if ($m.schemaVersion -notin @(1,2) -or $m.version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $m.sourceCommit -ne $ExpectedCommit -or $m.sourceTreeSHA256 -notmatch '^[0-9a-f]{64}$' -or $m.sourceDigestFormat -ne 'paths+text-lf-sha256-v1' -or $m.platform -ne 'windows' -or $m.architecture -ne 'amd64' -or $m.testsPassed -isnot [bool] -or -not $m.testsPassed) { throw 'Release provenance or validation manifest is invalid.' }
+    if ($m.schemaVersion -notin @(1,2,3) -or $m.version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $m.sourceCommit -ne $ExpectedCommit -or $m.sourceTreeSHA256 -notmatch '^[0-9a-f]{64}$' -or $m.sourceDigestFormat -ne 'paths+text-lf-sha256-v1' -or $m.platform -ne 'windows' -or $m.architecture -ne 'amd64' -or $m.testsPassed -isnot [bool] -or -not $m.testsPassed) { throw 'Release provenance or validation manifest is invalid.' }
     if ($SourceRoot -and ((Get-EDSourceState $SourceRoot).treeSHA256 -ne $m.sourceTreeSHA256 -or (Get-EDCopilotVersion $SourceRoot) -ne $m.version)) { throw 'Release does not match the checked-out source.' }
     $published = @(Get-EDPublicArtifactNames $m.version $m.schemaVersion)
     $reports = @($script:EDSmokeKinds | ForEach-Object { "smoke-$_.json" })
-    $expected = @('ED Copilot.exe') + @(Get-EDPublicArtifactNames $m.version 2) + $reports
+    $evidence = $reports
+    if ($m.schemaVersion -eq 3) { $evidence += $script:EDReleaseSBOMNames }
+    $expected = @('ED Copilot.exe') + @(Get-EDPublicArtifactNames $m.version 2) + $evidence
     $entries=@{}
     foreach ($a in $m.artifacts) {
         if ($a.name -notin $expected -or $entries.ContainsKey($a.name) -or $a.bytes -le 0 -or $a.bytes -gt 268435456 -or $a.sha256 -notmatch '^[0-9a-f]{64}$' -or $a.published -isnot [bool] -or $a.published -ne ($a.name -in $published)) { throw 'Invalid or duplicate artifact manifest entry.' }
@@ -146,9 +177,10 @@ function Test-EDReleaseDirectory {
         $path=Get-EDSafePath (Join-Path $Directory $a.name)
         if (Test-Path -LiteralPath $path -PathType Leaf) {
             if ((Get-Item -LiteralPath $path).Length -ne $a.bytes -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $a.sha256) { throw "Artifact hash/size mismatch: $($a.name)" }
-        } elseif ($a.published -or ($RequireSmokeReports -and $a.name -in $reports)) { throw "Missing release artifact: $($a.name)" }
+        } elseif ($a.published -or ($RequireBuildEvidence -and $a.name -in $evidence)) { throw "Missing release artifact: $($a.name)" }
     }
     if ($entries.Count -ne $expected.Count) { throw 'Incomplete release manifest.' }
+    if ($m.schemaVersion -eq 3) { Assert-EDReleaseSBOMs $Directory $m.version $entries }
     $sums=Read-EDChecksums (Join-Path $Directory 'SHA256SUMS.txt')
     foreach ($name in @('ED Copilot.exe',"ED-Copilot-$($m.version)-Setup.exe","ED-Copilot-$($m.version)-windows-amd64.zip")) { if ($sums[$name] -ne $entries[$name].sha256) { throw 'Release checksum sources disagree.' } }
     foreach ($kind in $script:EDSmokeKinds) {
@@ -158,7 +190,7 @@ function Test-EDReleaseDirectory {
     # Inspect the one executable entry as a stream; never extract arbitrary ZIP paths.
     $zip=[IO.Compression.ZipFile]::OpenRead((Join-Path $Directory "ED-Copilot-$($m.version)-windows-amd64.zip"))
     try {
-        if ($m.schemaVersion -eq 2 -and @($zip.Entries | Where-Object Name -In $reports).Count) { throw 'Portable package includes CI smoke reports.' }
+        if ($m.schemaVersion -ge 2 -and @($zip.Entries | Where-Object Name -In $evidence).Count) { throw 'Portable package includes CI-only evidence.' }
         $found=@($zip.Entries | Where-Object FullName -EQ 'ED Copilot.exe')
         if ($found.Count -ne 1 -or $found[0].Length -ne $entries['ED Copilot.exe'].bytes) { throw 'Portable executable is missing or duplicated.' }
         $stream=$found[0].Open();$hash=[Security.Cryptography.SHA256]::Create()
@@ -166,6 +198,24 @@ function Test-EDReleaseDirectory {
         if ($digest -ne $entries['ED Copilot.exe'].sha256) { throw 'Portable executable identity mismatch.' }
     } finally { $zip.Dispose() }
     return $m
+}
+
+function Assert-EDReleaseAttestations {
+    param([string]$Directory,$Manifest,[scriptblock]$Verify={
+        param($Path,$Predicate,$Commit)
+        & gh attestation verify $Path --repo $script:EDDeliveryRepository --signer-workflow "$script:EDDeliveryRepository/.github/workflows/windows.yml" --source-ref refs/heads/main --source-digest $Commit --deny-self-hosted-runners --predicate-type $Predicate
+        if ($LASTEXITCODE -ne 0) { throw "Could not verify GitHub attestation: $([IO.Path]::GetFileName($Path))" }
+    })
+    if ($Manifest.schemaVersion -ne 3) { throw 'Publication requires the release manifest with SBOM evidence.' }
+    $provenance = 'https://slsa.dev/provenance/v1'
+    $sbom = 'https://cyclonedx.org/bom'
+    $publicNames = @(Get-EDPublicArtifactNames $Manifest.version $Manifest.schemaVersion)
+    foreach ($name in $publicNames + 'release-manifest.json') {
+        & $Verify (Join-Path $Directory $name) $provenance $Manifest.sourceCommit
+    }
+    foreach ($name in $publicNames | Where-Object { $_ -match '\.(exe|zip)$' }) {
+        & $Verify (Join-Path $Directory $name) $sbom $Manifest.sourceCommit
+    }
 }
 
 function Assert-EDPublicURL {
@@ -319,9 +369,9 @@ function Save-EDReleaseAssets {
     Save-EDPublicReleaseAsset $Release $version 'release-manifest.json' $Directory $Download
     $m=Get-Content -LiteralPath (Join-Path $Directory 'release-manifest.json') -Raw|ConvertFrom-Json
     if($m.sourceCommit -ne $ExpectedCommit -or $m.version -ne $version){throw 'Release manifest belongs to different source.'}
-    if($m.schemaVersion -notin @(1,2)){throw 'Unsupported release manifest schema.'}
+    if($m.schemaVersion -notin @(1,2,3)){throw 'Unsupported release manifest schema.'}
     $names=@(Get-EDPublicArtifactNames $version $m.schemaVersion)
-    if($m.schemaVersion -eq 2 -and @($Release.assets | Where-Object { $_.name -notin ($names + 'release-manifest.json') }).Count){throw 'Unexpected public release asset.'}
+    if($m.schemaVersion -ge 2 -and @($Release.assets | Where-Object { $_.name -notin ($names + 'release-manifest.json') }).Count){throw 'Unexpected public release asset.'}
     foreach($name in $names){
         Save-EDPublicReleaseAsset $Release $version $name $Directory $Download
     }

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-function fixture() {
+function fixture({stubLayers=true}={}) {
   const nodes = new Map(), selectors = new Map(), styles = new Map(), classes = new Set(), messages = [], dialogs = [], listeners = new Map(), timers = [];
   const host = { scrollTop: 0, contains: element => !!element?.inPage };
   nodes.set('page-scroll', host);
@@ -17,20 +17,22 @@ function fixture() {
     querySelectorAll: selector => selectors.get(selector) || [],
     getElementById: id => nodes.get(id), addEventListener: (event, handler) => listeners.set(event, handler), createElement: () => ({ style: {}, remove() { selectors.delete('.menu'); } }),
   };
-  const window = { addEventListener() {}, COPILOT_SMOKE: false };
+  const window = { addEventListener() {}, getComputedStyle: node=>({visibility:node.visibility||'visible'}), COPILOT_SMOKE: false };
 	for (const moduleName of ['navigation.js','commander.js','updates.js','ranks.js','politics.js']) vm.runInNewContext(fs.readFileSync(path.join(__dirname, moduleName), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'overview.js'), 'utf8'), {window});
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'settings-pane.js'), 'utf8'), {window});
   let source = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
   source = source.replace(/\nboot\(\);\s*\}\)\(\);\s*$/, `
-window.TestUI={C,referenceCell,context,uiContext,currentLanguage,applyLanguage,captureInputs,restoreInputs,closeLayer,dialog,emptyStateInfo,renderEmptyState,renderActions,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
+window.TestUI={C,toast,referenceCell,context,uiContext,currentLanguage,applyLanguage,captureInputs,restoreInputs,closeLayer,dialog,emptyStateInfo,renderEmptyState,renderActions,renderGeneral,tableWindow,renderTablePager,renderOverview,renderChrome,rendererKind,beginNavigation,renderPage,connectionStatus,activityHtml,colonySelectorModel,selectColony,renderActivity,applyPalette,previewTheme,actionForm,datetimeInput,actionValues,submitAction,loadView,restoreView,captureView,handleClick,renderModes,renderSettings,history,
  setCall(value){call=value;},setRender(value){renderPage=value;},setShell(value){shell=value;},setNavigate(value){navigate=value;},setLoad(value){loadView=value;},setDialog(value){dialog=value;},setClose(value){closeLayer=value;},setToast(value){toast=value;}};
 })();`);
   vm.runInNewContext(source, { window, document, Intl, innerWidth: 1280, innerHeight: 800, localStorage: { getItem() { throw new Error('about:blank'); } }, setTimeout(fn,delay) { timers.push({fn,delay});return timers.length; }, clearTimeout() {}, setInterval() {} });
   const api = window.TestUI;
   api.setToast((message, error) => messages.push({ message, error }));
-  api.setDialog((title, body, footer) => dialogs.push({ title, body, footer }));
-  api.setClose(() => { api.C.layer = false; api.C.themePreview = null; });
+  if(stubLayers){
+    api.setDialog((title, body, footer) => dialogs.push({ title, body, footer }));
+    api.setClose(() => { api.C.layer = false; api.C.themePreview = null; });
+  }
   return { api, window, document, nodes, selectors, styles, classes, messages, dialogs, host, listeners, timers };
 }
 
@@ -83,6 +85,45 @@ test('an older dialog focus timer cannot steal focus in a replacement dialog or 
 test('a dialog without text fields focuses its footer action before its close button',()=>{
  const f=fixture(),focused=[];const panel={contains:()=>false,querySelector(selector){if(selector==='.dialog-foot button:not([disabled])')return {focus(){focused.push('action')}};if(selector==='.dialog-head button')return {focus(){focused.push('close')}};return null;}};
  f.selectors.set('#layers .dialog',panel);f.api.dialog('Confirm','<p>Confirm?</p>','<button>Confirm</button>');f.timers.at(-1).fn();assert.deepEqual(focused,['action']);
+});
+
+test('dialogs wrap Tab in both directions, block background focus and restore the original control after replacement',()=>{
+ const f=fixture({stubLayers:false});
+ const node=(properties={})=>({tabIndex:0,matches:()=>false,closest:()=>null,getClientRects:()=>[{}],
+  focus(){f.document.activeElement=this;},...properties});
+ const opener=node({id:'open-plan'}),close=node(),input=node(),submit=node();
+ const hidden=node({getClientRects:()=>[]}),disabled=node({matches:selector=>selector===':disabled'});
+ const controls=[close,input,submit,hidden,disabled];
+ const panel=node({tabIndex:-1,contains:element=>element===panel||controls.includes(element),
+  querySelector:selector=>selector.startsWith('.dialog-body input')?input:null,querySelectorAll:()=>controls});
+ const app={};
+ f.nodes.set('app',app);
+ f.selectors.set('#layers .dialog',panel);
+ opener.focus();
+ f.api.dialog('Plan','<input>');
+ assert.equal(app.inert,true);assert.equal(f.document.activeElement,panel);
+ assert.match(f.nodes.get('layers').innerHTML,/aria-modal="true" aria-labelledby="active-dialog-title"/);
+ f.timers.at(-1).fn();assert.equal(f.document.activeElement,input);
+ const key=(name,shiftKey=false)=>{const event={key:name,shiftKey,preventDefault(){this.defaultPrevented=true;}};f.listeners.get('keydown')(event);return !!event.defaultPrevented;};
+ assert.equal(key('Tab'),false);
+ submit.focus();assert.equal(key('Tab'),true);assert.equal(f.document.activeElement,close);
+ assert.equal(key('Tab',true),true);assert.equal(f.document.activeElement,submit);
+ opener.focus();f.listeners.get('focusin')({target:opener});assert.equal(f.document.activeElement,panel);
+ f.api.dialog('Confirm','<p>Confirm</p>');
+ const replacement=node({id:'open-plan'});
+ opener.isConnected=false;f.nodes.set('open-plan',replacement);
+ assert.equal(key('Escape'),true);assert.equal(f.document.activeElement,replacement);assert.equal(app.inert,false);
+});
+
+test('toast feedback separates routine announcements from errors and table rows respond to the keyboard',()=>{
+ const f=fixture(),toasts=[],status={},alert={};
+ f.nodes.set('toasts',{append:item=>toasts.push(item)});f.nodes.set('toast-status',status);f.nodes.set('toast-alert',alert);
+ f.api.toast('Saved');f.api.toast('Could not save',true);
+ assert.equal(status.textContent,'Saved');assert.equal(alert.textContent,'Could not save');assert.equal(toasts.length,2);
+ let clicked=0,prevented=0;
+ const target={matches:selector=>selector==='[data-row]',click(){clicked++;}};
+ for(const key of ['Enter',' ','ArrowRight'])f.listeners.get('keydown')({key,target,preventDefault(){prevented++;}});
+ assert.equal(clicked,2);assert.equal(prevented,2);
 });
 
 test('reading actions target the active lesson instead of a table row', () => {
@@ -203,12 +244,14 @@ test('quiet polling leaves form input alone and renders deferred changes after b
 test('explicit refresh restores nested scroll, keyboard focus and text selection', async () => {
   const { api, document, nodes, selectors, host } = fixture();
   let focusOptions, selection;
-  document.activeElement = { id: 'table-query', inPage: true, selectionStart: 2, selectionEnd: 5, selectionDirection: 'forward' };
+  const query = { id: 'table-query', inPage: true, focus(){}, selectionStart: 2, selectionEnd: 5, selectionDirection: 'forward' };
+  document.activeElement = query;
   host.scrollTop = 318;
   selectors.set('.table-scroll,.inspector,.sidebar-scroll', [{ scrollTop: 43, scrollLeft: 27 }]);
   api.setCall(async () => ({ state: {}, page: { Rows: [], Modes: [], Columns: ['x'] }, actions: [] }));
   api.setRender(() => {
     host.scrollTop = 0;
+    query.isConnected=false;
     nodes.set('table-query', { focus: options => { focusOptions = options; }, setSelectionRange: (...args) => { selection = args; } });
     selectors.set('.table-scroll,.inspector,.sidebar-scroll', [{ scrollTop: 0, scrollLeft: 0 }]);
   });
@@ -626,6 +669,20 @@ function activityFixture(){
  f.api.C.state={settings:{overlayEnabled:true,activity:'colonization'},colonization:{projects:[],selectedProjectId:''}};
  return f;
 }
+
+test('Cartography is selectable independently of the flight overlay',async()=>{
+ const {api,listeners}=activityFixture();const calls=[];
+ api.C.boot.activities.push({Value:'cartography',Label:'Картография'});
+ api.C.state.settings.activity='flight';
+ assert.match(api.activityHtml(),/value="flight" selected>Полёт<\/option>/);
+ assert.match(api.activityHtml(),/value="cartography"[^>]*>Картография<\/option>/);
+ api.setCall(async(op,params)=>{calls.push({op,values:params.values});api.C.state.settings.activity=params.values.activity;});
+ api.setLoad(async()=>{});
+ await listeners.get('change')({target:{id:'activity-select',value:'cartography',matches:()=>false}});
+ assert.equal(calls.length,1);assert.equal(calls[0].op,'settings');assert.equal(calls[0].values.activity,'cartography');
+ assert.match(api.activityHtml(),/value="cartography" selected>Картография<\/option>/);
+ assert.doesNotMatch(api.activityHtml(),/value="flight" selected/);
+});
 
 test('the activity bar explains an empty colony list and offers a real navigation action instead of an empty select',async()=>{
  const {api}=activityFixture();let destination='';api.setNavigate(async id=>{destination=id;});

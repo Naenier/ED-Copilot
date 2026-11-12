@@ -1,0 +1,15 @@
+.itinerary-workspace{display:grid;gap:14px}
+.itinerary-workspace h2{font-size:15px;margin:0 0 9px}
+.itinerary-workspace h3{font-size:13px;margin:0}
+.itinerary-actions{display:flex;gap:6px;align-items:end;flex-wrap:wrap}
+.itinerary-actions>label{display:grid;gap:4px;font-size:11px;color:var(--muted)}
+.itinerary-actions select{min-height:31px;padding:5px 9px}
+.itinerary-stop{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:11px 14px;margin-bottom:7px;font-size:11px}
+.itinerary-stop header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+.itinerary-stop .pill{min-height:24px;padding:4px 7px}
+.itinerary-stop p{margin:3px 0;color:var(--muted);line-height:1.6}
+.itinerary-stop p small{margin-left:7px}
+.itinerary-stop ul{padding-left:17px;margin:6px 0 0;line-height:1.65}
+.itinerary-stop li+li{margin-top:4px}
+.itinerary-error{color:var(--warn);margin:0}
+.itinerary-muted{color:var(--muted);margin:0;font-size:12px}

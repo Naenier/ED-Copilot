@@ -183,6 +183,7 @@ type Service struct {
 	hudWorldVersion                  uint64
 	hudTargetsKey                    string
 	hudSurfaceTargets, hudRawTargets []M
+	tripStartedAt                    string
 }
 
 func New(saved M) *Service {
@@ -208,6 +209,7 @@ func (s *Service) Reset() {
 	s.LastLimpetsAt = ""
 	s.GameRunning = false
 	s.resetApplied = false
+	s.tripStartedAt = ""
 	s.resetObserved()
 }
 func (s *Service) ExportSettings() M { return M{"options": v.Copy(s.Options), "resetAt": s.ResetAt} }
@@ -249,12 +251,13 @@ func (s *Service) ResetRun(timestamp string) error {
 	s.resetApplied = true
 	return nil
 }
-func (s *Service) begin(event, commander M) M {
+func (s *Service) begin(event, context, commander M) M {
 	if s.Current != nil {
 		return s.Current
 	}
 	s.sequence++
-	s.Current = M{"id": v.ID(), "startedAt": event["timestamp"], "lastEventAt": event["timestamp"], "lastMiningAt": event["timestamp"], "endedAt": nil, "closeReason": nil, "system": v.Str(commander["system"]), "body": v.Str(commander["body"]), "ship": v.Str(commander["ship"]), "vehicle": v.Text(commander["vehicle"], "unknown"), "refinedTons": 0, "materialUnits": 0, "prospectScans": 0, "prospectors": 0, "collectors": 0, "asteroidsCracked": 0, "yields": M{}, "composition": M{}, "rawContent": M{"high": 0, "medium": 0, "low": 0, "unknown": 0}}
+	s.Current = M{"id": miningRunID(event, context, s.sequence), "startedAt": event["timestamp"], "lastEventAt": event["timestamp"], "lastMiningAt": event["timestamp"], "endedAt": nil, "closeReason": nil, "system": v.Str(commander["system"]), "body": v.Str(commander["body"]), "ship": v.Str(commander["ship"]), "vehicle": v.Text(commander["vehicle"], "unknown"), "refinedTons": 0, "materialUnits": 0, "prospectScans": 0, "prospectors": 0, "collectors": 0, "asteroidsCracked": 0, "yields": M{}, "composition": M{}, "rawContent": M{"high": 0, "medium": 0, "low": 0, "unknown": 0}}
+	s.Current["tripStartedAt"] = s.tripStartedAt
 	return s.Current
 }
 func (s *Service) finish(timestamp, reason string) {
@@ -286,6 +289,9 @@ func (s *Service) Apply(event, context M) {
 	}
 	s.LastEventAt = at
 	s.GameRunning = typ != "Shutdown"
+	if typ == "Undocked" {
+		s.tripStartedAt = at
+	}
 	if typ == "Loadout" && event["Modules"] != nil {
 		modules := []M{}
 		for _, row := range v.Rows(event["Modules"]) {
@@ -327,6 +333,7 @@ func (s *Service) Apply(event, context M) {
 	}
 	if reason := boundaries[typ]; reason != "" {
 		s.finish(at, reason)
+		s.finishTrip(typ, at)
 		return
 	}
 	if context["countInPeriod"] == false {
@@ -337,8 +344,12 @@ func (s *Service) Apply(event, context M) {
 	if typ != "ProspectedAsteroid" && typ != "MiningRefined" && typ != "AsteroidCracked" && !raw && !drone {
 		return
 	}
-	run := s.begin(event, cmd)
+	if changedMiningContext(s.Current, cmd) {
+		s.finish(at, "Сменилось место добычи или техника")
+	}
+	run := s.begin(event, context, cmd)
 	run["lastMiningAt"] = at
+	s.recordMiningMethod(run, cmd, typ, raw)
 	if drone {
 		key := "collectors"
 		if event["Type"] == "Prospector" {
@@ -471,7 +482,12 @@ func (s *Service) runSnapshot(run, context M) M {
 		}
 		yields = append(yields, row)
 	}
-	sort.Slice(yields, func(i, j int) bool { return v.Num(yields[i]["refinedTons"]) > v.Num(yields[j]["refinedTons"]) })
+	sort.Slice(yields, func(i, j int) bool {
+		if a, b := v.Num(yields[i]["refinedTons"]), v.Num(yields[j]["refinedTons"]); a != b {
+			return a > b
+		}
+		return v.Str(yields[i]["key"]) < v.Str(yields[j]["key"])
+	})
 	out["yields"] = yields
 	composition := []M{}
 	for _, raw := range v.Obj(run["composition"]) {
@@ -483,6 +499,9 @@ func (s *Service) runSnapshot(run, context M) M {
 		row["averagePercent"] = nil
 		if v.Num(row["samples"]) > 0 {
 			row["averagePercent"] = v.Num(row["sumPercent"]) / v.Num(row["samples"])
+		}
+		if v.Num(run["prospectScans"]) > 0 && v.Num(row["samples"]) == v.Num(row["scans"]) {
+			row["averageAllScansPercent"] = v.Num(row["sumPercent"]) / v.Num(run["prospectScans"])
 		}
 		above := []M{}
 		for key, scans := range v.Obj(row["above"]) {
@@ -496,7 +515,12 @@ func (s *Service) runSnapshot(run, context M) M {
 		row["above"] = above
 		composition = append(composition, row)
 	}
-	sort.Slice(composition, func(i, j int) bool { return v.Num(composition[i]["scans"]) > v.Num(composition[j]["scans"]) })
+	sort.Slice(composition, func(i, j int) bool {
+		if a, b := v.Num(composition[i]["scans"]), v.Num(composition[j]["scans"]); a != b {
+			return a > b
+		}
+		return v.Str(composition[i]["key"]) < v.Str(composition[j]["key"])
+	})
 	out["composition"] = composition
 	return out
 }
@@ -539,7 +563,10 @@ func (s *Service) Snapshot(context M) M {
 	if latest != nil {
 		prospect = M{"runId": latest["id"], "prospectScans": latest["prospectScans"], "rawContent": latest["rawContent"], "composition": latest["composition"]}
 	}
-	planContext := v.Merge(v.Copy(context), M{"current": current, "history": history, "freeTons": free})
+	planContext := v.Merge(M{}, context, M{"current": current, "history": history, "freeTons": free})
+	if stock, available := context["miningCargo"].(map[string]map[string]trading.MiningStock); available {
+		s.enrichComparison(current, history, stock, v.Rows(context["resources"]))
+	}
 	return v.Merge(M{"options": v.Copy(s.Options), "resetAt": s.ResetAt, "current": currentValue, "history": history, "cargo": M{"capacity": capacity, "tons": tons, "freeTons": free, "fullPercent": full, "limpets": limpets, "limpetsVessel": "ship", "limpetsAt": s.LastLimpetsAt, "minutesToFull": fill}, "prospecting": prospect, "preflight": Preflight(s.Loadout, v.Str(s.Options["method"]), cmd, limpets), "plan": EstimatePlan(s.Options, planContext)}, s.observedSnapshot(context))
 }
 func EstimatePlan(options, context M) M {

@@ -4,7 +4,7 @@ function fixture(language='en'){
  const window={},calls=[],C={state:{app:{version:'2.6.0'},settings:{language,autoUpdateEnabled:true},updates:{status:'staged',availableVersion:'2.7.0'}}};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'updates.js'),'utf8'),{window});
  const esc=s=>String(s??'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
- const u={esc,icon:()=>'',btn:(label,action,_i,_c,attrs='')=>`<button data-click="${action}" ${attrs}>${label}</button>`,context:()=>({tab:'settings'}),call:async(...args)=>calls.push(args),loadView:async()=>{},closeLayer:()=>{C.layer=false;},dialog:(...args)=>{calls.push(['dialog',...args]);C.layer=true;}};
+ const u={esc,icon:()=>'',btn:(label,action,_i,_c,attrs='')=>`<button data-click="${action}" ${attrs}>${label}</button>`,context:()=>({tab:'settings'}),call:async(...args)=>calls.push(args),toast:()=>{},loadView:async()=>{},closeLayer:()=>{C.layer=false;},dialog:(...args)=>{calls.push(['dialog',...args]);C.layer=true;}};
  return {window,C,u,calls,api:window.UpdatesUI};
 }
 test('update setting is enabled by default and explains clean-exit installation in both languages',()=>{
@@ -19,4 +19,14 @@ test('changelog appears once after verified installation, escapes release text, 
 });
 test('documentation and automated smoke never open an update notification',()=>{
  const {window,C,u,api}=fixture();window.COPILOT_SMOKE=true;C.state.updates.notice={version:'2.7.0'};assert.equal(api.showNotice(C,u),false);
+});
+test('update recovery explains a pending restart and copies only on request',async()=>{
+ const {C,u,calls,api}=fixture();
+ assert.doesNotMatch(api.renderSettings(C,u),/previous version path/);
+ C.state.updates={status:'restartRequired',recoveryPath:'test recovery launcher.cmd'};
+ assert.match(api.renderSettings(C,u),/Restart Windows/);
+ assert.match(api.renderSettings(C,u),/Copy previous version path/);
+ assert.equal(calls.length,0);
+ await api.handleClick('updates-recovery-copy',{},C,u);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),['native',{action:'copy',text:'test recovery launcher.cmd'}]);
 });

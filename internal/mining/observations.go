@@ -317,9 +317,6 @@ func (s *Service) observe(event, context M) {
 		g := trading.Good(event["Type"], event["Type_Localised"])
 		count := withDefault(event["Count"], 1)
 		s.record(event, context, "sale", g, count, withDefault(event["TotalSale"], v.Num(event["SellPrice"])*count))
-		if context["countInPeriod"] != false {
-			increment(s.StatsTotal, "miningRevenue", v.Num(v.At(context, "tradeResult", "minedRevenue")))
-		}
 	}
 }
 func (s *Service) WorldSnapshot() []M {

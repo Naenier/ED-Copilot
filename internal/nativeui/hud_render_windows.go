@@ -5,6 +5,7 @@ package nativeui
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/localization"
 	p "github.com/Naenier/ED-Copilot/internal/presentation"
@@ -16,7 +17,26 @@ type hudSectionMetrics struct {
 	Lines              []int
 }
 
+const hudCartographyPageInterval = 10 * time.Second
+
+type hudCartographyFrame struct {
+	sections []p.HUDSection
+	metrics  []hudSectionMetrics
+	plan     p.HUDLayout
+}
+
+type hudCartographyPager struct {
+	frames  []hudCartographyFrame
+	system  string
+	started time.Time
+	index   int
+}
+
 func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool) p.HUDLayout {
+	return h.arrangeAt(view, vehicle, dpi, force, time.Now())
+}
+
+func (h *hudWindow) arrangeAt(view p.HUDRect, vehicle string, dpi int, force bool, now time.Time) p.HUDLayout {
 	bands := p.HUDSafeBands(view, vehicle, dpi)
 	width := bands[0].Width
 	if width <= 0 {
@@ -24,6 +44,9 @@ func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool)
 		return p.HUDLayout{}
 	}
 	if !force && view == h.layoutView && vehicle == h.layoutVehicle {
+		if len(h.cartography.frames) > 0 {
+			return h.cartographyFrame(now)
+		}
 		return h.plan
 	}
 	hdc := win.GetDC(h.hwnd)
@@ -44,6 +67,19 @@ func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool)
 			deliverySide = append(deliverySide, i)
 		}
 	}
+	if h.document.Activity == "cartography" && len(sections) > 0 && sections[0].Kind == "cartography-targets" && heights[0] > bands[0].Height {
+		frames := h.cartographyFrames(view, vehicle, dpi, bands[0].Height, sections, metrics)
+		if len(frames) > 0 {
+			started := now
+			if h.cartography.system == sections[0].Subtitle && len(h.cartography.frames) == len(frames) && !h.cartography.started.IsZero() {
+				started = h.cartography.started
+			}
+			h.cartography = hudCartographyPager{frames: frames, system: sections[0].Subtitle, started: started}
+			h.layoutView, h.layoutVehicle = view, vehicle
+			return h.cartographyFrame(now)
+		}
+	}
+	h.cartography = hudCartographyPager{}
 	var shoppingSide []int
 	if h.document.Activity == "colonization" && len(deliverySide) > 0 {
 		for i, section := range sections {
@@ -62,6 +98,87 @@ func (h *hudWindow) arrange(view p.HUDRect, vehicle string, dpi int, force bool)
 	}
 	h.renderSections, h.metrics, h.layoutView, h.layoutVehicle = sections, metrics, view, vehicle
 	return plan
+}
+
+func (h *hudWindow) cartographyFrame(now time.Time) p.HUDLayout {
+	pager := &h.cartography
+	if pager.started.IsZero() {
+		pager.started = now
+	}
+	pager.index = int(max(0, now.Sub(pager.started))/hudCartographyPageInterval) % len(pager.frames)
+	frame := pager.frames[pager.index]
+	h.renderSections, h.metrics = frame.sections, frame.metrics
+	return frame.plan
+}
+
+// Split the measured target rows across both safe bands, reserving space for
+// the route on the left. Very long lists rotate without taking game input.
+func (h *hudWindow) cartographyFrames(view p.HUDRect, vehicle string, dpi, height int, sections []p.HUDSection, metrics []hudSectionMetrics) []hudCartographyFrame {
+	targets, measured := sections[0], metrics[0]
+	leftHeight := height
+	for _, metric := range metrics[1:] {
+		leftHeight -= metric.Height + h.hudPX(7)
+	}
+	frames := []hudCartographyFrame{}
+	for first := 0; first < len(targets.Lines); {
+		right := h.fitCartographyRows(targets, measured, first, height)
+		middle := first + len(right.Lines)
+		if middle == first {
+			return nil
+		}
+		left := h.fitCartographyRows(targets, measured, middle, leftHeight)
+		last := middle + len(left.Lines)
+
+		rightSection := targets
+		rightSection.Lines = targets.Lines[first:middle]
+		frame := hudCartographyFrame{sections: []p.HUDSection{rightSection}, metrics: []hudSectionMetrics{right}}
+		if last > middle {
+			leftSection := targets
+			leftSection.Lines = targets.Lines[middle:last]
+			frame.sections = append(frame.sections, leftSection)
+			frame.metrics = append(frame.metrics, left)
+		}
+		frame.sections = append(frame.sections, sections[1:]...)
+		frame.metrics = append(frame.metrics, metrics[1:]...)
+		heights := make([]int, len(frame.metrics))
+		preferLeft := make([]int, 0, len(frame.metrics)-1)
+		for i, metric := range frame.metrics {
+			heights[i] = metric.Height
+			if i != 0 {
+				preferLeft = append(preferLeft, i)
+			}
+		}
+		frame.plan = p.LayoutHUDSections(view, vehicle, dpi, heights, preferLeft...)
+		frames = append(frames, frame)
+		first = last
+	}
+	if len(frames) > 1 {
+		for i, frame := range frames {
+			for j := range frame.sections {
+				if frame.sections[j].Kind == targets.Kind {
+					frame.sections[j].Title += fmt.Sprintf(" · %d/%d", i+1, len(frames))
+				}
+			}
+		}
+	}
+	return frames
+}
+
+func (h *hudWindow) fitCartographyRows(section p.HUDSection, full hudSectionMetrics, first, limit int) hudSectionMetrics {
+	height := 2*h.hudPX(8) + h.headerHeight(section) + h.hudPX(6)
+	last := first
+	for last < len(full.Lines) {
+		rowHeight := full.Lines[last]
+		if last > first {
+			rowHeight += h.hudPX(1)
+		}
+		if height+rowHeight > limit {
+			break
+		}
+		height += rowHeight
+		last++
+	}
+	return hudSectionMetrics{Height: height, ValueWidth: full.ValueWidth, Lines: full.Lines[first:last]}
 }
 
 // Keep a usable preview of each local action together when the right column
@@ -126,6 +243,9 @@ func (h *hudWindow) measureSection(hdc win.HDC, width int, section p.HUDSection)
 	}
 	win.SelectObject(hdc, win.HGDIOBJ(h.regular))
 	m.Height = 2*h.hudPX(8) + h.headerHeight(section) + h.hudPX(6)
+	if section.Radar != nil {
+		m.Height += h.hudPX(134)
+	}
 	for i, row := range section.Lines {
 		available := innerWidth
 		if row.Value != "" {
@@ -226,6 +346,10 @@ func (h *hudWindow) drawSection(hdc win.HDC, width, y, height int, section p.HUD
 
 	lineY := titleY + h.headerHeight(section) + h.hudPX(6)
 	lineBottom := bottom - insetY
+	if section.Radar != nil && lineY+h.hudPX(134) <= lineBottom {
+		h.drawSurfaceRadar(hdc, pad, lineY, right-pad, h.hudPX(126), section.Radar, base)
+		lineY += h.hudPX(134)
+	}
 	footerHeight := h.hudPX(20)
 	if (clipped || section.More > 0) && lineBottom-lineY >= footerHeight {
 		lineBottom -= footerHeight

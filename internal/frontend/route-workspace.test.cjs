@@ -88,6 +88,27 @@ test('tank, warehouse and reserve remain separate and a shortfall is visible', (
   assert.match(html, /На старте по плану/); assert.match(html, /Бак <strong>500 т/); assert.match(html, /Склад <strong>200 т/);
   assert.match(html, /По прибытии по плану/); assert.match(html, /rw-reserve-warning/); assert.match(html, /Не хватает <strong>25 т/);
 });
+test('the next card only proposes transfer at the current stop and displays arrival stock', () => {
+  const route = ready();
+  route.route.stops[0].transferTons = 205;
+  route.route.stops[0].restockTons = 42;
+  route.route.stops[1].tankTons = 655;
+  const html = fixture(route).render();
+  assert.match(html, /Перелить перед прыжком<\/dt><dd>205 т/);
+  assert.match(html, /Получить перед прыжком<\/dt><dd>42 т/);
+  assert.match(html, /Бак по прибытии<\/dt><dd>655 т/);
+  assert.doesNotMatch(html, /Пополнить бак после прыжка/);
+  route.route.stops[0].transferTons = 0;
+  assert.doesNotMatch(fixture(route).render(), /Перелить перед прыжком/);
+});
+test('estimated carrier stock and rebased arrival are distinguished from the original plan', () => {
+  const route = ready();
+  route.liveFuel = {system: 'Synthetic A', tankTons: 742, cargoTritiumTons: 2079, estimated: true, projected: true, arrivalTankTons: 630, arrivalCargoTritiumTons: 2079, reserveShortfallTons: 0};
+  const html = fixture(route).render();
+  assert.match(html, /Текущий запас по оценке[\s\S]*?742 т/);
+  assert.match(html, /По прибытии по текущим запасам[\s\S]*?630 т/);
+  assert.match(html, /На старте по плану[\s\S]*?500 т/);
+});
 test('copy uses the latest next destination and never an outdated button payload', async () => {
   const f = fixture(ready());
   assert.equal(await f.api.handle('route-workspace-copy', { dataset: { text: 'Incorrect old row' } }, f.C, f.u), true);

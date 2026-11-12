@@ -28,6 +28,23 @@ function project(id,name,extra={}){
  return {id,name,targetSystem:name+' system',originSystem:name+' origin',faction:name+' faction',status:'building',buildings:[{status:'building'},{status:'planned'}],unknownBills:1,totalMissing:80,concurrent:1,points:{tier2:0,tier3:null},economyPlan:{name:'Промышленность'},operationalSupplies:[{commodity:'steel',name:'Сталь',missing:80,cargoAvailable:0}],nextTask:{kind:'delivery',text:'Доставить сталь — 80 т'},...extra};
 }
 
+test('completed facility keeps impact, links and observed station services without a bill of materials',()=>{
+ const f=fixture(),id='port';
+ const building={id,name:'Dodecahedron',body:'Example 1',status:'complete',kind:'port',requirements:[],pointCost:0,impact:{
+  known:true,pad:'L',economy:'colony',observedEconomies:[{name:'Промышленность',fraction:.75}],observedServices:['shipyard'],
+  metrics:{initialPopulation:{base:8,weighted:8},security:{base:-4,weighted:-5.6}},
+  links:[{name:'Hub <one>',strength:'strong',direction:'in',state:'built'}],linkCount:1}};
+ f.C.state.colonization.activeProject=project('test','Example',{buildings:[building]});
+ f.C.mode='Строительство';f.C.selected=id;
+ const html=f.api.renderBuilding(f.C,f.ui);
+ assert.match(html,/Влияние сооружения/);
+ assert.match(html,/Индекс начального населения[\s\S]*\+8/);
+ assert.match(html,/Безопасность[\s\S]*-5\.6/);
+ assert.match(html,/Hub &lt;one&gt;[\s\S]*Сильная/);
+ assert.match(html,/Данные станции из журнала[\s\S]*Промышленность 75%[\s\S]*Верфь/);
+ assert.doesNotMatch(html,/Нужно, т/);
+});
+
 test('initial colony workflow explains station discovery without an empty faction selector or implicit network request',()=>{
  const f=fixture(),before=clone(f.C.state),html=f.api.render(f.C,f.ui);
  assert.doesNotMatch(html,/Колонии не добавлены|colony-overview/);assert.match(html,/Проверить систему/);
@@ -360,4 +377,115 @@ test('manual bill totals stay labelled as planning estimates without implying th
  assert.match(html,/Ручных смет: 2/);assert.doesNotMatch(html,/Ручные сметы — плановые оценки; требования игры имеют приоритет/);
  assert.match(html,/Полная смета ресурсов<\/span><strong>1000000 кр\./);
  assert.doesNotMatch(html,/Неполные оценки помечены границами/);
+});
+
+function portfolioFixture(){
+ const f=fixture();
+ const site=(id,status)=>({id,name:id,status,requirements:[{commodity:'steel',name:'Сталь',missing:200,cargoAvailable:100,carrierAvailable:50}]});
+ const alpha=budgetProject('a','Alpha'),beta=budgetProject('b','Beta');
+ alpha.buildings=[site('Alpha expansion','planned'),site('Old structure','complete')];
+ alpha.status='complete';
+ beta.buildings=[site('Beta port','building'),site('Beta refinery','planned')];
+ f.C.mode='Бюджет';
+ f.C.state.planWorkspace={key:'commander-1'};
+ Object.assign(f.C.state.colonization,{cargoKnown:true,includeCarrierWarehouse:true,carrierWarehouseComplete:true,activeProject:alpha,
+  projects:[alpha,beta,project('c','Cancelled colony',{status:'cancelled',buildings:[site('Cancelled port','planned')]}),
+   project('d','Finished colony',{buildings:[site('Finished port','complete')]})]});
+ const results={innerHTML:''},details={open:false,querySelector:()=>null},filters={innerHTML:'',querySelector:()=>null};
+ f.nodes.set('#colony-portfolio-results',results);
+ f.nodes.set('#colony-portfolio-filters',filters);
+ f.nodes.set('#colony-portfolio',details);
+ const open=value=>{details.open=value;details.ontoggle();};
+ const pending=()=>f.C.colonizationWorkspace.portfolio.pending;
+ return {...f,alpha,beta,details,filters,results,open,pending};
+}
+
+test('combined supplies loads only on expansion, supports colony and construction filters, and refreshes when stock changes',async()=>{
+ const f=portfolioFixture();
+ f.setRPC(async()=>({projectCount:2,buildingCount:3,unknownBills:0,supplies:[
+  {commodity:'steel',name:'Steel',missing:600,cargoAvailable:100,carrierAvailable:50,carrierComplete:true,toBuy:450}]}));
+ const html=f.api.render(f.C,f.ui);
+ assert.match(html,/<details[^>]*id="colony-portfolio" [^>]*><summary>Сводное снабжение/);
+ assert.doesNotMatch(html.split('id="colony-portfolio"')[1],/Alpha expansion|Beta port/);
+ f.api.init(f.C,f.ui);assert.equal(f.calls.length,0);
+ f.open(true);await f.pending();
+ assert.match(f.filters.innerHTML,/Alpha expansion/);assert.match(f.filters.innerHTML,/Beta port/);
+ assert.doesNotMatch(f.filters.innerHTML,/Cancelled port|Finished port|Old structure/);
+ assert.deepEqual(f.calls[0],{op:'colony.supply-portfolio',params:{projectIds:['a','b'],expectedPlanWorkspace:'commander-1'}});
+ assert.match(f.results.innerHTML,/Осталось доставить<\/span><strong>600 т/);
+ assert.match(f.results.innerHTML,/Покрыто запасами<\/span><strong>150 т/);
+ assert.match(f.results.innerHTML,/Закупить<\/span><strong>450 т/);
+ f.api.init(f.C,f.ui);assert.equal(f.calls.length,1);
+ f.api.handleChange({target:{dataset:{portfolioBuilding:'Beta port'},checked:false}},f.C,f.ui);
+ await f.pending();
+ assert.deepEqual(f.calls[1].params,{projectIds:['a','b'],buildingIds:['Alpha expansion','Beta refinery'],expectedPlanWorkspace:'commander-1'});
+ f.api.handleChange({target:{dataset:{portfolioProject:'b'},checked:false}},f.C,f.ui);
+ await f.pending();
+ assert.deepEqual(f.calls[2].params,{projectIds:['a'],expectedPlanWorkspace:'commander-1'});
+ f.alpha.buildings[0].requirements[0].cargoAvailable=110;
+ f.api.init(f.C,f.ui);await f.pending();assert.equal(f.calls.length,4);
+ f.open(false);f.api.init(f.C,f.ui);assert.equal(f.calls.length,4);
+});
+
+test('combined supplies preserves partial stock and missing-bill bounds across a commander change',async()=>{
+ const f=portfolioFixture(),old=deferred();
+ f.setRPC(()=>old.promise);
+ f.api.render(f.C,f.ui);f.api.init(f.C,f.ui);f.open(true);
+ const oldRequest=f.pending();
+ f.C.state.planWorkspace={key:'commander-2'};
+ const html=f.api.render(f.C,f.ui);
+ assert.doesNotMatch(html,/<details[^>]*id="colony-portfolio"[^>]*\bopen\b/);
+ f.details.open=false;f.api.init(f.C,f.ui);
+ old.resolve({projectCount:1,buildingCount:1,unknownBills:0,supplies:[{name:'Previous commander',missing:500,cargoAvailable:0,toBuy:500}]});
+ await oldRequest;
+ assert.doesNotMatch(f.results.innerHTML,/Previous commander/);
+ const partial={commodity:'steel',name:'<Steel>',missing:200,cargoAvailable:50,carrierAvailable:20,carrierComplete:false,toBuy:null,toBuyAtMost:130};
+ f.setRPC(async()=>({projectCount:2,buildingCount:3,unknownBills:1,supplies:[partial]}));
+ f.open(true);await f.pending();
+ assert.match(f.results.innerHTML,/Неизвестных смет: 1/);
+ assert.match(f.results.innerHTML,/Осталось доставить<\/span><strong>Не менее 200 т/);
+ assert.match(f.results.innerHTML,/Покрыто запасами<\/span><strong>Не менее 70 т/);
+ assert.match(f.results.innerHTML,/Закупить<\/span><strong>Неизвестно/);
+ assert.match(f.results.innerHTML,/&lt;Steel&gt;.*Не менее 20 т.*Не более 130 т/);
+ f.api.handleChange({target:{dataset:{portfolioProject:'a'},checked:false}},f.C,f.ui);
+ f.api.handleChange({target:{dataset:{portfolioProject:'b'},checked:false}},f.C,f.ui);
+ assert.equal(f.calls.length,3);
+ assert.match(f.results.innerHTML,/Выберите колонии\./);
+});
+
+test('combined supplies reserves confirmed stock, supports cancellation and opens procurement with the remainder',async()=>{
+ const f=portfolioFixture();
+ const row={projectId:'a',buildingId:'Alpha expansion',buildingName:'Alpha expansion',commodity:'steel',name:'Steel',sources:[{source:'fleet',available:50}]};
+ const held={...row,id:'hold-1',source:'fleet',remaining:40,fulfilled:0,status:'active',targetSystem:'Alpha Colony'};
+ const quote={commodity:'steel',name:'Steel',missing:200,cargoAvailable:80,carrierAvailable:50,carrierComplete:true,toBuy:70,reservedHere:40,reservedElsewhere:20};
+ const prefill={resourceKey:'steel',quantity:70,system:'Synthetic system',useCargo:false,useCarrierCargo:false};
+ let history=[];
+ f.setRPC(async(op,params)=>{
+  if(op==='colony.supply-reservation'){
+   history=[{...held,status:params.action==='cancel'?'cancelled':'active',inTransit:params.inTransit===true}];return {};
+  }
+  if(op==='colony.supply-market')return {navigate:'sale',mode:'Купить',prefill};
+  return {projectCount:2,buildingCount:3,unknownBills:0,supplies:[{...quote,inTransit:history[0]?.inTransit?40:0}],reservations:history,reservable:[row]};
+ });
+ const navigation=[],marketForms=[];
+ f.ui.navigate=async(tab,options)=>{navigation.push({tab,options:clone(options)});f.C.tab=tab;};
+ f.ui.handleClick=async(action,button)=>marketForms.push({action,id:button.dataset.actionId});
+ f.api.render(f.C,f.ui);f.api.init(f.C,f.ui);f.open(true);await f.pending();
+ assert.match(f.results.innerHTML,/Резервы/);assert.match(f.results.innerHTML,/max="50" value="50"/);
+ assert.match(f.results.innerHTML,/Зарезервировано здесь, т/);assert.match(f.results.innerHTML,/В резерве других строек, т/);
+ const form={elements:{target:{value:JSON.stringify(['a','Alpha expansion','steel'])},source:{value:'fleet'},count:{value:'51'}},querySelector:()=>null};
+ await f.api.submitReservation(form,f.C,f.ui);assert.equal(f.calls.length,1);
+ form.elements.count.value='40';await f.api.submitReservation(form,f.C,f.ui);await f.pending();
+ assert.deepEqual(f.calls[1],{op:'colony.supply-reservation',params:{action:'reserve',projectId:'a',buildingId:'Alpha expansion',commodity:'steel',source:'fleet',count:40,expectedPlanWorkspace:'commander-1'}});
+ assert.match(f.results.innerHTML,/Снять резерв/);
+ await f.api.handleClick('colony-workspace-reservation-transit',{dataset:{reservationId:'hold-1'}},f.C,f.ui);await f.pending();
+ assert.deepEqual(f.calls[3],{op:'colony.supply-reservation',params:{action:'transit',id:'hold-1',inTransit:true,expectedPlanWorkspace:'commander-1'}});
+ assert.match(f.results.innerHTML,/Из них в пути, т/);assert.match(f.results.innerHTML,/Alpha Colony/);assert.match(f.results.innerHTML,/Вернуть в резерв/);
+ await f.api.handleClick('colony-workspace-reservation-cancel',{dataset:{reservationId:'hold-1'}},f.C,f.ui);await f.pending();
+ assert.deepEqual(f.calls[5],{op:'colony.supply-reservation',params:{action:'cancel',id:'hold-1',expectedPlanWorkspace:'commander-1'}});
+ assert.match(f.results.innerHTML,/Отменён/);assert.doesNotMatch(f.results.innerHTML,/Снять резерв/);
+ await f.api.handleClick('colony-workspace-portfolio-market',{dataset:{commodity:'steel'}},f.C,f.ui);
+ assert.deepEqual(f.calls[7],{op:'colony.supply-market',params:{commodity:'steel',quantity:70,expectedPlanWorkspace:'commander-1'}});
+ assert.deepEqual(navigation,[{tab:'sale',options:{mode:'Купить',prefill}}]);
+ assert.deepEqual(marketForms,[{action:'action',id:'market.search'}]);
 });

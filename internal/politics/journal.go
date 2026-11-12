@@ -227,6 +227,8 @@ func NormalizePublicSystem(raw M, fetched string) M {
 		info[k] = clean(raw[k], 100)
 	}
 	info["population"] = number(raw["population"])
+	info["economy"] = clean(raw["primary_economy"], 100)
+	info["secondEconomy"] = clean(raw["secondary_economy"], 100)
 	info["controllingFaction"] = clean(raw["controlling_minor_faction"], 200)
 	info["state"] = clean(raw["controlling_minor_faction_state"], 100)
 	row["info"] = info

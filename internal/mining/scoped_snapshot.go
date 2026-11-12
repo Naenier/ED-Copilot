@@ -5,7 +5,7 @@ import v "github.com/Naenier/ED-Copilot/internal/value"
 // SnapshotForUI keeps run planning intact while avoiding the observed-world
 // clone and full target search on screens which do not display targets.
 func (s *Service) SnapshotForUI(context M, includeTargets bool) M {
-	context = v.Copy(context)
+	context = v.Merge(M{}, context)
 	context["snapshotTargets"], context["snapshotWorld"] = includeTargets, false
 	return s.Snapshot(context)
 }

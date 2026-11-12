@@ -362,6 +362,7 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 	var totalScan, totalMapping int64
 	useMapping := journey.Route.MaxResults == 0 || journey.Route.UseMappingValue
 	estimated, remaining := 0, 0
+	targets := []M{}
 	for i, stop := range journey.Route.Stops {
 		estimated += stop.EstimatedJumps
 		current := matchesRichesSystem(stop, system, address)
@@ -386,15 +387,27 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 			if body.MappingCredits != nil {
 				totalMapping += *body.MappingCredits
 			}
+			if !includeRoute && !current && !next {
+				continue
+			}
 			observation := journey.Observed[richesBodyKey(stop, body)]
 			journalCompleted := observation.journalComplete(useMapping)
 			completed := journalCompleted || observation.Manual
+			var row M
 			if includeRoute {
-				bodyRows[j]["scanned"], bodyRows[j]["mapped"] = observation.Scanned, observation.Mapped
-				bodyRows[j]["completed"], bodyRows[j]["manualCompleted"], bodyRows[j]["journalCompleted"] = completed, observation.Manual, journalCompleted
+				row = bodyRows[j]
+			} else if current {
+				row = v.Obj(v.Clone(body))
 			}
-			if current && !completed && progress["target"] == nil {
-				progress["target"] = v.Clone(body)
+			if row != nil {
+				row["scanned"], row["mapped"] = observation.Scanned, observation.Mapped
+				row["completed"], row["manualCompleted"], row["journalCompleted"] = completed, observation.Manual, journalCompleted
+			}
+			if current {
+				targets = append(targets, row)
+				if !completed && progress["target"] == nil {
+					progress["target"] = row
+				}
 			}
 			if next && !completed && progress["nextTarget"] == nil {
 				progress["nextTarget"] = v.Clone(body)
@@ -402,6 +415,7 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 		}
 	}
 	progress["estimatedJumps"], progress["remainingJumps"] = estimated, remaining
+	progress["targets"] = targets
 	progress["totalScanCredits"], progress["totalMappingCredits"] = totalScan, totalMapping
 	progress["useMappingValue"], progress["totalRewardCredits"] = useMapping, totalScan
 	if useMapping {

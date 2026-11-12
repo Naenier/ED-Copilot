@@ -89,6 +89,38 @@ func TestCommanderSelectionSideFilesAndLargeIDs(t *testing.T) {
 	}
 }
 
+func TestBackpackSideFileRejectsPreviousLoginAndDeduplicatesReplacement(t *testing.T) {
+	dir := t.TempDir()
+	log := "{\"event\":\"Fileheader\",\"gameversion\":\"4.4.2\"}\n{\"timestamp\":\"2026-11-13T00:01:00Z\",\"event\":\"LoadGame\",\"FID\":\"FSYNTH\"}\n"
+	if err := os.WriteFile(filepath.Join(dir, "Journal.2026-11-13T000100.01.log"), []byte(log), 0600); err != nil {
+		t.Fatal(err)
+	}
+	var pickups []M
+	reader := New(dir, func(event, meta M) {
+		if v.Bool(meta["side"]) && meta["file"] == "Backpack.json" {
+			pickups = append(pickups, event)
+		}
+	}, func() { pickups = nil })
+	write := func(event, timestamp string) {
+		t.Helper()
+		body := `{"event":"` + event + `","timestamp":"` + timestamp + `","Components":[{"Name":"graphene","Count":2}]}`
+		if err := os.WriteFile(filepath.Join(dir, "Backpack.json"), []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("Backpack", "2026-11-13T00:00:59Z")
+	reader.Poll()
+	if len(pickups) != 0 {
+		t.Fatal("a previous login's backpack was exposed", pickups)
+	}
+	write("BackpackMaterials", "2026-11-13T00:02:00Z")
+	reader.Poll()
+	reader.Poll()
+	if len(pickups) != 1 || pickups[0]["event"] != "BackpackMaterials" {
+		t.Fatal("replacement backpack was lost or duplicated", pickups)
+	}
+}
+
 func TestRemovedAndEarlierImportedSessionsRebuildInOrder(t *testing.T) {
 	dir := t.TempDir()
 	write := func(name, tag string) {

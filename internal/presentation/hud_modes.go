@@ -90,9 +90,7 @@ func hudFlightNavigation(doc *HUDDocument, s M) {
 }
 
 func hudFlight(doc *HUDDocument, s M) {
-	if !hudRiches(doc, v.Obj(v.At(s, "riches", "progress"))) {
-		hudFlightNavigation(doc, s)
-	}
+	hudFlightNavigation(doc, s)
 	fuel := v.Obj(v.At(s, "pilot", "fuel"))
 	rows := []HUDLine{}
 	if hudKnown(fuel["mainTons"]) {
@@ -621,17 +619,40 @@ func hudCarrier(doc *HUDDocument, s M, now time.Time) {
 	}
 	staleFuel := v.Bool(fuel["needsRefresh"])
 	if !staleFuel && hudKnown(fuel["tankTons"]) {
-		info = append(info, hudValue("Тритий в баке", Number(fuel["tankTons"])+" т", "text"))
+		value := Number(fuel["tankTons"]) + " т"
+		if v.Bool(fuel["tankEstimated"]) {
+			value = "≈ " + value
+		}
+		info = append(info, hudValue("Тритий в баке", value, "text"))
+	}
+	if staleFuel {
+		info = append(info, hudWarn("Ожидаем данные о баке"))
 	}
 	switch {
-	case staleFuel:
-		info = append(info, hudWarn("Топливо после прыжка не обновлено"))
 	case hudKnown(fuel["reserveTons"]):
 		info = append(info, hudValue("Тритий на складе", Number(fuel["reserveTons"])+" т", "text"))
 	case stop != nil && (!hudKnown(fuel["tankTons"]) || v.Num(stop["fuelUsedTons"]) > v.Num(fuel["tankTons"])):
 		info = append(info, hudWarn("Запас трития неизвестен"))
 	}
-	if free := v.At(c, "space", "freeTons"); hudKnown(free) && stop == nil {
+	finance := v.Obj(c["finance"])
+	if balance, known := v.Number(finance["balance"]); known {
+		info = append(info, hudValue("Баланс носителя", Number(balance)+" кр.", "text"))
+	}
+	if upkeep := finance["weeklyMaintenance"]; hudKnown(upkeep) {
+		value := Number(upkeep) + " кр."
+		if v.Bool(finance["weeklyMaintenanceEstimated"]) {
+			value = "≈ " + value
+		}
+		info = append(info, hudValue("Содержание в неделю", value, "muted"))
+	}
+	space := v.Obj(c["space"])
+	total, free := space["capacityTons"], space["freeTons"]
+	switch {
+	case v.Num(total) > 0 && hudKnown(free) && v.Num(free) <= v.Num(total):
+		info = append(info, hudValue("Вместимость", Number(v.Num(total)-v.Num(free))+" / "+Number(total)+" т", "muted"))
+	case v.Num(total) > 0:
+		info = append(info, hudValue("Вместимость", Number(total)+" т", "muted"))
+	case hudKnown(free):
 		info = append(info, hudValue("Свободно на складе", Number(free)+" т", "muted"))
 	}
 	hudCard(doc, "carrier", "ФЛОТОНОСЕЦ", label, 0, info...)

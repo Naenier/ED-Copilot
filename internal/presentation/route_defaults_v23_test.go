@@ -55,3 +55,15 @@ func TestSavedExplicitMinimumChoiceIsNotOverriddenByCarrierSnapshot(t *testing.T
 		}
 	}
 }
+
+func TestMatchingCarrierRefreshesSavedRouteFormFuel(t *testing.T) {
+	s := M{
+		"carrier":      M{"location": M{"system": "A"}, "fuel": M{"tankTons": 742, "reserveTons": 2079}, "space": M{"capacityTons": 25000, "freeTons": 18013}},
+		"carrierRoute": M{"status": "ready", "options": M{"sourceSystem": "A", "destinationSystem": "B", "calculateStartingFuel": false, "tankTons": 1000, "cargoTritiumTons": 1967, "usedCapacityTons": 6800}},
+	}
+	a := coreAction(t, "route", "", "route.calculate", s, nil, nil)
+	body := coreBody(t, a, nil)
+	if v.Num(body["tankTons"]) != 742 || v.Num(body["cargoTritiumTons"]) != 2079 || v.Num(body["usedCapacityTons"]) != 6987 {
+		t.Fatal("saved plan masked current carrier load", body)
+	}
+}

@@ -170,16 +170,18 @@ func TradeOffer(from, to M, wanted int, available, targetOwned any, protected in
 }
 
 type Planner struct {
-	mu        sync.RWMutex
-	items     []M
-	options   M
-	manual    M
-	stock     map[string]int
-	known     map[string]bool
-	uncertain map[string]bool
-	at        M
-	progress  map[string]M
-	roadmap   roadmapObservations
+	mu                      sync.RWMutex
+	items                   []M
+	options                 M
+	manual                  M
+	stock                   map[string]int
+	known                   map[string]bool
+	uncertain               map[string]bool
+	at                      M
+	progress                map[string]M
+	roadmap                 roadmapObservations
+	odysseyPlans            map[string]*odysseyWorkspace
+	odysseyObservationOwner string
 }
 
 func New(saved M) *Planner {
@@ -198,6 +200,7 @@ func New(saved M) *Planner {
 		}
 	}
 	p.reset()
+	p.restoreOdysseyLoadouts(v.Obj(saved["odysseyLoadouts"]))
 	return p
 }
 func (p *Planner) reset() {
@@ -207,12 +210,13 @@ func (p *Planner) reset() {
 	p.at = M{}
 	p.progress = map[string]M{}
 	p.resetRoadmap()
+	p.odysseyObservationOwner = ""
 }
 func (p *Planner) Reset() { p.mu.Lock(); defer p.mu.Unlock(); p.reset() }
 func (p *Planner) ExportSettings() M {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	return v.Copy(M{"items": p.items, "options": p.options, "manualEngineers": p.manual})
+	return v.Copy(M{"items": p.items, "options": p.options, "manualEngineers": p.manual, "odysseyLoadouts": p.saveOdysseyLoadouts()})
 }
 func (p *Planner) configure(body M) error {
 	next := v.Copy(p.options)
@@ -329,7 +333,13 @@ func (p *Planner) Apply(event, context M) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	kind := v.Str(event["event"])
+	owner := odysseyWorkspaceKey(context)
+	if owner != "" && owner != p.odysseyObservationOwner {
+		p.roadmap.personal = map[string]M{}
+		p.odysseyObservationOwner = owner
+	}
 	p.observeRoadmap(kind, event)
+	p.captureOdysseyProgress(owner, kind, event)
 	switch kind {
 	case "Materials":
 		for field, group := range map[string]string{"Raw": "raw", "Manufactured": "manufactured", "Encoded": "encoded"} {

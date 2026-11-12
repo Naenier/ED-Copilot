@@ -1,0 +1,28 @@
+.colony-history{display:grid;gap:16px}
+.colony-history-card{padding:20px;min-width:0}
+.colony-history-card h2{font-size:1.1rem;margin:0 0 16px}
+.colony-history-card h3{font-size:1rem;margin:0 0 8px}
+.colony-history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.colony-history-head h2{margin:0}
+.colony-history-head select{max-width:55%}
+.colony-history-metrics,.colony-history-properties,.colony-history-power{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:0}
+.colony-history-metrics>div,.colony-history-properties>div,.colony-history-power>section{display:grid;align-content:start;gap:5px;border:1px solid var(--border);padding:12px;border-radius:10px;min-width:0}
+.colony-history-metrics span,.colony-history-properties dt,.colony-history-properties small,.colony-history-empty{color:var(--muted)}
+.colony-history-metrics strong{font-size:1.2rem}
+.colony-history-properties dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.colony-history-properties dd small{display:block;font-weight:400;margin-top:5px}
+.colony-history-properties+h3{margin-top:20px}
+.colony-history-chart{display:block;width:100%;max-height:255px;margin:16px 0 0}
+.colony-history-chart text{font-size:12px;fill:var(--muted)}
+.colony-history-grid line{stroke:var(--border);stroke-width:1}
+.colony-history-marker line{stroke:var(--warn);stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.colony-history-curve{stroke:var(--accent)}
+.colony-history-curve polyline{stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.colony-history-curve circle{fill:var(--panel);stroke-width:1.4}
+.colony-history-power{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.colony-history-power .colony-history-chart{min-height:88px}
+.colony-history-changes{margin:0;padding:0;list-style:none}
+.colony-history-changes li{display:grid;grid-template-columns:150px 170px minmax(0,1fr);gap:12px;border-top:1px solid var(--line);padding:9px 0}
+.colony-history-changes time{color:var(--muted)}
+.colony-history-empty{margin:14px 0 0}
+@media(max-width:800px){.colony-history-changes li{grid-template-columns:1fr 1fr}.colony-history-changes strong{grid-column:1/-1}}

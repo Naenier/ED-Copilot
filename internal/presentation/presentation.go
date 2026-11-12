@@ -18,9 +18,14 @@ type Tab struct {
 	Required  bool
 }
 
-var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"riches", "Дорога к богатству", false}, {"targets", "Цели", false}, {"sale", "Рынки", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
+var Tabs = []Tab{{"overview", "Обзор", true}, {"commander", "Командир", false}, {"ranks", "Ранги", false}, {"politics", "Политика", false}, {"riches", "Картография", false}, {"targets", "Цели", false}, {"sale", "Рынки", false}, {"learning", "Академия", false}, {"encyclopedia", "Энциклопедия", false}, {"statistics", "Статистика", false}, {"settings", "Настройки", true}, {"deals", "Рейсы", false}, {"carrier", "Флотоносец", false}, {"carrier-calculator", "Калькулятор флотоносца", false}, {"carrier-trade", "Торговля флотоносцем", false}, {"route", "Маршрут флотоносца", false}, {"mining", "Добыча", false}, {"exobiology", "Экзобиология", false}, {"engineering", "Инженерия", false}, {"colonization", "Колонизация", false}, {"account", "Frontier", false}, {"integrations", "Синхронизация", false}, {"help", "Руководство", false}}
 var DefaultTabs = []string{"overview", "ranks", "politics", "riches", "targets", "deals", "sale", "mining", "exobiology", "learning", "encyclopedia", "statistics", "settings"}
-var Activities = []Choice{{"flight", "Полёт и навигация"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"colonization", "Колонизация и снабжение"}}
+var Activities = []Choice{{"flight", "Полёт и навигация"}, {"cartography", "Картография"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"odyssey", EngineeringOdyssey}, {"colonization", "Колонизация и снабжение"}}
+
+func init() {
+	Tabs = append(Tabs, Tab{"ship-route", "Маршрут корабля", false}, Tab{"exploration", "Исследования", false}, Tab{"notifications", "Уведомления", false}, Tab{"second-screen", "Второй экран", false})
+	DefaultTabs = append(DefaultTabs, "notifications", "second-screen")
+}
 
 type Choice struct{ Value, Label string }
 type Row struct {
@@ -216,8 +221,12 @@ func buildPage(tab, mode, query string, s M) Page {
 		return RanksPage(s)
 	case "politics":
 		return PoliticsPage(s)
-	case "riches":
+	case "riches", "ship-route", "notifications", "second-screen":
 		p.Columns = nil
+		return p
+	case "exploration":
+		p.Columns = nil
+		p.Modes = []string{"Экспедиции", "Находки", "Обследования"}
 		return p
 	case "exobiology":
 		return ExobiologyPage(mode, query, s)
@@ -381,16 +390,24 @@ func buildPage(tab, mode, query string, s M) Page {
 			}
 			break
 		}
-		p.Columns = []string{"№", "Система", "Дистанция, св. л.", "Расход, т", "В баке, т", "Дозаправка, т", "Пройдено"}
+		p.Columns = []string{"№", "Система", "Дистанция, св. л.", "Расход, т", "Бак по прибытии, т", "Перелить со склада, т", "Получить извне, т", "Пройдено"}
 		for _, stop := range v.Rows(v.At(r, "route", "stops")) {
-			p.Rows = append(p.Rows, row(stop, []string{Number(stop["index"]), v.Text(stop["name"], stop["system"]), Number(v.First(stop["distanceLy"], stop["distance"])), Number(stop["fuelUsedTons"]), Number(v.First(stop["tankTons"], stop["tankAfterTons"], stop["fuelRemainingTons"])), Number(stop["restockTons"]), Format(stop["visited"])}, fields(stop, "cargoTritiumTons", "Тритий в грузе, т", "elapsedMinutes", "Время от начала, мин", "refuelMinutes", "Дозаправка, мин", "estimatedArrival", "Прибытие", "estimatedDeparture", "Отправление", "estimatedReady", "Готовность")+"\r\n"+joinStrings(r["warnings"])+"\r\n"+joinStrings(r["assumptions"])))
+			tank := Number(v.First(stop["tankTons"], stop["tankAfterTons"], stop["fuelRemainingTons"]))
+			if v.Bool(stop["tankObserved"]) {
+				tank += " · замер"
+			} else if v.Bool(stop["tankEstimated"]) {
+				tank += " · оценка"
+			}
+			p.Rows = append(p.Rows, row(stop, []string{Number(stop["index"]), v.Text(stop["name"], stop["system"]), Number(v.First(stop["distanceLy"], stop["distance"])), Number(stop["fuelUsedTons"]), tank, Number(stop["transferTons"]), Number(stop["restockTons"]), Format(stop["visited"])}, fields(stop, "cargoTritiumTons", "Тритий в грузе, т", "fuelShortfallTons", "Не хватает на следующий прыжок, т", "elapsedMinutes", "Время от начала, мин", "refuelMinutes", "Дозаправка, мин", "estimatedArrival", "Прибытие", "estimatedDeparture", "Отправление", "estimatedReady", "Готовность")+"\r\n"+joinStrings(r["warnings"])+"\r\n"+joinStrings(r["assumptions"])))
 		}
 	case "colonization":
-		p.Modes = []string{"Обзор", "Выбор системы", "Строительство", colonySupplyLog, "Бюджет"}
+		p.Modes = []string{"Обзор", "Выбор системы", "Строительство", colonySupplyLog, "Бюджет", ColonyHistoryMode}
 		c := v.Obj(s["colonization"])
 		project := v.Obj(c["activeProject"])
 		p.Summary = v.Text(project["name"], project["targetSystem"], "Создайте или выберите колонию") + " · " + Label(project["status"])
 		switch mode {
+		case ColonyHistoryMode:
+			p.Summary, p.Columns = "", nil
 		case "Обзор", "":
 			p.Summary = ""
 			p.Columns = []string{"Колония", "Система", "Статус", "Строятся"}
@@ -465,6 +482,8 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Columns = nil
 			p.Summary = ""
 			p.Description = "Открытие инженеров, доступ к классам и материалы для выбранного улучшения."
+		case EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary:
+			p.Columns, p.Summary = nil, ""
 		case EngineeringMaterials, "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана":
 			p.Columns = []string{"Материал", "Категория", "Уровень", "Есть", "Нужно", "Не хватает"}
 			category, planOnly, _ := materialView(mode)
@@ -521,13 +540,22 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Columns, p.Rows, p.Summary = sub.Columns, sub.Rows, sub.Summary
 		}
 	case "mining":
-		p.Modes = []string{"Текущий заход", "История", "Снаряжение", "План"}
+		p.Modes = []string{"Текущий заход", "История", "Сравнение заходов", "Снаряжение", "План"}
 		m := v.Obj(s["mining"])
 		p.Summary = "Добыто: " + Number(v.At(m, "current", "refinedTons")) + " т · Темп: " + Number(v.At(m, "current", "tonsPerHour")) + " т/ч"
 		if mode == "История" {
 			p.Columns = []string{"Начало", "Место", "Добыто, т", "Темп, т/ч"}
 			for _, r := range v.Rows(m["history"]) {
 				p.Rows = append(p.Rows, row(r, []string{Date(r["startedAt"]), v.Str(r["system"]), Number(r["refinedTons"]), Number(r["tonsPerHour"])}, fields(r, "body", "Тело", "method", "Способ")))
+			}
+		} else if mode == "Сравнение заходов" {
+			p.Summary = ""
+			p.Columns = []string{"Начало", "Место", "Корабль", "Добыто, т", "Подтверждённая выручка", "Оценка остатка"}
+			runs := append([]M{v.Obj(m["current"])}, v.Rows(m["history"])...)
+			for _, r := range runs {
+				if r != nil {
+					p.Rows = append(p.Rows, row(r, []string{Date(r["startedAt"]), v.Text(r["body"], r["system"]), Format(r["ship"]), Number(r["refinedTons"]), Number(r["confirmedRevenue"]), Number(r["estimatedRemainingValue"])}, ""))
+				}
 			}
 		} else if mode == "Снаряжение" {
 			p.Columns = []string{"Проверка", "Нужно", "Статус", "Найдено / доступно"}
@@ -668,7 +696,7 @@ func encyclopedia(mode, query string, s M) Page {
 }
 func HelpFor(tab string) string {
 	if tab == "riches" {
-		return "Укажите стартовую систему, дальность прыжка и радиус поиска водных и землеподобных миров. С системой назначения поиск идёт вдоль маршрута к ней. Для возвращения к старту оставьте назначение пустым и включите петлю.\n\nЗадайте максимум систем и расстояние от точки прибытия до планеты. Минимальная награда за DSS по умолчанию составляет 1 000 000 кр. Флажок учёта награды за картографирование выбирает оценку DSS вместо FSS для подбора целей.\n\nВставьте скопированную систему в поиск карты галактики через Ctrl+V. При прибытии приложение скопирует следующую. Журнал отмечает выполненное исследование. Отметки также можно поставить вручную, а маршрут сохранить в CSV или JSON."
+		return "Укажите стартовую систему, дальность прыжка и радиус поиска водных и землеподобных миров. С системой назначения поиск идёт вдоль маршрута к ней. Для возвращения к старту оставьте назначение пустым и включите петлю.\n\nЗадайте максимум систем и расстояние от точки прибытия до планеты. Минимальная награда за DSS по умолчанию составляет 1 000 000 кр. Флажок учёта награды за картографирование выбирает оценку DSS вместо FSS для подбора целей.\n\nВключите оверлей и выберите занятие «Картография», чтобы видеть все планеты маршрута в текущей системе. Вставьте скопированную систему в поиск карты галактики через Ctrl+V. При прибытии приложение скопирует следующую. Журнал отмечает выполненное исследование. Отметки также можно поставить вручную, а маршрут сохранить в CSV или JSON."
 	}
 	if text := newSectionHelp[tab]; text != "" {
 		return text

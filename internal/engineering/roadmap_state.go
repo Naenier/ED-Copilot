@@ -126,13 +126,15 @@ func (p *Planner) observeRoadmap(kind string, event M) {
 	case "SuitLoadout", "SwitchSuitLoadout", "CreateSuitLoadout":
 		r.observePersonalLoadout(event)
 	case "BuySuit", "UpgradeSuit":
-		r.observePersonal("suit", event["SuitID"], event["Name"], event["Name_Localised"], event["Class"], event["SuitMods"])
+		r.observePersonal("suit", event["SuitID"], event["Name"], event["Name_Localised"], event["Class"], event["SuitMods"], event["timestamp"])
 	case "BuyWeapon", "UpgradeWeapon":
-		r.observePersonal("weapon", event["SuitModuleID"], event["Name"], event["Name_Localised"], event["Class"], event["WeaponMods"])
+		r.observePersonal("weapon", event["SuitModuleID"], event["Name"], event["Name_Localised"], event["Class"], event["WeaponMods"], event["timestamp"])
+	case "LoadoutEquipModule":
+		r.observePersonal("weapon", event["SuitModuleID"], event["ModuleName"], event["ModuleName_Localised"], event["Class"], event["WeaponMods"], event["timestamp"])
 	case "SellSuit":
-		delete(r.personal, "suit:"+v.Str(event["SuitID"]))
+		r.removePersonal("suit:"+v.Str(event["SuitID"]), event["timestamp"])
 	case "SellWeapon":
-		delete(r.personal, "weapon:"+v.Str(event["SuitModuleID"]))
+		r.removePersonal("weapon:"+v.Str(event["SuitModuleID"]), event["timestamp"])
 	}
 }
 
@@ -297,13 +299,13 @@ func applyShipUpgrade(row, mod M) {
 }
 
 func (r *roadmapObservations) observePersonalLoadout(event M) {
-	r.observePersonal("suit", event["SuitID"], event["SuitName"], event["SuitName_Localised"], nil, event["SuitMods"])
+	r.observePersonal("suit", event["SuitID"], event["SuitName"], event["SuitName_Localised"], event["Class"], event["SuitMods"], event["timestamp"])
 	for _, weapon := range v.Rows(event["Modules"]) {
-		r.observePersonal("weapon", weapon["SuitModuleID"], weapon["ModuleName"], weapon["ModuleName_Localised"], weapon["Class"], weapon["WeaponMods"])
+		r.observePersonal("weapon", weapon["SuitModuleID"], weapon["ModuleName"], weapon["ModuleName_Localised"], weapon["Class"], weapon["WeaponMods"], event["timestamp"])
 	}
 }
 
-func (r *roadmapObservations) observePersonal(kind string, id, item, localized, class, mods any) {
+func (r *roadmapObservations) observePersonal(kind string, id, item, localized, class, mods, at any) {
 	identity, symbol := v.Str(id), symbolText(item)
 	if identity == "" || len(identity) > 30 || symbol == "" || len(symbol) > 120 {
 		return
@@ -315,6 +317,8 @@ func (r *roadmapObservations) observePersonal(kind string, id, item, localized, 
 			return
 		}
 		row = M{"key": key, "moduleKey": kind, "symbol": symbol, "name": v.Text(localized, item)}
+	} else if odysseyItemKey(row["symbol"]) != odysseyItemKey(symbol) {
+		return
 	}
 	grade := v.Int(class)
 	if grade == 0 && kind == "suit" {
@@ -322,17 +326,26 @@ func (r *roadmapObservations) observePersonal(kind string, id, item, localized, 
 			grade, _ = strconv.Atoi(suffix)
 		}
 	}
-	if grade >= 1 && grade <= 5 {
-		row["grade"] = grade
+	if grade >= 1 && grade <= 5 && grade >= v.Int(row["grade"]) && !v.Time(at).Before(v.Time(row["gradeObservedAt"])) {
+		row["grade"], row["gradeObservedAt"] = grade, at
 	}
-	if raw := v.Arr(mods); raw != nil {
+	if raw := v.Arr(mods); raw != nil && !v.Time(at).Before(v.Time(row["modsObservedAt"])) {
 		values := []string{}
 		for _, mod := range raw {
-			if value := symbolText(mod); value != "" && len(value) <= 120 && len(values) < 8 {
+			if value := symbolText(mod); value != "" && len(value) <= 120 && len(values) < 8 && !contains(values, value) {
 				values = append(values, value)
 			}
 		}
-		row["mods"] = values
+		row["mods"], row["modsObservedAt"] = values, at
+	}
+	if !v.Time(at).Before(v.Time(row["observedAt"])) {
+		row["observedAt"] = at
 	}
 	r.personal[key] = row
+}
+
+func (r *roadmapObservations) removePersonal(key string, at any) {
+	if !v.Time(r.personal[key]["observedAt"]).After(v.Time(at)) {
+		delete(r.personal, key)
+	}
 }

@@ -79,3 +79,44 @@ func TestCarrierCAPIRejectsOldOrUnverifiedStockAndKeepsUnknownDistinctFromEmpty(
 		t.Fatal("confirmed empty stock not represented")
 	}
 }
+
+func TestCarrierFinanceAndSpaceUseVerifiedObservations(t *testing.T) {
+	tr, result, cmd := capiStockFixture()
+	record := v.Obj(v.At(result, "data", "carrier"))
+	record["finance"] = M{"bankBalance": 0, "maintenance": 6400000}
+	record["capacity"] = M{"freeSpace": 20123}
+	if !tr.ApplyCAPI(result, cmd) {
+		t.Fatal("valid observation was rejected")
+	}
+	state := tr.Snapshot(nil)
+	if balance, known := v.Number(v.At(state, "finance", "balance")); !known || balance != 0 {
+		t.Fatal("an observed zero balance was lost", state["finance"])
+	}
+	if v.Num(v.At(state, "finance", "weeklyMaintenance")) != 6400000 || v.Bool(v.At(state, "finance", "weeklyMaintenanceEstimated")) {
+		t.Fatal("observed weekly upkeep was lost", state["finance"])
+	}
+	if v.Num(v.At(state, "space", "capacityTons")) != 25000 || v.Num(v.At(state, "space", "freeTons")) != 20123 {
+		t.Fatal("observed capacity was lost", state["space"])
+	}
+	tr.Apply(M{"event": "CarrierBankTransfer", "CarrierID": tr.OwnerID, "timestamp": "2026-11-09T00:01:00Z", "CarrierBalance": -1200}, nil)
+	_ = tr.ApplyCAPI(result, cmd)
+	if v.Num(v.At(tr.Snapshot(nil), "finance", "balance")) != -1200 {
+		t.Fatal("an old CAPI result overwrote a later journal bank transfer")
+	}
+}
+
+func TestCarrierMaintenanceFallbackFromObservedInstalledServices(t *testing.T) {
+	tr, _, _ := capiStockFixture()
+	if v.At(tr.Snapshot(nil), "finance", "weeklyMaintenance") != nil {
+		t.Fatal("unknown crew generated a weekly cost")
+	}
+	tr.Apply(M{"event": "CarrierStats", "CarrierID": tr.OwnerID, "timestamp": "2026-11-09T00:01:00Z", "Crew": []M{
+		{"CrewRole": "Refuel", "Activated": true, "Enabled": true},
+		{"CrewRole": "Shipyard", "Activated": true, "Enabled": false},
+		{"CrewRole": "Outfitting", "Activated": false, "Enabled": false},
+	}}, nil)
+	state := tr.Snapshot(nil)
+	if v.Num(v.At(state, "finance", "weeklyMaintenance")) != 8300000 || !v.Bool(v.At(state, "finance", "weeklyMaintenanceEstimated")) {
+		t.Fatal("estimated cost must distinguish active and suspended services", state["finance"])
+	}
+}

@@ -221,13 +221,14 @@ func (t *Tracker) Apply(event, context M) {
 			}
 		}
 		c["statsAt"] = timestamp
-		for _, p := range [][2]string{{"FuelLevel", "tankTons"}, {"JumpRangeCurr", "jumpRangeCurrent"}, {"JumpRangeMax", "jumpRangeMax"}} {
+		for _, p := range [][2]string{{"JumpRangeCurr", "jumpRangeCurrent"}, {"JumpRangeMax", "jumpRangeMax"}} {
 			if x := numeric(event[p[0]]); x != nil {
 				fuel[p[1]] = x
 			}
 		}
-		fuel["updatedAt"] = timestamp
-		fuel["needsRefresh"] = false
+		if tank, known := validTank(event["FuelLevel"]); known && !v.Time(timestamp).Before(v.Time(fuel["updatedAt"])) && !v.Time(timestamp).Before(v.Time(jump["lastArrival"])) {
+			setTank(fuel, tank, timestamp, false)
+		}
 		usage := v.Obj(event["SpaceUsage"])
 		for _, p := range [][2]string{{"TotalCapacity", "capacityTons"}, {"Cargo", "cargoTons"}, {"CargoSpaceReserved", "reservedTons"}, {"Crew", "crewTons"}, {"ShipPacks", "shipPacksTons"}, {"ModulePacks", "modulePacksTons"}, {"FreeSpace", "freeTons"}} {
 			if x := numeric(usage[p[0]]); x != nil {
@@ -247,23 +248,40 @@ func (t *Tracker) Apply(event, context M) {
 				services[key] = M{"key": key, "name": v.Text(serviceNames[key], r["CrewRole"]), "installed": v.Bool(r["Activated"]), "enabled": v.Bool(r["Enabled"]), "crewName": r["CrewName"], "updatedAt": timestamp}
 			}
 			c["services"] = services
+			c["crewObserved"] = true
 		}
 	case "CarrierLocation", "CarrierJump":
 		if typ == "CarrierJump" && v.Text(event["MarketID"], event["CarrierID"]) != t.OwnerID {
 			break
 		}
-		c["location"] = M{"system": v.Text(event["StarSystem"]), "systemAddress": event["SystemAddress"], "bodyId": event["BodyID"], "coordinates": event["StarPos"], "updatedAt": timestamp}
+		origin := v.Obj(c["location"])
+		if v.Time(timestamp).Before(v.Time(origin["updatedAt"])) {
+			break
+		}
+		destination := M{"system": v.Text(event["StarSystem"]), "systemAddress": event["SystemAddress"], "bodyId": event["BodyID"], "coordinates": event["StarPos"], "updatedAt": timestamp}
+		if destination["coordinates"] == nil && sameSystem(origin, destination) {
+			destination["coordinates"] = origin["coordinates"]
+		}
+		cmd := v.Obj(context["commander"])
+		if destination["coordinates"] == nil && sameSystem(destination, M{"system": cmd["system"], "systemAddress": cmd["systemAddress"]}) {
+			destination["coordinates"] = cmd["coordinates"]
+		}
+		c["location"] = destination
 		pending := v.Obj(jump["pending"])
 		arrived := typ == "CarrierJump"
 		if len(pending) > 0 && !v.Time(pending["departureTime"]).IsZero() && v.Str(event["StarSystem"]) == v.Str(pending["system"]) && !v.Time(timestamp).Before(v.Time(pending["departureTime"])) && (pending["bodyId"] == nil || event["BodyID"] == nil || v.Str(pending["bodyId"]) == v.Str(event["BodyID"])) {
 			arrived = true
 		}
 		if arrived {
-			jump["lastArrival"] = timestamp
-			jump["pending"] = nil
-			fuel["needsRefresh"] = true
+			observeCarrierArrival(c, origin, destination, pending, event)
+			if typ == "CarrierJump" && v.Bool(event["Docked"]) {
+				t.DockedCarrierID, t.DockedStation = t.OwnerID, v.Str(event["StationName"])
+			}
+		} else if len(pending) == 0 && v.Str(origin["system"]) != "" && v.Str(destination["system"]) != "" && !sameSystem(origin, destination) {
+			fuel["needsRefresh"], fuel["tankEstimated"] = true, false
 		}
 	case "CarrierJumpRequest":
+		jump["origin"] = v.Copy(v.Obj(c["location"]))
 		departure := v.Time(event["DepartureTime"])
 		var millis any
 		if !departure.IsZero() {
@@ -272,14 +290,13 @@ func (t *Tracker) Apply(event, context M) {
 		jump["pending"] = M{"system": v.Text(event["SystemName"]), "body": event["Body"], "bodyId": event["BodyID"], "systemAddress": v.First(event["SystemAddress"], event["SystemID"]), "departureTime": event["DepartureTime"], "departureMs": millis, "requestedAt": timestamp}
 	case "CarrierJumpCancelled":
 		jump["pending"] = nil
+		jump["origin"] = nil
 	case "CarrierDepositFuel":
 		if explicitID == t.OwnerID {
-			if total := numeric(event["Total"]); total != nil {
-				fuel["tankTons"] = total
+			if total, known := validTank(event["Total"]); known && !v.Time(timestamp).Before(v.Time(fuel["updatedAt"])) && !v.Time(timestamp).Before(v.Time(jump["lastArrival"])) {
+				setTank(fuel, total, timestamp, false)
 			}
 			fuel["depositedTons"] = v.Num(fuel["depositedTons"]) + math.Max(0, v.Num(event["Amount"]))
-			fuel["updatedAt"] = timestamp
-			fuel["needsRefresh"] = false
 			t.transaction(c, event, "fuel", fmt.Sprintf("Заправлено трития: %g т", v.Num(event["Amount"])), nil)
 		}
 	case "CarrierFinance":
@@ -306,6 +323,7 @@ func (t *Tracker) Apply(event, context M) {
 			}
 		}
 	case "CarrierCrewServices":
+		c["crewChangedAt"] = timestamp
 		key := v.Key(event["CrewRole"])
 		if key != "" {
 			services := v.Obj(c["services"])
@@ -358,7 +376,7 @@ func (t *Tracker) Apply(event, context M) {
 			}
 		}
 	case "CargoTransfer":
-		if t.IsOwnDockedMarket(nil) {
+		if t.IsOwnDockedMarket(event["MarketID"]) {
 			for _, r := range v.Rows(event["Transfers"]) {
 				key := v.Key(r["Type"])
 				count := v.Num(r["Count"])
@@ -506,6 +524,7 @@ func (t *Tracker) Snapshot(context M) M {
 		fuel["reserveTons"] = 0
 	}
 	finance["weeklyUpkeep"] = t.Planning["weeklyUpkeep"]
+	finance["weeklyMaintenance"], finance["weeklyMaintenanceEstimated"] = maintenanceProjection(c, finance)
 	finance["runwayWeeks"] = nil
 	if finance["balance"] != nil && v.Num(t.Planning["weeklyUpkeep"]) > 0 {
 		finance["runwayWeeks"] = math.Max(0, v.Num(finance["balance"])/v.Num(t.Planning["weeklyUpkeep"]))

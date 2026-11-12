@@ -81,6 +81,9 @@ func TestDirectWebCommandsDoNotBuildOrSnapshotDomains(t *testing.T) {
 		{"learning", "/api/learning", M{"values": M{"action": "bookmark", "lessonId": "wmm.basics"}}, M{"action": "bookmark", "lessonId": "wmm.basics"}},
 		{"calculator", "/api/carrier/calculator", M{"values": M{"jumpsPerWeek": 4}}, M{"jumpsPerWeek": 4}},
 		{"select-colony", "/api/colonization", M{"id": "synthetic-colony"}, M{"action": "select-project", "id": "synthetic-colony"}},
+		{"colony.supply-portfolio", "/api/colonization/portfolio", M{"tab": "colonization", "projectIds": []string{"synthetic-colony"}}, M{"tab": "colonization", "projectIds": []string{"synthetic-colony"}}},
+		{"colony.supply-reservation", "/api/colonization/supply-reservation", M{"action": "cancel", "id": "synthetic-hold"}, M{"action": "cancel", "id": "synthetic-hold"}},
+		{"colony.supply-market", "/api/colonization/supply-market", M{"commodity": "steel", "quantity": 300}, M{"commodity": "steel", "quantity": 300}},
 		{"riches.plan", "/api/riches/route", M{"tab": "riches", "values": M{"origin": "Sol", "jumpRangeLy": 25, "radiusLy": 100}}, M{"origin": "Sol", "jumpRangeLy": 25, "radiusLy": 100}},
 		{"riches.copy", "/api/riches/route/copy", M{"tab": "riches"}, M{}},
 	} {

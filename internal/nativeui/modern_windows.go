@@ -32,6 +32,7 @@ type modernShell struct {
 	core             *edge.ICoreWebView2
 	document         string
 	ready, closed    bool
+	workspaceReady   bool
 	focusing         bool
 	focusQueued      bool
 	resizeQueued     bool
@@ -800,6 +801,13 @@ func (m *modernShell) windowAction(action string) (M, error) {
 		m.ready = true
 		m.focusBrowser()
 		m.logGeometry("document-ready")
+	case "workspace-ready":
+		if m.ready && !m.workspaceReady {
+			m.workspaceReady = true
+			if marker, ok := u.backend.(interface{ ConfirmUpdateWorkspace() }); ok {
+				go marker.ConfirmUpdateWorkspace()
+			}
+		}
 	default:
 		return nil, errors.New("Неизвестная команда окна")
 	}
@@ -896,6 +904,24 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 		return M{"ok": true}, openExternal(v.Str(params["url"]))
 	case "copy":
 		return M{"ok": true}, walk.Clipboard().SetText(v.Str(params["text"]))
+	case "save-json":
+		data := []byte(v.Str(params["text"]))
+		if len(data) > 8<<20 || !json.Valid(data) {
+			return nil, errors.New("Не удалось сохранить некорректный JSON.")
+		}
+		name := filepath.Base(v.Text(params["name"], "ED Copilot.json"))
+		if !strings.EqualFold(filepath.Ext(name), ".json") {
+			name += ".json"
+		}
+		d := walk.FileDialog{Title: localization.T(p.Language(u.state), "Сохранить план или таблицу"), FilePath: name, Filter: "JSON (*.json)|*.json"}
+		ok, err := d.ShowSave(u.main)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return M{"cancelled": true}, nil
+		}
+		return func() (M, error) { return M{"ok": true}, os.WriteFile(d.FilePath, data, 0600) }, nil
 	case "folder":
 		d := walk.FileDialog{Title: localization.T(p.Language(u.state), "Папка игровых журналов"), FilePath: v.Str(v.At(u.state, "connection", "journalDir"))}
 		ok, e := d.ShowBrowseFolder(u.main)

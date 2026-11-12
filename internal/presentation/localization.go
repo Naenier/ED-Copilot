@@ -42,6 +42,9 @@ func Build(tab, mode, query string, state M) Page {
 }
 
 func CoreActions(tab, mode string, state, selected, prefill M) []Action {
+	if SectionSevenCustom(tab, mode) {
+		return nil
+	}
 	actions := coreActions(tab, mode, state, selected, prefill)
 	if tab == "settings" {
 		actions = append([]Action{{ID: "settings.language", Title: "Язык интерфейса", Path: "/api/settings", Fields: []Field{{Key: "language", Label: "Язык интерфейса", Kind: "select", Default: Language(state), Choices: []Choice{{"ru", "Русский"}, {"en", "English"}}}}}}, actions...)
@@ -209,10 +212,14 @@ func LocalizeHUD(doc HUDDocument, state M) HUDDocument {
 func hudIdentities(state M, activity string) []string {
 	ids := stateIdentities(state)
 	switch activity {
-	case "flight":
+	case "cartography":
 		progress := v.Obj(v.At(state, "riches", "progress"))
-		target := v.Obj(progress["target"])
-		ids = append(ids, v.Str(progress["nextSystem"]), v.Text(target["name"], target["designation"]))
+		ids = append(ids, v.Str(progress["nextSystem"]), v.Str(progress["currentSystem"]))
+		for _, target := range hudCartographyTargets(progress) {
+			ids = append(ids, v.Str(target["name"]), v.Str(target["designation"]))
+		}
+	case "odyssey":
+		ids = append(ids, v.Str(v.At(state, "odyssey", "activeLoadout", "name")))
 	case "carrier":
 		c := v.Obj(state["carrier"])
 		pending := v.Obj(v.At(c, "jump", "pending"))
@@ -223,6 +230,7 @@ func hudIdentities(state M, activity string) []string {
 		ids = append(ids, rowIdentities(v.Obj(v.At(state, "trading", "destination")))...)
 	case "exobiology":
 		ex := v.Obj(state["exobiology"])
+		ids = append(ids, v.Str(v.At(ex, "surfaceRadar", "target", "label")))
 		ids = append(ids, v.Str(v.At(ex, "currentBody", "name")), v.Str(v.At(ex, "tracker", "bodyName")), v.Str(v.At(ex, "system", "name")))
 		if targets := v.Rows(ex["targets"]); len(targets) > 0 {
 			ids = append(ids, v.Str(targets[0]["name"]), v.Str(targets[0]["system"]))

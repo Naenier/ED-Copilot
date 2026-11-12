@@ -72,6 +72,14 @@ func TestRichesJourneyFollowsShipJumpsAndMapping(t *testing.T) {
 		v.At(got, "target", "name") != "Riches A 1" || engine.PendingClipboard()["text"] != "Riches B" {
 		t.Fatalf("arrival did not advance the route: %v", got)
 	}
+	if engine.SnapshotForHUD()["riches"] != nil {
+		t.Fatal("flight overlay computed Cartography")
+	}
+	doOK(t, engine, "/api/settings", M{"activity": "cartography"})
+	currentTargets := func() []M { return v.Rows(v.At(engine.SnapshotForHUD(), "riches", "progress", "targets")) }
+	if got := currentTargets(); len(got) != 2 || got[0]["name"] != "Riches A 1" || got[1]["name"] != "Riches A 2" || v.Bool(got[0]["completed"]) {
+		t.Fatalf("Cartography overlay did not receive the current system's planets: %v", got)
+	}
 	mark := M{"system": "Riches A", "body": "Riches A 1", "completed": true}
 	if _, err := engine.Do("/api/riches/route/complete", mark); err != nil || v.At(progress(), "target", "name") != "Riches A 2" {
 		t.Fatalf("manual completion did not advance the current body: %v", err)
@@ -92,7 +100,13 @@ func TestRichesJourneyFollowsShipJumpsAndMapping(t *testing.T) {
 	if got := progress(); v.At(got, "target", "name") != "Riches A 2" {
 		t.Fatalf("mapping did not advance the current planet: %v", got)
 	}
+	if got := currentTargets(); len(got) != 2 || !v.Bool(got[0]["completed"]) || v.Bool(got[1]["completed"]) {
+		t.Fatalf("Cartography overlay lost the completed or remaining planet: %v", got)
+	}
 	add(event("FSDJump", 5, M{"StarSystem": "Riches B", "SystemAddress": 11, "StarPos": []float64{60, 0, 0}}))
+	if got := currentTargets(); len(got) != 1 || got[0]["name"] != "Riches B A 3" {
+		t.Fatalf("Cartography overlay retained targets from the previous system: %v", got)
+	}
 	if got := progress(); v.Bool(got["finished"]) || got["remainingJumps"] != 0 ||
 		v.At(got, "target", "name") != "Riches B A 3" || engine.PendingClipboard() != nil {
 		t.Fatalf("the final system's planet should remain visible: %v", got)

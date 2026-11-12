@@ -43,6 +43,7 @@ func init() {
 	}
 	types = value.Rows(catalogData["catalog"])
 	sources = value.Rows(catalogData["sources"])
+	types = enrichDevelopmentCatalog(types)
 	typesByID = map[string]M{}
 	for _, row := range types {
 		typesByID[str(row["id"])] = row
@@ -78,26 +79,29 @@ func WithClock(now func() time.Time) Option {
 }
 
 type Planner struct {
-	mu                sync.RWMutex
-	config            M
-	projects          []M
-	selected          string
-	depots            map[string]M
-	contributions     []M
-	claims            map[string]M
-	stations          map[string]M
-	seen              map[string]bool
-	sequence          int64
-	commander         string
-	carrierOwner      string
-	carrierStocks     M
-	carrierMovementAt M
-	search            M
-	searchSerial      uint64
-	cancel            context.CancelFunc
-	client            HTTPClient
-	baseURL           string
-	now               func() time.Time
+	mu                 sync.RWMutex
+	config             M
+	projects           []M
+	selected           string
+	depots             map[string]M
+	contributions      []M
+	supplyReservations []supplyReservation
+	claims             map[string]M
+	stations           map[string]M
+	seen               map[string]bool
+	sequence           int64
+	commander          string
+	carrierOwner       string
+	carrierStocks      M
+	carrierMovementAt  M
+	developmentBodies  map[string]M
+	history            map[string]*systemHistory
+	search             M
+	searchSerial       uint64
+	cancel             context.CancelFunc
+	client             HTTPClient
+	baseURL            string
+	now                func() time.Time
 }
 
 func New(saved M, opts ...Option) *Planner {
@@ -108,6 +112,7 @@ func New(saved M, opts ...Option) *Planner {
 	for _, row := range limitedRows(saved["projects"], 100) {
 		p.projects = append(p.projects, cleanProject(row))
 	}
+	p.restoreSupplyReservations(saved["supplyReservations"])
 	p.selected = str(saved["selectedProjectId"])
 	if p.projectLocked(p.selected) == nil {
 		if len(p.projects) > 0 {
@@ -119,6 +124,7 @@ func New(saved M, opts ...Option) *Planner {
 	p.search = initialSearch()
 	p.search["options"] = merge(M{"originSystem": "", "faction": "", "rangeLy": 15}, p.config)
 	p.resetLocked()
+	p.restoreSystemHistory(saved["systemHistory"])
 	p.restoreCarrierStocks(value.Obj(saved["carrierInventoryCache"]))
 	accessFID, accessID := text(saved["squadronWarehouseAccessFID"], 100), marketID(saved["squadronWarehouseAccessCarrierID"])
 	currentCarrier := str(value.At(p.carrierStocks, "squadron", "id"))
@@ -153,11 +159,12 @@ func (p *Planner) resetLocked() {
 	p.carrierOwner = ""
 	p.carrierStocks = M{}
 	p.carrierMovementAt = M{}
+	p.developmentBodies = map[string]M{}
 }
 func (p *Planner) ExportSettings() M {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	return merge(copyM(p.config), M{"projects": cloneRows(p.projects), "selectedProjectId": p.selected, "carrierInventoryCache": M{"fid": p.carrierOwner, "warehouses": value.Copy(p.carrierStocks)}})
+	return merge(copyM(p.config), M{"projects": cloneRows(p.projects), "selectedProjectId": p.selected, "supplyReservations": p.savedSupplyReservations(), "carrierInventoryCache": M{"fid": p.carrierOwner, "warehouses": value.Copy(p.carrierStocks)}, "systemHistory": p.saveSystemHistory()})
 }
 func (p *Planner) projectLocked(id string) M {
 	if id == "" {

@@ -1,0 +1,35 @@
+.surface-radar-panel{display:grid;gap:14px;padding:18px}
+.surface-radar-panel h2,.surface-radar-panel p{margin:0}
+.surface-radar-panel header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.surface-radar-panel header span,.surface-radar-panel label,.surface-radar-point>span:last-child,.surface-radar-target>span{color:var(--muted)}
+.surface-radar-layout{display:grid;grid-template-columns:minmax(200px,1.2fr) minmax(220px,1fr);gap:18px}
+.surface-radar-map{display:block;width:100%;max-width:480px;margin:auto}
+.surface-radar-map.is-stale{opacity:.55}
+.surface-radar-map .radar-grid{stroke:var(--line);stroke-width:1;fill:none}
+.surface-radar-map .radar-north{fill:var(--muted);font-size:11px}
+.surface-radar-map .radar-player{fill:var(--text)}
+.surface-radar-map .radar-trail{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:.7}
+.radar-mark{fill:var(--text);stroke:var(--bg);stroke-width:1}
+.radar-mark.ship,.radar-mark.srv{fill:var(--accent)}
+.radar-mark.sample{fill:var(--warn)}
+.radar-mark.estimated{fill:none;stroke:var(--muted);stroke-dasharray:2 2}
+.radar-mark.is-target{stroke:var(--good);fill:var(--good)}
+.radar-mark .target-ring{fill:none;stroke:var(--good)}
+.surface-radar-map .sample-exclusion,.surface-radar-map .search-area{fill:none;stroke:var(--warn);stroke-dasharray:4 4;opacity:.6}
+.surface-radar-map .search-area{stroke:var(--muted);stroke-dasharray:2 4}
+.surface-radar-warning{color:var(--warn)}
+.surface-radar-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.surface-radar-target{display:grid;gap:6px;border:1px solid var(--accent);border-radius:8px;padding:10px}
+.surface-radar-target button{justify-self:start}
+.surface-radar-list{display:grid;gap:4px;max-height:340px;overflow:auto}
+.surface-radar-point{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;text-align:left;padding:8px;border:1px solid var(--border);border-radius:8px}
+.surface-radar-point.is-target{border-color:var(--good)}
+.surface-radar-point strong{overflow-wrap:anywhere}
+.surface-radar-buttons,.surface-radar-legend{display:flex;flex-wrap:wrap;gap:8px}
+.surface-radar-legend{justify-content:center;color:var(--muted)}
+.surface-radar-legend span{display:inline-flex;align-items:center;gap:4px}
+.radar-key{width:8px;height:8px;display:inline-block;border-radius:50%;background:var(--text);flex:none}
+.radar-key.ship,.radar-key.srv{background:var(--accent);border-radius:1px}
+.radar-key.sample{background:var(--warn)}
+.radar-key.estimated{background:transparent;border:1px dashed var(--muted)}
+@media(max-width:840px){.surface-radar-layout{grid-template-columns:1fr}}

@@ -28,6 +28,8 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	activity := v.Text(v.At(s, "settings", "activity"), "flight")
 	doc := HUDDocument{Activity: activity}
 	switch activity {
+	case "cartography":
+		hudCartography(&doc, s)
 	case "exobiology":
 		hudExobiology(&doc, s)
 	case "asteroid":
@@ -43,13 +45,19 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	case "carrier":
 		hudCarrier(&doc, s, now)
 	case "engineering":
-		hudMaterials(&doc, s, false)
-		hudExchange(&doc, s)
+		if !hudEngineeringStop(&doc, s) {
+			hudMaterials(&doc, s, false)
+			hudExchange(&doc, s)
+		}
+	case "odyssey":
+		hudOdyssey(&doc, s, now)
 	case "colonization":
 		hudColony(&doc, s, now)
 	default:
+		hudShipWaypoint(&doc, s)
 		hudFlight(&doc, s)
 	}
+	hudJournalNotice(&doc, s, now)
 	hudCompactContext(&doc, v.Obj(s["commander"]))
 	return doc
 }

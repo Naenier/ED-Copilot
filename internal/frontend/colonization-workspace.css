@@ -66,6 +66,38 @@
 .colony-budget-stock{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:11px}
 .colony-budget-stock>summary{cursor:pointer;padding:10px 16px;line-height:1.6;color:var(--muted)}
 .colony-budget-stock>.colony-warehouse-options{padding:0 16px 16px;margin:0}
+.colony-portfolio[open]>summary{color:var(--text)}
+.colony-portfolio-body{display:grid;gap:12px;padding:2px 13px 13px}
+.colony-portfolio-note,.colony-portfolio-status{margin:0;color:var(--muted);line-height:1.6}
+.colony-portfolio-status[role=alert]{color:var(--warn)}
+.colony-portfolio-body fieldset{min-width:0;margin:0;padding:0;border:0}
+.colony-portfolio-body legend{padding:0;color:var(--muted);margin-bottom:6px}
+.colony-portfolio-options{display:flex;flex-wrap:wrap;gap:6px 16px}
+.colony-portfolio-options label{display:flex;align-items:flex-start;gap:6px;padding:4px 0;line-height:1.55;cursor:pointer;overflow-wrap:anywhere}
+.colony-portfolio-options input{margin:2px 0 0;flex:none}
+.colony-portfolio-buildings{margin-top:8px}
+.colony-portfolio-buildings>summary{color:var(--muted);cursor:pointer;padding:3px 0}
+.colony-portfolio-buildings fieldset{margin:8px 0 0 13px}
+.colony-portfolio-counts{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 8px;color:var(--muted)}
+.colony-portfolio-counts .colony-budget-warning{margin:0}
+.colony-portfolio-table{margin-top:10px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.colony-portfolio-table table{width:100%;border-collapse:collapse}
+.colony-portfolio-table th,.colony-portfolio-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.colony-portfolio-table th:first-child{text-align:left;white-space:normal}
+.colony-portfolio-table th{font-weight:500}
+.colony-portfolio-table thead th{color:var(--muted)}
+.colony-portfolio-table tbody tr:last-child>*{border-bottom:0}
+.colony-portfolio-table .pill{margin-left:8px;padding:4px 7px;min-height:24px}
+.colony-portfolio-reservations{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.colony-portfolio-reservations>summary{cursor:pointer;color:var(--text);font-weight:500;padding:3px 0}
+.colony-reservation-destination small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.colony-reservation-actions{display:flex;gap:4px;flex-wrap:wrap}
+#colony-reservation-form{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:10px}
+#colony-reservation-form label{display:grid;gap:4px;min-width:110px;color:var(--muted)}
+#colony-reservation-form label:first-child{flex:2 1 240px}
+#colony-reservation-form label:nth-child(2){flex:1 1 145px}
+#colony-reservation-form label:nth-child(3){width:110px}
+#colony-reservation-form input,#colony-reservation-form select{width:100%;min-width:0;padding:6px 8px}
 #page:has(.colony-budget-workspace)>.page-heading{margin-bottom:12px}
 #page:has(.colony-budget-workspace)>.page-heading .eyebrow,#page:has(.colony-budget-workspace)>.page-heading .description{display:none}
 #page:has(.colony-budget-workspace)>.page-heading h1{font-size:20px;line-height:1.4;margin:0}
@@ -120,3 +152,29 @@
 @media(max-width:1020px){.colony-source-workspace{grid-template-columns:1fr}.colony-source-step+.colony-source-step{border-left:0;border-top:1px solid var(--line)}.colony-origin-summary{grid-template-columns:1fr 1fr}.colony-start{align-items:flex-start;flex-wrap:wrap}.colony-start>.pill{margin-left:70px}.colony-next-step{flex-wrap:wrap}.colony-next-step>.pill{margin-left:45px}}
 @media(max-width:1020px){.colony-budget-metrics{grid-template-columns:1fr}.colony-budget-metrics .colony-summary-metric{border-right:0;border-bottom:1px solid var(--line)}.colony-budget-metrics .colony-summary-metric:last-child{border-bottom:0}}
 @media(min-width:761px) and (max-width:1250px){.colony-budget-workspace .colony-budget-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.colony-budget-workspace .colony-budget-metrics .colony-summary-metric{border-right:1px solid var(--line);border-bottom:0}.colony-budget-workspace .colony-budget-metrics .colony-summary-metric:last-child{border-right:0}}
+.colony-development{margin-block:12px;padding:14px 16px}
+.colony-development>summary{cursor:pointer;font-weight:600}
+.colony-development-body{display:grid;gap:8px;margin-top:12px}
+.colony-development table{width:100%;border-collapse:collapse;text-align:left}
+.colony-development td,.colony-development th{padding:7px 10px}
+.colony-development td:not(:first-child),.colony-development th:not(:first-child){text-align:right;white-space:nowrap}
+.colony-development tbody th{font-weight:500}
+.colony-impact{display:grid;gap:12px;margin-top:12px;padding:16px 18px}
+.colony-impact header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.colony-impact h2,.colony-impact h3{margin:0;font-size:1rem}
+.colony-impact-meta{display:flex;flex-wrap:wrap;gap:7px 16px;color:var(--muted)}
+.colony-impact-meta strong{color:var(--text);margin-left:4px}
+.colony-impact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.colony-impact-grid>div{padding:10px;border-bottom:1px solid var(--border);min-width:0}
+.colony-impact-grid dt,.colony-impact-note{font-size:.875rem;color:var(--muted);margin:0}
+.colony-impact-grid dd{margin:4px 0 0;font-size:1.08rem;font-weight:600;font-variant-numeric:tabular-nums}
+.colony-impact-grid small{display:block;font-size:.8rem;font-weight:400}
+.colony-impact-lists{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.colony-impact-lists:empty{display:none}
+.colony-impact-list ul{margin:5px 0 0;padding-left:1.2rem;line-height:1.5}
+.colony-impact-links{grid-column:1/-1}
+.colony-impact-links ul{list-style:none;padding:0}
+.colony-impact-links li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid var(--border)}
+.colony-impact-observed{padding-top:8px;border-top:1px solid var(--border)}
+.colony-impact-observed>summary{cursor:pointer;margin-bottom:6px}
+@media(max-width:700px){.colony-impact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.colony-impact-lists{grid-template-columns:minmax(0,1fr)}.colony-impact-links li{display:block}.colony-impact-links small{display:block}}

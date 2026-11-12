@@ -15,7 +15,11 @@ func HelpForLanguage(tab, language string) string {
 }
 
 var englishSectionHelp = map[string]string{
-	"riches": "Enter a starting system, ship jump range and search radius for water worlds and Earth-like worlds. Add a destination to search along the route toward it. For a return trip, leave the destination empty and enable Loop.\n\nSet the maximum number of systems and the distance from arrival to the planet. The default minimum DSS reward is 1,000,000 Cr. Use mapping value selects DSS estimates instead of FSS estimates when choosing targets.\n\nPress Ctrl+V in the galaxy map search. The app copies the next system when you arrive. Journal events mark completed bodies, and you can also mark them manually. Save the route as CSV or JSON from the results.",
+	"exploration":   "Start an expedition before leaving to record its visits, FSS and DSS progress, stops, notes and Universal Cartographics sales. Review the track from the expedition page.\n\nChoose discovery rules in Discoveries. In Surveys, add named systems or a range within a procedural boxel. The journal confirms systems by their addresses. Surveys can be exported to JSON.",
+	"ship-route":    "Import the current in-game route, add an editable waypoint list, or calculate a route with Spansh. Check the fuel reserve and scoopable stars. Enter the actual ship mass and FSD parameters for an exact route.\n\nCopy the first system manually. With auto-copy enabled, each confirmed arrival or docking copies the following system. The Flight and Navigation overlay shows your current waypoint.",
+	"notifications": "Enable notifications and select the events you want to see or hear. Overlay, speech and priority are configured separately for each category.\n\nChoose a voice installed in Windows and use Test voice to check its rate and volume. The history opens the section related to each event.",
+	"second-screen": "Choose an IP address on your local network and select which panels to share. Open the displayed HTTPS address on your second device, check the certificate fingerprint if prompted, and enter the single-use code.\n\nGenerate a new code for each device. Revoke a single device or stop sharing to close the connection for everyone.",
+	"riches":        "Enter a starting system, ship jump range and search radius for water worlds and Earth-like worlds. Add a destination to search along the route toward it. For a return trip, leave the destination empty and enable Loop.\n\nSet the maximum number of systems and the distance from arrival to the planet. The default minimum DSS reward is 1,000,000 Cr. Use mapping value selects DSS estimates instead of FSS estimates when choosing targets.\n\nEnable the overlay and select Cartography to see all route targets in your current system. Press Ctrl+V in the galaxy map search. The app copies the next system when you arrive. Journal events mark completed bodies, and you can also mark them manually. Save the route as CSV or JSON from the results.",
 	"commander": `Commander centre
 
 Use the views to inspect observed finances, inventory, possessions, ships, statistics, reputation and recent journal activity. A dash means no confirmed observation is available; zero means a known zero value.
@@ -107,6 +111,8 @@ Start in Progression. Select engineers or filter by module and blueprint. The st
 
 Use Plan for a shopping list across several ship upgrades. Enter the number of rolls and choose an experimental effect for each module. Zero rolls skip a completed grade. The Materials and Material trading views use the same stock and planned quantities.
 
+In Odyssey loadouts, choose a suit and weapons, set target grades and modifications, and save the loadout. Compare the remaining materials with the dated backpack and ship locker counts. Reserve materials to include a loadout in the combined requirements. Choose Odyssey loadouts as the overlay activity to see shortages and relevant recent pickups while on foot.
+
 The journal records engineer access and observed equipment. For tasks without a recorded counter, verify progress in the game. Costs that depend on reputation are marked as estimates.`,
 	"colonization": `Colonisation
 
@@ -114,7 +120,7 @@ First check an inhabited origin system, choose an eligible station and its contr
 
 Overview lists your colonies. Open Construction to add facilities, see their resource bills and change construction order or supply priority. Visiting a depot loads its observed bill; manual bills remain estimates.
 
-Supply log shows the date, commodity and quantity of each delivery. Budget lists each commodity's full requirement value, remaining delivery value and procurement cost. It combines all planned and active structures in the selected colony.
+Supply log shows the date, commodity and quantity of each delivery. Budget lists the resource costs of planned and active structures in the selected colony. Open Combined supplies to choose structures across colonies and calculate what to buy after applying shared ship and carrier stock once.
 
 The overlay groups cargo to deliver, stock to unload and goods to buy. With carrier accounting enabled, the unload card requires fresh, accessible stock and a confirmed carrier location in the colony system. Long lists show how many rows remain. Journal-observed transfers update a known warehouse immediately.
 

@@ -31,7 +31,7 @@ func affectsEngineeringRoadmap(event M) bool {
 		"Loadout", "StoredModules", "ShipyardSwap", "ShipyardNew", "ModuleBuy", "ModuleSell", "ModuleStore", "ModuleRetrieve", "ModuleSwap", "MassModuleStore",
 		"SuitLoadout", "SwitchSuitLoadout", "CreateSuitLoadout", "DeleteSuitLoadout", "LoadoutEquipModule", "LoadoutRemoveModule",
 		"BuySuit", "UpgradeSuit", "SellSuit", "BuyWeapon", "UpgradeWeapon", "SellWeapon",
-		"ShipLocker", "ShipLockerMaterials", "TransferMicroResources", "CollectItems", "DropItems", "UseConsumable",
+		"ShipLocker", "ShipLockerMaterials", "Backpack", "BackpackMaterials", "BackpackChange", "Embark", "TransferMicroResources", "CollectItems", "DropItems", "UseConsumable",
 		"BuyMicroResources", "SellMicroResources", "TradeMicroResources":
 		return true
 	case "MissionCompleted":

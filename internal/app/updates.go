@@ -16,13 +16,34 @@ func (e *Engine) initializeUpdates() {
 	}
 	e.UpdateManager = manager
 	manager.SetEnabled(v.Bool(e.settings["autoUpdateEnabled"]))
-	if notice, err := manager.ConsumeNotice(); err == nil && notice != nil {
-		e.updateNotice = v.Obj(v.Clone(notice))
-	}
+	e.consumeUpdateNotice()
 	if !e.opts.ManualPolling {
 		e.updateDone = make(chan struct{})
 		go func() { defer close(e.updateDone); manager.Run(e.ctx) }()
 	}
+}
+
+func (e *Engine) consumeUpdateNotice() {
+	if notice, err := e.UpdateManager.ConsumeNotice(); err == nil && notice != nil {
+		e.mu.Lock()
+		e.updateNotice = v.Obj(v.Clone(notice))
+		e.mu.Unlock()
+		e.Notify()
+	}
+}
+
+func (e *Engine) ConfirmUpdateWorkspace() {
+	if e.UpdateManager == nil {
+		return
+	}
+	if err := e.UpdateManager.MarkWorkspaceReady(); err != nil {
+		e.mu.Lock()
+		e.updateError = err.Error()
+		e.mu.Unlock()
+		e.Notify()
+		return
+	}
+	e.consumeUpdateNotice()
 }
 
 func (e *Engine) updateSnapshot() M {

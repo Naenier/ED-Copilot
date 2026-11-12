@@ -31,6 +31,7 @@ func main() {
 	dataDir := flag.String("data-dir", "", "Отдельная папка профиля")
 	journalDir := flag.String("journal-dir", "", "Папка игровых журналов")
 	version := flag.Bool("version", false, "Версия приложения")
+	recoverUpdate := flag.String("recover-update", "", "Открыть сохранённую предыдущую версию")
 	smoke := flag.Bool("smoke", false, "Проверить нативные экраны в новом временном профиле")
 	soak := flag.Duration("smoke-soak", 0, "Измерить задержку оверлея и память на синтетическом профиле (15s–1h)")
 	headless := flag.Bool("smoke-headless", false, "Проверить модель и сохранение без окна")
@@ -40,6 +41,12 @@ func main() {
 	stress := flag.Bool("stress", false, "Большая синтетическая история для --demo или --smoke")
 	report := flag.String("smoke-report", "", "Файл отчёта smoke-сценария")
 	flag.Parse()
+	if *recoverUpdate != "" {
+		if err := updater.LaunchRecovery(*recoverUpdate); err != nil {
+			fail(err, "")
+		}
+		return
+	}
 	if *version {
 		fmt.Printf("ED Copilot %s · %s · native Windows\n", app.Version, runtime.Version())
 		return
@@ -189,7 +196,8 @@ func main() {
 		}
 		if *headless {
 			state := engine.Snapshot()
-			result := v.M{"ok": len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true}
+			research, researchOK := researchSmoke(engine)
+			result := v.M{"ok": researchOK && len(v.Rows(v.At(state, "colonization", "projects"))) == 2 && v.At(state, "commander", "ship") == "Panther Clipper Mk II", "version": app.Version, "ship": v.At(state, "commander", "ship"), "colonies": len(v.Rows(v.At(state, "colonization", "projects"))), "native": true, "networkDisabled": true, "research": research}
 			b, _ := json.MarshalIndent(result, "", "  ")
 			_ = os.MkdirAll(filepath.Dir(*report), 0700)
 			if err = os.WriteFile(*report, b, 0600); err != nil {
@@ -222,6 +230,9 @@ func main() {
 }
 func fail(err error, dir string) {
 	if dir != "" {
+		if path := updater.RecoveryLauncher(dir, app.Version); path != "" {
+			err = fmt.Errorf("%w\n\nOpen the previous version with its saved profile:\n%s", err, path)
+		}
 		_ = os.MkdirAll(dir, 0700)
 		_ = os.WriteFile(filepath.Join(dir, "startup-error.txt"), []byte(err.Error()), 0600)
 	}

@@ -286,7 +286,7 @@ func (r *Reader) Poll() {
 	if r.errorText != "" {
 		return
 	}
-	for _, name := range []string{"Status.json", "Cargo.json", "Market.json", "NavRoute.json", "Outfitting.json", "Shipyard.json", "ShipLocker.json"} {
+	for _, name := range []string{"Status.json", "Cargo.json", "Market.json", "NavRoute.json", "Outfitting.json", "Shipyard.json", "ShipLocker.json", "Backpack.json"} {
 		b, e := readSideFile(filepath.Join(r.Dir, name))
 		if e != nil || bytes.Equal(r.side[name], b) {
 			continue
@@ -300,7 +300,7 @@ func (r *Reader) Poll() {
 		switch {
 		case !found, kind == "NavRoute" && actual == "Route":
 			event["event"] = kind
-		case actual == kind, kind == "NavRoute" && actual == "NavRouteClear", kind == "ShipLocker" && actual == "ShipLockerMaterials":
+		case actual == kind, kind == "NavRoute" && actual == "NavRouteClear", kind == "ShipLocker" && actual == "ShipLockerMaterials", kind == "Backpack" && actual == "BackpackMaterials":
 		default:
 			continue
 		}

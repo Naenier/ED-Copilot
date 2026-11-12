@@ -55,8 +55,9 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 			page := result["page"].(p.Page)
 			referencePage := tab.ID == "encyclopedia" || (tab.ID == "engineering" || tab.ID == "targets") && mode == "Инженеры"
 			progressionPage := tab.ID == "engineering" && mode == p.EngineeringProgression
+			odysseyPage := tab.ID == "engineering" && mode == p.EngineeringOdyssey
 			richesPage := tab.ID == "riches"
-			if page.Title == "" || len(page.Columns) == 0 && !referencePage && !progressionPage && !richesPage {
+			if page.Title == "" || len(page.Columns) == 0 && !referencePage && !progressionPage && !odysseyPage && !richesPage && !p.SectionSevenCustom(tab.ID, mode) {
 				t.Fatalf("empty %s/%s", tab.ID, mode)
 			}
 			if richesPage && v.At(result, "state", "riches", "networkDisabled") != true {
@@ -66,6 +67,12 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 				roadmap, err := dispatchWeb(engine, "engineering-roadmap", M{"tab": tab.ID})
 				if err != nil || len(v.Rows(roadmap["engineers"])) != 38 {
 					t.Fatalf("engineering view has no roadmap: %v", err)
+				}
+			}
+			if odysseyPage {
+				loadouts, err := dispatchWeb(engine, "odyssey.loadouts", M{"tab": tab.ID})
+				if err != nil || len(v.Rows(loadouts["equipment"])) == 0 {
+					t.Fatalf("Odyssey view has no equipment catalogue: %v", err)
 				}
 			}
 			if _, err := json.Marshal(result); err != nil {

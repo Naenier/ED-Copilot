@@ -54,6 +54,7 @@ type hudWindow struct {
 	metrics                       []hudSectionMetrics
 	layoutView                    p.HUDRect
 	layoutVehicle                 string
+	cartography                   hudCartographyPager
 }
 
 func newHUD(u *Window) (*hudWindow, error) {
@@ -175,6 +176,7 @@ func (h *hudWindow) hide() {
 		win.ShowWindow(h.leftHwnd, win.SW_HIDE)
 		h.leftVisible = false
 	}
+	h.cartography.started = time.Time{}
 }
 
 func gameClientArea(hwnd win.HWND) (p.HUDRect, bool) {
@@ -240,7 +242,8 @@ func (h *hudWindow) refresh() {
 		}
 	}
 	colors = roles
-	doc := p.BuildHUD(s, time.Now())
+	now := time.Now()
+	doc := p.BuildHUD(s, now)
 	documentChanged := !reflect.DeepEqual(doc, h.document)
 	changed := fontsChanged || documentChanged || !reflect.DeepEqual(colors, h.colors)
 	h.document = doc
@@ -260,13 +263,14 @@ func (h *hudWindow) refresh() {
 		changed = true
 	}
 	vehicle := v.Str(v.At(s, "commander", "vehicle"))
-	plan := h.arrange(view, vehicle, dpi, fontsChanged || documentChanged)
+	previousPage := h.cartography.index
+	plan := h.arrangeAt(view, vehicle, dpi, fontsChanged || documentChanged, now)
 	if plan.Bounds[0].Height <= 0 && plan.Bounds[1].Height <= 0 {
 		h.layoutView = p.HUDRect{}
 		h.hide()
 		return
 	}
-	changed = changed || !reflect.DeepEqual(plan, h.plan)
+	changed = changed || previousPage != h.cartography.index || !reflect.DeepEqual(plan, h.plan)
 	h.plan = plan
 	applyColumn := func(hwnd win.HWND, next p.HUDRect, previous *p.HUDRect, visible *bool) {
 		if next.Width <= 0 || next.Height <= 0 {

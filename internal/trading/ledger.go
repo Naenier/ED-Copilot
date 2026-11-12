@@ -116,9 +116,10 @@ func sortedValues(m map[string]M, field string, desc bool) []M {
 }
 
 type lot struct {
-	Count    float64
-	UnitCost *float64
-	Origin   string
+	Count     float64
+	UnitCost  *float64
+	Origin    string
+	MiningRun string
 }
 type store map[string][]lot
 type Service struct {
@@ -202,7 +203,7 @@ func take(st store, key string, requested float64) []lot {
 		if count > requested {
 			count = requested
 		}
-		out = append(out, lot{count, l.UnitCost, l.Origin})
+		out = append(out, lot{Count: count, UnitCost: l.UnitCost, Origin: l.Origin, MiningRun: l.MiningRun})
 		lots[0].Count -= count
 		requested -= count
 		if lots[0].Count <= 0 {
@@ -215,13 +216,21 @@ func take(st store, key string, requested float64) []lot {
 	st[key] = lots
 	return out
 }
-func (s *Service) Reconcile(event, context M) {
+func (s *Service) Reconcile(event, context M) MiningTradeResult {
+	var mining MiningTradeResult
 	cmd := v.Obj(context["commander"])
 	vessel := Vessel(v.First(event["Vessel"], cmd["vehicle"]))
 	s.ActiveVessel = vessel
+	var inventory []M
+	switch event["Inventory"].(type) {
+	case []M, []any:
+		inventory = v.Rows(event["Inventory"])
+	default:
+		return mining
+	}
 	st := s.hold(vessel)
 	actual := map[string]float64{}
-	for _, row := range v.Rows(event["Inventory"]) {
+	for _, row := range inventory {
 		g := s.good(row["Name"], row["Name_Localised"])
 		if g != nil {
 			actual[v.Str(g["key"])] += amount(row["Count"])
@@ -244,9 +253,10 @@ func (s *Service) Reconcile(event, context M) {
 			add(st, k, []lot{{Count: expected - current, Origin: "unknown"}})
 		}
 		if expected < current {
-			take(st, k, current-expected)
+			takeWithMiningProvenance(st, k, current-expected, &mining)
 		}
 	}
+	return mining
 }
 func (s *Service) Market(event M) {
 	for _, row := range v.Rows(event["Items"]) {
@@ -330,9 +340,10 @@ func (s *Service) Apply(event, context M) M {
 	internal := v.Bool(context["ownMarket"])
 	period := context["countInPeriod"] != false
 	result := M{"internal": false, "minedRevenue": 0}
+	var mining MiningTradeResult
 	switch typ {
 	case "Cargo":
-		s.Reconcile(event, context)
+		mining = s.Reconcile(event, context)
 	case "Market":
 		s.Market(event)
 	case "MiningRefined", "CollectCargo":
@@ -343,39 +354,59 @@ func (s *Service) Apply(event, context M) M {
 				zero := float64(0)
 				l.UnitCost = &zero
 				l.Origin = "mined"
+				l.MiningRun = v.Str(context["miningRunId"])
 			}
 			add(st, v.Str(g["key"]), []lot{l})
 		}
 	case "EjectCargo":
 		g := s.good(event["Type"], event["Type_Localised"])
 		if g != nil {
-			take(st, v.Str(g["key"]), amount(event["Count"], 1))
+			takeWithMiningProvenance(st, v.Str(g["key"]), amount(event["Count"], 1), &mining)
 		}
 	case "ColonisationContribution":
 		for _, r := range v.Rows(event["Contributions"]) {
 			g := s.good(r["Name"], r["Name_Localised"])
 			if g != nil {
-				take(st, v.Str(g["key"]), amount(r["Amount"]))
+				takeWithMiningProvenance(st, v.Str(g["key"]), amount(r["Amount"]), &mining)
 			}
 		}
 	case "CarrierDepositFuel":
 		count := amount(event["Amount"])
-		take(st, "tritium", count)
+		takeWithMiningProvenance(st, "tritium", count, &mining)
 		s.record(event, M{"kind": "transfer", "key": "tritium", "name": "Тритий", "count": count, "value": 0, "internal": true, "direction": "carrier-fuel", "system": cmd["system"], "station": context["station"]}, period)
 		result["internal"] = true
 	case "CargoTransfer":
-		for _, r := range v.Rows(event["Transfers"]) {
+		ship, srv := s.hold("ship"), s.hold("srv")
+		hasCarrier := v.Str(context["carrierId"]) != ""
+		fromSRV := !hasCarrier && Vessel(cmd["vehicle"]) == "srv"
+		transfers := v.Rows(event["Transfers"])
+		if !fromSRV {
+			for _, r := range transfers {
+				if strings.EqualFold(v.Str(r["Direction"]), "tosrv") {
+					fromSRV = true
+					break
+				}
+			}
+		}
+		for _, r := range transfers {
 			g := s.good(r["Type"], r["Type_Localised"])
 			count := amount(r["Count"])
 			direction := strings.ToLower(v.Str(r["Direction"]))
-			if g == nil || count <= 0 || (direction != "tocarrier" && direction != "toship") {
+			if g == nil || count <= 0 || (direction != "tocarrier" && direction != "toship" && direction != "tosrv") {
 				continue
 			}
 			key := v.Str(g["key"])
-			if direction == "tocarrier" {
-				add(warehouse, key, take(st, key, count))
-			} else {
-				add(st, key, take(warehouse, key, count))
+			switch direction {
+			case "tocarrier":
+				add(warehouse, key, takeWithMiningProvenance(ship, key, count, &mining))
+			case "tosrv":
+				add(srv, key, takeWithMiningProvenance(ship, key, count, &mining))
+			case "toship":
+				source := warehouse
+				if fromSRV || !hasCarrier && len(srv[key]) > 0 {
+					source = srv
+				}
+				add(ship, key, takeWithMiningProvenance(source, key, count, &mining))
 			}
 			s.record(event, M{"kind": "transfer", "key": key, "name": g["name"], "count": count, "value": 0, "internal": true, "system": cmd["system"], "station": context["station"], "direction": direction}, period)
 		}
@@ -396,18 +427,27 @@ func (s *Service) Apply(event, context M) M {
 		t := M{"kind": kind, "key": key, "name": g["name"], "count": count, "value": value, "internal": internal, "system": cmd["system"], "station": context["station"], "knownCost": 0, "knownRevenue": 0, "margin": 0, "unknownTons": 0, "minedRevenue": 0}
 		if typ == "MarketBuy" {
 			if internal {
-				add(st, key, take(warehouse, key, count))
+				add(st, key, takeWithMiningProvenance(warehouse, key, count, &mining))
 			} else {
 				cost := value / count
-				add(st, key, []lot{{count, &cost, "bought"}})
+				add(st, key, []lot{{Count: count, UnitCost: &cost, Origin: "bought"}})
 			}
 		} else {
-			lots := take(st, key, count)
+			lots := takeWithMiningProvenance(st, key, count, &mining)
 			if internal {
 				add(warehouse, key, lots)
 			} else {
+				total, totalKnown := v.Number(event["TotalSale"])
+				unit, unitKnown := v.Number(event["SellPrice"])
+				priced := totalKnown && total >= 0 || unitKnown && unit >= 0
+				if !totalKnown || total < 0 {
+					total = unit * count
+				}
 				for _, l := range lots {
 					saleValue := value * l.Count / count
+					if l.MiningRun != "" {
+						mining.Sales = append(mining.Sales, MiningSale{RunID: l.MiningRun, Tons: l.Count, Credits: total * l.Count / count, Priced: priced})
+					}
 					cost := l.UnitCost
 					if cost == nil && amount(event["AvgPricePaid"]) > 0 {
 						c := amount(event["AvgPricePaid"])
@@ -435,6 +475,9 @@ func (s *Service) Apply(event, context M) M {
 	expenses := map[string]string{"RefuelAll": "Заправка", "RefuelPartial": "Заправка", "Repair": "Ремонт", "RepairAll": "Ремонт", "RestockVehicle": "Пополнение техники", "Resurrect": "Страховка", "BuyAmmo": "Боеприпасы"}
 	if label := expenses[typ]; label != "" && amount(event["Cost"]) > 0 {
 		s.record(event, M{"kind": "cost", "name": label, "count": 0, "value": amount(event["Cost"]), "cost": amount(event["Cost"]), "internal": false, "system": cmd["system"], "station": context["station"]}, period)
+	}
+	if len(mining.Sales) > 0 || len(mining.AmbiguousRuns) > 0 {
+		result["miningAttribution"] = mining
 	}
 	return result
 }

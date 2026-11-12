@@ -15,6 +15,17 @@ test('limpet commodity display and search follow language by canonical key while
 test('stale inventory never presents its old total as current',()=>{const C=fixture();C.commanderInventory='backpack';C.state.commanderProfile.inventory.backpack.items={known:false,needsSnapshot:true,entries:[{name:'Stale item',count:30}]};assert.equal(page.inventoryRows(C,u).includes('Stale item'),false);});
 test('a partial locker displays only observed categories and explicitly marks incompleteness',()=>{const C=fixture();C.commanderInventory='shipLocker';C.state.commanderProfile.inventory.shipLocker={items:{known:true,entries:[{name:'Observed item',count:2}]},components:{known:false,needsSnapshot:true,entries:[{name:'Stale component',count:80}]},data:{known:true,entries:[]},consumables:{known:true,entries:[]}};const html=page.inventoryRows(C,u);assert.ok(html.includes('Observed item'));assert.equal(html.includes('Stale component'),false);assert.ok(html.includes('Неполный инвентарь'));});
 test('fleet merges current and stored ships without duplicating an exact string ID',()=>{const C=fixture();C.mode='Флот';C.state.commanderProfile.fleet={known:true,count:1,currentShip:{known:true,id:'18446744073709551615',ship:'Python'},entries:[{id:'18446744073709551615',ship:'Python',system:'Sol'}]};const html=page.render(C,u);assert.equal((html.match(/class="commander-ship"/g)||[]).length,1);assert.ok(html.includes('ship%2F')||html.includes('ship/Python'));});
+test('only the active ship card opens the engineering outfitting workspace',async()=>{
+ const C=fixture();C.mode='Флот';C.tabs.push({ID:'engineering'});
+ C.state.commanderProfile.fleet={known:true,currentShip:{known:true,id:'7',ship:'Python'},entries:[
+  {id:'7',ship:'Python',system:'Sol'},{id:'8',ship:'Krait Mk II',system:'Achenar'}]};
+ const html=page.render(C,u),matches=[...html.matchAll(/data-tab="engineering" data-section="Оснащение корабля"/g)];
+ assert.equal(matches.length,1);
+ assert.ok(matches[0].index<html.indexOf('Krait Mk II'));
+ const calls=[];
+ await page.handleClick('commander-open',{dataset:{tab:'engineering',section:'Оснащение корабля'}},C,{...u,navigate:async(tab,options)=>calls.push([tab,options.mode])});
+ assert.deepEqual(calls,[['engineering','Оснащение корабля']]);
+});
 test('observed current ship location replaces its matching cached fleet row and clears an old station',()=>{const C=fixture();C.mode='Флот';C.state.commanderProfile.fleet={known:true,count:1,currentShip:{known:true,id:'7',ship:'Python',locationKnown:true,system:'Achenar',station:''},entries:[{id:'7',ship:'Python',system:'Sol',station:'Stale station'}]};const html=page.render(C,u);assert.equal((html.match(/class="commander-ship"/g)||[]).length,1);assert.ok(html.includes('Achenar'));assert.equal(html.includes('Stale station'),false);assert.equal(html.includes('>Sol<'),false);});
 test('balance chooses the later observed value instead of permanently preferring one provider',()=>{const C=fixture();C.state.pilot={credits:10,creditsAt:'2026-11-08T11:00:00Z'};C.state.commanderProfile.finance={credits:20,fields:{credits:{updatedAt:'2026-11-08T12:00:00Z'}}};assert.equal(page.balance(C),20);C.state.pilot.creditsAt='2026-11-08T13:00:00Z';assert.equal(page.balance(C),10);});
 test('commander profile opens ranks inside its workspace without touching Frontier login',async()=>{const C=fixture(),calls=[];await page.handleClick('commander-rank',{dataset:{id:'trade'}},C,{...u,navigate:async x=>calls.push(x)});assert.deepEqual(calls,['ranks']);assert.equal(C.rankWorkspace.selected,'trade');});

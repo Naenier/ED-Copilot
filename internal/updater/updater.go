@@ -50,6 +50,7 @@ type State struct {
 	Error            string `json:"error,omitempty"`
 	LastChecked      string `json:"lastChecked,omitempty"`
 	Staged           bool   `json:"staged"`
+	RecoveryPath     string `json:"recoveryPath,omitempty"`
 }
 
 type Notice struct {
@@ -62,6 +63,7 @@ type Notice struct {
 type Manager struct {
 	mu           sync.Mutex
 	checking     sync.Mutex
+	pendingMu    sync.Mutex
 	opts         Options
 	client       *http.Client
 	root         string
@@ -173,7 +175,12 @@ func New(o Options) (*Manager, error) {
 	}
 	m := &Manager{opts: o, client: client, root: root, state: State{Enabled: true, Status: "idle", Version: o.CurrentVersion}, installed: installedExecutable, launch: launchDetached, wake: make(chan struct{}, 1)}
 	if p, err := m.readPending(); err == nil && newer(p.Version, o.CurrentVersion) && m.verifyPending(p) == nil {
-		m.state.Staged, m.state.Status, m.state.AvailableVersion, m.state.ReleaseURL = true, "staged", p.Version, p.ReleaseURL
+		if r, blocked := unfinishedRecovery(root, p.Version); blocked {
+			m.state.AvailableVersion, m.state.ReleaseURL = p.Version, p.ReleaseURL
+			m.setRecoveryState(&m.state, r)
+		} else {
+			m.state.Staged, m.state.Status, m.state.AvailableVersion, m.state.ReleaseURL = true, "staged", p.Version, p.ReleaseURL
+		}
 	}
 	return m, nil
 }
@@ -392,6 +399,11 @@ func (m *Manager) Check(ctx context.Context) (result error) {
 		m.change(func(s *State) { s.Status = "portable" })
 		return nil
 	}
+	if r, blocked := unfinishedRecovery(m.root, v); blocked {
+		m.change(func(s *State) { m.setRecoveryState(s, r) })
+		return nil
+	}
+	m.change(func(s *State) { s.RecoveryPath = "" })
 	if p, err := m.readPending(); err == nil && p.Version == v && m.verifyPending(p) == nil {
 		m.change(func(s *State) { s.Status = "staged"; s.Staged = true })
 		return nil
@@ -426,7 +438,10 @@ func (m *Manager) Check(ctx context.Context) (result error) {
 		return nil
 	}
 	p := pending{Version: v, FromVersion: m.opts.CurrentVersion, ReleaseURL: r.URL, Body: truncate(r.Body, 32768), SHA256: expected, Size: setup.Size, Executable: m.opts.Executable}
-	if err = writeJSON(filepath.Join(m.root, "pending.json"), p); err != nil {
+	m.pendingMu.Lock()
+	err = writeJSON(filepath.Join(m.root, "pending.json"), p)
+	m.pendingMu.Unlock()
+	if err != nil {
 		return errors.New("cannot persist verified update")
 	}
 	m.change(func(s *State) { s.Status = "staged"; s.Staged = true })
@@ -546,6 +561,8 @@ func samePath(a, b string) bool { return strings.EqualFold(filepath.Clean(a), fi
 func (m *Manager) ApplyOnExit(restart bool) error {
 	m.checking.Lock()
 	defer m.checking.Unlock()
+	m.pendingMu.Lock()
+	defer m.pendingMu.Unlock()
 	if !m.Snapshot().Enabled {
 		return nil
 	}
@@ -557,6 +574,9 @@ func (m *Manager) ApplyOnExit(restart bool) error {
 		return err
 	}
 	if !newer(p.Version, m.opts.CurrentVersion) {
+		return nil
+	}
+	if _, blocked := unfinishedRecovery(m.root, p.Version); blocked {
 		return nil
 	}
 	if !m.installed(m.opts.Executable) {
@@ -590,6 +610,9 @@ func (m *Manager) ConsumeNotice() (*Notice, error) {
 		return nil, err
 	}
 	if !p.Applied || p.Version != m.opts.CurrentVersion || !newer(p.Version, p.FromVersion) {
+		return nil, nil
+	}
+	if r, tracked := recoveryForVersion(m.root, p.Version); tracked && r.Status != recoveryReady {
 		return nil, nil
 	}
 	if err = m.verifyPending(p); err != nil {

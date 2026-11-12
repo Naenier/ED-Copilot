@@ -96,6 +96,13 @@ func LocatePlant(scans []M, radius float64) M {
 		}
 		point := fromOffset(origin, localPoint{sum.e / count, sum.n / count}, radius)
 		point["locationBasis"] = "crossing"
+		spread := 25.0
+		for _, hit := range hits {
+			if math.Hypot(hit.e-median.e, hit.n-median.n) <= 150 {
+				spread = math.Max(spread, math.Hypot(hit.e-sum.e/count, hit.n-sum.n/count))
+			}
+		}
+		point["uncertaintyM"] = spread
 		return point
 	}
 	for i := len(scans) - 1; i >= 0; i-- {
@@ -156,7 +163,9 @@ func (s *Service) addCodexMark(mark M) {
 	located := LocatePlant(scans, radius)
 	mark["scans"] = scans
 	mark["latitude"], mark["longitude"], mark["locationBasis"] = located["latitude"], located["longitude"], located["locationBasis"]
+	mark["uncertaintyM"] = located["uncertaintyM"]
 	if match >= 0 {
+		mark["id"] = v.First(s.marks[match]["id"], mark["id"])
 		s.marks[match] = mark
 	} else {
 		s.addMark(mark)

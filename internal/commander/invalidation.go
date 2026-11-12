@@ -51,7 +51,7 @@ func (t *Tracker) invalidateChanges(event M, at string) bool {
 		if len(v.Arr(event["MaterialsReward"])) > 0 {
 			changed = t.invalidateInventory("materials", at)
 		}
-	case "BackpackChange":
+	case "BackpackChange", "Embark":
 		changed = t.invalidateInventory("backpack", at)
 	case "TransferMicroResources", "CollectItems", "DropItems", "UseConsumable", "BuyMicroResources", "SellMicroResources", "TradeMicroResources", "UpgradeSuit", "UpgradeWeapon":
 		changed = t.invalidateInventory("backpack", at)

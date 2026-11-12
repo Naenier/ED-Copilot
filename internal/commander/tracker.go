@@ -245,9 +245,9 @@ func (t *Tracker) Apply(event, context M) bool {
 		}
 	case "Materials":
 		changed = t.inventory(event, "materials", map[string]string{"Raw": "raw", "Manufactured": "manufactured", "Encoded": "encoded"}, at) || changed
-	case "Backpack", "ShipLocker", "ShipLockerMaterials":
+	case "Backpack", "BackpackMaterials", "ShipLocker", "ShipLockerMaterials":
 		container := "backpack"
-		if kind != "Backpack" {
+		if kind == "ShipLocker" || kind == "ShipLockerMaterials" {
 			container = "shipLocker"
 		}
 		changed = t.inventory(event, container, map[string]string{"Items": "items", "Components": "components", "Consumables": "consumables", "Data": "data"}, at) || changed
@@ -325,6 +325,16 @@ func (t *Tracker) ShipLockerSnapshot(fid string) M {
 		return nil
 	}
 	return v.Copy(v.Obj(v.At(t.state, "inventory", "shipLocker")))
+}
+
+func (t *Tracker) OdysseyInventorySnapshot(fid string) (locker, backpack M) {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	if fid == "" || t.owner != fid {
+		return nil, nil
+	}
+	inventory := v.Obj(t.state["inventory"])
+	return v.Copy(v.Obj(inventory["shipLocker"])), v.Copy(v.Obj(inventory["backpack"]))
 }
 
 func sortedKeys(m M) []string {

@@ -72,7 +72,7 @@ test('live language switching preserves typed drafts, focus, selection and indep
  Object.assign(a.C,{tab:'deals',mode:'Поиск',query:'Настройки',selected:'saved-player-route',page:{Rows:[]},state:{settings:{language:'ru'}}});
  const node={id:'table-query',name:'',tagName:'INPUT',type:'text',value:'12 345,5 · Настройки',checked:false,dataset:{},inPage:true,selectionStart:3,selectionEnd:8,selectionDirection:'forward',focus(){this.focused=true;},setSelectionRange(start,end){this.range=[start,end];}};
  f.nodes.set('table-query',node);f.selectors.set('#page input,#page select,#page textarea',[node]);f.document.activeElement=node;
- let shells=0,renders=0;a.setShell(()=>{shells++;node.value='reset';});a.setRender(()=>{renders++;node.value='reset';});
+ let shells=0,renders=0;a.setShell(()=>{shells++;node.value='reset';f.document.activeElement=null;});a.setRender(()=>{renders++;node.value='reset';});
  a.C.referenceSessions={library:{query:'user query',group:'custom',entryId:'ship/test',loadedKey:'old',listToken:2,entryToken:3,list:{},entry:{},listPromise:Promise.resolve({})}};
  f.window.copilotReceive({event:'update',data:{settings:{language:'en'},connection:{},commander:{},revision:2}});
  assert.equal(i18n.language,'en');assert.equal(f.document.documentElement.lang,'en');assert.equal(shells,1);assert.equal(renders,1);assert.equal(node.value,'12 345,5 · Настройки');assert.deepEqual(node.range,[3,8]);assert.equal(node.focused,true);

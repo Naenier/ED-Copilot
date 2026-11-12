@@ -198,6 +198,7 @@ func (p *Planner) discoverDepotLocked(depot M) {
 			project["supplyOrder"] = append(order, str(linked["id"]))
 		}
 	}
+	p.recordConstructionMilestone(project, depot)
 	if value.Time(linked["journalUpdatedAt"]).After(value.Time(depot["timestamp"])) {
 		return
 	}

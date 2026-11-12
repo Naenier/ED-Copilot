@@ -33,7 +33,8 @@ const planner = window.RichesUI;
 test('the planner includes both system lookups, reward filters, and all three checked options', () => {
   const C = { tab: 'riches', state: { commander: { system: 'Brestla' }, riches: { suggestedJumpRangeLy: 78.81 } } };
   const page = planner.render(C, ui('en'));
-  assert.match(page, /<h1>Road to Riches<\/h1>/);
+  assert.match(page, /<h1>Cartography<\/h1>/);
+  assert.match(planner.render(C, ui()), /<h1>Картография<\/h1>/);
   assert.match(page, /data-system-search="single" value="Brestla"/);
   assert.match(page, /name="destination"[^>]+data-system-search="single"[^>]+value=""/);
   assert.match(page, /name="jumpRangeLy"[^>]+value="78\.81"/);
@@ -67,6 +68,7 @@ test('the route retains body designations, rewards and separate travelled/remain
   assert.match(page, /No matching worlds were found/);
   assert.match(page, /Shows up to 100/);
   const overview = planner.renderOverview(C, u);
+  assert.match(overview, /id="riches-summary-title">Cartography/);
   assert.match(overview, /Planet in the next system/);
   assert.match(overview, /3 \/ 2/);
   assert.match(overview, /1571985/);

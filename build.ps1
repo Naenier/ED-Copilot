@@ -109,6 +109,8 @@ try {
     $lines = $artifacts | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($_) }
     [IO.File]::WriteAllLines((Join-Path $projectRoot 'dist/SHA256SUMS.txt'), $lines, [Text.UTF8Encoding]::new($false))
     if($Smoke -and $Package -and $Installer){
+        . (Join-Path $projectRoot 'scripts/release-sbom.ps1')
+        Write-EDReleaseSBOMs $binary $setup $version $installerTools (Join-Path $projectRoot 'dist')
         $null=New-EDReleaseManifest -Root $projectRoot -Directory (Join-Path $projectRoot 'dist') -Commit $SourceCommit -TestsPassed (-not $SkipTests)
     }
     Write-Output "Built: $binary"

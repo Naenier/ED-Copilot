@@ -16,13 +16,14 @@ async function run(C,u){
   check('Баланс командира без имени Status.json',!u.$('#page').textContent.includes('Status.json'));
   check('Обзор содержит топливо без отдельного экрана состояния',!!u.$('.overview-page .ov-metrics')&&!C.page.Modes.includes('Состояние'));
   await u.navigate('riches');
-  check('Дорога к богатству открывает форму маршрута и схему FSS',!!u.$('#riches-route-form #riches-origin')&&!!u.$('.riches-spectrum'));
-  check('Дорога к богатству показывает параметры Spansh и порог DSS в миллион кредитов',
+  check('Картография открывается в Галактике с формой маршрута и схемой FSS',C.group==='galaxy'&&u.$('#page h1')?.textContent===u.t('Картография')&&!!u.$('#riches-route-form #riches-origin')&&!!u.$('.riches-spectrum'));
+  check('Картография доступна как отдельное занятие оверлея',C.boot?.activities?.some(item=>item.Value==='cartography'&&item.Label==='Картография'));
+  check('Картография показывает параметры Spansh и порог DSS в миллион кредитов',
    ['destination','maxResults','maxDistanceLs'].every(name=>!!u.$('#riches-route-form [name="'+name+'"]'))&&
    Number(u.$('#riches-route-form [name="minMappingValue"]')?.value.replace(/\s/g,''))===1000000&&
    ['useMappingValue','avoidThargoids','loop'].every(name=>u.$('#riches-route-form [name="'+name+'"]')?.checked));
   const riches=await u.call('riches.status');
-  check('Дорога к богатству сохраняет автономность тестового профиля',riches.networkDisabled===true);
+  check('Картография сохраняет автономность тестового профиля',riches.networkDisabled===true);
   await u.navigate('carrier-trade',{mode:'Рейс'});check('Демонстрационный рейс содержит рассчитанную прибыль',C.state.carrierTrade?.summary?.profit!=null&&Number.isFinite(Number(C.state.carrierTrade.summary.profit)));await capture('readme-carrier-trade');
   await category('ships');check('Корабли представлены карточками',!!u.$('.ref-grid-ships'));await capture('readme-ships');
   await openFirst('ships','Python');check('Корабль открывается на отдельной странице',!!u.$('[data-reference="entry"]')&&!u.$('.inspector'));await capture('readme-ship');

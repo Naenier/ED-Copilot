@@ -39,17 +39,25 @@ Star system fields offer up to twenty suggestions from Spansh and EDSM. Type thr
 
 ![System page showing celestial bodies and surface materials](docs/screenshots/en/system.png)
 
-## Road to Riches
+## Cartography
 
-Open **Galaxy → Road to Riches**, then enter your starting system, jump range and search radius. Set a destination or leave it blank to enable a return loop. Limit the number of systems and the distance from arrival to each planet, choose whether to rank targets by FSS or DSS reward, and skip known Thargoid systems. The minimum DSS reward defaults to **1,000,000 Cr**. Enter `0` to remove the minimum.
+Open **Galaxy → Cartography**, then enter your starting system, jump range and search radius. Set a destination or leave it blank to enable a return loop. Limit the number of systems and the distance from arrival to each planet, choose whether to rank targets by FSS or DSS reward, and skip known Thargoid systems. The minimum DSS reward defaults to **1,000,000 Cr**. Enter `0` to remove the minimum.
 
 The results list water worlds and Earth-like worlds with their arrival distances and estimated FSS and DSS rewards. Use the signal diagrams to identify both planet types in the FSS. View the route diagram, mark completed planets or export the route as CSV or JSON.
 
-Copilot copies the next system when the route is ready and after you arrive at each stop. Paste it into the in-game galaxy map with **Ctrl+V**. Overview and the flight overlay show your mapping target, next system, estimated payout and jump progress.
+Copilot copies the next system when the route is ready and after you arrive at each stop. Paste it into the in-game galaxy map with **Ctrl+V**. Select **Cartography** in the overlay activity list to see the current system’s mapping targets, next system, estimated payout and jump progress.
 
-![Road to Riches search filters, FSS signals and mapping targets](docs/screenshots/en/road-to-riches.png)
+![Cartography search filters, FSS signals and mapping targets](docs/screenshots/en/road-to-riches.png)
+
+## Expeditions, discoveries and surveys
+
+Open **Galaxy → Expeditions** to record a journey, add stops and notes, and review the travel map. Visits, FSS completion, DSS mapping and Universal Cartographics payouts are tracked separately. Configure rules in **Discoveries** to pick out bodies and observations you care about. **Surveys** tracks named systems or a range in a procedural boxel and supports JSON import and export.
+
+In **Galaxy → Ship route**, import the in-game route, assemble a waypoint list, or calculate a route with Spansh. Check scoopable stars, fuel information and the next stop. Enable auto-copy to put the following destination on the clipboard after a confirmed arrival. The **Flight and Navigation** overlay shows the next waypoint.
 
 ## Exobiology
+
+The **Surface radar** view plots the ship, sample locations, saved markers and the recent surface track on the current body. It shows direction, distance, and the age or precision of the last position reading. The Exobiology overlay carries the same radar in the game.
 
 Choose planets by their biological signals, environmental conditions and the value of potential species. Track three genetic samples, the required separation and your distance from recorded points when live coordinates are available. A dedicated overlay activity supports surface exploration, while sample and sales screens distinguish data on board from confirmed Vista Genomics sales.
 
@@ -71,6 +79,8 @@ The reference catalogue includes 126 species across 25 genera, habitat condition
 Find stations and fleet carriers where you can buy or sell a commodity. Compare price per tonne, demand, supply, landing pad size, distance and the age of each observation. Search for trade routes that fit your cargo hold and budget, keep a destination in the overlay and track your transactions.
 
 Mining tools help you find valuable rings and planets, filter suitable targets, inspect prospected asteroids, check equipment and review mining sessions. Engineering materials and commodities for sale are tracked separately.
+
+In **Mining → Compare mining runs**, select sessions to compare their location, ship, mining method, observed mining time and trip duration. Compare the estimated value of remaining cargo with confirmed sales. Mixed cargo with unclear provenance is flagged in the report.
 
 ## Trade routes: from search to a usable plan
 
@@ -97,6 +107,8 @@ A separate calculator compares the purchase and running costs of personal and sq
 ## Personal fleet carrier routes
 
 Calculate jumps, fuel consumption, refuelling, the reserve on arrival and journey time. When your fuel stock is known, the form starts with that amount. Minimum starting fuel is a separate option for planning the required stock. Fuel cost remains unknown until you provide a tritium price.
+
+Each jump draws fuel from the tank. The plan shows when to transfer tritium from the warehouse before a jump. The carrier overlay updates from journal events and shows the tank, reserve, carrier balance, weekly upkeep and storage capacity.
 
 ![Personal fleet carrier route](docs/screenshots/en/route.png)
 
@@ -132,13 +144,19 @@ Manage multiple colonies independently. Choose a system using your preferred sta
 
 Start with an origin system and its stations, then select the station and controlling faction. The results include systems that pass the available eligibility checks. **Supply log** records accepted deliveries, and **Construction** shows the selected project's materials directly below the build queue.
 
-Enable **Include carrier warehouse** to include known personal carrier cargo. Enable **Squadron cargo is available to me** if you can use that stock. These settings are shared, while supply requirements and queues belong to each colony. The selected plan shows the sources separately with their callsigns and observation times. After sign-in, Frontier observations refresh automatically in the background. Stock aboard a carrier remains separate from cargo on your ship and accepted construction deliveries; it is not reserved between colony plans.
+Select a structure in **Construction** to see its effects on population, security, technology, economy and other system attributes. The colony overview shows the combined impact of built and planned structures. The timeline plots observed population, growth, faction influence and political changes as Copilot collects data.
+
+Enable **Include carrier warehouse** to include known personal carrier cargo. Enable **Squadron cargo is available to me** if you can use that stock. Frontier observations refresh automatically after sign-in. In **Budget → Combined supplies**, choose the structures to supply and reserve confirmed ship or carrier cargo for a specific structure. The shared calculation deducts stock already reserved for other structures. Open market search with the remaining commodity and quantity, and follow deliveries confirmed by the game journal.
+
+Mark a reserved shipment **In transit** to track its destination and the amount still to deliver. Confirmed deliveries reduce that amount automatically.
 
 The **Budget** view values every commodity at its latest observed galactic average price, with full, remaining and procurement totals for all planned and active construction in the selected colony. Missing bills and prices remain explicit. The overlay stays focused on logistics: up to ten outstanding commodities, excluding requirements already covered by fresh accessible carrier stock when carrier accounting is enabled. Fully covered commodities remain visible in the application.
 
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
 ## Engineering
+
+**Ship outfitting** compares the journal loadout with an imported EDSY or Coriolis build. Check the module and material requirements, use equipment already in storage, and export the build. **Engineering itinerary** combines eligible workshop visits and material trades into an ordered trip and can send the stops to **Ship route**.
 
 Use **Engineering → Progression** to follow unlock steps and filter engineers by module, blueprint, or experimental effect. You can start with a blueprint, then pick a compatible module to calculate its requirements. The plan links requirements to their reference pages and compares recipe costs with known inventory. **Engineering → Plan** combines requirements for multiple upgrades.
 
@@ -149,6 +167,8 @@ Open **Engineering → Materials** to review stock or select **Calculate materia
 ![Materials inventory and exchange options](docs/screenshots/en/material-exchange.png)
 
 ![Material reference with collection sources and trade guidance](docs/screenshots/en/material.png)
+
+In **Engineering → Odyssey loadouts**, save a suit and weapons with their target grades and modifications. The plan lists upgrade steps and materials still needed, with backpack and ship locker counts shown separately. Enable material reservations to account for other saved loadouts. Choose **Odyssey loadouts** as the overlay activity to see shortages and relevant recent pickups while on foot.
 
 ## Commander ranks and galactic politics
 
@@ -169,6 +189,8 @@ Nine courses and 27 lessons cover trading, group operations, getting started wit
 ![ED Copilot Academy](docs/screenshots/en/academy.png)
 
 ## In-game guidance and controls
+
+**Workspace → Notifications** lets you opt into overlay and local Windows voice alerts by event type and priority. **Second screen** shares selected navigation, expedition map, engineering or colony information with paired devices on your local network. Start the session from the desktop and use a one-time code for each device.
 
 The overlay displays panels for the selected activity only while Elite Dangerous is focused. It adapts to ship, SRV/Nomad and on-foot play; switching to Copilot hides the game panels.
 
@@ -193,6 +215,8 @@ This README is also available [in Russian](README.ru.md).
 In **Settings → Connections**, sign in to Frontier to refresh supported account information in the background. Under **Inara**, add your personal API key and enable event sending.
 
 Automatic updates are enabled by default and can be switched off in Settings. Stable GitHub releases download quietly and are checked against published SHA256 digests. Installation waits until you fully exit Copilot; the next launch shows the changes. Setup provides separate Start Menu and desktop shortcut choices and preserves them during updates.
+
+If an automatic update prevents the workspace from opening, go to `%LOCALAPPDATA%\ED Copilot\updates\recovery`. Read the `slot` in `state.json` and open `Open previous ED Copilot.cmd` in that folder. The previous version opens with its own copy of the saved plans and settings.
 
 Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separately from the application. Before updating, fully exit through the File menu or the system tray icon. The installer preserves your personal profile.
 

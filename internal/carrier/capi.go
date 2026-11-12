@@ -34,6 +34,8 @@ func (t *Tracker) ApplyCAPI(result, commander M) bool {
 	if at.IsZero() || started.IsZero() || at.Before(started) {
 		return false
 	}
+	applyCAPIFinance(c, record, at, started)
+	applyCAPITank(c, record, at, started)
 	if previous := v.Time(t.StockBaseline["timestamp"]); !previous.IsZero() && (!at.After(previous) || previous.After(started)) {
 		return false
 	}
@@ -126,5 +128,48 @@ func (t *Tracker) ApplyCAPI(result, commander M) bool {
 		items = append(items, row)
 	}
 	t.StockBaseline = M{"carrierId": id, "timestamp": v.ISO(at), "items": items, "complete": true, "source": "Frontier CAPI"}
+	applyCAPICapacity(c, record, total, at, started)
 	return true
+}
+
+func applyCAPIFinance(c, record M, at, started time.Time) {
+	current := v.Obj(c["finance"])
+	remote := v.Obj(record["finance"])
+	if last := v.Time(current["updatedAt"]); !last.After(started) && at.After(last) {
+		if balance, ok := v.Number(v.First(remote["bankBalance"], record["balance"])); ok && math.Abs(balance) <= 1e15 {
+			current["balance"], current["updatedAt"] = balance, v.ISO(at)
+		}
+	}
+	if !at.After(v.Time(current["maintenanceAt"])) || v.Time(c["crewChangedAt"]).After(started) {
+		return
+	}
+	maintenance, known := v.Number(remote["maintenance"])
+	if !known {
+		core, coreKnown := v.Number(remote["coreCost"])
+		services, servicesKnown := v.Number(remote["servicesCost"])
+		if coreKnown && servicesKnown && core >= 0 && services >= 0 {
+			maintenance, known = core+services, true
+		}
+	}
+	if known && maintenance >= 0 && maintenance <= 1e12 {
+		current["maintenance"], current["maintenanceAt"] = maintenance, v.ISO(at)
+	}
+}
+
+func applyCAPICapacity(c, record M, cargoTons float64, at, started time.Time) {
+	space := v.Obj(c["space"])
+	if last := v.Time(space["updatedAt"]); last.After(started) || !at.After(last) {
+		return
+	}
+	free, known := v.Number(v.At(record, "capacity", "freeSpace"))
+	capacity := v.Num(space["capacityTons"])
+	if capacity <= 0 {
+		model, _ := calculatorCatalog("fleet")
+		capacity = float64(model.Capacity)
+	}
+	if known && free >= 0 && free <= capacity {
+		space["capacityTons"], space["freeTons"] = capacity, free
+		space["cargoTons"] = cargoTons
+		space["updatedAt"], space["estimated"] = v.ISO(at), false
+	}
 }
