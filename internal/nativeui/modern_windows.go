@@ -30,7 +30,7 @@ type modernShell struct {
 	owner            *Window
 	view             *edge.Chromium
 	core             *edge.ICoreWebView2
-	document         string
+	document         []byte
 	ready, closed    bool
 	workspaceReady   bool
 	focusing         bool
@@ -146,7 +146,11 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		}
 		if source, e := sender.GetSource(); e != nil || !trustedWebSource(source) {
 			u.modern.ready = false
-			u.modern.postUI(func() { browser.NavigateToString(u.modern.document) })
+			u.modern.postUI(func() {
+				if err := u.modern.core.Navigate(workspaceURL); err != nil {
+					nativeErrorLog(err, backend.DataDir())
+				}
+			})
 		}
 	}
 	browser.SetBackgroundColour(25, 25, 25, 255)
@@ -164,8 +168,16 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		u.dispose()
 		return nil, err
 	}
-	u.modern.document = frontend.HTMLMode(hex.EncodeToString(nonce[:]), options.Smoke, options.ReadmeScreenshots)
-	browser.NavigateToString(u.modern.document)
+	u.modern.document = []byte(frontend.HTMLMode(hex.EncodeToString(nonce[:]), options.Smoke, options.ReadmeScreenshots))
+	browser.WebResourceRequestedCallback = u.modern.serveWorkspace
+	if err := u.modern.core.AddWebResourceRequestedFilter(workspaceOrigin+"/*", edge.COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL); err != nil {
+		u.dispose()
+		return nil, fmt.Errorf("Настройка ресурсов интерфейса WebView2: %w", err)
+	}
+	if err := u.modern.core.Navigate(workspaceURL); err != nil {
+		u.dispose()
+		return nil, fmt.Errorf("Открытие интерфейса WebView2: %w", err)
+	}
 	browser.Resize()
 	if err := browser.Show(); err != nil {
 		u.dispose()
@@ -605,7 +617,36 @@ type webRequest struct {
 	Params M      `json:"params"`
 }
 
-func trustedWebSource(source string) bool { return strings.SplitN(source, "#", 2)[0] == "about:blank" }
+const workspaceOrigin = "https://ed-copilot.invalid"
+const workspaceURL = workspaceOrigin + "/workspace"
+
+func trustedWebSource(source string) bool { return strings.SplitN(source, "#", 2)[0] == workspaceURL }
+
+// Serve the embedded workspace locally. NavigateToString limits the size of
+// HTML it can load, which the bilingual workspace can exceed.
+func (m *modernShell) serveWorkspace(req *edge.ICoreWebView2WebResourceRequest, args *edge.ICoreWebView2WebResourceRequestedEventArgs) {
+	uri, uriErr := req.GetUri()
+	method, methodErr := req.GetMethod()
+	status, reason := 404, "Not Found"
+	headers := "Cache-Control: no-store\r\nX-Content-Type-Options: nosniff"
+	if uriErr == nil && methodErr == nil && uri == workspaceURL && method == "GET" {
+		status, reason = 200, "OK"
+		headers += "\r\nContent-Type: text/html; charset=utf-8"
+	}
+	response, err := m.view.Environment().CreateWebResourceResponse(nil, status, reason, headers)
+	if err == nil {
+		defer response.Release()
+		if status == 200 {
+			err = response.PutByteContent(m.document)
+		}
+		if err == nil {
+			err = args.PutResponse(response)
+		}
+	}
+	if err != nil {
+		nativeErrorLog(err, m.owner.backend.DataDir())
+	}
+}
 
 func decodeWebRequest(source, raw string) (webRequest, error) {
 	var req webRequest

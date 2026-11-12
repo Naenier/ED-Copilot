@@ -183,19 +183,19 @@ func TestWebBridgeThemePreviewRequiresSeparateApply(t *testing.T) {
 
 func TestWebRequestsRequireEmbeddedOriginAndBoundedSingleJSON(t *testing.T) {
 	valid := `{"id":"123","op":"view","params":{"address":18446744073709551615}}`
-	for _, source := range []string{"about:blank", "about:blank#lesson-anchor"} {
+	for _, source := range []string{workspaceURL, workspaceURL + "#lesson-anchor"} {
 		request, err := decodeWebRequest(source, valid)
 		if err != nil || v.Str(request.Params["address"]) != "18446744073709551615" {
 			t.Fatal(request, err)
 		}
 	}
-	for _, source := range []string{"", "https://example.com", "file:///C:/app.html", "http://localhost:7122", "about:blank?remote=1", "about:blank-evil", "https://example.com/#about:blank"} {
+	for _, source := range []string{"", "about:blank", "https://example.com", "file:///C:/app.html", "http://localhost:7122", workspaceURL + "?remote=1", workspaceURL + "-evil", "https://example.com/#" + workspaceURL} {
 		if _, err := decodeWebRequest(source, valid); err == nil {
 			t.Fatal("untrusted source", source)
 		}
 	}
 	for _, message := range []string{`{}`, `{"id":"1"}`, `{"op":"view"}`, valid + `{}`, `{"id":"` + strings.Repeat("x", 81) + `","op":"view"}`, strings.Repeat(" ", 2*1024*1024+1)} {
-		if _, err := decodeWebRequest("about:blank", message); err == nil {
+		if _, err := decodeWebRequest(workspaceURL, message); err == nil {
 			t.Fatal("invalid request accepted")
 		}
 	}
