@@ -147,6 +147,7 @@ function Assert-EDReleaseSBOMs {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
         $bom = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable
         if ($bom.bomFormat -cne 'CycloneDX' -or $bom.specVersion -cne '1.6') { throw "Unsupported SBOM format: $name" }
+        if ($bom['serialNumber'] -cnotmatch '^urn:uuid:[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$') { throw "Invalid SBOM serial number: $name" }
         if ($name -eq 'application.cdx.json') {
             Assert-EDSBOMComponent $bom.metadata.component 'ed-copilot' $Version $executable
         } else {

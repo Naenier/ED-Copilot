@@ -111,3 +111,28 @@ func TestObservedCraftChangesOnlyTheMatchingInstalledModule(t *testing.T) {
 		t.Fatal(result)
 	}
 }
+
+func TestObservedCraftNormalizesSymbolAndRejectsStaleOrPreview(t *testing.T) {
+	loadout := M{"ShipID": 4, "timestamp": "2026-11-07T12:00:00Z", "Modules": []M{
+		{"Slot": "FrameShiftDrive", "Item": "$Int_Hyperdrive_Size5_Class5_Name;", "Engineering": M{
+			"BlueprintName": "FSD_LongRange", "Level": 3, "Quality": 1, "ExperimentalEffect": "special_fsd_cooled"}},
+	}}
+	craft := M{"Slot": "FrameShiftDrive", "Module": "int_hyperdrive_size5_class5", "BlueprintName": "FSD_LongRange",
+		"ShipID": 4, "timestamp": "2026-11-07T12:01:00Z", "Level": 4}
+	updated := ApplyObservedCraft(loadout, craft)
+	engineering := func(snapshot M) M { return v.Obj(v.Rows(snapshot["Modules"])[0]["Engineering"]) }
+	if row := engineering(updated); v.Int(row["Level"]) != 4 || row["Quality"] != nil || row["ExperimentalEffect"] != "special_fsd_cooled" {
+		t.Fatal(row)
+	}
+	for _, override := range []M{{"IsPreview": true}, {"ShipID": 8}, {"timestamp": "2026-11-07T12:00:30Z"}} {
+		stale := v.Merge(v.Copy(craft), override)
+		stale["Level"] = 5
+		if row := engineering(ApplyObservedCraft(updated, stale)); v.Int(row["Level"]) != 4 {
+			t.Fatal(row, override)
+		}
+	}
+	craft["ApplyExperimentalEffect"], craft["timestamp"] = "special_fsd_heavy", "2026-11-07T12:02:00Z"
+	if row := engineering(ApplyObservedCraft(updated, craft)); row["ExperimentalEffect"] != "special_fsd_heavy" {
+		t.Fatal(row)
+	}
+}

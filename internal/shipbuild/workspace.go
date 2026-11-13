@@ -208,12 +208,15 @@ func replace(target, request M) error {
 // ApplyObservedCraft updates the matching currently installed module. A
 // crafting event cannot establish the new ship-wide numerical performance.
 func ApplyObservedCraft(loadout, event M) M {
-	slot, item := v.Str(event["Slot"]), v.Str(event["Module"])
-	if slot == "" || item == "" {
+	slot, item := v.Str(event["Slot"]), journalItemSymbol(event["Module"])
+	if slot == "" || item == "" || v.Bool(event["IsPreview"]) ||
+		event["ShipID"] != nil && v.Str(event["ShipID"]) != v.Str(loadout["ShipID"]) ||
+		v.Time(event["timestamp"]).Before(v.Time(loadout["timestamp"])) {
 		return loadout
 	}
 	for index, row := range v.Rows(loadout["Modules"]) {
-		if !strings.EqualFold(slot, v.Str(row["Slot"])) || !strings.EqualFold(item, v.Str(row["Item"])) {
+		if !strings.EqualFold(slot, v.Str(row["Slot"])) || item != journalItemSymbol(row["Item"]) ||
+			v.Time(event["timestamp"]).Before(v.Time(row["EngineeringObservedAt"])) {
 			continue
 		}
 		next := v.Copy(loadout)
@@ -221,6 +224,9 @@ func ApplyObservedCraft(loadout, event M) M {
 		engineering := v.Obj(module["Engineering"])
 		if blueprint := v.Str(event["BlueprintName"]); blueprint != "" && !strings.EqualFold(blueprint, v.Str(engineering["BlueprintName"])) {
 			engineering = M{}
+		}
+		if event["Level"] != nil && v.Int(event["Level"]) != v.Int(engineering["Level"]) {
+			delete(engineering, "Quality")
 		}
 		for _, field := range []string{"BlueprintName", "BlueprintID", "Level", "Quality", "Engineer", "EngineerID", "ExperimentalEffect", "ExperimentalEffect_Localised"} {
 			if value := event[field]; value != nil {
@@ -236,12 +242,20 @@ func ApplyObservedCraft(loadout, event M) M {
 			delete(engineering, "Modifiers")
 		}
 		module["Engineering"] = engineering
+		if event["timestamp"] != nil {
+			module["EngineeringObservedAt"] = event["timestamp"]
+		}
 		for _, field := range []string{"UnladenMass", "LadenMass", "MaxJumpRange", "UnladenJumpRange", "LadenJumpRange", "PowerCapacity", "PowerDraw", "PowerRetracted", "PowerDeployed"} {
 			delete(next, field)
 		}
 		return next
 	}
 	return loadout
+}
+
+func journalItemSymbol(raw any) string {
+	item := strings.TrimPrefix(strings.ToLower(strings.TrimSpace(v.Str(raw))), "$")
+	return strings.TrimSuffix(strings.TrimSuffix(item, ";"), "_name")
 }
 
 func buildView(build M) M {

@@ -258,6 +258,18 @@ func smokeJournal(dir string) error {
 	rows := []v.M{
 		{"event": "Fileheader", "gameversion": "4.4.2", "build": "synthetic"},
 		{"event": "LoadGame", "FID": "FNATIVE-SYNTHETIC", "Commander": "Тестовый командир", "Ship": "panthermkii", "ShipID": 1, "ShipName": "Звёздный попутчик", "ShipIdent": "CP-200", "CargoCapacity": 400, "FuelLevel": 32, "FuelCapacity": 64, "Credits": 1234567890, "Loan": 0, "Horizons": true, "Odyssey": true},
+		{"event": "Loadout", "Ship": "panthermkii", "ShipID": 1, "ShipName": "Звёздный попутчик", "ShipIdent": "CP-200", "Modules": []v.M{
+			{"Slot": "FrameShiftDrive", "Item": "int_hyperdrive_overcharge_size6_class5", "Engineering": v.M{"BlueprintName": "FSD_LongRange", "Level": 3, "Quality": 0.6667, "ExperimentalEffect": "special_fsd_cooled"}},
+			{"Slot": "Armour", "Item": "panthermkii_armour_grade2", "Engineering": v.M{"BlueprintName": "Armour_HeavyDuty", "Level": 5, "Quality": 1}},
+			{"Slot": "MainEngines", "Item": "int_engine_size7_class5"},
+			{"Slot": "SmallHardpoint1", "Item": "hpt_pulselaser_fixed_small"},
+		}},
+		{"event": "EngineerProgress", "Engineers": []v.M{
+			{"EngineerID": 300100, "Progress": "Unlocked", "Rank": 5},
+			{"EngineerID": 300030, "Progress": "Known"},
+			{"EngineerID": 300180, "Progress": "Invited"},
+			{"EngineerID": 300280, "Progress": "Known"},
+		}},
 		{"event": "Location", "StarSystem": "Тестовая колония А", "SystemAddress": 10000001, "StarPos": []float64{0, 0, 0}, "Docked": true, "StationName": "Строительный склад Альфа", "MarketID": 42},
 		{"event": "ColonisationConstructionDepot", "MarketID": 42, "ConstructionProgress": 0.25, "ConstructionComplete": false, "ConstructionFailed": false, "ResourcesRequired": []v.M{{"Name": "$aluminium_name;", "Name_Localised": "Алюминий", "RequiredAmount": 1000, "ProvidedAmount": 250}, {"Name": "$steel_name;", "Name_Localised": "Сталь", "RequiredAmount": 500, "ProvidedAmount": 100}}},
 		{"event": "Location", "StarSystem": "Тестовая колония Б", "SystemAddress": 10000002, "StarPos": []float64{10, 0, 0}, "Docked": true, "StationName": "Строительный склад Бета", "MarketID": 43},

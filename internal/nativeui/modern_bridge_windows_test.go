@@ -69,6 +69,15 @@ func TestWebBridgeAllSectionsModesAndActionDescriptions(t *testing.T) {
 					t.Fatalf("engineering view has no roadmap: %v", err)
 				}
 			}
+			if tab.ID == "engineering" && mode == p.EngineeringCurrentShip {
+				if v.At(result, "state", "engineeringRoadmapRevision") == nil || v.At(result, "context", "mode") != mode {
+					t.Fatal("current ship view has no scoped refresh revision")
+				}
+				plan, err := dispatchWeb(engine, "ship-engineering-plan", M{"tab": tab.ID})
+				if err != nil || plan["loadoutKnown"] != false {
+					t.Fatalf("current ship view does not handle a fresh profile: %v", err)
+				}
+			}
 			if odysseyPage {
 				loadouts, err := dispatchWeb(engine, "odyssey.loadouts", M{"tab": tab.ID})
 				if err != nil || len(v.Rows(loadouts["equipment"])) == 0 {

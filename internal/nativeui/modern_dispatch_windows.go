@@ -49,6 +49,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/ship-builds/update", input)
 	case "ship-builds-export":
 		return backend.Do("/api/ship-builds/export", input)
+	case "ship-engineering-plan":
+		return backend.Do("/api/engineering/current-ship", input)
 	case "engineering-itinerary":
 		return backend.Do("/api/engineering/itinerary", input)
 	case "engineering-itinerary-update":
@@ -245,12 +247,15 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		page := p.LocalizePage(tab, p.Page{Title: p.Title(tab), Description: "Справочник командира", Modes: modes, Columns: []string{}, Rows: []p.Row{}}, state)
 		return M{"page": page, "actions": []M{}, "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
 	}
-	if op == "view" && tab == "engineering" && (mode == "" || mode == p.EngineeringProgression) {
+	if op == "view" && tab == "engineering" && (mode == "" || mode == p.EngineeringProgression || mode == p.EngineeringCurrentShip) {
 		state := snapshotForWeb(backend, "engineering-roadmap")
-		page := p.Build(tab, p.EngineeringProgression, "", state)
+		if mode == "" {
+			mode = p.EngineeringProgression
+		}
+		page := p.Build(tab, mode, "", state)
 		viewState := webState(state)
 		viewState["engineeringRoadmapRevision"] = state["engineeringRoadmapRevision"]
-		return M{"page": page, "actions": []M{}, "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": p.EngineeringProgression, "selected": ""}}, nil
+		return M{"page": page, "actions": []M{}, "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
 	}
 	if op == "view" && tab == "engineering" && mode == p.EngineeringOdyssey {
 		state := snapshotForWeb(backend, "engineering-odyssey")

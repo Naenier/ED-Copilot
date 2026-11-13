@@ -1,6 +1,7 @@
 package presentation
 
 const EngineeringProgression = "Прокачка"
+const EngineeringCurrentShip = "Текущий корабль"
 const EngineeringMaterials = "Материалы"
 const EngineeringOdyssey = "Снаряжение Odyssey"
 const EngineeringShipBuild = "Оснащение корабля"
@@ -8,7 +9,7 @@ const EngineeringItinerary = "Поездка к инженерам"
 const ColonyHistoryMode = "Динамика системы"
 
 func EngineeringModes() []string {
-	return []string{EngineeringProgression, "План", EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary, EngineeringMaterials, "Инженеры"}
+	return []string{EngineeringProgression, EngineeringCurrentShip, "План", EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary, EngineeringMaterials, "Инженеры"}
 }
 
 func EngineeringMode(mode string) string {
@@ -29,7 +30,7 @@ func SectionSevenCustom(tab, mode string) bool {
 	case "ship-route", "exploration", "notifications", "second-screen":
 		return true
 	case "engineering":
-		return mode == EngineeringShipBuild || mode == EngineeringItinerary
+		return mode == EngineeringCurrentShip || mode == EngineeringShipBuild || mode == EngineeringItinerary
 	case "exobiology":
 		return mode == SurfaceRadarMode
 	case "colonization":

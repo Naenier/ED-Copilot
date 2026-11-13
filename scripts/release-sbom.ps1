@@ -33,6 +33,7 @@ function New-EDApplicationSBOM {
     )
     [ordered]@{
         '$schema'='https://cyclonedx.org/schema/bom-1.6.schema.json'; bomFormat='CycloneDX'; specVersion='1.6'; version=1
+        serialNumber=('urn:uuid:' + [Guid]::NewGuid().ToString('D'))
         metadata=@{component=$application}; components=$components
         dependencies=@(@{ref=$application['bom-ref']; dependsOn=@($components | ForEach-Object { $_['bom-ref'] })})
     }
@@ -57,6 +58,7 @@ function Write-EDReleaseSBOMs {
     $payload = $application.metadata.component
     $installer = [ordered]@{
         '$schema'=$application['$schema']; bomFormat=$application.bomFormat; specVersion=$application.specVersion; version=$application.version
+        serialNumber=('urn:uuid:' + [Guid]::NewGuid().ToString('D'))
         metadata=@{component=$setupComponent}
         components=@($payload, $bootstrapper, $inno) + $application.components
         dependencies=@(@{ref=$setupComponent['bom-ref']; dependsOn=@($payload['bom-ref'], $bootstrapper['bom-ref'], $inno['bom-ref'])}) + $application.dependencies

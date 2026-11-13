@@ -482,7 +482,7 @@ func buildPage(tab, mode, query string, s M) Page {
 			p.Columns = nil
 			p.Summary = ""
 			p.Description = "Открытие инженеров, доступ к классам и материалы для выбранного улучшения."
-		case EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary:
+		case EngineeringCurrentShip, EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary:
 			p.Columns, p.Summary = nil, ""
 		case EngineeringMaterials, "Материалы плана", "Сырьё", "Промышленные материалы", "Данные", "Сырьё плана", "Промышленные материалы плана", "Данные плана":
 			p.Columns = []string{"Материал", "Категория", "Уровень", "Есть", "Нужно", "Не хватает"}

@@ -28,7 +28,7 @@ func affectsEngineeringRoadmap(event M) bool {
 		"EngineerProgress", "EngineerContribution", "EngineerCraft", "EngineerLegacyConvert",
 		"Cargo", "MarketBuy", "MarketSell", "CargoTransfer", "CollectCargo", "EjectCargo", "MiningRefined",
 		"CargoDepot", "ColonisationContribution", "CarrierDepositFuel",
-		"Loadout", "StoredModules", "ShipyardSwap", "ShipyardNew", "ModuleBuy", "ModuleSell", "ModuleStore", "ModuleRetrieve", "ModuleSwap", "MassModuleStore",
+		"Loadout", "StoredModules", "ShipyardSwap", "ShipyardNew", "ShipyardBuy", "ModuleBuy", "ModuleSell", "ModuleStore", "ModuleRetrieve", "ModuleSwap", "MassModuleStore",
 		"SuitLoadout", "SwitchSuitLoadout", "CreateSuitLoadout", "DeleteSuitLoadout", "LoadoutEquipModule", "LoadoutRemoveModule",
 		"BuySuit", "UpgradeSuit", "SellSuit", "BuyWeapon", "UpgradeWeapon", "SellWeapon",
 		"ShipLocker", "ShipLockerMaterials", "Backpack", "BackpackMaterials", "BackpackChange", "Embark", "TransferMicroResources", "CollectItems", "DropItems", "UseConsumable",

@@ -14,6 +14,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/secondscreen"
 	"github.com/Naenier/ED-Copilot/internal/shipbuild"
 	"github.com/Naenier/ED-Copilot/internal/shiproute"
+	"github.com/Naenier/ED-Copilot/internal/ships"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -25,6 +26,7 @@ type sectionSeven struct {
 	screens                         *secondscreen.Service
 	builds, itineraries             M
 	loadout, stored                 M
+	loadoutChangedAt                time.Time
 	observedOwner                   string
 	lowFuel, engineeringReady       bool
 	carrierJump                     M
@@ -72,6 +74,7 @@ func (e *Engine) startSectionSeven() {
 func (e *Engine) resetSectionSevenObservations() {
 	s := &e.section7
 	s.loadout, s.stored, s.carrierJump, s.observedOwner = nil, nil, nil, ""
+	s.loadoutChangedAt = time.Time{}
 	s.lowFuel, s.engineeringReady = false, false
 	s.itineraryCache = nil
 	e.sectionSevenContext()
@@ -116,19 +119,31 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	}
 	if owner != s.observedOwner {
 		s.loadout, s.stored, s.carrierJump = nil, nil, nil
+		s.loadoutChangedAt = time.Time{}
 		s.lowFuel, s.engineeringReady = false, false
 		s.observedOwner = owner
 	}
 	kind := v.Str(event["event"])
 	switch kind {
 	case "LoadGame", "ShipyardSwap", "ShipyardNew", "ShipyardBuy":
-		s.loadout = nil
+		if at := v.Time(event["timestamp"]); !at.Before(s.loadoutChangedAt) {
+			s.loadout, s.loadoutChangedAt = nil, at
+		}
 	case "Loadout":
-		s.loadout = v.Copy(event)
+		if at := v.Time(event["timestamp"]); v.Arr(event["Modules"]) != nil && ships.VehicleKind(v.Str(event["Ship"])) == "ship" && !at.Before(s.loadoutChangedAt) {
+			s.loadout, s.loadoutChangedAt = v.Copy(event), at
+		}
 	case "StoredModules":
 		s.stored = v.Copy(event)
 	case "EngineerCraft", "EngineerLegacyConvert":
 		s.loadout = shipbuild.ApplyObservedCraft(s.loadout, event)
+	case "ModuleBuy", "ModuleSell", "ModuleStore", "ModuleRetrieve", "ModuleSwap", "MassModuleStore":
+		if at := v.Time(event["timestamp"]); !at.Before(s.loadoutChangedAt) &&
+			(event["ShipID"] == nil || v.Str(event["ShipID"]) == v.Str(s.loadout["ShipID"])) {
+			// The journal writes a full Loadout after outfitting. Until then the
+			// previous set of installed modules cannot be treated as current.
+			s.loadout, s.loadoutChangedAt = nil, at
+		}
 	}
 	findings := s.exploration.Apply(owner, event, meta)
 	switch kind {

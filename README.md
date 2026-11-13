@@ -156,6 +156,8 @@ The **Budget** view values every commodity at its latest observed galactic avera
 
 ## Engineering
 
+**Current ship** reads the fitted modules, blueprint grades and experimental effects from the game journal. See which modules are finished, what you can upgrade now and which engineers you need to unlock. Choose a blueprint to review the remaining grades, materials and workshop requirements.
+
 **Ship outfitting** compares the journal loadout with an imported EDSY or Coriolis build. Check the module and material requirements, use equipment already in storage, and export the build. **Engineering itinerary** combines eligible workshop visits and material trades into an ordered trip and can send the stops to **Ship route**.
 
 Use **Engineering → Progression** to follow unlock steps and filter engineers by module, blueprint, or experimental effect. You can start with a blueprint, then pick a compatible module to calculate its requirements. The plan links requirements to their reference pages and compares recipe costs with known inventory. **Engineering → Plan** combines requirements for multiple upgrades.

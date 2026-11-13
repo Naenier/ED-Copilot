@@ -33,7 +33,7 @@ function Refresh-Fixture {
     $application = New-EDApplicationSBOM (Join-Path $artifacts 'ED Copilot.exe') '2.3.4' $buildInfo
     $setup = New-EDSBOMFileComponent (Join-Path $artifacts 'ED-Copilot-2.3.4-Setup.exe') 'ED Copilot Setup' '2.3.4' 'ed-copilot-setup'
     Write-EDDeliveryJSON (Join-Path $artifacts 'application.cdx.json') $application
-    Write-EDDeliveryJSON (Join-Path $artifacts 'installer.cdx.json') @{bomFormat='CycloneDX';specVersion='1.6';metadata=@{component=$setup};components=@($application.metadata.component)}
+    Write-EDDeliveryJSON (Join-Path $artifacts 'installer.cdx.json') @{bomFormat='CycloneDX';specVersion='1.6';serialNumber=('urn:uuid:'+[Guid]::NewGuid().ToString('D'));metadata=@{component=$setup};components=@($application.metadata.component)}
     $null=New-EDReleaseManifest -Root $source -Directory $artifacts -Commit $commit -TestsPassed $true
 }
 try{
@@ -44,6 +44,16 @@ try{
         Must ($bom.components[0].version -eq '1.27.3') 'Missing Go standard library version.'
         Must ($bom.components[1].purl -eq 'pkg:golang/github.com/fixture/module@v1.2.3') 'Compiled Go module missing.'
         Must ($bom.components[1].properties[0].value -eq ('h1:'+('A'*43)+'=')) 'Module checksum missing.'
+    }
+    Check 'Attestation inventories require a CycloneDX serial number' {
+        $path=Join-Path $artifacts 'application.cdx.json'
+        try {
+            $bom=Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable
+            $bom.Remove('serialNumber')
+            Write-EDDeliveryJSON $path $bom
+            $null=New-EDReleaseManifest $source $artifacts $commit $true
+            Reject {Test-EDReleaseDirectory $artifacts $commit} 'Invalid SBOM serial number'
+        } finally { Refresh-Fixture }
     }
     Check 'An inventory with a mismatched executable digest is rejected' {
         $path=Join-Path $artifacts 'application.cdx.json'

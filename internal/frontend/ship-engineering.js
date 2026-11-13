@@ -1,0 +1,372 @@
+(() => {
+  'use strict';
+
+  const mode = 'Текущий корабль';
+  const operation = 'ship-engineering-plan';
+  const active = C => C.tab === 'engineering' && C.mode === mode;
+  const rows = value => Array.isArray(value) ? value : [];
+  const statuses = {
+    complete: ['Улучшен до максимума', 'complete'],
+    'in-progress': ['В процессе', 'inProgress'],
+    available: ['Можно улучшить', 'available'],
+    locked: ['Нужен доступ к инженеру', 'locked'],
+    unknown: ['Неизвестно', 'unknown']
+  };
+  const access = {
+    unlocked: 'Доступен', invited: 'Приглашение получено', acquainted: 'Приглашение получено',
+    known: 'Обнаружен', locked: 'Закрыт', barred: 'Доступ ограничен', unknown: 'Неизвестно'
+  };
+  const conditions = {
+    'replaces-blueprint': 'Новый чертёж заменит установленное улучшение.',
+    'unmapped-blueprint': 'Текущий чертёж не распознан. Расход рассчитан без зачёта этого улучшения.',
+    'experimental-incompatible': 'Экспериментальный эффект несовместим с выбранным экземпляром.',
+    'requires-blueprint': 'Сначала примените чертёж к выбранному экземпляру.',
+    'live-only': 'Доступно в режиме Live.'
+  };
+  const coreSlots = {
+    armour: 'Броня', powerplant: 'Силовая установка', mainengines: 'Двигатели',
+    frameshiftdrive: 'Рамочно-смещающий двигатель', lifesupport: 'Система жизнеобеспечения',
+    powerdistributor: 'Распределитель питания', radar: 'Сенсоры', fueltank: 'Топливный бак'
+  };
+
+  function slotName(module, u) {
+    const slot = String(module.slot || '');
+    const raw = slot.toLowerCase();
+    if (module.slotLabel) return u.t(module.slotLabel);
+    if (coreSlots[raw]) return u.t(coreSlots[raw]);
+    const optional = raw.match(/^(slot|military)(\d+)_size\d+$/);
+    if (optional) return u.t(optional[1] === 'military' ? 'Военный отсек {number}' : 'Внутренний отсек {number}', {number: Number(optional[2])});
+    const hardpoint = raw.match(/^(tiny|small|medium|large|huge)hardpoint(\d+)$/);
+    if (hardpoint) {
+      const caption = {
+        tiny: 'Служебное крепление {number}', small: 'Малое крепление {number}', medium: 'Среднее крепление {number}',
+        large: 'Большое крепление {number}', huge: 'Огромное крепление {number}'
+      }[hardpoint[1]];
+      return u.t(caption, {number: Number(hardpoint[2])});
+    }
+    return slot;
+  }
+
+  const owner = C => C.state?.planWorkspace?.key || '';
+  const identity = C => JSON.stringify([owner(C), C.state?.commander?.fid, C.state?.commander?.shipId, C.state?.commander?.ship]);
+  const revision = C => C.state?.engineeringRoadmapRevision ?? C.state?.shipBuildRevision ?? C.state?.revision;
+  function model(C) {
+    const key = identity(C);
+    if (C.shipEngineering?.key !== key) C.shipEngineering = {key, filter: 'all', query: '', target: {}, sequence: 0};
+    return C.shipEngineering;
+  }
+
+  const tr = (u, text, values) => u.esc(u.t(text, values));
+  const number = (u, value) => value == null ? '—' : u.esc(u.fmt(value));
+  const title = (u, value, name = 'name', english = 'english') => /^en\b/i.test(u.locale())
+    ? value?.[english] || u.t(value?.[name] || '')
+    : value?.[name] || value?.[english] || '';
+  const grade = (u, value) => Number(value) > 0 ? 'G' + number(u, value) : '—';
+  const ref = (u, id, label) => id && label
+    ? `<button type="button" class="table-entity-link" data-reference-id="${u.esc(id)}">${u.esc(label)}</button>`
+    : u.esc(label || '');
+  const entity = (u, kind, key, label) => ref(u, key ? kind + '/' + key : '', label);
+
+  function materialTable(u, ingredients, inventory = true) {
+    return `<div class="ship-eng-table"><table><thead><tr>
+      <th scope="col">${tr(u, 'Материал')}</th><th scope="col">${tr(u, inventory ? 'Требуется' : 'Количество')}</th>
+      ${inventory ? `<th scope="col">${tr(u, 'В наличии')}</th><th scope="col">${tr(u, 'Не хватает')}</th>` : ''}
+      </tr></thead><tbody>${ingredients.map(item => `<tr>
+        <th scope="row">${ref(u, item.entryId || (item.key && 'material/' + item.key), title(u, item) || item.key)}</th>
+        <td>${number(u, item.count)}</td>${inventory ? `<td>${number(u, item.owned)}</td>
+        <td class="${Number(item.missing) > 0 ? 'ship-eng-deficit' : ''}">${number(u, item.missing)}</td>` : ''}</tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function place(u, engineer) {
+    if (!engineer?.system && !engineer?.base) return '';
+    const location = u.esc([engineer.system, engineer.base].filter(Boolean).join(' · '));
+    return `<span class="ship-eng-place">${location}${engineer.system ? `<button type="button" class="icon-button"
+      data-click="table-copy-system" data-system="${u.esc(engineer.system)}" aria-label="${tr(u, 'Копировать систему {system}', {system: engineer.system})}"
+      title="${tr(u, 'Копировать систему')}">${u.icon('copy')}</button>` : ''}</span>`;
+  }
+
+  function engineerRow(u, engineer, role = '') {
+    const status = access[engineer.status];
+    const limit = Number(engineer.maxGrade) > 0 ? tr(u, 'Чертёж до {grade}', {grade: 'G' + u.fmt(engineer.maxGrade)}) : '';
+    const rank = Number(engineer.rank) > 0 ? tr(u, 'Ранг {grade}', {grade: 'G' + u.fmt(engineer.rank)}) : '';
+    const available = Number(engineer.accessibleGrade) > 0 && engineer.accessibleGrade < engineer.maxGrade
+      ? tr(u, 'Доступно сейчас: {grade}', {grade: 'G' + u.fmt(engineer.accessibleGrade)}) : '';
+    return `<div class="ship-eng-engineer"><div><strong>${entity(u, 'engineer', engineer.key, title(u, engineer))}</strong>
+      ${place(u, engineer)}</div><div class="ship-eng-access">
+      ${[role ? tr(u, role) : '', status ? tr(u, status) : '', rank, limit, available].filter(Boolean).join(' · ')}</div></div>`;
+  }
+
+  function unlockSteps(u, chain) {
+    const work = chain.map(engineer => ({engineer, steps: rows(engineer.steps).filter(step => step.status !== 'done')}))
+      .filter(row => row.steps.length);
+    if (!work.length) return '';
+    return `<section class="ship-eng-unlock"><h3>${tr(u, 'Шаги для доступа')}</h3>${work.map(({engineer, steps}) =>
+      `<div class="ship-eng-unlock-stage"><strong>${entity(u, 'engineer', engineer.key, title(u, engineer))}</strong>
+      <ol>${steps.map(step => {
+        const description = title(u, step, 'text', 'english') ||
+          (step.kind === 'rank' && Number(step.target) > 0 ? u.t('Поднимите ранг инженера до G{grade}.', {grade: u.fmt(step.target)}) : '');
+        const prereq = entity(u, 'engineer', step.engineerKey, title(u, step, 'engineerName', 'engineerEnglish'));
+        const progress = step.current != null && step.target != null ? number(u, step.current) + ' / ' + number(u, step.target) : '';
+        const requirements = rows(step.items);
+        return `<li><span>${u.esc(description)}</span>${prereq ? ' · ' + prereq : ''}
+          ${progress ? `<small>${progress}</small>` : ''}
+          ${requirements.length ? materialTable(u, requirements, false) : ''}</li>`;
+      }).join('')}</ol></div>`).join('')}</section>`;
+  }
+
+  function remainingGrades(u, recipe) {
+    const steps = rows(recipe.grades).filter(step => step.status !== 'done');
+    const effect = rows(recipe.experimentalMaterials);
+    if (!steps.length && !effect.length) return '';
+    return `<details class="ship-eng-breakdown" data-ship-eng-disclosure="materials"><summary>${tr(u, 'Расход по ступеням')}</summary>
+      ${steps.map(step => {
+        const perRoll = step.rolls == null || !rows(step.materials).length;
+        const materials = perRoll ? rows(step.perRoll) : step.materials;
+        const note = perRoll ? tr(u, 'На одну попытку') :
+          tr(u, 'Попыток по расчёту: {count}', {count: u.fmt(step.rolls)});
+        return `<section><h4>${grade(u, step.grade)} <small>${note}</small></h4>${materials.length ? materialTable(u, materials, false) : ''}</section>`;
+      }).join('')}
+      ${effect.length ? `<section><h4>${tr(u, 'Экспериментальный эффект')}</h4>${materialTable(u, effect, false)}</section>` : ''}</details>`;
+  }
+
+  function recipeMarkup(u, recipe) {
+    if (!recipe) return '';
+    const notes = rows(recipe.conditions).map(condition => conditions[condition]).filter(Boolean);
+    const totals = rows(recipe.totals).concat(rows(recipe.currencies));
+    const pending = rows(recipe.grades).some(step => step.status !== 'done') ||
+      (recipe.experimentalStatus && recipe.experimentalStatus !== 'done');
+    const confidence = recipe.totalsPartial ? 'Часть расходов известна только на одну попытку.' : recipe.confidence === 'estimate'
+      ? 'Количество материалов ориентировочное.' : recipe.confidence === 'unknown' && pending
+        ? 'Точное количество материалов неизвестно.' : '';
+    return `${notes.map(note => `<p class="ship-eng-note">${tr(u, note)}</p>`).join('')}
+      ${confidence ? `<p class="ship-eng-note">${tr(u, confidence)}</p>` : ''}
+      ${totals.length ? `<section><h3>${tr(u, 'Материалы для улучшений')}</h3>${materialTable(u, totals)}</section>` : ''}
+      ${!pending && !totals.length && recipe.confidence === 'exact' && recipe.compatible !== false ? `<p>${tr(u, 'Это улучшение уже установлено.')}</p>` : ''}
+      ${remainingGrades(u, recipe)}`;
+  }
+
+  function select(u, field, label, values, value) {
+    const id = 'ship-eng-' + field;
+    return `<label for="${id}"><span>${tr(u, label)}</span><select id="${id}" data-ship-eng-target="${field}">
+      ${values.map(([key, text]) => `<option value="${u.esc(key)}" ${String(key) === String(value ?? '') ? 'selected' : ''}>${u.esc(text)}</option>`).join('')}</select></label>`;
+  }
+
+  function detailMarkup(u, data, r) {
+    const error = r.error ? `<p role="alert">${u.esc(r.error)}</p>${retry(u)}` : '';
+    if (!data?.detail || data.detail.slot !== r.slot) return error || `<p role="status">${tr(u, 'Загрузка…')}</p>`;
+    const detail = data.detail;
+    const module = rows(data.modules).find(row => String(row.slot || row.id) === r.slot);
+    const blueprint = rows(detail.blueprints).find(row => row.key === detail.blueprintKey);
+    const experimentals = rows(detail.experimentals);
+    const effect = experimentals.find(row => row.key === detail.experimentalKey);
+    const links = [
+      module?.moduleKey ? entity(u, 'module', module.moduleKey, title(u, module)) : '',
+      blueprint && blueprint.key !== module?.blueprintKey ? entity(u, 'blueprint', blueprint.key, title(u, blueprint)) : '',
+      effect && effect.key !== module?.experimentalKey ? entity(u, 'experimental', effect.key, title(u, effect)) : ''
+    ].filter(Boolean);
+    const maxGrade = Math.min(5, Math.max(0, Number(blueprint?.maxGrade) || 0));
+    const grades = Array.from({length: maxGrade}, (_, i) => [i + 1, 'G' + u.fmt(i + 1)]);
+    const preferred = detail.engineer || detail.recipe?.engineer;
+    const available = detail.availableEngineer?.key !== preferred?.key ? detail.availableEngineer : null;
+    const candidates = rows(blueprint?.engineers).filter(engineer => engineer.key !== preferred?.key && engineer.key !== available?.key);
+    if (!rows(detail.blueprints).length) return `<p>${tr(u, 'Для этого модуля нет доступных чертежей в справочнике.')}</p>`;
+    return `${error}<div class="ship-eng-target" ${r.busy ? 'aria-busy="true"' : ''}>
+      ${select(u, 'blueprintKey', 'Чертёж', rows(detail.blueprints).map(row => [row.key, title(u, row)]), detail.blueprintKey)}
+      ${grades.length ? select(u, 'grade', 'Целевая ступень', grades, detail.grade) : ''}
+      ${experimentals.length ? select(u, 'experimentalKey', 'Экспериментальный эффект',
+        [['', u.t('Без эффекта')], ...experimentals.map(row => [row.key, title(u, row)])], detail.experimentalKey) : ''}
+      </div>
+      ${links.length ? `<div class="ship-eng-reference">${links.join(' · ')}</div>` : ''}
+      ${preferred || available || candidates.length ? `<section><h3>${tr(u, 'Инженеры')}</h3>
+        ${preferred ? engineerRow(u, preferred, available || candidates.length ? 'Для целевой ступени' : '') : ''}
+        ${available ? engineerRow(u, available) : ''}
+        ${candidates.length ? `<details class="ship-eng-breakdown" data-ship-eng-disclosure="engineers"><summary>${tr(u, 'Другие инженеры ({count})', {count: u.fmt(candidates.length)})}</summary>
+          ${candidates.map(engineer => engineerRow(u, engineer)).join('')}</details>` : ''}</section>` : ''}
+      ${unlockSteps(u, rows(detail.unlockSteps))}
+      ${recipeMarkup(u, detail.recipe)}`;
+  }
+
+  function moduleRow(u, module, r) {
+    const slot = String(module.slot || module.id);
+    const open = r.slot === slot;
+    const name = title(u, module) || module.item;
+    const blueprint = title(u, module, 'blueprintName', 'blueprintEnglish');
+    const effect = title(u, module, 'experimentalName', 'experimentalEnglish');
+    const quality = module.quality == null || !Number.isFinite(Number(module.quality)) ? null :
+      Math.round(Math.max(0, Math.min(1, Number(module.quality))) * 100);
+    const current = blueprint ? entity(u, 'blueprint', module.blueprintKey, blueprint) : '';
+    const status = statuses[module.status] ? module.status : 'unknown';
+    const expand = tr(u, open ? 'Свернуть расчёт для {module}' : 'Рассчитать улучшения для {module}', {module: name});
+    return `<tr data-ship-eng-row="${u.esc(slot)}"><th scope="row"><button type="button" class="ship-eng-module"
+        data-ship-eng-slot="${u.esc(slot)}" aria-expanded="${open}" aria-label="${expand}">
+        ${u.icon('chevron-right')}<span><strong>${u.esc([module.moduleClass, name].filter(Boolean).join(' '))}</strong>
+        <small>${u.esc(slotName(module, u))}</small></span></button></th>
+      <td><span class="ship-eng-status ${status}">${tr(u, statuses[status][0])}</span></td>
+      <td>${current || (Number(module.grade) > 0 ? tr(u, 'Чертёж неизвестен') : '—')}
+        ${effect ? `<small>${entity(u, 'experimental', module.experimentalKey, effect)}</small>` : ''}</td>
+      <td>${grade(u, module.grade)}${Number(module.maxGrade) > 0 ? ' / ' + grade(u, module.maxGrade) : ''}
+        ${quality != null ? `<small class="ship-eng-quality"><progress max="100" value="${quality}" aria-label="${tr(u, 'Готовность ступени')}"></progress>${number(u, quality)}%</small>` : ''}</td></tr>
+      ${open ? `<tr><td class="ship-eng-details" colspan="4"><div data-ship-eng-detail="${u.esc(slot)}">${detailMarkup(u, r.data, r)}</div></td></tr>` : ''}`;
+  }
+
+  function listMarkup(u, r) {
+    const query = r.query.trim().toLocaleLowerCase();
+    const modules = rows(r.data?.modules).filter(module => {
+      if (r.filter !== 'all' && module.status !== r.filter) return false;
+      return !query || [module.name, module.english, module.slot, slotName(module, u), module.moduleClass, module.blueprintName,
+        module.blueprintEnglish].some(value => String(value || '').toLocaleLowerCase().includes(query));
+    });
+    return modules.length ? `<div class="ship-eng-table ship-eng-modules"><table>
+      <thead><tr>${['Модуль и слот', 'Статус', 'Установленный чертёж', 'Ступень'].map(label => `<th scope="col">${tr(u, label)}</th>`).join('')}</tr></thead>
+      <tbody>${modules.map(module => moduleRow(u, module, r)).join('')}</tbody></table></div>` :
+      `<p class="ship-eng-note" role="status">${tr(u, 'Ничего не найдено')}</p>`;
+  }
+
+  const retry = u => `<button type="button" class="pill" data-ship-eng-retry>${tr(u, 'Повторить')}</button>`;
+  function content(C, u) {
+    const r = model(C), data = r.data;
+    if (!data) return r.error ? `<p role="alert">${u.esc(r.error)}</p>${retry(u)}` :
+      `<p class="ship-eng-note" role="status">${tr(u, 'Загрузка…')}</p>`;
+    const ship = data.ship || C.state?.commander?.ship;
+    const name = data.shipName && data.shipName !== ship ? [data.shipName, ship] : [ship];
+    const headline = name[0] ? `<h2>${u.esc(name[0])}${name[1] ? `<small>${u.esc(name[1])}</small>` : ''}</h2>` : '';
+    if (!data.loadoutKnown) return `${headline}<p class="ship-eng-note">${tr(u, 'Откройте снаряжение текущего корабля в игре, чтобы журнал записал его модули.')}</p>`;
+    if (!rows(data.modules).length) return `${headline}<p class="ship-eng-note">${tr(u, 'На корабле нет распознанных модулей, доступных для инженерии.')}</p>`;
+    const counts = [['all', 'Все модули корабля', rows(data.modules).length], ...Object.entries(statuses).map(([key, [label, summary]]) =>
+      [key, label, data.summary?.[summary] ?? rows(data.modules).filter(row => row.status === key).length]).filter(([, , n]) => n > 0)];
+    return `<div class="ship-eng-toolbar">${headline}<input id="ship-eng-search" type="search" autocomplete="off"
+      aria-label="${tr(u, 'Поиск модулей корабля')}" placeholder="${tr(u, 'Найти модуль или слот')}" value="${u.esc(r.query)}"></div>
+      <div class="ship-eng-filters" role="group" aria-label="${tr(u, 'Статус улучшения')}">${counts.map(([key, label, value]) =>
+        `<button class="pill" type="button" data-ship-eng-filter="${key}" aria-pressed="${r.filter === key}">${tr(u, label)} <small>${number(u, value)}</small></button>`).join('')}</div>
+      ${r.error && !r.slot ? `<p role="alert">${u.esc(r.error)}</p>${retry(u)}` : ''}
+      <div data-ship-eng-list>${listMarkup(u, r)}</div>`;
+  }
+
+  function render(C, u) {
+    return u.heading(u.t(mode), '') + `<div id="ship-engineering" class="ship-eng">${content(C, u)}</div>`;
+  }
+
+  function draw(C, u, listOnly = false) {
+    if (!active(C)) return;
+    const r = model(C), host = u.$('#ship-engineering');
+    if (!host) return;
+    const root = listOnly ? host.querySelector('[data-ship-eng-list]') : host;
+    if (!root) return;
+    const focus = host.ownerDocument.activeElement;
+    const focused = root.contains(focus);
+    const open = r.slot && [...host.querySelectorAll(`[data-ship-eng-detail] [data-ship-eng-disclosure][open]`)]
+      .filter(node => node.closest('[data-ship-eng-detail]')?.dataset.shipEngDetail === r.slot)
+      .map(node => node.dataset.shipEngDisclosure);
+    const newMarkup = listOnly ? listMarkup(u, r) : content(C, u);
+    if (root.shipEngMarkup === newMarkup) return;
+    root.innerHTML = newMarkup;
+    root.shipEngMarkup = newMarkup;
+    if (open) for (const node of host.querySelectorAll('[data-ship-eng-disclosure]')) {
+      if (open.includes(node.dataset.shipEngDisclosure)) node.open = true;
+    }
+    if (focused) {
+      const slot = focus.dataset?.shipEngSlot;
+      const filter = focus.dataset?.shipEngFilter;
+      const next = (focus.id && host.ownerDocument.getElementById(focus.id)) ||
+        (slot && [...host.querySelectorAll('[data-ship-eng-slot]')].find(node => node.dataset.shipEngSlot === slot)) ||
+        (filter && [...host.querySelectorAll('[data-ship-eng-filter]')].find(node => node.dataset.shipEngFilter === filter));
+      next?.focus({preventScroll: true});
+    }
+  }
+
+  function load(C, u) {
+    if (!active(C)) return;
+    const r = model(C), stamp = JSON.stringify([revision(C), r.slot, r.target]);
+    if (r.stamp === stamp) return r.read;
+    r.stamp = stamp;
+    r.busy = true;
+    r.error = '';
+    const request = ++r.sequence;
+    const body = {expectedPlanWorkspace: owner(C)};
+    if (r.slot) Object.assign(body, {slot: r.slot}, r.target);
+    r.read = (async () => {
+      try {
+        const data = await u.call(operation, body);
+        if (model(C) !== r || request !== r.sequence) return;
+        r.data = data;
+        if (r.slot && !rows(data.modules).some(row => String(row.slot || row.id) === r.slot)) {
+          r.slot = '';
+          r.target = {};
+        }
+        if (r.filter !== 'all' && !rows(data.modules).some(row => row.status === r.filter)) r.filter = 'all';
+      } catch (error) {
+        if (model(C) === r && request === r.sequence) r.error = u.t(error.message);
+      } finally {
+        if (model(C) === r && request === r.sequence) {
+          r.busy = false;
+          draw(C, u);
+        }
+      }
+    })();
+    return r.read;
+  }
+
+  function init(C, u) {
+    if (!active(C)) return;
+    const host = u.$('#ship-engineering');
+    if (host && !host.shipEngBound) {
+      host.shipEngBound = true;
+      host.addEventListener('click', event => {
+        const button = event.target.closest('[data-ship-eng-slot], [data-ship-eng-filter], [data-ship-eng-retry]');
+        if (!button || !active(C)) return;
+        const r = model(C);
+        if (button.dataset.shipEngSlot) {
+          r.slot = r.slot === button.dataset.shipEngSlot ? '' : button.dataset.shipEngSlot;
+          r.target = {};
+          r.error = '';
+          draw(C, u, true);
+          void load(C, u);
+        } else if (button.dataset.shipEngFilter) {
+          r.filter = button.dataset.shipEngFilter;
+          draw(C, u);
+        } else {
+          r.stamp = '';
+          void load(C, u);
+        }
+      });
+      host.addEventListener('input', event => {
+        if (event.target.id !== 'ship-eng-search') return;
+        model(C).query = event.target.value;
+        draw(C, u, true);
+      });
+      host.addEventListener('change', event => {
+        const field = event.target.dataset.shipEngTarget;
+        if (!field) return;
+        const r = model(C), detail = r.data?.detail, value = event.target.value;
+        if (!detail) return;
+        const effective = {blueprintKey: detail.blueprintKey, grade: detail.grade, experimentalKey: detail.experimentalKey};
+        r.target = {...effective, ...r.target, [field]: field === 'grade' ? Number(value) : value};
+        if (field === 'blueprintKey') {
+          delete r.target.grade;
+          delete r.target.experimentalKey;
+        }
+        void load(C, u);
+      });
+    }
+    void load(C, u);
+  }
+
+  async function smoke(C, u) {
+    await u.navigate('engineering', {mode});
+    await load(C, u);
+    const r = model(C), modules = rows(r.data?.modules);
+    const checks = [{name: 'Current ship engineering renders observed modules', ok: r.data?.loadoutKnown === true &&
+      modules.length > 0 && !!u.$('[data-ship-eng-row]')}];
+    const module = modules.find(item => item.moduleKey === 'fsd');
+    checks.push({name: 'Current ship engineering reads the installed FSD blueprint and grade', ok:
+      !!module?.blueprintKey && module.grade > 0 && !!u.$('[data-ship-eng-row] [data-reference-id^="blueprint/"]')});
+    const target = [...u.$$('#ship-engineering [data-ship-eng-slot]')].find(button => button.dataset.shipEngSlot === module?.slot);
+    if (target) target.click();
+    await r.read;
+    checks.push({name: 'Current ship engineering opens a slot calculation', ok: !!target && r.data?.detail?.slot === module?.slot &&
+      !!u.$('[data-ship-eng-target="blueprintKey"]') && !!u.$('[data-ship-eng-detail] [data-reference-id^="engineer/"]')});
+    return checks;
+  }
+
+  window.ShipEngineeringUI = {active, render, init, smoke};
+})();
