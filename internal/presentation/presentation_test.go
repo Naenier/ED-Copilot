@@ -110,7 +110,7 @@ func TestBuildEveryTabAndModeUsesNativeColumns(t *testing.T) {
 	if len(v.Rows(v.At(s, "pilot", "recent"))) == 0 {
 		v.Obj(s["pilot"])["recent"] = []M{{"timestamp": "2026-11-07T12:00:00Z", "event": "LoadGame", "label": "Начало сеанса", "system": "Synthetic A"}}
 	}
-	if len(Tabs) != 27 {
+	if len(Tabs) != 28 {
 		t.Fatal("unexpected navigation scope", len(Tabs))
 	}
 	for _, tab := range Tabs {
