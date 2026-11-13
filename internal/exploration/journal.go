@@ -11,7 +11,7 @@ import (
 )
 
 // Apply consumes trusted player journal observations. Replay can rebuild the
-// index, but it never produces a new overlay or speech notification.
+// index, but it never produces a new overlay notification.
 func (s *Service) Apply(owner string, event, context M) []M {
 	kind := v.Str(event["event"])
 	switch kind {

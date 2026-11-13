@@ -83,6 +83,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 	switch path {
 	case "/api/engineering/current-ship":
 		return e.CurrentShipEngineering(body)
+	case "/api/engineering/current-ship/plan":
+		return e.UpdateCurrentShipEngineeringPlan(body)
 	case "/api/updates/dismiss":
 		e.mu.Lock()
 		e.updateNotice = nil
@@ -170,7 +172,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			}
 		}
 		e.settings = next
-		e.section7.notifications.Context(e.planWorkspace.key, v.Str(next["activity"]), v.Str(next["language"]))
+		e.section7.notifications.Context(e.planWorkspace.key, v.Str(next["activity"]))
 		e.section7.screens.Invalidate()
 		if disabled, exists := next["routeAutoCopyNext"]; exists && !v.Bool(disabled) {
 			e.clearClipboardLocked("carrier-route")

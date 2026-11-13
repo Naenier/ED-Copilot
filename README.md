@@ -156,7 +156,7 @@ The **Budget** view values every commodity at its latest observed galactic avera
 
 ## Engineering
 
-**Current ship** reads the fitted modules, blueprint grades and experimental effects from the game journal. See which modules are finished, what you can upgrade now and which engineers you need to unlock. Choose a blueprint to review the remaining grades, materials and workshop requirements.
+**Current ship** reads fitted modules and upgrades from the game journal. Save a target blueprint, grade and experimental effect for each slot you want to upgrade. The ship plan combines material requirements, compares them with your inventory, and suggests an order for visiting engineers and meeting their unlock requirements.
 
 **Ship outfitting** compares the journal loadout with an imported EDSY or Coriolis build. Check the module and material requirements, use equipment already in storage, and export the build. **Engineering itinerary** combines eligible workshop visits and material trades into an ordered trip and can send the stops to **Ship route**.
 
@@ -192,7 +192,7 @@ Nine courses and 27 lessons cover trading, group operations, getting started wit
 
 ## In-game guidance and controls
 
-**Workspace → Notifications** lets you opt into overlay and local Windows voice alerts by event type and priority. **Second screen** shares selected navigation, expedition map, engineering or colony information with paired devices on your local network. Start the session from the desktop and use a one-time code for each device.
+**Workspace → Notifications** lets you opt into overlay alerts by event type and priority. **Second screen** shares selected navigation, expedition map, engineering or colony information with paired devices on your local network. Start the session from the desktop and use a one-time code for each device.
 
 The overlay displays panels for the selected activity only while Elite Dangerous is focused. It adapts to ship, SRV/Nomad and on-foot play; switching to Copilot hides the game panels.
 

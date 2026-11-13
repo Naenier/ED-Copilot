@@ -2,6 +2,7 @@ package engineering
 
 import (
 	"errors"
+	"math"
 
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
@@ -69,13 +70,20 @@ func (p *Planner) currentShipDetail(current M, choices []M, selected M, q roadma
 	key := v.Str(best["key"])
 	detail["engineer"], detail["availableEngineer"] = best, available
 	detail["unlockSteps"] = p.currentShipUnlockSteps(key, q.grade, observations)
-	recipe := M{"moduleKey": module, "blueprintKey": selected["key"], "experimentalKey": q.effect,
-		"kind": "ship", "grade": q.grade, "engineerKeys": keys, "engineer": best, "compatible": true,
-		"confidence": "exact", "conditions": []string{}, "grades": []M{}, "experimentalMaterials": []M{}, "totals": []M{}}
-	p.shipRecipe(recipe, blueprints[v.Str(selected["key"])], current, observations)
-	p.qualifyCurrentShipBudget(recipe, current, observations)
+	q.blueprint = v.Str(selected["key"])
+	recipe := p.currentShipRecipe(current, q, best, observations)
+	recipe["engineerKeys"] = keys
 	detail["recipe"] = recipe
 	return detail, nil
+}
+
+func (p *Planner) currentShipRecipe(current M, q roadmapQuery, engineer, observations M) M {
+	recipe := M{"moduleKey": current["moduleKey"], "blueprintKey": q.blueprint, "experimentalKey": q.effect,
+		"kind": "ship", "grade": q.grade, "engineer": engineer, "compatible": true,
+		"confidence": "exact", "conditions": []string{}, "grades": []M{}, "experimentalMaterials": []M{}, "totals": []M{}}
+	p.shipRecipe(recipe, blueprints[q.blueprint], current, observations)
+	p.qualifyCurrentShipBudget(recipe, current, observations)
+	return recipe
 }
 
 func (p *Planner) currentShipUnlockSteps(key string, grade int, observations M) []M {
@@ -106,8 +114,9 @@ func (p *Planner) currentShipUnlockSteps(key string, grade int, observations M) 
 	return rows
 }
 
-// Frontier's 18.08 fixed roll count is verified at rank 5. A percentage in
-// Loadout is progress through the current grade, not the number of rolls spent.
+// Frontier's 18.08 fixed roll count is verified at rank 5. The observed
+// progress may originate from an earlier visit, so partial grades remain
+// estimates even if their quality matches the fixed progress increments.
 func (p *Planner) qualifyCurrentShipBudget(recipe, current, observations M) {
 	if !v.Bool(recipe["compatible"]) {
 		return
@@ -117,10 +126,22 @@ func (p *Planner) qualifyCurrentShipBudget(recipe, current, observations M) {
 	fixed := fixedRollsVersion(v.Str(game["version"])) && (!liveKnown || live)
 	engineer := v.Obj(recipe["engineer"])
 	verifiedRank := engineer["status"] == "unlocked" && v.Int(engineer["rank"]) == 5
-	totals, missing := map[string]int{}, false
+	totals, estimated := map[string]int{}, map[string]bool{}
+	missing := false
 	for _, step := range v.Rows(recipe["grades"]) {
 		if step["status"] == "done" {
 			continue
+		}
+		if fixed && verifiedRank && step["status"] == "unknown" && current["blueprintKey"] == recipe["blueprintKey"] &&
+			v.Int(current["grade"]) == v.Int(step["grade"]) && current["unmappedBlueprint"] == nil {
+			if rolls := estimateRemainingShipRolls(current["quality"], v.Int(step["grade"])); rolls > 0 {
+				step["status"], step["rolls"] = "estimated", rolls
+				step["materials"] = p.ingredientRows(v.Rows(step["perRoll"]), rolls, false, observations)
+				for _, ingredient := range v.Rows(step["materials"]) {
+					ingredient["estimated"] = true
+					estimated[v.Str(ingredient["key"])] = true
+				}
+			}
 		}
 		if !fixed || !verifiedRank || step["status"] == "unknown" || current["unmappedBlueprint"] != nil {
 			step["status"], step["materials"] = "unknown", []M{}
@@ -139,17 +160,35 @@ func (p *Planner) qualifyCurrentShipBudget(recipe, current, observations M) {
 	}
 	materials, currencies := []M{}, []M{}
 	for _, row := range p.ingredientRows(ingredientTotals(totals), 1, false, observations) {
+		if estimated[v.Str(row["key"])] {
+			row["estimated"] = true
+		}
 		if row["category"] == "currency" {
 			currencies = append(currencies, row)
 		} else {
 			materials = append(materials, row)
 		}
 	}
-	recipe["totals"], recipe["currencies"], recipe["totalsPartial"] = materials, currencies, missing
+	recipe["totals"], recipe["currencies"], recipe["totalsPartial"], recipe["totalsEstimated"] = materials, currencies, missing, len(estimated) > 0
 	if missing {
 		recipe["confidence"] = "unknown"
 		if len(totals) > 0 {
 			recipe["confidence"] = "estimate"
 		}
+	} else if len(estimated) > 0 {
+		recipe["confidence"] = "estimate"
 	}
+}
+
+func estimateRemainingShipRolls(rawQuality any, grade int) int {
+	quality, known := v.Number(rawQuality)
+	if !known || quality <= 0 || quality >= 1 || grade <= 1 {
+		return 0
+	}
+	// The journal can round repeating progress (for example .6667 at G3).
+	used := math.Round(quality * float64(grade))
+	if used <= 0 || used >= float64(grade) || math.Abs(quality-used/float64(grade)) > .001 {
+		return 0
+	}
+	return grade - int(used)
 }

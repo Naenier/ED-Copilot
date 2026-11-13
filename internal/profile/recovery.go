@@ -59,7 +59,7 @@ var settingsSections = []settingsSection{
 	{"trade", []string{"tradePlan", "tradingDestination", "savedTradeRoutes", "manualPrices", "galacticPrices", "statsSince"}},
 	{"carrier", []string{"carrier", "carrierCalculator", "carrierRouteGo", "carrierTrade"}},
 	{"colonies", []string{"colonization"}},
-	{"engineering", []string{"engineering", "shipBuilds", "engineeringItineraries"}},
+	{"engineering", []string{"engineering", "shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans"}},
 	{"exploration", []string{"exobiology", "richesRoutes", "exploration", "shipRoutes"}},
 	{"notifications", []string{"notifications"}},
 	{"learning", []string{"learning"}},

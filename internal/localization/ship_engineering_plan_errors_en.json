@@ -1,0 +1,9 @@
+{
+  "Выберите модуль, чертёж и ступень улучшения.": "Choose a module, blueprint and target grade.",
+  "Достигнут предел целей для этого корабля.": "This ship has reached the limit for saved goals.",
+  "Корабль сменился. Откройте план заново.": "Your ship changed. Reopen the plan.",
+  "Модуль в этом слоте сменился. Откройте его заново.": "The fitted module changed. Reopen the slot.",
+  "Не удалось определить текущий корабль по журналу.": "The journal has not identified your current ship.",
+  "Неизвестное действие с планом инженеров.": "Unknown ship engineering plan action.",
+  "Это улучшение недоступно для выбранного модуля.": "This upgrade is unavailable for the selected module."
+}

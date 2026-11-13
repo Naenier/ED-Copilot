@@ -53,7 +53,34 @@ func (p *Planner) CurrentShipEngineering(loadout, input, observations M) (M, err
 	if !known {
 		return result, nil
 	}
+	for _, installed := range p.currentShipModules(loadout, observations) {
+		status := v.Str(installed.row["status"])
+		if status == "in-progress" {
+			status = "inProgress"
+		}
+		summary[status] = v.Int(summary[status]) + 1
+		rows = append(rows, installed.row)
+		if installed.row["slot"] == slot {
+			detail, err := p.currentShipDetail(installed.row, installed.choices, installed.preferred, q, input, observations)
+			if err != nil {
+				return nil, err
+			}
+			result["detail"] = detail
+		}
+	}
+	result["modules"] = rows
+	return result, nil
+}
+
+type currentShipModule struct {
+	row       M
+	choices   []M
+	preferred M
+}
+
+func (p *Planner) currentShipModules(loadout, observations M) []currentShipModule {
 	legacy := journal.GameMode(v.Str(v.At(observations, "game", "version"))) == "legacy"
+	rows := []currentShipModule{}
 	seen := map[string]bool{}
 	choicesByModule := map[string][]M{}
 	for _, raw := range v.Rows(loadout["Modules"]) {
@@ -96,23 +123,10 @@ func (p *Planner) CurrentShipEngineering(loadout, input, observations M) (M, err
 			choice = choices[0]
 		}
 		row["maxGrade"], row["accessibleGrade"] = choice["maxGrade"], choice["accessibleGrade"]
-		status := currentShipStatus(row, installed, choices, current)
-		row["status"] = status
-		if status == "in-progress" {
-			status = "inProgress"
-		}
-		summary[status] = v.Int(summary[status]) + 1
-		rows = append(rows, row)
-		if currentSlot == slot {
-			detail, err := p.currentShipDetail(row, choices, choice, q, input, observations)
-			if err != nil {
-				return nil, err
-			}
-			result["detail"] = detail
-		}
+		row["status"] = currentShipStatus(row, installed, choices, current)
+		rows = append(rows, currentShipModule{row, choices, choice})
 	}
-	result["modules"] = rows
-	return result, nil
+	return rows
 }
 
 func currentShipStatus(row, installed M, choices []M, current M) string {

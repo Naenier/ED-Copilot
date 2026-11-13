@@ -69,7 +69,7 @@ func (e *Engine) finishPlanReplay() {
 		e.adoptRichesJourneyLocked()
 		e.replayedPlanWorkspace = planWorkspace{}
 		e.planReplay = false
-		e.section7.notifications.Context(e.planWorkspace.key, v.Str(e.settings["activity"]), v.Str(e.settings["language"]))
+		e.section7.notifications.Context(e.planWorkspace.key, v.Str(e.settings["activity"]))
 		e.rebindSecondScreenLocked()
 		e.Notify()
 	}

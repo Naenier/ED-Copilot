@@ -1,7 +1,8 @@
 package notifications
 
 import (
-	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -9,7 +10,7 @@ import (
 func TestNotificationsAreOptInScopedAndDeduplicatedAfterRestart(t *testing.T) {
 	now := time.Now()
 	s := New(nil)
-	s.Context("alpha", "flight", "en")
+	s.Context("alpha", "flight")
 	event := Event{ID: "first", Kind: "finding", Scope: "alpha", Activity: "flight", Title: "Находка", EnglishTitle: "Discovery", System: "Sol", ObservedAt: now}
 	if s.Emit(event) || s.HUD(now) != nil {
 		t.Fatal("alerts must be explicitly enabled")
@@ -27,54 +28,42 @@ func TestNotificationsAreOptInScopedAndDeduplicatedAfterRestart(t *testing.T) {
 	if s.HUD(now) != nil {
 		t.Fatal("the previous system's discovery remained on the HUD")
 	}
-	s.Context("alpha", "trade", "en")
+	s.Context("alpha", "trade")
 	if s.HUD(now) != nil || s.HUD(now.Add(time.Minute)) != nil {
 		t.Fatal("a nonurgent notice survived activity change or expiry")
 	}
-	s.Context("beta", "flight", "en")
+	s.Context("beta", "flight")
 	if len(s.Snapshot("beta")["events"].([]Event)) != 0 || s.Emit(event) {
 		t.Fatal("alert crossed commander scope")
 	}
 	restarted := New(s.Export())
-	restarted.Context("alpha", "flight", "en")
+	restarted.Context("alpha", "flight")
 	if restarted.Emit(event) || restarted.HUD(now) != nil || len(restarted.Snapshot("alpha")["events"].([]Event)) != 1 {
 		t.Fatal("persistent history replayed or lost the alert")
 	}
 }
 
-func TestVoiceDropsQueuedActivityOnSwitchAndSpeaksCurrentUrgency(t *testing.T) {
-	s := New(nil)
-	s.Context("alpha", "flight", "en")
-	p := s.Snapshot("alpha")["preferences"].(Preferences)
-	p.Enabled = true
-	for _, kind := range []string{"finding", "fuel"} {
-		rule := p.Rules[kind]
-		rule.Voice = true
-		p.Rules[kind] = rule
+func TestLegacySpeechSettingsAreDiscardedAndVisualPreferencesSurvive(t *testing.T) {
+	legacy := json.RawMessage(`{"preferences":{"enabled":true,"language":"ru","volume":75,"rate":-3,"rules":{"finding":{"enabled":true,"visual":false,"voice":true,"priority":2}}}}`)
+	s := New(legacy)
+	s.Context("alpha", "flight")
+	now := time.Now()
+	if !s.Emit(Event{ID: "old", Kind: "finding", Scope: "alpha", ObservedAt: now}) || s.HUD(now) != nil {
+		t.Fatal("the existing history-only rule was lost")
 	}
-	if err := s.Configure(p); err != nil {
+	if !s.Emit(Event{ID: "fuel", Kind: "fuel", Scope: "alpha", ObservedAt: now}) {
+		t.Fatal("the existing visual notifications were lost")
+	}
+	if event := s.HUD(now); event == nil || event.ID != "fuel" {
+		t.Fatal("the visual alert did not appear")
+	}
+	saved, err := json.Marshal(s.Export())
+	if err != nil {
 		t.Fatal(err)
 	}
-	now := time.Now()
-	s.Emit(Event{ID: "first", Kind: "finding", Scope: "alpha", Activity: "flight", EnglishTitle: "Discovery", ObservedAt: now})
-	s.Context("alpha", "trade", "en")
-	s.Emit(Event{ID: "second", Kind: "fuel", Scope: "alpha", EnglishTitle: "Low fuel", ObservedAt: now})
-	s.Preview("ru")
-	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
-	defer cancel()
-	spoken := make(chan string, 3)
-	go s.Run(ctx, func(_ context.Context, text, language string, _, _ int) error {
-		spoken <- language + " " + text
-		return nil
-	})
-	for _, want := range []string{"en Low fuel", "ru Проверка голоса ED Copilot."} {
-		select {
-		case text := <-spoken:
-			if text != want {
-				t.Fatalf("wanted %q, got %q", want, text)
-			}
-		case <-ctx.Done():
-			t.Fatal("voice worker did not speak")
+	for _, obsolete := range []string{`"voice"`, `"language"`, `"volume"`, `"rate"`} {
+		if strings.Contains(string(saved), obsolete) {
+			t.Errorf("old notification field retained: %s", obsolete)
 		}
 	}
 }

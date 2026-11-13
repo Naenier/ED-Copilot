@@ -25,9 +25,10 @@ type sectionSeven struct {
 	notifications                   *notifications.Service
 	screens                         *secondscreen.Service
 	builds, itineraries             M
+	currentShipEngineeringPlans     M
 	loadout, stored                 M
 	loadoutChangedAt                time.Time
-	observedOwner                   string
+	observedOwner, observedShipID   string
 	lowFuel, engineeringReady       bool
 	carrierJump                     M
 	screenOwner                     string
@@ -39,18 +40,18 @@ type sectionSeven struct {
 
 func (e *Engine) initSectionSeven(saved M) {
 	e.section7 = sectionSeven{
-		exploration:   exploration.New(v.Obj(saved["exploration"])),
-		routes:        shiproute.New(saved["shipRoutes"]),
-		routePlanner:  shiproute.NewPlanner(e.opts.HTTPClient),
-		notifications: notifications.New(saved["notifications"]),
-		screens:       secondscreen.New(e.secondScreenView),
-		builds:        v.Copy(v.Obj(saved["shipBuilds"])),
-		itineraries:   v.Copy(v.Obj(saved["engineeringItineraries"])),
+		exploration:                 exploration.New(v.Obj(saved["exploration"])),
+		routes:                      shiproute.New(saved["shipRoutes"]),
+		routePlanner:                shiproute.NewPlanner(e.opts.HTTPClient),
+		notifications:               notifications.New(saved["notifications"]),
+		screens:                     secondscreen.New(e.secondScreenView),
+		builds:                      v.Copy(v.Obj(saved["shipBuilds"])),
+		itineraries:                 v.Copy(v.Obj(saved["engineeringItineraries"])),
+		currentShipEngineeringPlans: v.Copy(v.Obj(saved["currentShipEngineeringPlans"])),
 	}
 }
 
 func (e *Engine) startSectionSeven() {
-	go e.section7.notifications.Run(e.ctx, notifications.Speak)
 	// A pending jump can approach departure while Status.json is unchanged.
 	go func() {
 		tick := time.NewTicker(10 * time.Second)
@@ -74,6 +75,7 @@ func (e *Engine) startSectionSeven() {
 func (e *Engine) resetSectionSevenObservations() {
 	s := &e.section7
 	s.loadout, s.stored, s.carrierJump, s.observedOwner = nil, nil, nil, ""
+	s.observedShipID = ""
 	s.loadoutChangedAt = time.Time{}
 	s.lowFuel, s.engineeringReady = false, false
 	s.itineraryCache = nil
@@ -90,7 +92,7 @@ func (e *Engine) sectionSevenContext() {
 	}
 	e.jobIDs["shipRouteSearch"]++
 	delete(e.network, "shipRouteSearch")
-	e.section7.notifications.Context(e.planWorkspace.key, v.Str(e.settings["activity"]), v.Str(e.settings["language"]))
+	e.section7.notifications.Context(e.planWorkspace.key, v.Str(e.settings["activity"]))
 	e.rebindSecondScreenLocked()
 }
 
@@ -109,6 +111,9 @@ func (e *Engine) saveSectionSeven(saved M) {
 	saved["shipRoutes"] = s.routes.Export()
 	saved["shipBuilds"] = v.Copy(s.builds)
 	saved["engineeringItineraries"] = v.Copy(s.itineraries)
+	if len(s.currentShipEngineeringPlans) > 0 {
+		saved["currentShipEngineeringPlans"] = v.Copy(s.currentShipEngineeringPlans)
+	}
 	saved["notifications"] = s.notifications.Export()
 }
 
@@ -119,6 +124,7 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	}
 	if owner != s.observedOwner {
 		s.loadout, s.stored, s.carrierJump = nil, nil, nil
+		s.observedShipID = ""
 		s.loadoutChangedAt = time.Time{}
 		s.lowFuel, s.engineeringReady = false, false
 		s.observedOwner = owner
@@ -128,10 +134,12 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	case "LoadGame", "ShipyardSwap", "ShipyardNew", "ShipyardBuy":
 		if at := v.Time(event["timestamp"]); !at.Before(s.loadoutChangedAt) {
 			s.loadout, s.loadoutChangedAt = nil, at
+			s.observedShipID = observedEngineeringShipID(event)
 		}
 	case "Loadout":
 		if at := v.Time(event["timestamp"]); v.Arr(event["Modules"]) != nil && ships.VehicleKind(v.Str(event["Ship"])) == "ship" && !at.Before(s.loadoutChangedAt) {
 			s.loadout, s.loadoutChangedAt = v.Copy(event), at
+			s.observedShipID = engineeringShipID(event["ShipID"])
 		}
 	case "StoredModules":
 		s.stored = v.Copy(event)
@@ -333,7 +341,7 @@ func (e *Engine) sectionSevenLocal(path string, body M) (M, bool, error) {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
 	e.mu.RLock()
-	owner, language := e.planWorkspace.key, v.Str(e.settings["language"])
+	owner := e.planWorkspace.key
 	e.mu.RUnlock()
 	if err := validatePlanWorkspace(body, owner); err != nil {
 		return nil, false, err
@@ -377,12 +385,8 @@ func (e *Engine) sectionSevenLocal(path string, body M) (M, bool, error) {
 	case "/api/notifications":
 		return s.notifications.Snapshot(owner), false, nil
 	case "/api/notifications/update":
-		if body["action"] == "test" {
-			if e.opts.DisableNetwork {
-				return nil, false, errors.New("Голос отключён в тестовом профиле.")
-			}
-			err := s.notifications.Preview(language, body["preferences"])
-			return s.notifications.Snapshot(owner), false, err
+		if v.Str(body["action"]) != "" {
+			return nil, false, errors.New("Неизвестное действие с уведомлениями.")
 		}
 		err := s.notifications.Configure(body["preferences"])
 		return s.notifications.Snapshot(owner), true, err

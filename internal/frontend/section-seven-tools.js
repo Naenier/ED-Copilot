@@ -26,7 +26,6 @@
       return `<div class="s7-rule">
         <label><input name="${id}-enabled" type="checkbox" ${checked(rule.enabled)}> ${u.esc(u.t(name))}</label>
         <label><input name="${id}-visual" type="checkbox" ${checked(rule.visual)}> ${u.esc(u.t('Оверлей'))}</label>
-        <label><input name="${id}-voice" type="checkbox" ${checked(rule.voice)}> ${u.esc(u.t('Голос'))}</label>
         <label class="s7-priority"><span class="s7-label">${u.esc(u.t('Приоритет'))}</span>
           <select name="${id}-priority">${options(u, [['1', 'Обычный'], ['2', 'Высокий'], ['3', 'Срочный']], rule.priority)}</select>
         </label>
@@ -45,16 +44,8 @@
     return `<form id="s7-notifications" class="panel s7-panel">
       <label class="s7-enable"><input name="enabled" type="checkbox" ${checked(p.enabled)}> ${u.esc(u.t('Включить уведомления'))}</label>
       <div class="s7-rules">${rules}</div>
-      <h2>${u.esc(u.t('Голос Windows'))}</h2>
-      <div class="s7-fields">
-        <label><span>${u.esc(u.t('Язык голоса'))}</span><select name="language">${options(u, [['auto', 'Как в интерфейсе'], ['en', 'English'], ['ru', 'Русский']], p.language)}</select></label>
-        <label><span>${u.esc(u.t('Скорость речи'))}</span><input type="number" name="rate" min="-10" max="10" value="${p.rate}" required></label>
-        <label><span>${u.esc(u.t('Громкость, %'))}</span><input type="number" name="volume" min="0" max="100" value="${p.volume}" required></label>
-      </div>
-      ${data.voiceError ? `<p role="status">${u.esc(u.t('Установите голос выбранного языка в параметрах Windows.'))}</p>` : ''}
       <div class="s7-actions">
         <button class="pill primary" type="submit">${u.esc(u.t('Сохранить'))}</button>
-        ${button(u, 'Проверить голос', 'voice', 'volume-2')}
       </div>
     </form>
     <section class="panel s7-panel"><h2>${u.esc(u.t('История уведомлений'))}</h2>
@@ -95,7 +86,7 @@
   function render(C, u) {
     const s = local(C);
     const title = C.tab === 'notifications' ? 'Уведомления' : 'Второй экран';
-    const description = C.tab === 'notifications' ? 'Выберите события для оверлея и голоса.' : 'Откройте выбранные панели на телефоне или другом компьютере в вашей сети.';
+    const description = C.tab === 'notifications' ? 'Выберите события для оверлея.' : 'Откройте выбранные панели на телефоне или другом компьютере в вашей сети.';
     return u.heading(u.t(title), u.t(description)) + `<div class="s7-tools">${s.error ?
       `<p role="alert">${u.esc(s.error)}</p>${button(u, 'Повторить', 'retry', 'refresh-cw')}` : s.data ?
         (C.tab === 'notifications' ? notifications(s.data, C, u) : screens(s.data, u)) :
@@ -135,9 +126,9 @@
 
   function preferences(fields) {
     const rules = Object.fromEntries(Object.keys(categories).map(id => [id, {
-      enabled: fields.has(id + '-enabled'), visual: fields.has(id + '-visual'), voice: fields.has(id + '-voice'), priority: Number(fields.get(id + '-priority'))
+      enabled: fields.has(id + '-enabled'), visual: fields.has(id + '-visual'), priority: Number(fields.get(id + '-priority'))
     }]));
-    return {enabled: fields.has('enabled'), rules, language: fields.get('language'), rate: Number(fields.get('rate')), volume: Number(fields.get('volume'))};
+    return {enabled: fields.has('enabled'), rules};
   }
 
   async function submit(form, C, u) {
@@ -164,11 +155,6 @@
     } else if (verb === 'copy-url' || verb === 'copy-code') {
       const value = verb === 'copy-url' ? s.data?.url : s.data?.code;
       if (value) await u.call('native', {action: 'copy', text: value});
-    } else if (verb === 'voice') {
-      const form = control.closest('form');
-      if (form?.reportValidity()) {
-        await u.call('notifications.update', {action: 'test', preferences: preferences(new FormData(form)), expectedPlanWorkspace:s.owner});
-      }
     } else {
       await update(C, u, {action: verb, id: control.dataset.id});
     }

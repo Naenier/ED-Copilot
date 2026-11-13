@@ -51,6 +51,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/ship-builds/export", input)
 	case "ship-engineering-plan":
 		return backend.Do("/api/engineering/current-ship", input)
+	case "ship-engineering-plan-update":
+		return backend.Do("/api/engineering/current-ship/plan", input)
 	case "engineering-itinerary":
 		return backend.Do("/api/engineering/itinerary", input)
 	case "engineering-itinerary-update":

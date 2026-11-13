@@ -1,35 +1,26 @@
 package notifications
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
-const (
-	historyLimit = 240
-	queueLimit   = 20
-)
+const historyLimit = 240
 
 var priorities = map[string]int{"finding": 1, "engineering": 1, "task": 1, "carrier": 2, "fuel": 3}
 
 type Rule struct {
 	Enabled  bool `json:"enabled"`
 	Visual   bool `json:"visual"`
-	Voice    bool `json:"voice"`
 	Priority int  `json:"priority"`
 }
 
 type Preferences struct {
-	Enabled  bool            `json:"enabled"`
-	Language string          `json:"language"`
-	Rate     int             `json:"rate"`
-	Volume   int             `json:"volume"`
-	Rules    map[string]Rule `json:"rules"`
+	Enabled bool            `json:"enabled"`
+	Rules   map[string]Rule `json:"rules"`
 }
 
 type Event struct {
@@ -57,35 +48,21 @@ type savedState struct {
 	History     []Event     `json:"history"`
 }
 
-type utterance struct {
-	event           Event
-	expires         time.Time
-	previewLanguage string
-	preview         *Preferences
-}
-
-type Speaker func(context.Context, string, string, int, int) error
-
 type Service struct {
-	mu                        sync.Mutex
-	prefs                     Preferences
-	history                   []Event
-	seen                      map[string]bool
-	pending                   []utterance
-	current                   utterance
-	cancel                    context.CancelFunc
-	owner, activity, language string
-	system                    string
-	voiceError                bool
-	wake                      chan struct{}
+	mu              sync.Mutex
+	prefs           Preferences
+	history         []Event
+	seen            map[string]bool
+	owner, activity string
+	system          string
 }
 
 func New(raw any) *Service {
-	defaults := Preferences{Language: "auto", Volume: 75, Rules: map[string]Rule{}}
+	defaults := Preferences{Rules: map[string]Rule{}}
 	for kind, priority := range priorities {
 		defaults.Rules[kind] = Rule{Enabled: true, Visual: true, Priority: priority}
 	}
-	s := &Service{prefs: defaults, seen: map[string]bool{}, language: "en", wake: make(chan struct{}, 1)}
+	s := &Service{prefs: defaults, seen: map[string]bool{}}
 	if raw == nil {
 		return s
 	}
@@ -120,7 +97,7 @@ func clonePreferences(p Preferences) Preferences {
 }
 
 func valid(p Preferences) bool {
-	if p.Language != "auto" && p.Language != "ru" && p.Language != "en" || p.Volume < 0 || p.Volume > 100 || p.Rate < -10 || p.Rate > 10 || len(p.Rules) != len(priorities) {
+	if len(p.Rules) != len(priorities) {
 		return false
 	}
 	for kind, rule := range p.Rules {
@@ -140,13 +117,9 @@ func (s *Service) Configure(raw any) error {
 	defer s.mu.Unlock()
 	next := clonePreferences(s.prefs)
 	if json.Unmarshal(data, &next) != nil || !valid(next) {
-		return errors.New("Проверьте язык, скорость, громкость и приоритеты уведомлений.")
+		return errors.New("Проверьте приоритеты уведомлений.")
 	}
 	s.prefs = next
-	s.pruneLocked(time.Now())
-	if s.cancel != nil && !s.validUtteranceLocked(s.current, time.Now()) {
-		s.cancel()
-	}
 	return nil
 }
 
@@ -162,24 +135,19 @@ func (s *Service) Enabled(kind string) bool {
 	return s.prefs.Enabled && s.prefs.Rules[kind].Enabled
 }
 
-func (s *Service) Context(owner, activity, language string) {
+func (s *Service) Context(owner, activity string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if owner != s.owner {
 		s.system = ""
 	}
-	s.owner, s.activity, s.language = owner, activity, language
-	s.refreshQueueLocked()
+	s.owner, s.activity = owner, activity
 }
 
 func (s *Service) SetSystem(system string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.system == system {
-		return
-	}
 	s.system = system
-	s.refreshQueueLocked()
 }
 
 func (s *Service) ClearNonurgent(kind string) {
@@ -190,24 +158,6 @@ func (s *Service) ClearNonurgent(kind string) {
 		if active(s.history[i]) {
 			s.history[i].visualUntil = time.Time{}
 		}
-	}
-	kept := s.pending[:0]
-	for _, u := range s.pending {
-		if !active(u.event) {
-			kept = append(kept, u)
-		}
-	}
-	s.pending = kept
-	if s.cancel != nil && active(s.current.event) {
-		s.cancel()
-	}
-}
-
-func (s *Service) refreshQueueLocked() {
-	now := time.Now()
-	s.pruneLocked(now)
-	if s.cancel != nil && !s.validUtteranceLocked(s.current, now) {
-		s.cancel()
 	}
 }
 
@@ -232,56 +182,7 @@ func (s *Service) Emit(event Event) bool {
 		delete(s.seen, s.history[historyLimit].key())
 		s.history = s.history[:historyLimit]
 	}
-	if rule.Voice {
-		s.enqueueLocked(utterance{event: event, expires: now.Add(30 * time.Second)})
-	}
 	return true
-}
-
-func (s *Service) Preview(language string, draft ...any) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if language != "en" && language != "ru" {
-		language = s.language
-	}
-	s.voiceError = false
-	p := clonePreferences(s.prefs)
-	if len(draft) > 0 && draft[0] != nil {
-		data, err := json.Marshal(draft[0])
-		if err != nil || json.Unmarshal(data, &p) != nil || !valid(p) {
-			return errors.New("Проверьте язык, скорость, громкость и приоритеты уведомлений.")
-		}
-	}
-	s.enqueueLocked(utterance{event: Event{Kind: "preview", Priority: 1, Title: "Проверка голоса ED Copilot.", EnglishTitle: "ED Copilot voice check."}, expires: time.Now().Add(20 * time.Second), previewLanguage: language, preview: &p})
-	return nil
-}
-
-func (s *Service) enqueueLocked(u utterance) {
-	s.pruneLocked(time.Now())
-	s.pending = append(s.pending, u)
-	sort.SliceStable(s.pending, func(i, j int) bool { return s.pending[i].event.Priority > s.pending[j].event.Priority })
-	if len(s.pending) > queueLimit {
-		s.pending = s.pending[:queueLimit]
-	}
-	if u.event.Priority == 3 && s.cancel != nil && s.current.event.Priority < u.event.Priority {
-		s.cancel()
-	}
-	select {
-	case s.wake <- struct{}{}:
-	default:
-	}
-}
-
-func (s *Service) validUtteranceLocked(u utterance, now time.Time) bool {
-	if !now.Before(u.expires) {
-		return false
-	}
-	e := u.event
-	if e.Kind == "preview" {
-		return true
-	}
-	rule := s.prefs.Rules[e.Kind]
-	return s.prefs.Enabled && rule.Enabled && rule.Voice && e.Scope == s.owner && s.relevantLocked(e)
 }
 
 func (s *Service) relevantLocked(e Event) bool {
@@ -292,65 +193,6 @@ func (s *Service) relevantLocked(e Event) bool {
 		return false
 	}
 	return e.Kind != "finding" || e.System == "" || s.system == "" || strings.EqualFold(e.System, s.system)
-}
-
-func (s *Service) pruneLocked(now time.Time) {
-	kept := s.pending[:0]
-	for _, u := range s.pending {
-		if s.validUtteranceLocked(u, now) {
-			kept = append(kept, u)
-		}
-	}
-	s.pending = kept
-}
-
-func (s *Service) Run(ctx context.Context, speak Speaker) {
-	for ctx.Err() == nil {
-		s.mu.Lock()
-		s.pruneLocked(time.Now())
-		if len(s.pending) == 0 {
-			s.mu.Unlock()
-			select {
-			case <-ctx.Done():
-				return
-			case <-s.wake:
-				continue
-			}
-		}
-		u := s.pending[0]
-		s.pending = s.pending[1:]
-		p := s.prefs
-		if u.preview != nil {
-			p = *u.preview
-		}
-		display := s.language
-		if u.previewLanguage != "" {
-			display = u.previewLanguage
-		}
-		locale := p.Language
-		if locale == "auto" {
-			locale = display
-		}
-		voice, stop := context.WithTimeout(ctx, 15*time.Second)
-		s.current, s.cancel = u, stop
-		s.mu.Unlock()
-		title, detail := u.event.Title, u.event.Detail
-		if locale == "en" {
-			title, detail = u.event.EnglishTitle, u.event.EnglishDetail
-			if title == "" {
-				title, detail = u.event.Title, u.event.Detail
-			}
-		}
-		err := speak(voice, strings.TrimSpace(title+" "+detail), locale, p.Rate, p.Volume)
-		cancelled := voice.Err()
-		stop()
-		s.mu.Lock()
-		s.current, s.cancel = utterance{}, nil
-		if cancelled == nil || errors.Is(cancelled, context.DeadlineExceeded) {
-			s.voiceError = err != nil
-		}
-		s.mu.Unlock()
-	}
 }
 
 func (s *Service) Snapshot(owner string) map[string]any {
@@ -364,7 +206,7 @@ func (s *Service) Snapshot(owner string) map[string]any {
 		event.Scope = ""
 		history = append(history, event)
 	}
-	return map[string]any{"preferences": clonePreferences(s.prefs), "events": history, "voiceError": s.voiceError}
+	return map[string]any{"preferences": clonePreferences(s.prefs), "events": history}
 }
 
 func (s *Service) HUD(now time.Time) *Event {

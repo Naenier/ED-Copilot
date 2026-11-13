@@ -41,7 +41,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.14"
+const Version = "2.8.15"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -626,6 +626,10 @@ func (e *Engine) ExportProfile(file string) error {
 func (e *Engine) persistenceSnapshot() (M, M) {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
+	return e.persistenceSnapshotLocked()
+}
+
+func (e *Engine) persistenceSnapshotLocked() (M, M) {
 	e.mu.RLock()
 	saved := M{"settings": v.Copy(e.settings), "appearance": v.Copy(e.appearance), "navigation": M{"version": 4, "tabs": append([]string(nil), e.navigation...)}, "journalDir": e.opts.JournalDir, "bookmarks": v.Clone(e.bookmarks), "manualPrices": v.Copy(e.manualPrices), "statsSince": e.statsSince, "objectives": v.Clone(e.objectives)}
 	saved["galacticPrices"] = v.Copy(e.galacticPrices)
