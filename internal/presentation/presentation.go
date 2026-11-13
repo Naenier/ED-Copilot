@@ -23,7 +23,7 @@ var DefaultTabs = []string{"overview", "ranks", "politics", "riches", "targets",
 var Activities = []Choice{{"flight", "Полёт и навигация"}, {"cartography", "Картография"}, {"asteroid", "Добыча в кольцах"}, {"surface", "Планетарная добыча"}, {"raw", "Сбор сырья"}, {"exobiology", "Экзобиология"}, {"trade", "Торговля"}, {"carrier", "Флотоносец"}, {"engineering", "Материалы для инженерии"}, {"odyssey", EngineeringOdyssey}, {"colonization", "Колонизация и снабжение"}}
 
 func init() {
-	Tabs = append(Tabs, Tab{"ship-route", "Маршрут корабля", false}, Tab{"exploration", "Исследования", false}, Tab{"notifications", "Уведомления", false}, Tab{"second-screen", "Второй экран", false})
+	Tabs = append(Tabs, Tab{"ship-route", "Маршрут корабля", false}, Tab{"exploration", "Исследования", false}, Tab{"notifications", "Уведомления", false}, Tab{"second-screen", "Второй экран", false}, Tab{"surface-navigation", "Полёт по координатам", false})
 	DefaultTabs = append(DefaultTabs, "notifications", "second-screen")
 }
 
@@ -221,7 +221,7 @@ func buildPage(tab, mode, query string, s M) Page {
 		return RanksPage(s)
 	case "politics":
 		return PoliticsPage(s)
-	case "riches", "ship-route", "notifications", "second-screen":
+	case "riches", "ship-route", "surface-navigation", "notifications", "second-screen":
 		p.Columns = nil
 		return p
 	case "exploration":

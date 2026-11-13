@@ -212,6 +212,9 @@ func LocalizeHUD(doc HUDDocument, state M) HUDDocument {
 func hudIdentities(state M, activity string) []string {
 	ids := stateIdentities(state)
 	switch activity {
+	case "flight":
+		target := v.Obj(v.At(state, "surfaceNavigation", "target"))
+		ids = append(ids, v.Str(target["bodyName"]), v.Str(target["systemName"]))
 	case "cartography":
 		progress := v.Obj(v.At(state, "riches", "progress"))
 		ids = append(ids, v.Str(progress["nextSystem"]), v.Str(progress["currentSystem"]))

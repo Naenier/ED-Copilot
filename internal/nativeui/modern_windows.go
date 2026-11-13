@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -44,6 +45,7 @@ type modernShell struct {
 	pendingState     M
 	stateQueued      bool
 	hudQueued        bool
+	showSurfaceNav   atomic.Bool
 	actionMu         sync.Mutex
 	desktopMu        sync.Mutex
 	desktopPending   M
@@ -369,6 +371,11 @@ func (m *modernShell) watch() {
 			}
 			if gate.due(now) {
 				state := attachRouteClipboard(nativeHUDSnapshot(u.backend), u.backend)
+				if m.showSurfaceNav.Load() && state["surfaceNavigation"] == nil {
+					if provider, ok := u.backend.(interface{ SurfaceNavigationSnapshot() M }); ok {
+						state["surfaceNavigation"] = provider.SurfaceNavigationSnapshot()
+					}
+				}
 				if u.disposed.Load() {
 					return
 				}
@@ -559,6 +566,9 @@ func (u *Window) applyModernSnapshot(state M) {
 	}
 	if u.modern.ready && !u.modern.closed && win.IsWindowVisible(u.main.Handle()) && !win.IsIconic(u.main.Handle()) {
 		update := M{"revision": u.state["revision"], "connection": u.state["connection"], "settings": u.state["settings"], "commander": u.state["commander"]}
+		if u.modern.showSurfaceNav.Load() && u.state["surfaceNavigation"] != nil {
+			update["surfaceNavigation"] = u.state["surfaceNavigation"]
+		}
 		if v.At(u.state, "settings", "activity") == "colonization" {
 			update["overlayColonies"] = overlayColonyUpdate(u.state)
 		}
@@ -691,6 +701,9 @@ func (m *modernShell) message(raw string, sender *edge.ICoreWebView2, args *edge
 func (m *modernShell) handleRequest(req webRequest) {
 	if m.owner.quitting {
 		return
+	}
+	if req.Op == "view" {
+		m.showSurfaceNav.Store(req.Params["tab"] == "surface-navigation")
 	}
 	if m.soak != nil && req.Op == "view" {
 		m.soak.readyOnce.Do(func() { close(m.soak.webReady) })

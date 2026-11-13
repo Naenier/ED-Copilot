@@ -193,7 +193,7 @@ func portableField(key string) bool {
 		"tradingDestination", "savedTradeRoutes", "manualPrices", "statsSince", "carrier",
 		"carrierCalculator", "carrierRouteGo", "carrierTrade", "colonization", "engineering",
 		"exobiology", "richesRoutes", "learning", "ranks", "politics", "mining",
-		"shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans", "exploration", "shipRoutes", "notifications":
+		"shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans", "exploration", "shipRoutes", "surfaceNavigationTargets", "notifications":
 		return true
 	default:
 		return false

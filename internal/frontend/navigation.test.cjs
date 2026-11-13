@@ -34,3 +34,10 @@ test('Cartography appears in Galaxy and keeps the existing planner route',()=>{
  assert.match(html,/data-nav="riches"[^>]*aria-current="page"[^>]*><span>Картография<\/span>/);
  assert.equal(nav.entries(C,'work').some(item=>item.tab==='riches'),false);
 });
+test('surface coordinates is a distinct Galaxy tab next to ship navigation',()=>{
+ const C={tab:'surface-navigation',mode:'',group:'galaxy',tabs:[{ID:'ship-route',Title:'Маршрут корабля'},{ID:'surface-navigation',Title:'Полёт по координатам'}],nav:[]};
+ assert.equal(nav.groupFor(C.tab),'galaxy');
+ const entries=nav.entries(C,'galaxy');
+ assert.equal(entries.findIndex(item=>item.tab===C.tab),entries.findIndex(item=>item.tab==='ship-route')+1);
+ assert.deepEqual(Array.from(entries.filter(item=>nav.selected(C,item)),item=>item.title),['Полёт по координатам']);
+});

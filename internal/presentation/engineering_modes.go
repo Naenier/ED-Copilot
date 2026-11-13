@@ -27,7 +27,7 @@ func EngineeringMaterialMode(mode string) bool {
 // SectionSevenCustom marks pages whose renderer owns its controls and rows.
 func SectionSevenCustom(tab, mode string) bool {
 	switch tab {
-	case "ship-route", "exploration", "notifications", "second-screen":
+	case "ship-route", "surface-navigation", "exploration", "notifications", "second-screen":
 		return true
 	case "engineering":
 		return mode == EngineeringCurrentShip || mode == EngineeringShipBuild || mode == EngineeringItinerary

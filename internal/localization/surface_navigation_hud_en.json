@@ -1,0 +1,12 @@
+{
+  "ПОЛЁТ ПО КООРДИНАТАМ": "SURFACE COORDINATES",
+  "Координаты цели": "Target coordinates",
+  "Текущие координаты": "Current coordinates",
+  "Цель · %s": "Target · %s",
+  "Сейчас · %s": "Current · %s",
+  "По поверхности": "Surface distance",
+  "Цель на другом небесном теле": "Target is on another body",
+  "Курс не определён": "Course unavailable",
+  "Точка достигнута": "Waypoint reached",
+  "Ждём координаты поверхности": "Waiting for surface coordinates"
+}

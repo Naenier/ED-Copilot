@@ -60,7 +60,7 @@ var settingsSections = []settingsSection{
 	{"carrier", []string{"carrier", "carrierCalculator", "carrierRouteGo", "carrierTrade"}},
 	{"colonies", []string{"colonization"}},
 	{"engineering", []string{"engineering", "shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans"}},
-	{"exploration", []string{"exobiology", "richesRoutes", "exploration", "shipRoutes"}},
+	{"exploration", []string{"exobiology", "richesRoutes", "exploration", "shipRoutes", "surfaceNavigationTargets"}},
 	{"notifications", []string{"notifications"}},
 	{"learning", []string{"learning"}},
 	{"ranks", []string{"ranks"}},

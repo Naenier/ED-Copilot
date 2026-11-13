@@ -1,0 +1,17 @@
+.surface-nav{display:grid;gap:18px;padding:20px}
+.surface-nav-form{display:flex;align-items:end;flex-wrap:wrap;gap:10px}
+.surface-nav-form label{display:grid;gap:6px;flex:1 1 260px;max-width:420px;color:var(--muted);font-size:12px}
+.surface-nav-form input{width:100%;min-height:34px;font-variant-numeric:tabular-nums}
+.surface-nav-form button{min-height:34px}
+.surface-nav [hidden]{display:none}
+.surface-nav-error{flex-basis:100%;color:var(--danger)}
+.surface-nav-error,.surface-nav-status{margin:0;font-size:12px}
+.surface-nav-status{color:var(--muted)}
+.surface-nav-readings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin:0;overflow:hidden;border:1px solid var(--border);border-radius:10px;background:var(--border)}
+.surface-nav-reading{min-width:0;padding:14px 16px;background:var(--panel)}
+.surface-nav-reading dt{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px}
+.surface-nav-reading .icon{width:14px;height:14px;flex:none}
+.surface-nav-reading dd{margin:7px 0 0;color:var(--text);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.surface-nav-reading .surface-nav-detail{margin-top:4px;color:var(--muted);font-size:11px;font-weight:400}
+@media(max-width:1040px){.surface-nav-readings{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.surface-nav{padding:14px}.surface-nav-readings{grid-template-columns:1fr}}

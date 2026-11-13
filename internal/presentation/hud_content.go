@@ -54,6 +54,7 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	case "colonization":
 		hudColony(&doc, s, now)
 	default:
+		hudSurfaceNavigation(&doc, s)
 		hudShipWaypoint(&doc, s)
 		hudFlight(&doc, s)
 	}
@@ -66,6 +67,9 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 // already identify the destination, worksite, carrier or subject they need.
 func hudCompactContext(doc *HUDDocument, cmd M) {
 	if doc.Activity != "flight" || len(doc.Sections) == 0 {
+		return
+	}
+	if doc.Sections[0].Kind == "surface-navigation" {
 		return
 	}
 	location := v.Str(cmd["system"])

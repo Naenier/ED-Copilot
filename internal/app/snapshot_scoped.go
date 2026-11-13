@@ -40,6 +40,10 @@ func (e *Engine) snapshotScoped(tab string) M {
 	cmd["locationUpdatedAt"], cmd["cargoUpdatedAt"] = e.locationAt, e.cargoAt
 	cargoSync := v.Copy(v.Obj(e.cargoSync[trading.Vessel(cmd["vehicle"])]))
 	activity, hud, syncOnly := v.Text(settings["activity"], "flight"), tab == "hud", tab == "sync"
+	var surfaceNavigation M
+	if tab == "surface-navigation" || hud && activity == "flight" {
+		surfaceNavigation = e.surfaceNavigationViewLocked()
+	}
 	var richesState M
 	if oneOf(tab, "riches", "overview") || hud && activity == "cartography" {
 		richesState = e.richesSnapshotLocked(tab == "riches")
@@ -95,6 +99,13 @@ func (e *Engine) snapshotScoped(tab string) M {
 	state["desktop"], state["theme"], state["navigation"] = desktop, M{"settings": appearance, "palette": palette, "presets": theme.Presets()}, M{"tabs": navigation}
 	state["objectives"], state["bookmarks"], state["notices"] = goals, bookmarks, notices
 	state["planWorkspace"] = workspace.snapshot()
+	if surfaceNavigation != nil {
+		state["surfaceNavigation"] = surfaceNavigation
+	}
+	if tab == "surface-navigation" {
+		state["colonization"] = e.Colonies.SelectorSnapshot()
+		return state
+	}
 	if tab == "colony-history" {
 		state["colonization"] = e.Colonies.SelectorSnapshot()
 		state["colonyHistory"] = e.Colonies.SystemHistorySnapshot()

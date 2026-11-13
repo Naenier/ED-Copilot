@@ -8,7 +8,7 @@ const groups=[
  {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['Текущий корабль','ship'],['План','target'],['Поездка к инженерам','route'],['Оснащение корабля','layout-grid'],['Снаряжение Odyssey','shield-check'],['Материалы','package'],['Инженеры','users']]},
  {id:'exobiology',title:'Экзобиология',icon:'leaf',tabs:['exobiology'],modes:[['Обзор','house'],['Планеты','orbit'],['Образцы','leaf'],['Радар поверхности','compass'],['Продажи','wallet'],['Находки','target'],['Места','map-pin'],['Статистика','chart-no-axes-combined']]},
  {id:'fleet',title:'Флотоносцы',icon:'ship',tabs:['carrier','route','carrier-calculator']},
- {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics','riches','ship-route','exploration']},
+ {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics','riches','ship-route','surface-navigation','exploration']},
  {id:'knowledge',title:'Библиотека',icon:'book-open',tabs:['encyclopedia','learning','help']},
  {id:'commander',title:'Командир',icon:'users',tabs:['commander','ranks']},
 ];
@@ -22,8 +22,9 @@ function entries(C,id){
   const cartography=C.tabs.find(tab=>tab.ID==='riches');
   const riches=cartography?[{tab:cartography.ID,mode:'',title:cartography.Title,icon:'route'}]:[];
   const route=C.tabs.find(tab=>tab.ID==='ship-route');
+  const surface=C.tabs.find(tab=>tab.ID==='surface-navigation');
   const exploration=C.tabs.some(tab=>tab.ID==='exploration')?[['Экспедиции','route'],['Находки','target'],['Обследования','layout-grid']].map(([title,icon])=>({tab:'exploration',mode:title,title,icon})):[];
-  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...riches,...(route?[{tab:route.ID,mode:'',title:route.Title,icon:'route'}]:[]),...exploration,...politics];
+  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...riches,...(route?[{tab:route.ID,mode:'',title:route.Title,icon:'route'}]:[]),...(surface?[{tab:surface.ID,mode:'',title:surface.Title,icon:'map-pin'}]:[]),...exploration,...politics];
  }
  const g=group(id);
  if(g.modes)return g.modes.map(([title,icon])=>({tab:g.tabs[0],mode:title,title,icon}));

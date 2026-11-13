@@ -35,7 +35,7 @@ func HTMLMode(nonce string, smoke, readme bool) string {
 		brandScript += "window.COPILOT_README=true;\n"
 	}
 	sectionSevenCSS, sectionSevenJS := "", ""
-	for _, name := range []string{"exploration", "ship-route", "surface-radar", "ship-builds", "ship-engineering", "engineering-itinerary", "section-seven-tools", "colony-history"} {
+	for _, name := range []string{"exploration", "ship-route", "surface-navigation", "surface-radar", "ship-builds", "ship-engineering", "engineering-itinerary", "section-seven-tools", "colony-history"} {
 		sectionSevenCSS += "\n" + read(name+".css")
 		sectionSevenJS += "\n" + read(name+".js")
 	}

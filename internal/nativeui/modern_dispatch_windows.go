@@ -61,6 +61,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/ship-route", input)
 	case "ship-route.calculate":
 		return backend.Do("/api/ship-route/calculate", input)
+	case "surface-navigation.update":
+		return backend.Do("/api/surface-navigation", input)
 	case "notifications.view":
 		return backend.Do("/api/notifications", input)
 	case "notifications.update":
@@ -274,7 +276,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			scope = "surface-radar"
 		case tab == "colonization" && mode == p.ColonyHistoryMode:
 			scope = "colony-history"
-		case tab == "ship-route":
+		case tab == "ship-route", tab == "surface-navigation":
 			scope = tab
 		case tab == "exploration", tab == "notifications", tab == "second-screen":
 			scope = "section-seven"
@@ -436,7 +438,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"shipRoute", "surfaceRadar", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory"} {
+	for _, key := range []string{"shipRoute", "surfaceRadar", "surfaceNavigation", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory"} {
 		if value, exists := state[key]; exists {
 			out[key] = value
 		}

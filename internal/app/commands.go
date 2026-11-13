@@ -81,6 +81,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return result, err
 	}
 	switch path {
+	case "/api/surface-navigation":
+		return e.updateSurfaceNavigation(body)
 	case "/api/engineering/current-ship":
 		return e.CurrentShipEngineering(body)
 	case "/api/engineering/current-ship/plan":
