@@ -5,16 +5,12 @@
 const clone=value=>value==null?value:JSON.parse(JSON.stringify(value));
 const normalized=value=>String(value??'').replace(/\s+/g,' ').trim();
 function useful(route){const result=clone(route);if(result)delete result.savedAt;return JSON.stringify(result);}
-function planUseful(plan){
- if(!plan?.key)return null;
- return {key:plan.key,quantity:plan.quantity,buyPrice:plan.buyPrice,sellPrice:plan.sellPrice,source:plan.source||'',destination:plan.destination||'',buy:plan.buy||null,sell:plan.sell||null};
-}
 async function run(C,u){
  if(window.COPILOT_SMOKE!==true)throw new Error('Сценарий доступен только в изолированной проверке');
  if(typeof u.handleClick!=='function')throw new Error('Smoke требует настоящий обработчик интерфейса');
  const checks=[],check=(name,ok)=>{checks.push({name,ok:!!ok});if(!ok)throw new Error(name);};
  const original={tab:C.tab,mode:C.mode,query:C.query,selected:C.selected,prefill:clone(C.prefill),lesson:C.lesson,course:C.course,focus:C.focus,inspector:C.inspector,nav:[...(C.nav||[])],dealsUI:clone(C.dealsUI),settingsPane:clone(C.settingsPane),colonyWorkspace:clone(C.colonizationWorkspace),reference:C.reference,references:C.referenceSessions};
- let originalPlan,originalFavorites,originalColony,failure;
+ let originalFavorites,originalColony,startedTradeRun,failure;
  const cleanupErrors=[];
  const visit=(tab,options={})=>u.navigate(tab,{...options,back:true});
  const click=async selector=>{
@@ -48,37 +44,50 @@ async function run(C,u){
   check('Настройки: панель открывается повторно',visible(u.$('.settings-help')));
 
   await visit('deals',{mode:'Поиск'});
-  originalPlan=clone(C.state.tradePlan||{});originalFavorites=clone(C.state.savedTradeRoutes||[]);
+  originalFavorites=clone(C.state.savedTradeRoutes||[]);
   const route=(C.state.tradeRoutes?.results||[]).find(item=>item.legs?.length===2);
   check('Рейсы: синтетический результат содержит оба торговых плеча',!!route);
   C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();
   let card=u.$$('[data-deals-route]').find(node=>node.dataset.dealsRoute===route.id);
   const legs=card?u.$$('.deals-leg',card):[];
-  check('Рейсы: оба плеча имеют отдельные карточки закупки и продажи',legs.length===2&&legs.every(node=>u.$$('.deals-endpoint',node).length===2));
+  const endpoints=card?u.$$('.deals-endpoint',card):[];
+  check('Рейсы: две станции и два плеча показаны в одной карточке',legs.length===2&&endpoints.length===2);
+  check('Рейсы: обе системы и станции видимы',['buy','sell'].every((side,index)=>{
+   const station=route.legs[0][side],node=endpoints[index];
+   return textHas(u.$('.deals-system',node),station.system)&&textHas(u.$('.deals-station',node),station.station);
+  }));
   for(let index=0;index<2;index++){
-   const endpoints=u.$$('.deals-endpoint',legs[index]),leg=route.legs[index];
-   check('Рейсы: системы, станции, цены и объёмы плеча '+(index+1),['buy','sell'].every((side,sideIndex)=>{
-    const node=endpoints[sideIndex],station=leg[side];
-    return textHas(u.$('.deals-system',node),station.system)&&textHas(u.$('.deals-station',node),station.station)&&textHas(u.$('.deals-quote',node),u.fmt(leg[side==='buy'?'buyPrice':'sellPrice']))&&textHas(u.$('.deals-quote',node),u.fmt(leg[side==='buy'?'supply':'demand']));
+   const quotes=u.$$('.deals-quote',legs[index]),leg=route.legs[index],sides=index===0?['buy','sell']:['sell','buy'];
+   check('Рейсы: направление, цены и объёмы плеча '+(index+1),sides.every((side,sideIndex)=>{
+    const node=quotes[sideIndex];
+    return node?.dataset.side===side&&textHas(node,u.fmt(leg[side==='buy'?'buyPrice':'sellPrice']))&&textHas(node,u.fmt(leg[side==='buy'?'supply':'demand']));
    }));
   }
+  check('Рейсы: прибыль за час скрыта до первого круга',!textHas(card,'кр./ч')&&!textHas(card,'Cr/h'));
   await u.handleClick('deals-save',u.$('[data-click="deals-save"]',card));
   const once=clone(C.state.savedTradeRoutes||[]),saved=once.find(item=>item.searchID===route.id)||once.find(item=>JSON.stringify(item.legs)===JSON.stringify(route.legs));
   check('Рейсы: сохранён весь рейс с двумя плечами',!!saved&&saved.legs.length===2);
   card=u.$$('[data-deals-route]').find(node=>node.dataset.dealsRoute===route.id);
-  await u.handleClick('deals-save',u.$('[data-click="deals-save"]',card));
+  const star=u.$('[data-click="deals-save"]',card);
+  check('Рейсы: звезда показывает добавление в избранное',star?.disabled&&star.getAttribute('aria-pressed')==='true');
+  await u.call('deals-saved-route',{values:{action:'save-route',route,expectedPlanWorkspace:C.state.planWorkspace?.key||''}});
   const repeated=await fresh('deals','Сохранённые');
   check('Рейсы: повторное сохранение не создаёт дубликат',(repeated.savedTradeRoutes||[]).length===once.length&&(repeated.savedTradeRoutes||[]).filter(item=>item.id===saved.id).length===1);
   check('Рейсы: повторный запрос сохраняет обе котировки',JSON.stringify((repeated.savedTradeRoutes||[]).find(item=>item.id===saved.id)?.legs)===JSON.stringify(saved.legs));
   await click('[data-click="deals-view"][data-view="saved"]');
   card=u.$$('[data-deals-route]').find(node=>node.dataset.dealsRoute===saved.id);
   check('Рейсы: сохранённый маршрут открывается полной картой',!!card&&u.$$('.deals-leg',card).length===2);
-  await u.handleClick('deals-select',u.$('[data-click="deals-select"]',card));
-  card=u.$$('[data-deals-route]').find(node=>node.dataset.dealsRoute===saved.id);
-  check('Рейсы: выбор сохранённого маршрута сохраняется при перерисовке',!!card?.classList.contains('selected')&&C.selected===saved.id);
-  await u.handleClick('deals-plan',u.$('[data-click="deals-plan"][data-leg="1"]',card));
-  const plan=(await fresh('deals')).tradePlan||{},second=saved.legs[1];
-  check('Рейсы: план второго плеча сохраняет правильные системы и станции',plan.key===second.key&&plan.buy?.system===second.buy.system&&plan.buy?.station===second.buy.station&&plan.sell?.system===second.sell.system&&plan.sell?.station===second.sell.station&&Number(plan.quantity)===Number(second.quantity));
+  const existingTradeRun=C.state.tradeRun;
+  if(!existingTradeRun?.routeId){
+   await u.handleClick('deals-track',u.$('[data-click="deals-track"]',card));
+   startedTradeRun=true;
+   card=u.$$('[data-deals-route]').find(node=>node.dataset.dealsRoute===saved.id);
+   check('Рейсы: маршрут из избранного отслеживается после перерисовки',
+    !!card?.classList.contains('selected')&&C.state.tradeRun?.routeId===saved.id&&!!u.$('.deals-run [data-click="deals-track-stop"]'));
+   await click('[data-click="deals-track-stop"]');
+   startedTradeRun=false;
+   check('Рейсы: отслеживание можно остановить',!C.state.tradeRun?.routeId);
+  }
 
   await visit('colonization',{mode:'Обзор'});
   originalColony=C.state.colonization?.selectedProjectId;
@@ -148,16 +157,16 @@ async function run(C,u){
  }catch(error){failure=error;}
  finally{
   const restore=async(name,work)=>{try{await work();}catch(error){cleanupErrors.push(name+': '+(error.message||error));}};
+  if(startedTradeRun) await restore('Отслеживание рейса',async()=>{
+   const state=await fresh('deals');
+   if(state.tradeRun?.routeId) await u.call('deals-track',{values:{action:'stop',expectedPlanWorkspace:state.planWorkspace?.key||''}});
+  });
   if(originalFavorites)await restore('Сохранённые рейсы',async()=>{
    const current=(await fresh('deals')).savedTradeRoutes||[],ids=new Set(originalFavorites.map(item=>item.id));
    for(const item of current)if(!ids.has(item.id))await u.call('deals-saved-route',{values:{action:'delete-route',id:item.id}});
    for(const item of originalFavorites){const now=current.find(value=>value.id===item.id);if(useful(now)!==useful(item)){const route=clone(item);route.id=item.searchID||item.id;await u.call('deals-saved-route',{values:{action:'save-route',route,title:item.title||''}});}}
    const restored=(await fresh('deals')).savedTradeRoutes||[];
    if(restored.length!==originalFavorites.length||originalFavorites.some(item=>useful(item)!==useful(restored.find(value=>value.id===item.id))))throw new Error('Полезные данные сохранённых рейсов изменились');
-  });
-  if(originalPlan!==undefined)await restore('План перевозки',async()=>{
-   await u.call(originalPlan.key?'deals-plan':'deals-plan-clear',originalPlan.key?{values:originalPlan}:{});
-   if(JSON.stringify(planUseful((await fresh('deals')).tradePlan))!==JSON.stringify(planUseful(originalPlan)))throw new Error('Исходное плечо не восстановлено');
   });
   if(originalColony)await restore('Выбранная колония',()=>u.call('select-colony',{tab:'colonization',id:originalColony}));
   await restore('Панель подробностей',async()=>{C.inspector=original.inspector;await u.call('desktop',{values:{inspectorOpen:original.inspector}});});

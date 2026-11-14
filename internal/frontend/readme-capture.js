@@ -47,10 +47,9 @@ async function run(C,u){
   try{if(!C.collapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));check('Compact navigation collapses only the sidebar',C.collapsed===true);await capture('readme-navigation-compact');}
   finally{if(C.collapsed!==wasCollapsed)await u.handleClick('sidebar',u.$('[data-click="sidebar"]'));}
   await u.navigate('deals',{mode:'Поиск'});C.dealsUI.view='results';C.dealsUI.query='';C.dealsUI.page=0;u.renderPage();await capture('readme-deals');
-  u.$('.deals-search').open=true;
-  const commodityFilter=await visible('[data-deals-filter="resourceFilter"]');
-  if(!commodityFilter.checked)commodityFilter.click();
-  (await visible('#deals-commodity-picker')).open=true;
+  const tradeSearch=await visible('[data-click="deals-view"][data-view="search"]');
+  await u.handleClick('deals-view',tradeSearch);
+  await visible('[data-deals-filter="sourcePowerState"]');
   await capture('readme-deals-filters');
   await u.navigate('carrier-trade',{mode:'Рейс'});await capture('readme-carrier-trade');
   await u.navigate('route');await capture('route-details');

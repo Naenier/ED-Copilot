@@ -15,7 +15,7 @@ func TestDealsPageIncludesSystemsStationsBothLegsAndQuoteDetails(t *testing.T) {
 		return M{"id": id, "system": system, "station": station, "pad": "L", "distanceLs": 400, "type": "Coriolis", "coordinates": []float64{0, 0, 0}, "updatedAt": "2026-11-08T12:00:00Z", "quotes": []M{{"key": key, "name": key, "price": price, "supply": 1000, "demand": 1000}}}
 	}
 	rows := trading.BuildRoutes(map[string]M{"gold": {"buy": []M{market("A", "Alpha", "Source", "gold", 100)}, "sell": []M{market("B", "Beta", "Buyer", "gold", 200)}}, "silver": {"buy": []M{market("B", "Beta", "Buyer", "silver", 100)}, "sell": []M{market("A", "Alpha", "Source", "silver", 200)}}}, o)
-	s := M{"tradeRoutes": M{"results": rows}, "commander": M{"system": "Alpha", "cargoCapacity": 100, "cargoTons": 20}, "pilot": M{"credits": 100000}}
+	s := M{"tradeRoutes": M{"results": rows}, "commander": M{"system": "Alpha", "cargoCapacity": 100, "cargoTons": 20}, "planWorkspace": M{"key": "owner"}}
 	s["goods"] = trading.New(nil).Snapshot(nil)["goods"]
 	before := v.Copy(s)
 	page := DealsPage("", "", s)
@@ -36,8 +36,8 @@ func TestDealsPageIncludesSystemsStationsBothLegsAndQuoteDetails(t *testing.T) {
 	if seen["deals.copy-buy.0"].Path != "Alpha" || seen["deals.copy-sell.0"].Path != "Beta" || seen["deals.copy-station-buy.0"].Path != "Source" || seen["deals.copy-buy.0"].Kind != "copy" {
 		t.Fatal("system and station clipboard actions mixed")
 	}
-	if v.At(seen["deals.plan.1"].Payload, "buy", "system") != "Beta" || seen["deals.save-route"].Path != "/api/trading/saved-routes" {
-		t.Fatal("second leg or full-route persistence command lost")
+	if v.At(seen["deals.track"].Payload, "routeId") != rows[0]["id"] || seen["deals.save-route"].Path != "/api/trading/saved-routes" {
+		t.Fatal("route tracking or full-route persistence command lost")
 	}
 	search := seen["deals.search"]
 	values := M{}
@@ -52,7 +52,7 @@ func TestDealsPageIncludesSystemsStationsBothLegsAndQuoteDetails(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v.Num(body["cargoCapacity"]) != 80 || v.Num(body["credits"]) != 100000 || len(v.Arr(body["resourceKeys"])) != 6 {
-		t.Fatal("search defaults ignore real ship/balance", body)
+	if v.Num(body["cargoCapacity"]) != 100 || len(search.Fields) != 15 || body["credits"] != nil || body["resourceKeys"] != nil || !v.Bool(body["roundTrip"]) {
+		t.Fatal("unexpected route search fields", body)
 	}
 }

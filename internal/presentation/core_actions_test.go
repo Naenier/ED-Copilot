@@ -205,8 +205,8 @@ func TestTradingNativeInputsAndSelectedQuoteDirections(t *testing.T) {
 		t.Fatal("bookmark enabled without selection")
 	}
 	a := coreAction(t, "deals", "", "deals.search", s, nil, nil)
-	body := coreBody(t, a, M{"resource1": "gold", "resource2": "silver", "resource3": "", "resource4": "", "resource5": "", "resource6": ""})
-	if !reflect.DeepEqual(body["resourceKeys"], []string{"gold", "silver"}) || body["resource1"] != nil {
+	body := coreBody(t, a, M{"sourcePower": "Nakato Kaine", "sourcePowerState": "Stronghold", "targetPower": "Zemina Torval", "targetPowerState": "Fortified"})
+	if body["sourcePower"] != "Nakato Kaine" || body["sourcePowerState"] != "Stronghold" || body["targetPower"] != "Zemina Torval" || body["targetPowerState"] != "Fortified" || body["resourceKeys"] != nil {
 		t.Fatal(body)
 	}
 	purchase := coreAction(t, "carrier", "", "carrier.tritium", s, nil, nil)

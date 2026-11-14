@@ -84,7 +84,7 @@ func RouteOptions(input, commander M) M {
 // quantity describes this leg, rather than the larger basket used for search.
 func routeMarket(raw, quote M, quantity float64) M {
 	out := M{}
-	for _, key := range []string{"id", "marketId", "station", "system", "systemAddress", "type", "pad", "carrier", "planetary", "distanceLy", "distanceLs", "updatedAt", "sourceUpdatedAt", "ageHours", "source", "sourceUrl", "own"} {
+	for _, key := range []string{"id", "marketId", "station", "system", "systemAddress", "type", "pad", "carrier", "planetary", "distanceLy", "distanceLs", "updatedAt", "sourceUpdatedAt", "ageHours", "source", "sourceUrl", "own", "controllingPower", "powerplayState", "powerKnown"} {
 		out[key] = raw[key]
 	}
 	out["coordinates"] = v.Clone(raw["coordinates"])

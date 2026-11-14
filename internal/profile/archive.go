@@ -190,7 +190,7 @@ func ImportPortable(file, newDir string) error {
 func portableField(key string) bool {
 	switch key {
 	case "settings", "appearance", "navigation", "objectives", "bookmarks", "tradePlan",
-		"tradingDestination", "savedTradeRoutes", "manualPrices", "statsSince", "carrier",
+		"tradingDestination", "savedTradeRoutes", "activeTradeRoutes", "manualPrices", "statsSince", "carrier",
 		"carrierCalculator", "carrierRouteGo", "carrierTrade", "colonization", "engineering",
 		"exobiology", "richesRoutes", "learning", "ranks", "politics", "mining",
 		"shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans", "exploration", "shipRoutes", "surfaceNavigationTargets", "notifications":

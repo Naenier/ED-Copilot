@@ -41,7 +41,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.16"
+const Version = "2.8.17"
 
 type Options struct {
 	DataDir, JournalDir           string
@@ -100,6 +100,7 @@ type Engine struct {
 	engineeringRoadmapRevision                      uint64
 	odysseyPickups                                  []M
 	surfaceNavigation                               surfaceNavigation
+	tradeRuns                                       *trading.LiveRoutes
 	updates                                         chan struct{}
 	callback                                        *http.Server
 	listener                                        net.Listener
@@ -167,6 +168,7 @@ func New(o Options) (*Engine, error) {
 	x.Ranks = ranks.New(v.Obj(saved["ranks"]))
 	x.Politics = politics.New(v.Obj(saved["politics"]), politics.Options{HTTPClient: o.HTTPClient, DisableNetwork: o.DisableNetwork})
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
+	x.tradeRuns = trading.NewLiveRoutes(saved["activeTradeRoutes"])
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
 	x.Calculator = carrier.NewCalculator(v.Obj(saved["carrierCalculator"]))
 	x.CarrierTrade = carrier.NewTradePlanner(v.Obj(saved["carrierTrade"]))
@@ -378,6 +380,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	if previousWorkspace != e.planWorkspace.key {
 		e.resetRichesSearchLocked()
 		e.adoptRichesJourneyLocked()
+		e.clearClipboardLocked("trade-route")
 	}
 	cmd = ships.ApplyEvent(cmd, event)
 	if kind == "Loadout" {
@@ -430,7 +433,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	if (kind == "Commander" || kind == "LoadGame") && previousFID != v.Str(cmdCopy["fid"]) {
 		e.cancelFrontierRequest()
 	}
-	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "side": meta["side"], "planWorkspace": workspace}
+	ctx := M{"commander": cmdCopy, "settings": settings, "game": game, "countInPeriod": since == "" || !v.Time(at).Before(v.Time(since)), "gameRunning": running, "replay": meta["replay"], "file": meta["file"], "offset": meta["offset"], "side": meta["side"], "planWorkspace": workspace}
 	if previousFID != "" && v.Str(cmdCopy["fid"]) != previousFID && (kind == "Commander" || kind == "LoadGame") {
 		// Reader normally resets all observations before changing FID. Keep
 		// direct journal dispatch equally safe for owner-scoped projections.
@@ -476,6 +479,11 @@ func (e *Engine) applyLocked(event, meta M) {
 	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
 	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
 		e.queueNextRouteClipboard()
+	}
+	if nextSystem := e.tradeRuns.Observe(workspace, event, ctx); nextSystem != "" && !v.Bool(meta["replay"]) && !side {
+		e.mu.Lock()
+		e.queueClipboardLocked("trade-route", nextSystem)
+		e.mu.Unlock()
 	}
 	if kind == "Market" && event["Items"] != nil {
 		e.market(event, cmdCopy)
@@ -590,6 +598,7 @@ func (e *Engine) Snapshot() M {
 	state["surfaceNavigation"] = surfaceNavigation
 	state["riches"] = richesState
 	state["savedTradeRoutes"] = e.Trading.SavedRoutesFor(workspace.key)
+	state["tradeRun"] = e.tradeRuns.Snapshot(workspace.key)
 	state["carrierCalculator"] = e.Calculator.Snapshot()
 	state["carrierTrade"] = e.carrierTradeSnapshot(state)
 	state["learning"] = e.Learning.SnapshotForLanguage(v.Str(settings["language"]))
@@ -660,6 +669,7 @@ func (e *Engine) persistenceSnapshotLocked() (M, M) {
 	saved["mining"] = e.Mining.ExportSettings()
 	e.saveSectionSeven(saved)
 	v.Merge(saved, e.Trading.ExportSettings())
+	saved["activeTradeRoutes"] = e.tradeRuns.Export()
 	return saved, desktop
 }
 func (e *Engine) Notice(text string) {

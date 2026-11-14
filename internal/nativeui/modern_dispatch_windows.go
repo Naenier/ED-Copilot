@@ -146,6 +146,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/trading/routes", v.Obj(input["values"]))
 	case "deals-cancel":
 		return backend.Do("/api/trading/cancel", M{})
+	case "deals-track":
+		return backend.Do("/api/trading/active-route", v.Obj(input["values"]))
 	case "deals-plan":
 		return backend.Do("/api/trading/plan", v.Obj(input["values"]))
 	case "deals-plan-clear":
@@ -438,7 +440,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"shipRoute", "surfaceRadar", "surfaceNavigation", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory"} {
+	for _, key := range []string{"shipRoute", "surfaceRadar", "surfaceNavigation", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory", "tradeRun"} {
 		if value, exists := state[key]; exists {
 			out[key] = value
 		}

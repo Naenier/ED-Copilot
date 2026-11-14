@@ -163,6 +163,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	}
 	cmd["cargo"], cmd["cargoTons"] = cargo, tons
 	state["tradeLedger"], state["tradePlan"] = ledger, ledger["plan"]
+	if tab == "deals" || hud && activity == "trade" {
+		state["tradeRun"] = e.tradeRuns.Snapshot(workspace.key)
+	}
 	if tab == "deals" {
 		state["savedTradeRoutes"] = e.Trading.SavedRoutesFor(workspace.key)
 		cmd["shipPad"] = trading.ShipPad(cmd)

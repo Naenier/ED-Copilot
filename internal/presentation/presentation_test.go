@@ -162,7 +162,7 @@ func TestPresentationActualDomainContracts(t *testing.T) {
 	s := presentationState(t)
 	s["exobiology"] = exobiologyPresentationFixture()
 	deals := Build("deals", "", "", s)
-	if len(deals.Rows) != 1 || !reflect.DeepEqual(deals.Rows[0].Cells, []string{"Synthetic A → Synthetic A", "Порт закупки → Порт сбыта", "Платина · 100 т", "10 000", "10 000", "40 000"}) || !strings.Contains(deals.Rows[0].Details, "Станция: Порт закупки") || !strings.Contains(deals.Rows[0].Details, "Спрос с запасом, т: 250") {
+	if len(deals.Rows) != 1 || !reflect.DeepEqual(deals.Rows[0].Cells, []string{"Synthetic A → Synthetic A", "Порт закупки → Порт сбыта", "Платина · 100 т", "10 000", "0", "—"}) || !strings.Contains(deals.Rows[0].Details, "Станция: Порт закупки") || !strings.Contains(deals.Rows[0].Details, "Спрос, т: 1 000") {
 		t.Fatalf("nested route legs lost: %+v", deals.Rows)
 	}
 	route := Build("route", "", "", s)
@@ -346,7 +346,7 @@ func TestHelpNativeWorkflowAndReadableTables(t *testing.T) {
 func TestHelpDoesNotAdvertiseBrowserApplication(t *testing.T) {
 	for _, article := range data.Array("help.json") {
 		body := strings.ToLower(v.Str(article["body"]))
-		for _, obsolete := range []string{"браузерная версия", "в обычном браузере кнопка", "разрешите всплывающие окна", "http://localhost", "https://localhost", "http://127.0.0.1", "карточк"} {
+		for _, obsolete := range []string{"браузерная версия", "в обычном браузере кнопка", "разрешите всплывающие окна", "http://localhost", "https://localhost", "http://127.0.0.1"} {
 			if strings.Contains(body, obsolete) {
 				t.Fatalf("%v advertises obsolete web application flow: %s", article["id"], obsolete)
 			}

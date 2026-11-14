@@ -56,7 +56,7 @@ type settingsSection struct {
 var settingsSections = []settingsSection{
 	{"settings", []string{"settings", "appearance", "navigation", "journalDir"}},
 	{"goals", []string{"objectives", "bookmarks"}},
-	{"trade", []string{"tradePlan", "tradingDestination", "savedTradeRoutes", "manualPrices", "galacticPrices", "statsSince"}},
+	{"trade", []string{"tradePlan", "tradingDestination", "savedTradeRoutes", "activeTradeRoutes", "manualPrices", "galacticPrices", "statsSince"}},
 	{"carrier", []string{"carrier", "carrierCalculator", "carrierRouteGo", "carrierTrade"}},
 	{"colonies", []string{"colonization"}},
 	{"engineering", []string{"engineering", "shipBuilds", "engineeringItineraries", "currentShipEngineeringPlans"}},

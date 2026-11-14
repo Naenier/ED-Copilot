@@ -1,13 +1,17 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-function fixture(){
+const catalogue=Object.assign({},...fs.readdirSync(path.join(__dirname,'../localization')).filter(name=>name.endsWith('_en.json')).sort().map(name=>require('../localization/'+name)));
+function fixture(language='ru'){
  const observedAt=new Date(Date.now()-3600000).toISOString();
  const station=(id,system,name,price,supply,demand)=>({id,system,station:name,type:'Coriolis',pad:'L',distanceLs:420,observedAt,updatedAt:observedAt,ageHours:1,quotes:[{key:'gold',price,supply,demand,quantity:50}]});
  const leg={key:'gold',name:'Золото',buy:station('A','Alpha','Source Port',100,1000,0),sell:station('B','Beta','Buyer Port',200,0,1000),quantity:50,buyPrice:100,sellPrice:200,supply:1000,demand:1000,safeDemand:250,purchaseCost:5000,revenue:10000,grossMargin:5000,operatingCost:500,netEstimate:4500,profitPerTonne:100,marginPercent:100,distanceLy:30,approachDistanceLy:5,minutes:15,profitPerHour:18000,limitingFactors:['capital']};
  const back={...leg,key:'silver',name:'Серебро',buy:{...leg.sell},sell:{...leg.buy}};
  const route={id:'route|1',legs:[leg,back],roundTrip:true,netEstimate:9000,grossMargin:10000,minutes:30,profitPerHour:18000,distanceLy:60,minimumCapital:5500,warnings:[]};
  const C={tab:'deals',state:{commander:{system:'Alpha',cargoCapacity:100,cargoTons:20},pilot:{credits:100000},tradeRoutes:{results:[route],checked:2,total:4,assumptions:'Доход по введённому времени.'},goods:[{key:'gold',name:'Золото'},{key:'silver',name:'Серебро'}],savedTradeRoutes:[]}};
- const listeners=new Map(),ctx={window:{},document:{addEventListener:(type,handler)=>listeners.set(type,handler)},Date,Intl};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'deals.js'),'utf8'),ctx);
+ const listeners=new Map(),ctx={window:{CopilotTranslations:catalogue},document:{addEventListener:(type,handler)=>listeners.set(type,handler)},Date,Intl};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'i18n.js'),'utf8'),ctx);
+ ctx.window.CopilotI18n.setLanguage(language);
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'deals.js'),'utf8'),ctx);
  const calls=[],inputs=[],dialogs=[],toasts=[],error={textContent:'',classList:{remove(){}}},query={focus(){this.focused=true},setSelectionRange(start){this.start=start}};
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const u={esc,icon:()=>'<svg></svg>',fmt:value=>value==null||value===''?'—':new Intl.NumberFormat('ru-RU').format(Number(value)),money:value=>value==null?'—':value+' кр.',btn:(label,action,icon,style,attrs='')=>`<button data-click="${action}" ${attrs}>${esc(label)}</button>`,badge:text=>`<span>${esc(text)}</span>`,heading:(title,description,extra='')=>`<h1>${esc(title)}</h1><p>${esc(description)}</p>${extra}`,call:async(op,params)=>{calls.push({op,params:params===undefined?undefined:JSON.parse(JSON.stringify(params))});return {ok:true}},loadView:async()=>{},renderPage(){},toast:text=>toasts.push(text),dialog:(title,html,footer)=>dialogs.push({title,html,footer}),closeLayer(){},$:selector=>selector==='#deals-form-error'?error:selector==='#deals-query'?query:null,$$:()=>inputs};
@@ -15,43 +19,46 @@ function fixture(){
  const input=(key,value,extra={})=>({dataset:{dealsFilter:key},value,type:'text',matches:()=>true,...extra});
  return{api:ctx.window.DealsUI,C,u,calls,inputs,dialogs,listeners,route,leg,button,input,error,query,toasts};
 }
-test('renders both complete legs, systems and stations, price, stock, demand, age and arrival',()=>{
+test('renders paired station headers, mirrored legs, raw prices, stock, demand, age and arrival',()=>{
  const {api,C,u,leg}=fixture(),html=api.render(C,u);
- for(const text of ['Alpha','Beta','Source Port','Buyer Port','Золото','Серебро','Запас','Спрос','От звезды','Туда','Обратно','Начальный капитал','по вашему времени','Назначить покупателя','Сохранить план перевозки','Сохранить весь рейс'])assert.ok(html.includes(text),text);
- assert.equal((html.match(/data-copy="system"/g)||[]).length,4);assert.equal((html.match(/data-copy="station"/g)||[]).length,4);assert.ok(html.includes('datetime="'+leg.buy.observedAt+'"'));assert.doesNotMatch(html,/NaN|undefined|onclick=/);
+ for(const text of ['Alpha','Beta','Source Port','Buyer Port','Золото','Серебро','Запас','Спрос','От звезды','Туда','Обратно','До первой системы','Самая старая цена','Прибыль за тонну','Рентабельность','Отслеживать рейс','Добавить маршрут в избранное'])assert.ok(html.includes(text),text);
+ assert.equal((html.match(/data-copy="system"/g)||[]).length,2);
+ assert.equal((html.match(/data-copy="station"/g)||[]).length,2);
+ assert.deepEqual([...html.matchAll(/class="deals-quote (buy|sell)"/g)].map(match=>match[1]),['buy','sell','sell','buy']);
+ assert.ok(html.includes('datetime="'+leg.buy.observedAt+'"'));
+ assert.doesNotMatch(html,/NaN|undefined|onclick=|18000|18[\s\u00a0]000|кр\.\/ч/);
 });
-test('uses known free hold and real pilot balance while preserving unknown and zero',()=>{
- const {api,C,u}=fixture();let html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value="80"/);assert.match(html,/data-deals-filter="credits" value="100000"/);
- C.dealsUI=null;C.state.commander.cargoCapacity=null;C.state.pilot.credits=null;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value=""/);assert.match(html,/data-deals-filter="credits" value=""/);
- C.dealsUI=null;C.state.commander.cargoCapacity=0;C.state.pilot.credits=0;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value="0"/);assert.match(html,/data-deals-filter="credits" value="0"/);
+test('uses nominal cargo capacity and preserves unknown and zero',()=>{
+ const {api,C,u}=fixture();let html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value="100"/);
+ C.dealsUI=null;C.state.commander.cargoCapacity=null;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value=""/);
+ C.dealsUI=null;C.state.commander.cargoCapacity=0;html=api.render(C,u);assert.match(html,/data-deals-filter="cargoCapacity" value="0"/);
 });
-test('search sends an optional commodity filter and minimum net profit in normalized numbers',async()=>{
- const {api,C,u,calls,inputs,input}=fixture();
- const html=api.render(C,u);
- assert.match(html,/id="deals-commodity-picker" class="deals-commodity-picker" hidden/);
- assert.doesNotMatch(html,/data-deals-filter="resource\d/);
- inputs.push(input('cargoCapacity','120'),input('credits','12 500,5'),input('marketType','carriers'),input('minDemand','2 000'),input('minNetProfit','42 000'));
+test('search shows only reference fields, normalizes values and submits both political filters',async()=>{
+ const {api,C,u,calls,inputs,input}=fixture(),html=api.render(C,u);
+ const expected=['system','cargoCapacity','maxDistance','maxAgeHours','minPad','maxArrivalLs','allowSurface','minSupply','minDemand','roundTrip','sourcePower','sourcePowerState','targetPower','targetPowerState','orderBy'].sort();
+ assert.deepEqual([...html.matchAll(/data-deals-filter="([^"]+)"/g)].map(match=>match[1]).sort(),expected);
+ inputs.push(input('cargoCapacity','120'),input('maxDistance','20,5'),input('allowSurface','true'),input('minDemand','2 000'),
+  input('sourcePower','Edmund Mahon'),input('sourcePowerState','Stronghold'),input('targetPower','Zemina Torval'),
+  input('targetPowerState','Exploited'),input('roundTrip','',{type:'checkbox',checked:false}));
+ await api.handle('deals-view',{dataset:{view:'search'}},C,u);
  await api.handle('deals-search',null,C,u);
- assert.equal(calls[0].params.values.resourceFilter,false);
- assert.deepEqual(calls[0].params.values.resourceKeys,[]);
- const toggle=checked=>({target:input('resourceFilter','',{type:'checkbox',checked})});
- api.handleInput(toggle(true),C,u);
- await assert.rejects(api.handle('deals-search',null,C,u),/Выберите хотя бы один товар/);
- for(const commodity of ['gold','gold','silver','water','tea','titanium','wine','liquor']) api.handleInput({target:{dataset:{dealsCommodity:commodity},checked:true}},C,u);
- await api.handle('deals-search',null,C,u);
- const body=calls[1].params.values;
- assert.equal(body.credits,12500.5);
+ const body=calls[0].params.values;
+ assert.deepEqual(Object.keys(body).sort(),[...expected,'automatic'].sort());
  assert.equal(body.cargoCapacity,120);
- assert.equal(body.includeCarriers,true);
+ assert.equal(body.maxDistance,20.5);
+ assert.equal(body.allowSurface,true);
  assert.equal(body.minDemand,2000);
- assert.equal(body.minNetProfit,42000);
- assert.deepEqual(body.resourceKeys,['gold','silver','water','tea','titanium','wine','liquor']);
- api.handleInput(toggle(false),C,u);
- await api.handle('deals-search',null,C,u);
- assert.deepEqual(calls[2].params.values.resourceKeys,[]);
+ assert.equal(body.sourcePower,'Edmund Mahon');
+ assert.equal(body.sourcePowerState,'Stronghold');
+ assert.equal(body.targetPower,'Zemina Torval');
+ assert.equal(body.targetPowerState,'Exploited');
+ assert.equal(body.roundTrip,false);
+ assert.equal(C.dealsUI.view,'search');
 });
-test('invalid or unknown finance prevents any external search and gives a field error',async()=>{
- const {api,C,u,calls,inputs,input,error}=fixture();inputs.push(input('credits',''));await assert.rejects(api.handle('deals-search',null,C,u),/Бюджет/);assert.equal(calls.length,0);assert.match(error.textContent,/укажите число/);
+test('unknown cargo prevents external search and gives a field error',async()=>{
+ const {api,C,u,calls,inputs,input,error}=fixture();inputs.push(input('cargoCapacity',''));
+ await assert.rejects(api.handle('deals-search',null,C,u),/Вместимость трюма/);
+ assert.equal(calls.length,0);assert.match(error.textContent,/Введите число/);
 });
 test('copy selects each exact endpoint field through native clipboard without navigation or backend mutation',async()=>{
  const {api,C,u,calls,button}=fixture();await api.handle('deals-copy',button({side:'buy',copy:'system'}),C,u);await api.handle('deals-copy',button({side:'sell',copy:'station',leg:'1'}),C,u);
@@ -87,12 +94,12 @@ test('result pagination mounts only ten complete cards and filtering searches bo
  api.handleInput({target:{id:'deals-query',value:'Buyer Port',selectionStart:10}},C,u);assert.equal((api.render(C,u).match(/data-deals-route=/g)||[]).length,10);
 });
 test('backend text is escaped and unknown observation values never become a fresh quote',()=>{
- const {api,C,u,leg}=fixture();leg.buy.system='<img src=x onerror=alert(1)>';leg.buy.station='<script>x</script>';leg.buy.observedAt=null;leg.buy.updatedAt=null;leg.buy.ageHours=null;leg.buy.distanceLs=null;const html=api.render(C,u);assert.match(html,/&lt;img/);assert.match(html,/&lt;script&gt;/);assert.match(html,/Время цены неизвестно/);assert.match(html,/От звезды: <b>— св. с./);assert.doesNotMatch(html,/<img|<script/);
+ const {api,C,u,leg}=fixture();leg.buy.system='<img src=x onerror=alert(1)>';leg.buy.station='<script>x</script>';leg.buy.observedAt=null;leg.buy.updatedAt=null;leg.buy.ageHours=null;leg.buy.distanceLs=null;const html=api.render(C,u);assert.match(html,/&lt;img/);assert.match(html,/&lt;script&gt;/);assert.match(html,/Время цены неизвестно/);assert.match(html,/От звезды <b>—<\/b>/);assert.doesNotMatch(html,/<img|<script/);
 });
 test('unrelated global input does not initialize stale route filters and buttons do not submit twice',()=>{
- const {api,C,u,listeners}=fixture();assert.equal(api.handleInput({target:{id:'settings-other',matches:()=>false}},C,u),false);assert.equal(C.dealsUI,undefined);api.init(C,u);const first=listeners.get('submit');api.init(C,u);assert.equal(listeners.get('submit'),first);assert.match(api.render(C,u),/data-click="deals-search" type="button"/);
+ const {api,C,u,listeners}=fixture();assert.equal(api.handleInput({target:{id:'settings-other',matches:()=>false}},C,u),false);assert.equal(C.dealsUI,undefined);api.init(C,u);const first=listeners.get('submit');api.init(C,u);assert.equal(listeners.get('submit'),first);assert.match(api.render(C,u),/type="submit" class="pill primary deals-submit"/);assert.doesNotMatch(api.render(C,u),/data-click="deals-search"/);
 });
-test('opening trade finds routes automatically using confirmed hold, credits and ship pad',async()=>{
+test('opening trade finds routes automatically using confirmed hold and ship pad',async()=>{
  const {api,C,u,calls}=fixture();
  C.mode='Поиск';C.state.tradeRoutes={};C.state.commander.shipPad='M';
  assert.match(api.render(C,u),/Подбираем выгодные рейсы/);
@@ -104,25 +111,21 @@ test('opening trade finds routes automatically using confirmed hold, credits and
  assert.equal(calls[0].op,'deals-search');
  assert.equal(values.automatic,true);
  assert.equal(values.system,'Alpha');
- assert.equal(values.cargoCapacity,80);
- assert.equal(values.credits,100000);
+ assert.equal(values.cargoCapacity,100);
+ assert.equal(values.maxDistance,20);
  assert.equal(values.minPad,'M');
- assert.equal(values.resourceFilter,false);
- assert.deepEqual(values.resourceKeys,[]);
+ assert.equal('credits' in values,false);
  C.state.tradeRoutes={options:values,updatedAt:new Date().toISOString(),results:[]};
  await api.init(C,u);
  assert.equal(calls.length,1);
 });
 
-test('automatic routes do not guess empty cargo, funding or saved-route intent',async()=>{
+test('automatic routes do not guess empty cargo or run from favorites',async()=>{
  const {api,C,u,calls}=fixture();
- C.state.tradeRoutes={};C.mode='Поиск';C.state.commander.cargoKnown=false;
- assert.match(api.render(C,u),/Укажите свободный трюм/);
+ C.state.tradeRoutes={};C.mode='Поиск';C.state.commander.cargoCapacity=null;
+ assert.match(api.render(C,u),/Укажите вместимость трюма/);
  await api.init(C,u);
- C.state.commander.cargoKnown=true;C.state.pilot.credits=null;
- assert.match(api.render(C,u),/Укажите бюджет закупки/);
- await api.init(C,u);
- C.state.pilot.credits=100000;C.mode='Сохранённые';
+ C.state.commander.cargoCapacity=100;C.mode='Сохранённые';
  await api.init(C,u);
  assert.equal(calls.length,0);
 });
@@ -138,9 +141,9 @@ test('component smoke is independent of selected result or saved view',async()=>
 
 test('raw child-market pages and malformed legacy records never become empty route cards',async()=>{
  const {api,C,u,route,calls,button}=fixture();C.state.tradeRoutes.results=[{id:'market-legacy',station:'Legacy Empty Port'},null,{}, {id:'bad',legs:[]},{id:'bad-leg',legs:[{}]},route];
- let html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,1);assert.doesNotMatch(html,/Legacy Empty Port/);assert.match(html,/Требуется повторный поиск/);assert.match(html,/Результаты <span>1<\/span>/);
+ let html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,1);assert.doesNotMatch(html,/Legacy Empty Port/);assert.match(html,/Требуется повторный поиск/);assert.match(html,/Лучшие торговые маршруты <span>1<\/span>/);
  await assert.rejects(api.handle('deals-select',button({id:'market-legacy'}),C,u),/Рейс больше не найден/);assert.equal(calls.length,0);
- C.state.tradeRoutes.results=[{id:'market-only',station:'Legacy Empty Port'}];html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,0);assert.match(html,/<details class="panel deals-search" open>/);
+ C.state.tradeRoutes.results=[{id:'market-only',station:'Legacy Empty Port'}];html=api.render(C,u);assert.equal((html.match(/data-deals-route=/g)||[]).length,0);assert.match(html,/<form id="deals-search-form"/);
  C.state.savedTradeRoutes=[{id:'broken',station:'Broken saved station'}];C.dealsUI.view='saved';assert.doesNotMatch(api.render(C,u),/Broken saved station/);
 });
 
@@ -164,14 +167,57 @@ test('station types are localized for display while raw market types survive cop
  leg.buy.type='<img src=x onerror=alert(1)>';html=api.render(C,u);assert.match(html,/&lt;img/);assert.doesNotMatch(html,/<img/);
 });
 
-test('unknown costs and capital remain unknown and a missing leg result never has a positive sign',()=>{
- const {api,C,u,leg,route}=fixture();leg.operatingCost=null;leg.netEstimate=null;route.minimumCapital=null;route.netEstimate=null;route.profitPerHour=null;
- const html=api.render(C,u);assert.match(html,/Расходы: <b>—<\/b>/);assert.match(html,/Начальный капитал<\/span><strong>—<\/strong>/);assert.doesNotMatch(html,/\+—/);
- leg.operatingCost=0;leg.netEstimate=0;assert.match(api.render(C,u),/Расходы: <b>0 кр\.<\/b>/);
+test('unknown costs, margin and trip profit remain unknown',()=>{
+ const {api,C,u,leg,route}=fixture();leg.profitPerTonne=null;route.netEstimate=null;
+ const html=api.render(C,u);assert.match(html,/Прибыль за тонну<\/dt><dd>—<\/dd>/);assert.match(html,/Прибыль за рейс<\/dt><dd>—<\/dd>/);assert.doesNotMatch(html,/\+—/);
+ route.netEstimate=0;assert.match(api.render(C,u),/Прибыль за рейс<\/dt><dd>0 кр\.<\/dd>/);
 });
 
 test('quote timestamps stay visible without a stale badge',()=>{
  const {api,C,u,leg,route}=fixture();leg.buy.observedAt=null;leg.buy.updatedAt=null;leg.buy.ageHours=0;let html=api.render(C,u);assert.match(html,/Время цены неизвестно/);
  leg.buy.observedAt=new Date(Date.now()+48*3600000).toISOString();html=api.render(C,u);assert.match(html,/Время котировки в будущем/);
  leg.buy.observedAt=new Date(Date.now()-30*3600000).toISOString();route.options={maxAgeHours:24,carrierMaxAgeHours:6};html=api.render(C,u);assert.match(html,/30 ч назад/);assert.match(html,/местное время/);assert.doesNotMatch(html,/deals-observed stale|Проверьте перед рейсом/);
+});
+
+test('tracking starts from favorites, reveals commands independent of search, and stops within its workspace',async()=>{
+ const {api,C,u,calls,button,route}=fixture();
+ C.state.planWorkspace={key:'operator'};
+ C.state.savedTradeRoutes=[{...route,id:'favorite'}];
+ await api.handle('deals-view',{dataset:{view:'saved'}},C,u);
+ assert.match(api.render(C,u),/data-click="deals-track"[^>]* data-id="favorite"/);
+ await api.handle('deals-track',button({id:'favorite'}),C,u);
+ C.state.tradeRun={routeId:'favorite',phase:'outbound',target:{system:'Next System',station:'Next Port',sell:{name:'Золото',quantity:50,price:200}},completedRounds:0};
+ C.state.savedTradeRoutes=[];
+ assert.match(api.render(C,u),/Следующая станция[\s\S]*Next Port[\s\S]*Next System[\s\S]*Продажа/);
+ assert.doesNotMatch(api.render(C,u),/Прибыль за час по времени круга/);
+ await api.handle('deals-track-stop',null,C,u);
+ assert.deepEqual(calls,[
+  {op:'deals-track',params:{values:{action:'start',routeId:'favorite',expectedPlanWorkspace:'operator'}}},
+  {op:'deals-track',params:{values:{action:'stop',expectedPlanWorkspace:'operator'}}}
+ ]);
+});
+
+test('measured time gates hourly projections and reconciled sales replace estimates',()=>{
+ const {api,C,u,route}=fixture();
+ route.powerBonusPower='Zemina Torval';route.powerBonusPerUnit=45;route.powerBonusProfit=2250;route.profitWithPowerBonus=11250;
+ C.state.tradeRun={routeId:route.id,completedRounds:0,profitPerHour:14000};
+ let html=api.render(C,u);
+ assert.match(html,/Бонус Powerplay при полном ранге.*Zemina Torval/);
+ assert.doesNotMatch(html,/кр\.\/ч/);
+ C.state.tradeRun={routeId:route.id,completedRounds:1,lastRoundSeconds:1200,profitPerHour:27000,lastRoundProfit:9000};
+ html=api.render(C,u);assert.match(html,/Прибыль за час по времени круга/);assert.match(html,/Расчёт за час с бонусом/);
+ C.state.tradeRun.actualProfitPerHour=26323;C.state.tradeRun.actualRoundProfit=8774;
+ html=api.render(C,u);assert.match(html,/Фактическая прибыль за час/);assert.doesNotMatch(html,/Прибыль за час по времени круга/);
+});
+
+test('English localizes the completed workspace including filters, tracked actions and bonus',()=>{
+ const {api,C,u,route}=fixture('en');
+ Object.assign(route,{powerBonusPower:'Zemina Torval',powerBonusPerUnit:45,powerBonusProfit:2250,profitWithPowerBonus:11250,warnings:['Рейс в одну сторону']});
+ C.state.tradeRun={routeId:route.id,phase:'return',completedRounds:1,lastRoundSeconds:1200,profitPerHour:27000,lastRoundProfit:9000,
+  target:{system:'Alpha',station:'Source Port',sell:{name:'Серебро',quantity:50,price:200}}};
+ const html=api.render(C,u);
+ assert.match(html,/Source system Powerplay state/);
+ assert.match(html,/Target system Powerplay state/);
+ assert.match(html,/Estimated hourly profit with bonus/);
+ assert.doesNotMatch(html,/[А-Яа-яЁё]/);
 });

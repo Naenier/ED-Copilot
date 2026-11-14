@@ -1,0 +1,14 @@
+{
+  "ТОРГОВЫЙ РЕЙС": "TRADE ROUTE",
+  "За круг по ценам рынка": "Quoted round-trip profit",
+  "В час по времени круга": "Per hour at observed pace",
+  "Фактически в час": "Actual profit per hour",
+  "Выбранный рейс недоступен.": "The selected trade route is unavailable.",
+  "Выбранный рейс содержит некорректные точки или котировки.": "The selected route has invalid stops or prices.",
+  "Достигнут предел сохранённых торговых рейсов.": "The saved trade route limit has been reached.",
+  "Неизвестное действие торгового рейса.": "Unknown trade route action.",
+  "Карточки рейсов показывают цены, запас и спрос на обеих станциях.": "Route cards show prices, supply and demand at both stations.",
+  "Выберите рейс, чтобы скопировать систему назначения. При входе в эту систему Copilot копирует обратную точку.": "Select a route to copy the destination system. Copilot copies the return stop when you enter that system.",
+  "В торговом оверлее видны станция, система и товары для покупки и продажи.": "The trading overlay shows the station, system and commodities to buy and sell.",
+  "Прибыль в час появляется после первого круга по времени из журнала игры.": "Profit per hour appears after the first round trip, using time from the game journal."
+}

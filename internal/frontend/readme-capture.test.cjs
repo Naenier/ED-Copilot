@@ -13,8 +13,7 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
   async open(id){C.reference.entryId=id;C.reference.entry={id};},
   async handleClick(action){assert.equal(action,'reference-farming');calls.push({op:action});return true;}
  }};
- const tradeSettings={open:false}, commodityPicker={open:false};
- const commodityFilter={checked:false,click(){this.checked=true;}};
+ const tradeSearch={dataset:{view:'search'}};
  const blueprint={value:'',dispatchEvent(event){calls.push({op:'blueprint',type:event.type,value:this.value});}};
  const document={documentElement:{lang:language},body:{innerText:bodyText},images:[]};
  const u={
@@ -24,9 +23,8 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
    if(selector.startsWith('[data-commander-section='))return C.tab==='commander'?{}:null;
    if(selector==='[data-click="sidebar"]')return {dataset:{click:'sidebar'}};
    if(C.tab==='deals'){
-    if(selector==='.deals-search')return tradeSettings;
-    if(selector==='[data-deals-filter="resourceFilter"]')return commodityFilter;
-    if(selector==='#deals-commodity-picker')return commodityFilter.checked?commodityPicker:null;
+    if(selector==='[data-click="deals-view"][data-view="search"]')return tradeSearch;
+    if(selector==='[data-deals-filter="sourcePowerState"]')return C.dealsUI.view==='search'?{}:null;
    }
    if(selector==='#eng-roadmap-blueprintKey')return C.mode==='Прокачка'?blueprint:null;
    if(selector==='.ref-farm-route button[data-system]'||selector==='[data-reference="entry"] [data-reference-image]')return C.reference?.entryId==='article/farm-guardian'?{}:null;
@@ -44,12 +42,13 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
   async navigate(tab,options={}){C.tab=tab;C.mode=options.mode||'';if(tab==='deals')C.dealsUI={};if(tab==='encyclopedia')C.reference={loading:false,entryLoading:false,list:{entries:[]}};},
   async handleClick(action,button){
    if(action==='reference-galaxy-tab'){assert.equal(button.dataset.id,'bodies');C.systemBodies=true;return;}
+   if(action==='deals-view'){assert.equal(button.dataset.view,'search');C.dealsUI.view='search';calls.push({op:'trade-search'});return;}
    assert.equal(action,'sidebar');C.collapsed=!C.collapsed;calls.push({op:'sidebar',collapsed:C.collapsed});
   },
   renderPage(){},async loadView(){},async smokeCapture(name){captures.push(name);}
  };
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'readme-capture.js'),'utf8'),{window,document,innerWidth:1920,innerHeight:1080,requestAnimationFrame:fn=>fn(),setTimeout,Date,Event});
- return {C,u,window,document,calls,captures,tradeSettings,commodityPicker,run:()=>window.ReadmeCapture.run(C,u),report:()=>calls.find(row=>row.op==='smoke-result')?.body};
+ return {C,u,window,document,calls,captures,run:()=>window.ReadmeCapture.run(C,u),report:()=>calls.find(row=>row.op==='smoke-result')?.body};
 }
 
 test('true documentation flags still reject real commanders and invalid language before any action',async()=>{
@@ -62,7 +61,7 @@ test('English and Russian capture flows visit commander sections and restore com
  for(const language of ['en','ru']){
   const f=fixture(language);await f.run();const report=f.report();assert.equal(report.ok,true,JSON.stringify(report.problems));assert.equal(report.language,language);assert.equal(f.captures.length,28);assert.equal(new Set(f.captures).size,28);
   for(const name of ['readme-commander','readme-ranks','readme-fleet','readme-inventory','readme-navigation','readme-navigation-compact','readme-farming','readme-galaxy','readme-system','readme-engineering','readme-material-exchange','readme-material','readme-deals-filters','readme-farming-catalog','readme-exo-planets','readme-exo-samples','readme-politics'])assert.ok(f.captures.includes(name),name);
-  assert.ok(f.tradeSettings.open&&f.commodityPicker.open);
+  assert.ok(f.calls.some(row=>row.op==='trade-search'));
   assert.ok(f.calls.some(row=>row.op==='blueprint'&&row.type==='change'&&row.value==='FSD_LongRange'));
   assert.ok(f.calls.some(row=>row.op==='reference-farming'));
   const exchange=f.calls.find(row=>row.op==='action'&&row.body.actionId==='engineering.trade');

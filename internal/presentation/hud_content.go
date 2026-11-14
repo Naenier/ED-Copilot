@@ -40,8 +40,10 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 		hudMaterials(&doc, s, true)
 		hudTargets(&doc, s, "raw")
 	case "trade":
-		hudDestination(&doc, s, now)
-		hudTradePlan(&doc, s)
+		if !hudActiveTradeRoute(&doc, s) {
+			hudDestination(&doc, s, now)
+			hudTradePlan(&doc, s)
+		}
 	case "carrier":
 		hudCarrier(&doc, s, now)
 	case "engineering":

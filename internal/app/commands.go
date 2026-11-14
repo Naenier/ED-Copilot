@@ -81,6 +81,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return result, err
 	}
 	switch path {
+	case "/api/trading/active-route":
+		return e.updateActiveTradeRun(body)
 	case "/api/surface-navigation":
 		return e.updateSurfaceNavigation(body)
 	case "/api/engineering/current-ship":
@@ -537,7 +539,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return e.start(name, body, func(ctx context.Context, id uint64) (M, error) {
 			searcher.OnUpdate = func(s M) { s["running"] = true; e.updateNetwork(name, id, s) }
 			if name == "tradeRoutes" {
-				return searcher.FindRoutes(ctx, body, snapshot)
+				return searcher.FindStationRoutes(ctx, body, snapshot)
 			}
 			return searcher.Search(ctx, body, snapshot)
 		}), nil

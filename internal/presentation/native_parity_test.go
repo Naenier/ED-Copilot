@@ -123,8 +123,9 @@ func TestMarketWarningsAndQuoteObservationDateRemainVisible(t *testing.T) {
 	}
 }
 
-func TestTradeRouteEachLegCanCopyBuyAndSellAndSetDestination(t *testing.T) {
+func TestTradeRouteCanCopyEachMarketAndTrackTheEntireRoute(t *testing.T) {
 	s := presentationState(t)
+	s["planWorkspace"] = M{"key": "commander"}
 	selected := v.Copy(v.Rows(v.At(s, "tradeRoutes", "results"))[0])
 	leg := v.Rows(selected["legs"])[0]
 	firstBuy, firstSell := v.Copy(v.Obj(leg["buy"])), v.Copy(v.Obj(leg["sell"]))
@@ -139,29 +140,20 @@ func TestTradeRouteEachLegCanCopyBuyAndSellAndSetDestination(t *testing.T) {
 		}
 		seen[a.ID] = true
 	}
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		suffix, buy, sell string
-		quantity          float64
-	}{{"0", "Система закупки", "Система продажи", 100}, {"1", "Обратная закупка", "Дом", 50}} {
+	}{{"0", "Система закупки", "Система продажи"}, {"1", "Обратная закупка", "Дом"}} {
 		if got := coreAction(t, "deals", "", "deals.copy-buy."+tc.suffix, s, selected, nil); got.Disabled || got.Path != tc.buy {
 			t.Fatal(got)
 		}
 		if got := coreAction(t, "deals", "", "deals.copy-sell."+tc.suffix, s, selected, nil); got.Disabled || got.Path != tc.sell {
 			t.Fatal(got)
 		}
-		a := coreAction(t, "deals", "", "deals.destination."+tc.suffix, s, selected, nil)
-		body, err := a.Body(nil)
-		if err != nil || a.Disabled || a.Path != "/api/trading/destination" || v.At(body, "destination", "system") != tc.sell {
-			t.Fatal("route buyer did not reach HUD", i, a, body)
-		}
-		purchase := coreAction(t, "deals", "", "deals.purchase."+tc.suffix, s, selected, nil)
-		prefill, err := PurchasePrefill(purchase, M{"quantity": 75, "system": "Уточнённая система"})
-		if err != nil || purchase.Kind != "purchase" || prefill["resourceKey"] != "platinum" || v.Num(prefill["quantity"]) != 75 || prefill["system"] != "Уточнённая система" || v.Bool(prefill["useCargo"]) || v.Bool(prefill["useCarrierCargo"]) {
-			t.Fatal("purchase edit discarded", prefill, err)
-		}
-		if v.Num(purchase.Payload["quantity"]) != tc.quantity {
-			t.Fatal("another leg quantity used")
-		}
+	}
+	a := coreAction(t, "deals", "", "deals.track", s, selected, nil)
+	body, err := a.Body(nil)
+	if err != nil || a.Path != "/api/trading/active-route" || body["routeId"] != selected["id"] || body["action"] != "start" {
+		t.Fatal("route tracking did not receive the result id", a, body)
 	}
 	if got := CoreActions("deals", "", s, nil, nil); len(got) != 2 {
 		t.Fatal("row-specific actions enabled without route", got)

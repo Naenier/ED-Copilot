@@ -76,7 +76,7 @@ The reference catalogue includes 126 species across 25 genera, habitat condition
 
 ## Trading and mining
 
-Find stations and fleet carriers where you can buy or sell a commodity. Compare price per tonne, demand, supply, landing pad size, distance and the age of each observation. Search for trade routes that fit your cargo hold and budget, keep a destination in the overlay and track your transactions.
+Find stations and fleet carriers where you can buy or sell a commodity. Compare price per tonne, demand, supply, landing pad size, distance and the age of each observation. Track trade routes, destinations and transactions.
 
 Mining tools help you find valuable rings and planets, filter suitable targets, inspect prospected asteroids, check equipment and review mining sessions. Engineering materials and commodities for sale are tracked separately.
 
@@ -84,15 +84,9 @@ In **Mining → Compare mining runs**, select sessions to compare their location
 
 ## Trade routes: from search to a usable plan
 
-The route screen presents both stations on a wide card, including their systems, landing pads, arrival distances, buy and sell prices, supply, demand and observation times. A return load on an A → B → A route has its own commodity and calculation. Copy each system or station name independently, then paste it into the game.
+Search nearby trade routes by cargo capacity, route distance, quote age, station properties, market supply and demand, and Powerplay at either end. The cards compare both stations and show the prices, volumes, margins and applicable Powerplay bonus. Use the star to keep a route in **Favorite routes**.
 
-Search takes available cargo space, your known credit balance, market volume, costs and personal limits into account. By default it compares all goods on the markets it checks. Enable **Filter by commodity** to pick specific goods, or set a minimum net profit for the complete trip, including any return load. Profit per hour uses the journey time you enter for one direction. Travel to the first station is excluded.
-
-![A two-leg trade route](docs/screenshots/en/deals.png)
-
-![Trade route search with the optional commodity picker and minimum net profit](docs/screenshots/en/deals-filters.png)
-
-Select a route, set its buyer as the overlay destination or save a plan for a particular leg. Keep up to 40 complete routes, including both market quotes, in Saved. These are observation snapshots: run a new search before repeating a route to check current prices and available volume.
+Select a route to copy the destination system. On arrival Copilot copies the return system. The trading overlay shows the station and the commodities to buy and sell. Profit per hour appears after a completed round trip, using time recorded in the game journal.
 
 ## Fleet carrier trading: the whole journey in one calculation
 
