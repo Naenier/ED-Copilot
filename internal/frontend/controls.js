@@ -6,73 +6,15 @@ const contextLabels={general:'Общее управление',ship:'Кораб�
 const filterLabels={...contextLabels,camera:'Камера',scanner:'Сканеры'};
 const keyLabels={
   GamePad_FaceDown:'A',GamePad_FaceRight:'B',GamePad_FaceLeft:'X',GamePad_FaceUp:'Y',
-  GamePad_DPadUp:'D-pad ↑',GamePad_DPadDown:'D-pad ↓',GamePad_DPadLeft:'D-pad ←',GamePad_DPadRight:'D-pad →',
+  GamePad_DPadUp:'Крестовина ↑',GamePad_DPadDown:'Крестовина ↓',GamePad_DPadLeft:'Крестовина ←',GamePad_DPadRight:'Крестовина →',
   GamePad_LBumper:'LB',GamePad_RBumper:'RB',GamePad_LTrigger:'LT',GamePad_RTrigger:'RT',
   Pos_GamePad_LTrigger:'LT',Pos_GamePad_RTrigger:'RT',
   GamePad_LThumb:'LS',GamePad_RThumb:'RS',GamePad_Start:'Menu',GamePad_Back:'View',
   GamePad_LStickX:'LS X',GamePad_LStickY:'LS Y',GamePad_RStickX:'RS X',GamePad_RStickY:'RS Y',
   Key_LeftShift:'L Shift',Key_RightShift:'R Shift',Key_LeftControl:'L Ctrl',Key_RightControl:'R Ctrl',
-  Key_LeftAlt:'L Alt',Key_RightAlt:'R Alt',Key_Space:'Space',Key_Enter:'Enter',Key_Escape:'Esc',
+  Key_LeftAlt:'L Alt',Key_RightAlt:'R Alt',Key_Space:'Пробел',Key_Enter:'Enter',Key_Escape:'Esc',
   Key_UpArrow:'↑',Key_DownArrow:'↓',Key_LeftArrow:'←',Key_RightArrow:'→',
   Mouse_1:'ЛКМ',Mouse_2:'ПКМ',Mouse_3:'СКМ'
-};
-const controllerButtons=[
-  'GamePad_FaceDown','GamePad_FaceRight','GamePad_FaceLeft','GamePad_FaceUp',
-  'GamePad_DPadUp','GamePad_DPadDown','GamePad_DPadLeft','GamePad_DPadRight',
-  'GamePad_LBumper','GamePad_RBumper','Pos_GamePad_LTrigger','Pos_GamePad_RTrigger',
-  'GamePad_LThumb','GamePad_RThumb','GamePad_Back','GamePad_Start'
-];
-const controllerAxes=['GamePad_LStickX','GamePad_LStickY','GamePad_RStickX','GamePad_RStickY','GamePad_LTrigger','GamePad_RTrigger'];
-const keyboardKeys=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].map(char=>'Key_'+char).concat(
-  Array.from({length:12},(_,index)=>'Key_F'+(index+1)),Object.keys(keyLabels).filter(key=>key.startsWith('Key_')));
-const actionLabels={
-  YawAxisRaw:'Рыскание',RollAxisRaw:'Крен',PitchAxisRaw:'Тангаж',LateralThrustRaw:'Боковая тяга',
-  VerticalThrustRaw:'Вертикальная тяга',AheadThrust:'Продольная тяга',ThrottleAxis:'Ось газа',
-  LeftThrustButton:'Тяга влево',RightThrustButton:'Тяга вправо',UpThrustButton:'Тяга вверх',DownThrustButton:'Тяга вниз',
-  ForwardThrustButton:'Тяга вперёд',BackwardThrustButton:'Тяга назад',ForwardKey:'Увеличить тягу',BackwardKey:'Уменьшить тягу',
-  ToggleFlightAssist:'Помощь в полёте',UseBoostJuice:'Форсаж',HyperSuperCombination:'Рамочно-сдвиговый двигатель',
-  Supercruise:'Суперкруиз',Hyperspace:'Гиперпрыжок',OrbitLinesToggle:'Линии орбит',ToggleReverseThrottleInput:'Реверс тяги',
-  SetSpeedZero:'Нулевая тяга',PrimaryFire:'Основной огонь',SecondaryFire:'Дополнительный огонь',
-  DeployHardpointToggle:'Выпустить или убрать оружие',CycleFireGroupNext:'Следующая огневая группа',
-  CycleFireGroupPrevious:'Предыдущая огневая группа',DeployHeatSink:'Сброс теплоотвода',UseShieldCell:'Батарея щита',
-  FireChaffLauncher:'Дипольные отражатели',ChargeECM:'Электронное противодействие',ToggleCargoScoop:'Грузовой ковш',
-  LandingGearToggle:'Посадочное шасси',EjectAllCargo:'Сбросить весь груз',ShipSpotLightToggle:'Фары корабля',
-  NightVisionToggle:'Ночное видение',SelectTarget:'Выбрать цель',CycleNextTarget:'Следующая цель',
-  CyclePreviousTarget:'Предыдущая цель',SelectHighestThreat:'Наибольшая угроза',
-  CycleNextHostileTarget:'Следующая враждебная цель',CyclePreviousHostileTarget:'Предыдущая враждебная цель',
-  TargetNextRouteSystem:'Следующая система маршрута',IncreaseEnginesPower:'Мощность двигателей',
-  IncreaseWeaponsPower:'Мощность оружия',IncreaseSystemsPower:'Мощность систем',
-  ResetPowerDistribution:'Сброс распределения мощности',UIFocus:'Фокус интерфейса',FocusLeftPanel:'Левая панель',
-  FocusRightPanel:'Правая панель',FocusCommsPanel:'Панель связи',FocusRadarPanel:'Нижняя панель',
-  QuickCommsPanel:'Быстрое сообщение',GalaxyMapOpen:'Карта галактики',SystemMapOpen:'Карта системы',
-  HeadLookToggle:'Осмотр кабины',Pause:'Пауза',FriendsMenu:'Меню друзей',OpenCodexGoToDiscovery:'Кодекс',
-  PlayerHUDModeToggle:'Переключить режим интерфейса',ExplorationFSSEnter:'Открыть ПСС',
-  UI_Up:'Меню вверх',UI_Down:'Меню вниз',UI_Left:'Меню влево',UI_Right:'Меню вправо',UI_Select:'Подтвердить',UI_Back:'Назад',
-  UI_Toggle:'Переключить элемент меню',CycleNextPanel:'Следующая вкладка',CyclePreviousPanel:'Предыдущая вкладка',
-  CycleNextPage:'Следующая страница',CyclePreviousPage:'Предыдущая страница',
-  ToggleDriveAssist:'Помощь при вождении',SteeringAxis:'Рулевое управление',SteerLeftButton:'Повернуть налево',
-  SteerRightButton:'Повернуть направо',DriveSpeedAxis:'Ось скорости ТРП',AutoBreakBuggyButton:'Стояночный тормоз',
-  VerticalThrustersButton:'Вертикальные двигатели ТРП',BuggyPrimaryFireButton:'Основной огонь ТРП',
-  BuggySecondaryFireButton:'Дополнительный огонь ТРП',HeadlightsBuggyButton:'Фары ТРП',ToggleBuggyTurretButton:'Турель ТРП',
-  RecallDismissShip:'Вызвать или отпустить корабль',SelectTarget_Buggy:'Выбрать цель с ТРП',
-  HumanoidForwardAxis:'Движение вперёд и назад',HumanoidForwardButton:'Шаг вперёд',HumanoidBackwardButton:'Шаг назад',
-  HumanoidStrafeAxis:'Движение в стороны',HumanoidStrafeLeftButton:'Шаг влево',HumanoidStrafeRightButton:'Шаг вправо',
-  HumanoidRotateAxis:'Горизонтальный обзор',HumanoidPitchAxis:'Вертикальный обзор',HumanoidSprintButton:'Бег',
-  HumanoidWalkButton:'Ходьба',HumanoidCrouchButton:'Присесть',HumanoidJumpButton:'Прыгнуть',
-  HumanoidPrimaryInteractButton:'Основное взаимодействие',HumanoidSecondaryInteractButton:'Вторичное взаимодействие',
-  HumanoidItemWheelButton:'Колесо предметов',HumanoidEmoteWheelButton:'Колесо эмоций',
-  HumanoidPrimaryFireButton:'Стрельба',HumanoidZoomButton:'Прицелиться',HumanoidThrowGrenadeButton:'Бросить гранату',
-  HumanoidMeleeButton:'Ближний бой',HumanoidReloadButton:'Перезарядить',HumanoidSwitchWeapon:'Сменить оружие',
-  HumanoidHideWeaponButton:'Убрать оружие',HumanoidToggleFlashlightButton:'Фонарик',
-  HumanoidToggleNightVisionButton:'Ночное видение костюма',HumanoidToggleShieldsButton:'Щит костюма',
-  HumanoidHealthPack:'Аптечка',HumanoidBattery:'Батарея костюма',HumanoidSwitchToRechargeTool:'Энергосвязь',
-  HumanoidSwitchToCompAnalyser:'Анализатор состава',HumanoidSwitchToSuitTool:'Инструмент костюма',
-  HumanoidToggleToolModeButton:'Режим инструмента',HumanoidOpenAccessPanelButton:'Панель доступа',
-  PhotoCameraToggle:'Фоторежим',ToggleFreeCam:'Свободная камера',FreeCamToggleHUD:'Интерфейс камеры',
-  QuitCamera:'Закрыть камеру',ExplorationFSSDiscoveryScan:'Сканирование системы',ExplorationFSSQuit:'Выйти из ПСС',
-  ExplorationFSSRadioTuningX_Raw:'Настройка частоты ПСС',ExplorationFSSZoomIn:'Приблизить в ПСС',
-  ExplorationFSSZoomOut:'Отдалить в ПСС',ExplorationSAAChangeScannedAreaViewToggle:'Сменить карту поверхности',
-  ExplorationSAAExitThirdPerson:'Выйти из картографирования'
 };
 const slotLabels={primary:'Основное назначение',secondary:'Дополнительное назначение',axis:'Ось'};
 const button=(u,label,action,icon='',style='quiet',attrs='')=>u.btn(t(label),'controls-'+action,icon,style,attrs);
@@ -100,22 +42,28 @@ const contextOf=action=>{
 };
 const humanize=id=>String(id||'').replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g,'$1 $2');
 function labelFor(action) {
-  const english=humanize(action.id);
-  if(window.CopilotI18n?.language==='en') return english;
-  const base=action.id.replace(/_(?:Humanoid|Buggy)$/,'');
-  return actionLabels[action.id]||actionLabels[base]||english;
+  if(window.CopilotI18n?.language==='en') return humanize(action.id);
+  return window.ControlActionLabels?.[action.id]||t('Действие вне справочника');
 }
-const keyName=key=>t(keyLabels[key]||String(key||'').replace(/^Key_/,''));
-function devices(detail) {
-  const list=new Map([['Keyboard',t('Клавиатура')],['Mouse',t('Мышь')]]);
-  for(const action of detail?.actions||[]) for(const slot of action.slots||[]) {
-    for(const item of [slot,...(slot.modifiers||[])]) {
-      if(!item.device||item.device==='{NoDevice}') continue;
-      if(/GamePad_/i.test(item.key)) list.set(item.device,`${t('Геймпад')} · ${item.device}`);
-      else if(!list.has(item.device)) list.set(item.device,item.device);
-    }
-  }
-  return list;
+function keyName(key='') {
+  if(!key) return '';
+  if(keyLabels[key]) return t(keyLabels[key]);
+  const direction=key.match(/^(Pos|Neg)_(.+)$/);
+  if(direction) return `${keyName(direction[2])} ${direction[1]==='Pos'?'+':'−'}`;
+  const button=key.match(/^(?:Joy|Mouse)_(\d+)$/);
+  if(button) return t('Кнопка {number}',{number:button[1]});
+  const axis=key.match(/^(?:Joy|Mouse)_([XYZRUVA])Axis$/);
+  if(axis) return t('Ось {axis}',{axis:axis[1]});
+  const numpad=key.match(/^Key_Numpad_(\d)$/);
+  if(numpad) return t('Цифровая клавиша {number}',{number:numpad[1]});
+  if(!key.startsWith('Key_')) return t('Кнопка устройства');
+  const name=key.slice(4);
+  return name.length===1?name.toUpperCase():t(humanize(name));
+}
+function inputDevice(device,key) {
+  if(device==='Keyboard') return t('Клавиатура');
+  if(device==='Mouse') return t('Мышь');
+  return t(key?.includes('GamePad_')?'Геймпад':'Контроллер');
 }
 function running(C) {
   const l=local(C);
@@ -126,7 +74,7 @@ function binding(u,slot) {
   if(notSet(slot)) return `<span class="controls-unbound">${th(u,'Не назначено')}</span>`;
   const parts=[...(slot.modifiers||[]),slot];
   return `<span class="controls-chord">${parts.map((item,index)=>`${index?'<span aria-hidden="true">+</span>':''}
-    <kbd title="${u.esc(item.device+' · '+item.key)}">${u.esc(keyName(item.key))}</kbd>`).join('')}</span>`;
+    <kbd title="${u.esc(inputDevice(item.device,item.key))}">${u.esc(keyName(item.key))}</kbd>`).join('')}</span>`;
 }
 const canonical=slot=>notSet(slot)?'':[
   slot.device,slot.key,
@@ -172,7 +120,7 @@ function renderActions(C,u) {
   return [...grouped].map(([category,actions])=>`<section class="controls-category">
     <h3>${th(u,filterLabels[category])}</h3>
     ${actions.map(action=>`<div class="controls-action">
-      <div class="controls-action-name"><strong>${u.esc(labelFor(action))}</strong><code>${u.esc(action.id)}</code></div>
+      <div class="controls-action-name"><strong>${u.esc(labelFor(action))}</strong></div>
       <div class="controls-action-slots">${(action.slots||[]).map(slot=>`<button type="button" class="controls-slot"
         data-click="controls-edit" data-action="${u.esc(action.id)}" data-slot="${u.esc(slot.id)}" ${disabled?'disabled':''}>
         <small>${th(u,slotLabels[slot.id]||slot.id)}</small>${binding(u,slot)}</button>`).join('')}</div>
@@ -244,79 +192,99 @@ function render(C,u) {
       </section>`:''}`}
   </section>`;
 }
-function pairInputs(u,label,pair,listID,devicesID) {
-  return `<div class="controls-pair">
-    <label class="controls-field"><span>${th(u,'Устройство')}</span><input type="text" data-control-role="device" list="${devicesID}"
-      value="${u.esc(pair.device==='{NoDevice}'?'':pair.device||'')}" maxlength="80" autocomplete="off"></label>
-    <label class="controls-field"><span>${th(u,label)}</span><input type="text" data-control-role="key" list="${listID}"
-      value="${u.esc(pair.key||'')}" maxlength="100" autocomplete="off"></label>
-  </div>`;
+const keyboardCodes={
+  Backspace:'Backspace',Tab:'Tab',Enter:'Enter',Space:'Space',CapsLock:'CapsLock',
+  ShiftLeft:'LeftShift',ShiftRight:'RightShift',ControlLeft:'LeftControl',ControlRight:'RightControl',
+  AltLeft:'LeftAlt',AltRight:'RightAlt',MetaLeft:'LeftWin',MetaRight:'RightWin',ContextMenu:'Apps',
+  ArrowUp:'UpArrow',ArrowDown:'DownArrow',ArrowLeft:'LeftArrow',ArrowRight:'RightArrow',
+  Insert:'Insert',Delete:'Delete',Home:'Home',End:'End',PageUp:'PageUp',PageDown:'PageDown',
+  PrintScreen:'SYSRQ',Pause:'Pause',NumLock:'NumLock',ScrollLock:'ScrollLock',
+  Backquote:'Grave',Minus:'Minus',Equal:'Equals',BracketLeft:'LeftBracket',BracketRight:'RightBracket',
+  Backslash:'BackSlash',Semicolon:'SemiColon',Quote:'Apostrophe',Comma:'Comma',Period:'Period',Slash:'Slash',
+  IntlBackslash:'OEM_102',NumpadDivide:'Numpad_Divide',NumpadMultiply:'Numpad_Multiply',
+  NumpadSubtract:'Numpad_Subtract',NumpadAdd:'Numpad_Add',NumpadEnter:'Numpad_Enter',
+  NumpadDecimal:'Numpad_Decimal',NumpadComma:'Numpad_Comma',NumpadEqual:'Numpad_Equals'
+};
+const russianLetters='фисвуапршолдьтщзйкыегмцчня';
+const russianPunctuation={BracketLeft:'х',BracketRight:'ъ',Semicolon:'ж',Quote:'э',Backquote:'ё',Comma:'б',Period:'ю'};
+function eliteKeyboardKey(code='',layout) {
+  const russian=/^ru(?:[-_]|$)/i.test(layout||'');
+  if(/^Key[A-Z]$/.test(code)) return 'Key_'+(russian?russianLetters[code.charCodeAt(3)-65]:code[3]);
+  if(russian&&russianPunctuation[code]) return 'Key_'+russianPunctuation[code];
+  if(/^Digit[0-9]$/.test(code)) return 'Key_'+code[5];
+  if(/^Numpad[0-9]$/.test(code)) return 'Key_Numpad_'+code[6];
+  if(/^F(?:[1-9]|1[0-5])$/.test(code)) return 'Key_'+code;
+  return keyboardCodes[code]?'Key_'+keyboardCodes[code]:'';
 }
-function datalist(id,rows,u) {
-  return `<datalist id="${id}">${rows.map(([value,label])=>`<option value="${u.esc(value)}" label="${u.esc(label)}"></option>`).join('')}</datalist>`;
+function gamepadDevice(detail,slot) {
+  const gamepad=item=>!notSet(item)&&/(?:^|_)GamePad_/.test(item.key);
+  if(gamepad(slot)) return slot.device;
+  const uses=new Map();
+  for(const action of detail.actions||[]) for(const bound of action.slots||[]) {
+    for(const part of [bound,...(bound.modifiers||[])]) {
+      if(gamepad(part)) uses.set(part.device,(uses.get(part.device)||0)+1);
+    }
+  }
+  return [...uses].sort((a,b)=>b[1]-a[1])[0]?.[0]||'GamePad';
+}
+const passthroughKeys=new Set(['Key_ц','Key_ы','Key_1','Key_2','Key_3','Key_4']);
+function gamepadFirst(detail) {
+  let pad=0, keys=0;
+  for(const action of detail.actions||[]) for(const slot of action.slots||[]) {
+    for(const part of [slot,...(slot.modifiers||[])]) {
+      if(notSet(part)) continue;
+      if(part.device==='Keyboard'&&passthroughKeys.has(part.key)) keys++;
+      else if(/(?:^|_)GamePad_/.test(part.key)) pad++;
+      else return false;
+    }
+  }
+  return pad>0&&pad>=keys;
+}
+function editableTuning(action,slot) {
+  return slot.id==='axis'?(typeof action.inverted==='boolean'||action.deadzone!=null):
+    typeof action.toggle==='boolean'||typeof slot.hold==='boolean';
 }
 function editor(C,u,detail,action,slot) {
-  const l=local(C), axis=slot.id==='axis', devs=devices(detail);
-  const controller=[...devs].find(([id,label])=>id===slot.device&&label.startsWith(t('Геймпад')+' · '))||
-    [...devs].find(([,label])=>label.startsWith(t('Геймпад')+' · '));
-  const mods=slot.modifiers||[];
-  const edit={profileId:detail.id,revision:detail.revision,action:action.id,slot:slot.id};
+  const l=local(C), axis=slot.id==='axis', tuning=editableTuning(action,slot);
+  const edit={profileId:detail.id,revision:detail.revision,action:action.id,slot:slot.id,
+    keyboardLayout:detail.keyboardLayout,gamepad:gamepadDevice(detail,slot),gamepadFirst:gamepadFirst(detail),
+    pressed:new Map(),blocked:new Set()};
   l.edit=edit;
-  l.keyTarget=null;
-  const observed=new Set((detail.actions||[]).flatMap(item=>(item.slots||[]).flatMap(row=>[
-    row.key,...(row.modifiers||[]).map(mod=>mod.key)
-  ])).filter(Boolean));
-  const keyOptions=keys=>[...new Set([...keys,...observed])].map(key=>[key,keyName(key)]);
-  const deviceList=datalist('controls-device-options',[...devs],u);
-  const keyList=datalist('controls-key-options',keyOptions([
-    ...controllerButtons,...(axis?controllerAxes:[]),...keyboardKeys,...Object.keys(keyLabels).filter(key=>key.startsWith('Mouse_'))
-  ]),u);
-  const shortcut=(key)=>`<button type="button" data-click="controls-fill-key" data-device="${u.esc(controller?.[0]||'')}"
-    data-key="${u.esc(key)}" title="${u.esc(key)}">${u.esc(keyName(key))}</button>`;
-  const row=(item,index)=>`<div class="controls-modifier" data-controls-modifier>
-    ${pairInputs(u,t('Клавиша модификатора {number}',{number:index+1}),item,'controls-key-options','controls-device-options')}
-    ${button(u,'','remove-modifier','x','quiet',`title="${th(u,'Удалить модификатор')}" aria-label="${th(u,'Удалить модификатор')}"`)}
-  </div>`;
   const body=`<form id="controls-binding-form" class="controls-binding-form">
-    <p class="controls-edit-caption"><code>${u.esc(action.id)}</code> · ${th(u,slotLabels[slot.id]||slot.id)}</p>
-    ${deviceList}${keyList}
-    <div class="controls-edit-pair" data-controls-main>${pairInputs(u,axis?'Код оси':'Кнопка или клавиша',slot,'controls-key-options','controls-device-options')}</div>
-    ${controller?`<section class="controls-quick-keys">
-      <div><strong>${th(u,axis?'Оси геймпада':'Кнопки геймпада')}</strong><code>${u.esc(controller[0])}</code></div>
-      <div>${(axis?controllerAxes:controllerButtons).map(shortcut).join('')}</div>
-    </section>`:''}
-    ${axis?`<div class="controls-axis">
-      ${typeof action.inverted==='boolean'?`<label><input type="checkbox" id="controls-invert"${action.inverted?' checked':''}> ${th(u,'Инвертировать ось')}</label>`:''}
-      ${action.deadzone!=null?`<label class="controls-field"><span>${th(u,'Мёртвая зона, 0–1')}</span><input id="controls-deadzone" type="text" inputmode="decimal"
-        value="${u.esc(action.deadzone)}" maxlength="18"></label>`:''}</div>`:
-      typeof action.toggle==='boolean'?`<label class="controls-toggle"><input id="controls-toggle" type="checkbox"${action.toggle?' checked':''}> ${th(u,'Переключатель вместо удержания')}</label>`:''}
-    ${!axis&&typeof slot.hold==='boolean'?`<label class="controls-toggle"><input id="controls-hold" type="checkbox"${slot.hold?' checked':''}> ${th(u,'Удерживать кнопку')}</label>`:''}
-    <section class="controls-modifiers"><header><h3>${th(u,'Модификаторы')}</h3>${button(u,'Добавить модификатор','add-modifier','plus','quiet')}</header>
-        <div id="controls-modifiers">${mods.map(row).join('')}</div>
-        <template id="controls-modifier-template">${row({},0)}</template>
-    </section>
+    <div class="controls-capture-box">
+      <div class="controls-capture-current"><span>${th(u,slotLabels[slot.id]||slot.id)}</span>${binding(u,slot)}</div>
+      <div id="controls-capture-focus" class="controls-capture-target" tabindex="0" aria-labelledby="controls-capture-prompt">
+        <strong id="controls-capture-prompt">${th(u,axis?'Отклоните стик или нажмите курок':
+          edit.gamepadFirst?'Нажмите кнопку или сочетание на геймпаде':'Нажмите кнопку или сочетание клавиш')}</strong>
+        <div id="controls-capture-result" role="status" aria-live="polite"></div>
+      </div>
+      ${button(u,'Повторить захват','capture-retry','refresh-cw','quiet','id="controls-capture-retry" disabled')}
+    </div>
+    ${tuning?`<details class="controls-axis-options"><summary>${th(u,'Параметры назначения')}</summary>
+      ${axis?`<div class="controls-axis">
+        ${typeof action.inverted==='boolean'?`<label><input type="checkbox" id="controls-invert"${action.inverted?' checked':''}> ${th(u,'Инвертировать ось')}</label>`:''}
+        ${action.deadzone!=null?`<label class="controls-field"><span>${th(u,'Мёртвая зона, 0–1')}</span><input id="controls-deadzone" type="text" inputmode="decimal"
+          value="${u.esc(action.deadzone)}" maxlength="18"></label>`:''}</div>`:
+        `${typeof action.toggle==='boolean'?`<label class="controls-toggle"><input id="controls-toggle" type="checkbox"${action.toggle?' checked':''}> ${th(u,'Переключатель вместо удержания')}</label>`:''}
+        ${typeof slot.hold==='boolean'?`<label class="controls-toggle"><input id="controls-hold" type="checkbox"${slot.hold?' checked':''}> ${th(u,'Удерживать кнопку')}</label>`:''}`}
+    </details>`:''}
     <div id="controls-edit-notice" class="notice" role="status" hidden></div>
   </form>`;
   const footer=button(u,'Очистить назначение','clear-binding','x','quiet',notSet(slot)?'disabled':'')+
     '<span class="spacer"></span>'+u.btn(t('Отмена'),'close-dialog','','quiet')+
-    button(u,'Сохранить назначение','save-binding','check','primary');
+    button(u,'Сохранить назначение','save-binding','check','primary','id="controls-binding-save" disabled');
   u.dialog(labelFor(action),body,footer,true);
-}
-function readPair(host) {
-  return {device:host?.querySelector('[data-control-role="device"]')?.value.trim()||'',
-    key:host?.querySelector('[data-control-role="key"]')?.value.trim()||''};
+  return startCapture(C,u,edit);
 }
 function showEditNotice(u,text) {
   const node=u.$('#controls-edit-notice');
   if(node) {node.hidden=!text;node.textContent=text||'';}
 }
 function collectEdit(u,edit,clear=false) {
-  const form=u.$('#controls-binding-form');
-  if(!form) throw new Error(t('Откройте назначение заново.'));
-  const pair=clear?{device:'',key:''}:readPair(form.querySelector('[data-controls-main]'));
-  if(!!pair.device!==!!pair.key) throw new Error(t('Укажите устройство и клавишу вместе.'));
-  const change={action:edit.action,slot:edit.slot,...pair};
-  if(!clear&&edit.slot==='axis') {
+  const change={action:edit.action,slot:edit.slot};
+  if(clear) return {...change,device:'',key:'',modifiers:[]};
+  if(edit.candidate) Object.assign(change,edit.candidate);
+  if(edit.slot==='axis') {
     const raw=u.$('#controls-deadzone')?.value.trim().replace(',','.');
     const invert=u.$('#controls-invert');
     if(invert) change.inverted=invert.checked;
@@ -326,32 +294,141 @@ function collectEdit(u,edit,clear=false) {
       change.deadzone=Number(raw);
     }
   }
-  const modifiers=clear||!pair.key?[]:[...form.querySelectorAll('[data-controls-modifier]')].map(readPair)
-    .filter(item=>item.device||item.key);
-  if(modifiers.some(item=>!item.key||!item.device)) throw new Error(t('Заполните устройство и клавишу каждого модификатора.'));
-  const parts=[pair,...modifiers].filter(item=>item.device&&item.key).map(canonical);
-  if(new Set(parts).size!==parts.length) throw new Error(t('Одна клавиша не может повторяться в сочетании.'));
-  change.modifiers=modifiers;
-  const toggle=u.$('#controls-toggle');
-  if(toggle&&!clear) change.toggle=toggle.checked;
-  const hold=u.$('#controls-hold');
-  if(hold&&!clear) change.hold=hold.checked;
+  for(const [field,id] of [['toggle','#controls-toggle'],['hold','#controls-hold']]) {
+    const flag=u.$(id);
+    if(flag) change[field]=flag.checked;
+  }
   return change;
 }
 function showCurrentConflicts(C,u) {
   const l=local(C), detail=profile(C), edit=l.edit;
   const action=detail?.actions?.find(item=>item.id===edit?.action);
-  if(!action||!u.$('#controls-binding-form')) return;
+  if(!action) return;
   l.confirmedConflict='';
-  let change;
-  try {change=collectEdit(u,edit);} catch(_) {showEditNotice(u,'');return;}
-  const potential=matchingBindings(detail,action,edit.slot,change);
+  const potential=edit.candidate?matchingBindings(detail,action,edit.slot,edit.candidate):[];
   showEditNotice(u,potential.length?t('Возможное пересечение с действиями {list}.',{list:potential.map(labelFor).join(', ')}):'');
+}
+function syncCapture(C,u,edit,notice='') {
+  const output=u.$('#controls-capture-result');
+  if(output) output.innerHTML=edit.candidate?binding(u,edit.candidate):th(u,notice||
+    (edit.slot==='axis'?'Ожидаем движение оси геймпада…':
+      edit.gamepadFirst?'Ожидаем ввод с геймпада…':'Ожидаем кнопку геймпада или клавишу…'));
+  const save=u.$('#controls-binding-save');
+  if(save) save.disabled=running(C)||!(edit.candidate||edit.tuningChanged);
+  const retry=u.$('#controls-capture-retry');
+  if(retry) retry.disabled=running(C)||edit.waiting;
+}
+function cancelCapture(u,edit) {
+  const id=edit?.captureId;
+  if(!id) return;
+  edit.captureId='';
+  void u.call('controls.capture.cancel',{captureId:id}).catch(()=>{});
+}
+function finishCapture(C,u,edit,candidate) {
+  cancelCapture(u,edit);
+  edit.waiting=false;
+  edit.pressed.clear();
+  edit.blocked.clear();
+  edit.candidate=candidate;
+  syncCapture(C,u,edit);
+  showCurrentConflicts(C,u);
+}
+let captureSequence=0;
+async function startCapture(C,u,edit) {
+  cancelCapture(u,edit);
+  const captureId='binding-'+Date.now()+'-'+(++captureSequence);
+  edit.captureId=captureId;
+  edit.waiting=true;
+  edit.candidate=null;
+  edit.pressed.clear();
+  edit.blocked.clear();
+  syncCapture(C,u,edit);
+  showEditNotice(u,'');
+  u.$('#controls-capture-focus')?.focus();
+  const current=()=>local(C).edit===edit&&edit.captureId===captureId;
+  try {
+    const result=await u.call('controls.capture',{captureId,kind:edit.slot==='axis'?'axis':'button'});
+    if(!current()) return;
+    edit.captureId='';
+    if(typeof result?.key==='string'&&/^(?:(?:Pos|Neg)_)?GamePad_/.test(result.key)) {
+      const device=edit.gamepad;
+      const keys=[...new Set(Array.isArray(result.modifiers)?result.modifiers:[])]
+        .filter(key=>typeof key==='string'&&key!==result.key&&/^(?:(?:Pos|Neg)_)?GamePad_/.test(key));
+      finishCapture(C,u,edit,{device,key:result.key,modifiers:keys.map(key=>({device,key}))});
+      return;
+    }
+    const keyboardAvailable=edit.slot!=='axis';
+    edit.waiting=!!result?.unavailable&&keyboardAvailable;
+    const retry=u.$('#controls-capture-retry');
+    const message=result?.unavailable?
+      keyboardAvailable&&!edit.gamepadFirst?'Геймпад не обнаружен. Можно нажать клавишу.':'Геймпад не обнаружен. Подключите геймпад и повторите захват.':
+      result?.timedOut?'Время захвата истекло. Повторите попытку.':'Захват отменён.';
+    syncCapture(C,u,edit,message);
+    if(retry) retry.disabled=running(C);
+  } catch(error) {
+    if(!current()) return;
+    edit.captureId='';
+    edit.waiting=false;
+    syncCapture(C,u,edit,t(error.message||'Не удалось начать захват.'));
+  }
+}
+function inputPair(edit,event,type) {
+  if(type==='keyboard') {
+    const key=eliteKeyboardKey(event.code,edit.keyboardLayout);
+    return key?{device:'Keyboard',key}:null;
+  }
+  const button={0:1,2:2,1:3,3:4}[event.button];
+  return button?{device:'Mouse',key:'Mouse_'+button}:null;
+}
+function captureInput(C,u,event,type,released) {
+  const edit=local(C).edit, target=u.$('#controls-capture-focus');
+  if(!edit?.waiting||edit.slot==='axis'||!target?.contains(event.target)||running(C)) return;
+  if(type==='keyboard'&&event.code==='Escape') return; // The dialog handles Escape and cancels capture.
+  const pair=inputPair(edit,event,type);
+  if(!pair) return;
+  event.preventDefault();
+  event.stopImmediatePropagation?.();
+  const id=type==='keyboard'?event.code:'mouse-'+event.button;
+  if(edit.gamepadFirst&&(pair.device!=='Keyboard'||!passthroughKeys.has(pair.key))) {
+    if(released) edit.blocked.delete(id);
+    else {
+      edit.blocked.add(id);
+      edit.pressed.clear();
+      if(!event.repeat) syncCapture(C,u,edit,'Для этого профиля используйте геймпад или клавиши Ц, Ы и 1–4.');
+    }
+    return;
+  }
+  if(edit.blocked.size) return;
+  if(!released) {
+    if(!event.repeat&&!edit.pressed.has(id)&&edit.pressed.size<9) {
+      cancelCapture(u,edit);
+      edit.pressed.set(id,pair);
+      const pressed=[...edit.pressed.values()];
+      const output=u.$('#controls-capture-result');
+      if(output) output.innerHTML=binding(u,{...pressed.pop(),modifiers:pressed});
+    }
+    return;
+  }
+  if(!edit.pressed.has(id)) return;
+  const pressed=[...edit.pressed.values()];
+  finishCapture(C,u,edit,{...pressed.pop(),modifiers:pressed});
+}
+function layerClosed(C,u) {
+  const edit=C.controlsUI?.edit;
+  if(!edit) return;
+  cancelCapture(u,edit);
+  delete C.controlsUI.edit;
 }
 function setGameRunning(C,u,running) {
   if(typeof running!=='boolean') return;
   local(C).gameRunning=running;
-  for(const action of ['save-binding','clear-binding','apply-clone','apply-activate','apply-restore']) {
+  const edit=local(C).edit;
+  if(edit&&running&&edit.waiting) {
+    cancelCapture(u,edit);
+    edit.waiting=false;
+    syncCapture(C,u,edit,'Захват отменён.');
+  }
+  for(const action of ['clear-binding','apply-clone','apply-activate','apply-restore']) {
     const button=u.$(`#layers [data-click="controls-${action}"]`);
     if(!button) continue;
     if(running&&!button.disabled) {
@@ -362,6 +439,12 @@ function setGameRunning(C,u,running) {
       delete button.dataset.controlsGameDisabled;
       button.disabled=false;
     }
+  }
+  if(edit) {
+    const save=u.$('#controls-binding-save');
+    if(save) save.disabled=running||!(edit.candidate||edit.tuningChanged);
+    const retry=u.$('#controls-capture-retry');
+    if(retry) retry.disabled=running||edit.waiting;
   }
 }
 async function refresh(C,u,profileId) {
@@ -453,31 +536,6 @@ async function handle(action,node,C,u) {
     await pending;
     return;
   }
-  if(name==='fill-key') {
-    const form=u.$('#controls-binding-form');
-    const host=l.keyTarget&&form?.contains(l.keyTarget)?l.keyTarget:form?.querySelector('[data-controls-main]');
-    if(!host||!node.dataset.device) return;
-    host.querySelector('[data-control-role="device"]').value=node.dataset.device;
-    host.querySelector('[data-control-role="key"]').value=node.dataset.key;
-    showCurrentConflicts(C,u);
-    return;
-  }
-  if(name==='add-modifier'||name==='remove-modifier') {
-    const list=u.$('#controls-modifiers');
-    if(!list) return;
-    if(name==='remove-modifier') node.closest('[data-controls-modifier]')?.remove();
-    else {
-      if(list.children.length>=8) return;
-      list.appendChild(u.$('#controls-modifier-template').content.cloneNode(true));
-    }
-    [...list.children].forEach((child,index)=>{
-      const title=child.querySelector('[data-control-role="key"]')?.closest('label')?.querySelector('span');
-      if(title) title.textContent=t('Клавиша модификатора {number}',{number:index+1});
-    });
-    list.lastElementChild?.querySelector('input')?.focus();
-    showCurrentConflicts(C,u);
-    return;
-  }
   if(name==='import'||name==='export') {
     if(l.busy||name==='export'&&!detail) return;
     if(name==='import') requireClosed(C);
@@ -539,19 +597,18 @@ async function handle(action,node,C,u) {
     return mutate(C,u,{action:'activate',profileId:detail.id,context,expectedRevision:detail.revision},'Активный профиль изменён');
   }
   if(detail.readOnly) return;
+  if(name==='capture-retry'&&l.edit) return startCapture(C,u,l.edit);
   if(name==='edit') {
     const binding=detail.actions?.find(item=>item.id===node.dataset.action);
     const slot=binding?.slots?.find(item=>item.id===node.dataset.slot);
-    if(binding&&slot) {
-      editor(C,u,detail,binding,slot);
-      showCurrentConflicts(C,u);
-    }
+    if(binding&&slot) return editor(C,u,detail,binding,slot);
     return;
   }
   if(name==='save-binding'||name==='clear-binding') {
     const edit=l.edit, binding=detail.actions?.find(item=>item.id===edit?.action);
     if(!binding||edit.profileId!==detail.id||edit.revision!==detail.revision)
       throw new Error(t('Профиль обновился. Откройте назначение заново.'));
+    if(name==='save-binding'&&!edit.candidate&&!edit.tuningChanged) return;
     const change=collectEdit(u,edit,name==='clear-binding');
     const collisions=matchingBindings(detail,binding,edit.slot,change);
     const signature=canonical(change);
@@ -560,6 +617,8 @@ async function handle(action,node,C,u) {
       showEditNotice(u,t('Возможное пересечение с действиями {list}. Нажмите «Сохранить назначение» ещё раз, чтобы применить.',{list:collisions.map(labelFor).join(', ')}));
       return;
     }
+    cancelCapture(u,edit);
+    edit.waiting=false;
     return mutate(C,u,{action:'edit',profileId:detail.id,expectedRevision:edit.revision,changes:[change]},'Назначение сохранено');
   }
 }
@@ -591,10 +650,22 @@ function init(C,u) {
   if(!init.bound&&typeof document!=='undefined') {
     init.bound=true;
     document.addEventListener('input',event=>{
-      if(active(C)&&event.target.closest?.('#controls-binding-form')) showCurrentConflicts(C,u);
+      if(!l.edit||!event.target.closest?.('.controls-axis-options')) return;
+      l.edit.tuningChanged=true;
+      const save=u.$('#controls-binding-save');
+      if(save) save.disabled=running(C);
     });
-    document.addEventListener('focusin',event=>{
-      if(active(C)&&event.target.dataset?.controlRole) l.keyTarget=event.target.closest('[data-controls-main],[data-controls-modifier]');
+    document.addEventListener('keydown',event=>captureInput(C,u,event,'keyboard',false),true);
+    document.addEventListener('keyup',event=>captureInput(C,u,event,'keyboard',true),true);
+    document.addEventListener('pointerdown',event=>captureInput(C,u,event,'mouse',false),true);
+    document.addEventListener('pointerup',event=>captureInput(C,u,event,'mouse',true),true);
+    document.addEventListener('contextmenu',event=>{
+      if(l.edit?.waiting&&u.$('#controls-capture-focus')?.contains(event.target)) event.preventDefault();
+    });
+    document.addEventListener('focusout',event=>{
+      if(event.target.id!=='controls-capture-focus'||!l.edit) return;
+      l.edit.pressed.clear();
+      l.edit.blocked.clear();
     });
     document.addEventListener('submit',event=>{
       const actions={'controls-binding-form':'save-binding','controls-clone-form':'apply-clone','controls-activate-form':'apply-activate'};
@@ -605,5 +676,5 @@ function init(C,u) {
     });
   }
 }
-window.ControlsUI={active,tabs,render,init,handle};
+window.ControlsUI={active,tabs,render,init,handle,layerClosed};
 })();

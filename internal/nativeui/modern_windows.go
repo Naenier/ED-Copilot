@@ -28,38 +28,40 @@ import (
 )
 
 type modernShell struct {
-	owner            *Window
-	view             *edge.Chromium
-	core             *edge.ICoreWebView2
-	document         []byte
-	ready, closed    bool
-	workspaceReady   bool
-	focusing         bool
-	focusQueued      bool
-	resizeQueued     bool
-	positionQueued   bool
-	visibilityQueued bool
-	browserVisible   bool
-	uiPost           func(func())
-	snapshotMu       sync.Mutex
-	pendingState     M
-	stateQueued      bool
-	hudQueued        bool
-	showSurfaceNav   atomic.Bool
-	actionMu         sync.Mutex
-	desktopMu        sync.Mutex
-	desktopPending   M
-	desktopDone      chan struct{}
-	desktopSaving    bool
-	desiredMode      string
-	smokeOnce        sync.Once
-	smokeFirstView   M
-	smokeAfterUI     M
-	soak             *nativeSoak
-	lastSummary      string
-	language         string
-	diagnostics      int
-	captures         []*modernPreviewCapture
+	owner              *Window
+	view               *edge.Chromium
+	core               *edge.ICoreWebView2
+	document           []byte
+	ready, closed      bool
+	workspaceReady     bool
+	focusing           bool
+	focusQueued        bool
+	resizeQueued       bool
+	positionQueued     bool
+	visibilityQueued   bool
+	browserVisible     bool
+	uiPost             func(func())
+	snapshotMu         sync.Mutex
+	pendingState       M
+	stateQueued        bool
+	hudQueued          bool
+	showSurfaceNav     atomic.Bool
+	actionMu           sync.Mutex
+	desktopMu          sync.Mutex
+	desktopPending     M
+	desktopDone        chan struct{}
+	desktopSaving      bool
+	desiredMode        string
+	smokeOnce          sync.Once
+	smokeFirstView     M
+	smokeAfterUI       M
+	soak               *nativeSoak
+	lastSummary        string
+	language           string
+	diagnostics        int
+	captures           []*modernPreviewCapture
+	controlCaptureID   string
+	stopControlCapture func()
 }
 
 func newModernWindow(backend Controller, options Options) (*Window, error) {
@@ -230,6 +232,7 @@ func (u *Window) initModernTray() {
 }
 
 func (m *modernShell) close() {
+	m.cancelControlCapture()
 	if m.closed {
 		return
 	}
@@ -739,6 +742,10 @@ func (m *modernShell) handleRequest(req webRequest) {
 	if req.Op == "smoke-viewport" {
 		result, err := m.smokeViewport(req.Params["compact"])
 		m.reply(req.ID, result, err)
+		return
+	}
+	if req.Op == "controls.capture" || req.Op == "controls.capture.cancel" {
+		m.captureControl(req)
 		return
 	}
 	if req.Op == "native" {

@@ -31,7 +31,7 @@ Your avatar opens **Commander**, with pages for Summary, Ranks, Finances, Invent
 
 ## Game controls
 
-Open **Settings → Controls** to edit Elite Dangerous Live bindings, including gamepad chords, keyboard shortcuts and stick axes. Switch profiles for general controls, ship, SRV and on-foot play independently. Import or export a `.binds` file, save a backup or restore a previous copy. Exit Elite Dangerous before changing its control files.
+Open **Settings → Controls**, choose an assignment and press a button or move a stick to capture it. To record a gamepad combination, hold the modifier and press the other button. Switch profiles for general controls, ship, SRV and on-foot play independently. Import or export a `.binds` file, save a backup or restore a previous copy. Exit Elite Dangerous before changing its control files.
 
 ## Star system search
 

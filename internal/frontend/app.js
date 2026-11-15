@@ -344,6 +344,7 @@ function closeLayer(){
  const wasModal=C.layer,invoker=dialogInvoker;
  dialogInvoker=null;menuInvoker=null;
  window.SystemSearchUI?.close?.();
+ window.ControlsUI?.layerClosed(C,uiContext());
  $('#layers').innerHTML='';C.layer=false;C.themePreview=null;
  const app=$('#app');if(app)app.inert=false;
  if(C.pendingLanguage)applyLanguage(true);

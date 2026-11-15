@@ -12,13 +12,13 @@
   min-width: 0;
   container-type: inline-size;
 }
-.controls-toolbar,.controls-profile-tools,.controls-actions > header,.controls-modifiers > header,.controls-quick-keys > div:first-child {
+.controls-toolbar,.controls-profile-tools,.controls-actions > header {
   display: flex;
   gap: 8px 10px;
   flex-wrap: wrap;
   align-items: center;
 }
-.controls-toolbar,.controls-actions > header,.controls-modifiers > header,.controls-quick-keys > div:first-child {
+.controls-toolbar,.controls-actions > header {
   justify-content: space-between;
 }
 .controls-toolbar h2,.controls-profiles h2,.controls-actions h2,.controls-backups h2 {
@@ -26,7 +26,7 @@
   font-size: 14px;
   font-weight: 600;
 }
-.controls-toolbar .pill,.controls-profile-tools .pill,.controls-backup-list .pill,.controls-modifiers .pill {
+.controls-toolbar .pill,.controls-profile-tools .pill,.controls-backup-list .pill {
   font-size: 11px;
   min-height: 30px;
 }
@@ -95,7 +95,7 @@
 .controls-profile-meta b {
   font-weight: 500;
 }
-.controls-profile-meta code,.controls-action-name code,.controls-edit-caption code,.controls-quick-keys code {
+.controls-profile-meta code {
   font-size: 10px;
   color: var(--muted);
   overflow-wrap: anywhere;
@@ -245,7 +245,7 @@
   background: var(--raised);
   font: inherit;
 }
-.controls-empty,.controls-edit-caption {
+.controls-empty {
   color: var(--muted);
   font-size: 12px;
   margin: 0;
@@ -254,7 +254,7 @@
   display: grid;
   gap: 11px;
 }
-.controls-pair,.controls-axis {
+.controls-axis {
   display: grid;
   grid-template-columns: repeat(2,minmax(0,1fr));
   align-items: end;
@@ -268,49 +268,69 @@
   justify-self: start;
   align-self: center;
 }
-.controls-quick-keys,.controls-modifiers {
+.controls-capture-box {
+  display: grid;
+  justify-items: start;
+  gap: 9px;
+}
+.controls-capture-current {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.controls-capture-target {
+  width: 100%;
+  min-height: 94px;
+  padding: 13px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.controls-capture-target:focus {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.controls-capture-target strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.controls-capture-target > div {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.controls-capture-target .controls-chord {
+  justify-content: center;
+  font-size: 14px;
+}
+.controls-capture-target kbd {
+  padding: 2px 6px;
+}
+.controls-axis-options {
+  padding: 0 9px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 8px;
-}
-.controls-quick-keys strong,.controls-modifiers h3 {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-  margin: 0;
-}
-.controls-quick-keys > div + div,.controls-modifiers > div:not(:empty) {
-  margin-top: 6px;
-}
-.controls-quick-keys > div + div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.controls-quick-keys button {
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 4px 7px;
-  background: var(--bg);
   font-size: 11px;
 }
-.controls-quick-keys button:hover {
-  background: var(--accent-bg);
-  border-color: var(--accent);
+.controls-axis-options > summary {
+  padding: 8px 0;
+  cursor: pointer;
 }
-.controls-modifier {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) auto;
-  align-items: end;
-  gap: 5px;
-  margin-top: 5px;
+.controls-axis-options > div,.controls-axis-options > label {
+  padding-bottom: 8px;
 }
-.controls-modifier .pill {
-  padding: 4px 6px;
-}
-.controls-modifier .icon {
-  height: 14px;
-  width: 14px;
+.controls-axis-options > label {
+  display: block;
 }
 @container (max-width:570px) {
   .controls-active,.controls-action {
@@ -321,7 +341,7 @@
   }
 }
 @media (max-width:520px) {
-  .controls-pair,.controls-axis {
+  .controls-axis {
     grid-template-columns: minmax(0,1fr);
   }
 }

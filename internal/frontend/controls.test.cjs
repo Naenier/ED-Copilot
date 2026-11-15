@@ -26,37 +26,51 @@ function fixture(language='ru') {
     backups:[{id:'backup-a',createdAt:'2026-11-15T06:00:00Z',reason:'manual',profileNames:['Copilot Gamepad']}]
   };
   const C={tab:'settings',state:{connection:{}}};
-  const calls=[],dialogs=[],toasts=[],nodes=new Map(),timers=new Map();
+  const calls=[],dialogs=[],toasts=[],nodes=new Map(),timers=new Map(),listeners=new Map();
+  const capture={result:{key:'GamePad_FaceLeft',modifiers:['GamePad_RBumper'],controller:0}};
   const sandbox={window:{CopilotTranslations:translations,
-    setInterval(handler){timers.set(1,handler);return 1;},clearInterval:id=>timers.delete(id)},document:{addEventListener(){}},Intl,Date};
+    setInterval(handler){timers.set(1,handler);return 1;},clearInterval:id=>timers.delete(id)},
+    document:{addEventListener(type,fn){listeners.set(type,fn);}},Intl,Date};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'i18n.js'),'utf8'),sandbox);
   sandbox.window.CopilotI18n.setLanguage(language);
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'controls-action-labels.js'),'utf8'),sandbox);
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'controls.js'),'utf8'),sandbox);
   const api=sandbox.window.ControlsUI;
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const u={esc,fmt:value=>String(value),icon:name=>`<svg data-icon="${name}"></svg>`,
     btn:(text,action,icon,style,attrs='')=>`<button data-click="${action}" ${attrs}>${esc(text)}</button>`,
-    renderPage(){},closeLayer(){},
-    async call(op,params){calls.push({op,params:params==null?params:JSON.parse(JSON.stringify(params))});return data;},
+    renderPage(){},closeLayer(){api.layerClosed(C,u);},
+    async call(op,params){
+      calls.push({op,params:params==null?params:JSON.parse(JSON.stringify(params))});
+      if(op==='controls.capture') return capture.result;
+      if(op==='controls.capture.cancel') return {ok:true};
+      return data;
+    },
     $:selector=>nodes.get(selector),
     toast:message=>toasts.push(message),
-    dialog:(title,html,footer)=>dialogs.push({title,html,footer})
+    dialog(title,html,footer){
+      dialogs.push({title,html,footer});
+      if(html.includes('controls-capture-focus')) {
+        nodes.set('#controls-capture-focus',{id:'controls-capture-focus',focus(){this.focused=true;},contains(target){return this===target;}});
+        nodes.set('#controls-capture-result',{innerHTML:''});
+        nodes.set('#controls-edit-notice',{hidden:true,textContent:''});
+        nodes.set('#controls-binding-save',{disabled:true});
+        nodes.set('#controls-capture-retry',{disabled:true});
+      }
+    }
   };
   const click=(name,dataset={})=>api.handle('controls-'+name,{dataset},C,u);
-  const open=()=>click('tab',{tab:'controls'});
-  function form(deviceValue,keyValue,modifiers=[]) {
-    const pair=(device,key)=>({
-      querySelector:selector=>({value:selector.includes('device')?device:key})
-    });
-    const main=pair(deviceValue,keyValue);
-    nodes.set('#controls-binding-form',{
-      querySelector:()=>main,
-      querySelectorAll:()=>modifiers.map(item=>pair(item.device,item.key))
-    });
-    nodes.set('#controls-edit-notice',{hidden:true,textContent:''});
-    return main;
-  }
-  return {api,C,u,data,calls,dialogs,toasts,nodes,click,open,form,timers};
+  const open=async()=>{
+    await click('tab',{tab:'controls'});
+    nodes.set('[data-controls-workspace]',{addEventListener(){}});
+    api.init(C,u);
+  };
+  const key=(type,code)=>{
+    const event={code,target:nodes.get('#controls-capture-focus'),preventDefault(){this.handled=true;},stopImmediatePropagation(){}};
+    listeners.get(type)(event);
+    return event.handled;
+  };
+  return {api,C,u,data,calls,dialogs,toasts,nodes,click,open,timers,capture,key};
 }
 
 test('Settings opens the controls editor and displays all active contexts with both key slots and axes',async()=>{
@@ -80,12 +94,14 @@ test('edits the alternative slot with a gamepad modifier and keeps game device i
   const f=fixture();
   await f.open();
   await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
-  assert.match(f.dialogs[0].html,/Кнопки геймпада/);
-  assert.match(f.dialogs[0].html,/data-device="15320A57"\s+data-key="GamePad_FaceLeft"/);
-  assert.match(f.dialogs[0].html,/data-key="Pos_GamePad_LTrigger"/);
-  f.form(device,'GamePad_FaceLeft',[{device,key:'GamePad_RBumper'}]);
+  assert.match(f.dialogs[0].html,/Нажмите кнопку или сочетание на геймпаде/);
+  assert.doesNotMatch(f.dialogs[0].html,/15320A57|PrimaryFire|datalist/);
+  assert.equal(f.calls[1].op,'controls.capture');
+  assert.equal(f.calls[1].params.kind,'button');
+  assert.equal(f.nodes.get('#controls-capture-focus').focused,true);
+  assert.match(f.nodes.get('#controls-capture-result').innerHTML,/>RB<\/kbd>[\s\S]*>X<\/kbd>/);
   await f.click('save-binding');
-  assert.deepEqual(f.calls[1],{op:'controls.update',params:{action:'edit',profileId:'local',expectedRevision:'revision-a',changes:[
+  assert.deepEqual(f.calls[2],{op:'controls.update',params:{action:'edit',profileId:'local',expectedRevision:'revision-a',changes:[
     {action:'PrimaryFire',slot:'secondary',device,key:'GamePad_FaceLeft',modifiers:[{device,key:'GamePad_RBumper'}]}
   ]}});
 });
@@ -93,34 +109,35 @@ test('edits the alternative slot with a gamepad modifier and keeps game device i
 test('axis tuning validates the range and sends inversion, deadzone and an existing modifier',async()=>{
   const f=fixture();
   await f.open();
+  f.capture.result={key:'GamePad_LStickY',modifiers:['GamePad_FaceUp'],controller:0};
   await f.click('edit',{action:'YawAxisRaw',slot:'axis'});
-  assert.match(f.dialogs[0].html,/data-key="GamePad_RTrigger"/);
-  f.form(device,'GamePad_LStickY',[{device,key:'GamePad_FaceUp'}]);
+  assert.equal(f.calls[1].params.kind,'axis');
+  assert.match(f.dialogs[0].html,/Отклоните стик или нажмите курок/);
   f.nodes.set('#controls-invert',{checked:false});
   const deadzone={value:'1.05'};
   f.nodes.set('#controls-deadzone',deadzone);
   await assert.rejects(f.click('save-binding'),/Мёртвая зона/);
-  assert.equal(f.calls.length,1);
+  assert.equal(f.calls.length,2);
   deadzone.value='0,15';
   await f.click('save-binding');
-  assert.deepEqual(f.calls[1].params.changes,[{action:'YawAxisRaw',slot:'axis',device,key:'GamePad_LStickY',
-    inverted:false,deadzone:.15,modifiers:[{device,key:'GamePad_FaceUp'}]}]);
+  assert.deepEqual(f.calls[2].params.changes,[{action:'YawAxisRaw',slot:'axis',device,key:'GamePad_LStickY',
+    modifiers:[{device,key:'GamePad_FaceUp'}],inverted:false,deadzone:.15}]);
 });
 
 test('identical bindings in an overlapping context need a second save, separate contexts do not warn',async()=>{
   const f=fixture();
   await f.open();
+  f.capture.result={key:'GamePad_FaceRight',modifiers:[],controller:0};
   await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
-  f.form(device,'GamePad_FaceRight');
-  await f.click('save-binding');
-  assert.equal(f.calls.length,1);
-  assert.match(f.nodes.get('#controls-edit-notice').textContent,/Дополнительный огонь/);
   await f.click('save-binding');
   assert.equal(f.calls.length,2);
-  await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
-  f.form(device,'GamePad_FaceUp');
+  assert.match(f.nodes.get('#controls-edit-notice').textContent,/Дополнительный огонь/);
   await f.click('save-binding');
   assert.equal(f.calls.length,3);
+  f.capture.result={key:'GamePad_FaceUp',modifiers:[],controller:0};
+  await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
+  await f.click('save-binding');
+  assert.equal(f.calls.length,5);
 });
 
 test('only the chosen context is activated, with explicit confirmation before backup restore',async()=>{
@@ -180,14 +197,81 @@ test('unknown or changed profiles never redirect a pending edit to a different s
   const f=fixture();
   await f.open();
   await f.click('edit',{action:'PrimaryFire',slot:'primary'});
-  f.form(device,'GamePad_FaceRight');
   f.data.profile.revision='revision-b';
   await assert.rejects(f.click('save-binding'),/Профиль обновился/);
-  assert.equal(f.calls.length,1);
+  assert.equal(f.calls.length,2);
   f.data.profile.readOnly=true;
   assert.match(f.api.render(f.C,f.u),/Встроенный профиль. Для изменения создайте копию/);
   await f.click('clone');
   f.nodes.set('#controls-clone-name',{value:'New Pad'});
   await f.click('apply-clone');
-  assert.deepEqual(f.calls[1],{op:'controls.update',params:{action:'clone',profileId:'local',expectedRevision:'revision-b',name:'New Pad'}});
+  assert.deepEqual(f.calls[2],{op:'controls.update',params:{action:'clone',profileId:'local',expectedRevision:'revision-b',name:'New Pad'}});
+});
+
+test('preserves physical Russian passthrough keys and ignores unrelated keyboard input on a gamepad profile',async()=>{
+  const f=fixture();
+  f.data.profile.keyboardLayout='ru-RU';
+  f.capture.result={unavailable:true};
+  await f.open();
+  await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
+  assert.ok(f.key('keydown','KeyQ'));
+  assert.match(f.nodes.get('#controls-capture-result').innerHTML,/используйте геймпад/);
+  assert.ok(f.key('keyup','KeyQ'));
+  assert.equal(f.nodes.get('#controls-binding-save').disabled,true);
+  for(const [physical,key,label] of [['KeyW','Key_ц','Ц'],['KeyS','Key_ы','Ы']]) {
+    if(physical==='KeyS') await f.click('edit',{action:'PrimaryFire',slot:'secondary'});
+    f.key('keydown',physical);
+    f.key('keyup',physical);
+    assert.ok(f.nodes.get('#controls-capture-result').innerHTML.includes(`>${label}</kbd>`));
+    await f.click('save-binding');
+    assert.deepEqual(f.calls.at(-1).params.changes,[
+      {action:'PrimaryFire',slot:'secondary',device:'Keyboard',key,modifiers:[]}
+    ]);
+  }
+});
+
+test('mixed profiles capture a physical keyboard chord and ignore a native result after keyboard input',async()=>{
+  const f=fixture();
+  f.data.profile.keyboardLayout='ru-RU';
+  Object.assign(f.data.profile.actions.find(action=>action.id==='QuickCommsPanel').slots[0],
+    {device:'Keyboard',key:'Key_Enter'});
+  let resolvePad;
+  f.capture.result=new Promise(resolve=>{resolvePad=resolve;});
+  await f.open();
+  const pending=f.click('edit',{action:'PrimaryFire',slot:'secondary'});
+  const {captureId}=f.calls.at(-1).params;
+  f.key('keydown','ControlLeft');
+  f.key('keydown','KeyW');
+  f.key('keyup','KeyW');
+  resolvePad({key:'GamePad_FaceUp',controller:0});
+  await pending;
+  assert.deepEqual(f.calls.at(-1),{op:'controls.capture.cancel',params:{captureId}});
+  await f.click('save-binding');
+  assert.deepEqual(f.calls.at(-1).params.changes,[
+    {action:'PrimaryFire',slot:'secondary',device:'Keyboard',key:'Key_ц',modifiers:[{device:'Keyboard',key:'Key_LeftControl'}]}
+  ]);
+});
+
+test('closing the editor cancels its native capture without recording a binding',async()=>{
+  const f=fixture();
+  let resolvePad;
+  f.capture.result=new Promise(resolve=>{resolvePad=resolve;});
+  await f.open();
+  const pending=f.click('edit',{action:'PrimaryFire',slot:'secondary'});
+  const {captureId}=f.calls.at(-1).params;
+  f.api.layerClosed(f.C,f.u);
+  resolvePad({key:'GamePad_FaceUp',controller:0});
+  await pending;
+  assert.deepEqual(f.calls.at(-1),{op:'controls.capture.cancel',params:{captureId}});
+  assert.equal(f.C.controlsUI.edit,undefined);
+  assert.equal(f.calls.some(call=>call.op==='controls.update'),false);
+});
+
+test('Russian action rows hide XML identifiers while filtering can still use them',async()=>{
+  const f=fixture();
+  await f.open();
+  f.C.controlsUI.query='YawAxisRaw';
+  const html=f.api.render(f.C,f.u);
+  assert.match(html,/Ось рыскания/);
+  assert.doesNotMatch(html.replace(/<[^>]+>/g,''),/YawAxisRaw|GamePad_LStickX|15320A57/);
 });
