@@ -8,6 +8,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/carrier"
 	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/commander"
+	"github.com/Naenier/ED-Copilot/internal/controls"
 	"github.com/Naenier/ED-Copilot/internal/edsm"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
@@ -41,16 +42,18 @@ import (
 
 type M = v.M
 
-const Version = "2.8.17"
+const Version = "2.8.18"
 
 type Options struct {
-	DataDir, JournalDir           string
-	HTTPClient                    *http.Client
-	CallbackPort                  int
-	DisableNetwork, ManualPolling bool
+	DataDir, JournalDir            string
+	BindingsDir, ControlSchemesDir string
+	HTTPClient                     *http.Client
+	CallbackPort                   int
+	DisableNetwork, ManualPolling  bool
 }
 type Engine struct {
 	section7                                        sectionSeven
+	controls                                        *controls.Service
 	mu                                              sync.RWMutex
 	domainMu                                        sync.Mutex
 	saveMu                                          sync.Mutex
@@ -132,9 +135,11 @@ func New(o Options) (*Engine, error) {
 	if o.JournalDir == "" {
 		o.JournalDir = v.Text(saved["journalDir"], profile.DefaultJournals())
 	}
+	discoverControlDirectories(&o)
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
 	x.frontierAuto = newFrontierAutomatic()
+	x.controls = newControls(o)
 	x.surfaceNavigation.targets = restoreSurfaceTargets(v.Obj(saved["surfaceNavigationTargets"]))
 	x.galacticPrices = restoreGalacticPrices(v.Obj(saved["galacticPrices"]))
 	v.Merge(x.settings, v.Obj(saved["settings"]))

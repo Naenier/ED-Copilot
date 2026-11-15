@@ -269,7 +269,7 @@ function routeCard(C,u,route) {
     <header class="deals-route-header">
       <div class="deals-endpoint-pair">${endpoint(u,route,'buy')}<div class="deals-between">${u.icon(legs.length>1?'arrow-left-right':'arrow-right')}</div>${endpoint(u,route,'sell')}</div>
       <div class="deals-route-tools">
-        <span>${saved?u.esc(savedRouteLabel(route)):`${th(legs.length>1?'Рейс туда и обратно':'Рейс в одну сторону')}`}</span>
+        <span>${saved?u.esc(savedRouteLabel(route)):th(legs.length>1?'Рейс туда и обратно':'Рейс в одну сторону')}</span>
         <button class="deals-star${favorite?' favorite':''}" type="button" data-click="deals-save" ${attrs}
           aria-label="${th(favoriteLabel)}" title="${th(favoriteLabel)}" aria-pressed="${favorite?'true':'false'}"${favorite?' disabled':''}>${favorite?'★':'☆'}</button>
       </div>
@@ -422,14 +422,16 @@ async function handle(action,b,C,u) {
       if(box){box.textContent=error.message;box.classList.remove('hidden');}
       throw error;
     }
+    l.manual=true;
     l.autoError='';
     await u.call('deals-search',{values:{...values,automatic:false}});
-    l.manual=true;
     l.page=0;
     l.selected='';
     l.query='';
     l.dirty=false;
     await u.loadView();
+    const status=u.$('.deals-progress')||u.$('.deals-results');
+    status?.scrollIntoView?.({block:'start'});
     return true;
   }
   if(name==='plan-clear') {

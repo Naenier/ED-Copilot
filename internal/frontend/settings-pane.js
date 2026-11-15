@@ -74,6 +74,8 @@ function pane(C,u){
 }
 function render(C,u,mainHTML){
  if(!active(C))return mainHTML;
+ if(window.ControlsUI?.active(C))return '<div class="settings-workspace" data-settings-workspace><div class="settings-main">'+
+  u.heading(t("Настройки"),'')+window.ControlsUI.tabs(C,u)+window.ControlsUI.render(C,u)+'</div></div>';
  return '<div class="settings-workspace'+(C.inspector?' has-help':'')+'" data-settings-workspace><div class="settings-main">'+mainHTML+'</div>'+(C.inspector?pane(C,u):'')+'</div>';
 }
 function renderProfile(u){
@@ -110,6 +112,7 @@ function topicFor(target,C,u,host){
  return '';
 }
 function init(C,u){
+ if(window.ControlsUI?.active(C)){window.ControlsUI.init(C,u);return;}
  if(!active(C)||!C.inspector)return;
  const host=u.$('[data-settings-workspace]');
  if(!host)return;

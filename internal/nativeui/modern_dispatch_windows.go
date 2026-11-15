@@ -37,6 +37,12 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "controls.view":
+		return backend.Do("/api/controls", input)
+	case "controls.status":
+		return backend.Do("/api/controls/status", nil)
+	case "controls.update":
+		return backend.Do("/api/controls/update", input)
 	case "explorationQuery":
 		return backend.Do("/api/exploration/query", input)
 	case "exploration.update":

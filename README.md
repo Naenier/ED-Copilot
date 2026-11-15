@@ -29,6 +29,10 @@ Your avatar opens **Commander**, with pages for Summary, Ranks, Finances, Invent
 
 ![Commander summary and grouped navigation](docs/screenshots/en/commander.png)
 
+## Game controls
+
+Open **Settings → Controls** to edit Elite Dangerous Live bindings, including gamepad chords, keyboard shortcuts and stick axes. Switch profiles for general controls, ship, SRV and on-foot play independently. Import or export a `.binds` file, save a backup or restore a previous copy. Exit Elite Dangerous before changing its control files.
+
 ## Star system search
 
 Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. When nearby search falls back to Spansh, the results identify the provider and include up to 50 of the nearest systems.

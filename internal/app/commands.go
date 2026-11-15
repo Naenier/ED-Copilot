@@ -81,6 +81,12 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return result, err
 	}
 	switch path {
+	case "/api/controls":
+		return e.controls.View(body)
+	case "/api/controls/status":
+		return M{"gameRunning": eliteMayBeRunning()}, nil
+	case "/api/controls/update":
+		return e.controls.Update(body)
 	case "/api/trading/active-route":
 		return e.updateActiveTradeRun(body)
 	case "/api/surface-navigation":

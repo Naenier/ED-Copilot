@@ -754,7 +754,8 @@ func (m *modernShell) handleRequest(req webRequest) {
 		m.reply(req.ID, result, e)
 		return
 	}
-	if req.Op == "system-search" || req.Op == "system-search-cancel" || req.Op == "galaxy.system" || req.Op == "galaxy.nearby" || req.Op == "exo.sites" || req.Op == "engineering-roadmap" {
+	switch req.Op {
+	case "system-search", "system-search-cancel", "galaxy.system", "galaxy.nearby", "exo.sites", "engineering-roadmap", "controls.view", "controls.status":
 		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 		return
 	}
@@ -967,6 +968,8 @@ func (m *modernShell) nativeAction(params M) (any, error) {
 	u.dialogOpen = true
 	defer func() { u.dialogOpen = false }()
 	switch v.Str(params["action"]) {
+	case "controls-import", "controls-export":
+		return u.controlsFileAction(params)
 	case "profile-export":
 		return u.profileExportAction()
 	case "profile-import":
