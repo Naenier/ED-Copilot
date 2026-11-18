@@ -716,15 +716,20 @@ func (p *RoutePlanner) SelectStop(index int) error {
 	return nil
 }
 func (p *RoutePlanner) ObserveCarrier(carrier M) bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if v.Bool(p.state["running"]) || !v.Bool(carrier["owned"]) {
+	return v.Bool(carrier["owned"]) && p.ObserveCarrierLocation(v.Obj(carrier["location"]))
+}
+
+// ObserveCarrierLocation needs only the owner's observed position. Journal
+// ingestion can advance the route without projecting the carrier warehouse.
+func (p *RoutePlanner) ObserveCarrierLocation(location M) bool {
+	timestamp := v.Str(location["updatedAt"])
+	if timestamp == "" {
 		return false
 	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	route := v.Obj(p.state["route"])
-	location := v.Obj(carrier["location"])
-	timestamp := v.Str(location["updatedAt"])
-	if timestamp == "" || v.Time(timestamp).Before(v.Time(route["createdAt"])) {
+	if v.Bool(p.state["running"]) || len(route) == 0 || v.Time(timestamp).Before(v.Time(route["createdAt"])) {
 		return false
 	}
 	for i, stop := range v.Rows(route["stops"]) {

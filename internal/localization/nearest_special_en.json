@@ -1,0 +1,15 @@
+{
+  "Подбор этих заданий доступен в Inara. Наличие конкретного задания проверяется на доске миссий станции.": "Find likely locations for these missions in Inara. Check the station mission board for availability.",
+  "Выберите вид поиска.": "Choose a search type.",
+  "Для отбора фракций игроков нужен каталог EDSM.": "Filtering player factions requires the EDSM catalogue.",
+  "Фракции игроков проверяются в EDSM. На странице до шести систем.": "Player factions are checked against EDSM, up to six systems per page.",
+  "Противники указаны по данным EliteHub или недавней записи журнала. Для остальных систем показаны состояния фракций.": "Opponents come from EliteHub or recent journal data. Other systems show faction states.",
+  "Показаны фракции с двумя или более активными состояниями.": "Showing factions with two or more active states.",
+  "EDSM не подтвердил статус фракций игроков для части систем. Показаны подтверждённые результаты.": "EDSM could not verify player factions in some systems. Showing verified results.",
+  "Поиск навигационных маяков доступен в Inara.": "Find navigation beacons in Inara.",
+  "Выберите тип сигнала.": "Choose a signal type.",
+  "Поиск сигналов охватывает первые 100 систем, подходящих по дополнительным условиям.": "The signal search covers the first 100 systems that match the additional filters.",
+  "Spansh не вернул результаты поиска.": "Spansh did not return search results.",
+  "Spansh не вернул названия фракций.": "Spansh did not return faction names.",
+  "Не найдены координаты исходной системы.": "The reference system coordinates were not found."
+}

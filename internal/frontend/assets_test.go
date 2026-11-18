@@ -69,7 +69,7 @@ func TestHTMLIsCompleteOfflineDocument(t *testing.T) {
 	}
 }
 
-func TestHTMLIncludesEveryRuntimeAssetWithoutBreakingRawTextElements(t *testing.T) {
+func TestHTMLIncludesCoreAssetsWithoutBreakingRawTextElements(t *testing.T) {
 	document := HTML("1111111111111111111111111111111111111111", false)
 	script := regexp.MustCompile(`(?s)<script\b[^>]*>(.*?)</script>`).FindStringSubmatch(document)
 	style := regexp.MustCompile(`(?s)<style\b[^>]*>(.*?)</style>`).FindStringSubmatch(document)
@@ -77,7 +77,7 @@ func TestHTMLIncludesEveryRuntimeAssetWithoutBreakingRawTextElements(t *testing.
 		t.Fatal("complete executable and stylesheet elements are required")
 	}
 	previousScript, previousStyle := -1, -1
-	for _, name := range []string{"icons.js", "academy.js", "calculator.js", "app.js", "app.css", "academy.css", "calculator.css"} {
+	for _, name := range []string{"icons.js", "overview.js", "app.js", "app.css", "overview.css", "system-search.css"} {
 		t.Run(name, func(t *testing.T) {
 			asset := embeddedAsset(t, name)
 			position := strings.Index(document, asset)
@@ -256,4 +256,30 @@ func jsCallArguments(source string, from int) []string {
 		}
 	}
 	return nil
+}
+
+func TestShipFittingCatalogueLoadsOutsideStartupDocument(t *testing.T) {
+	document := HTML("1111111111111111111111111111111111111111", false)
+	if !strings.Contains(document, "workspace/ship-fits.js") || strings.Contains(document, "globalThis.EdCopilotShipFitRU =") {
+		t.Fatal("ship fitting catalogue must load on demand")
+	}
+	bundle := string(ShipFitsBundle())
+	for _, asset := range []string{"ship-fit-ru.js", "ship-fit-engine.js", "ship-fits.js"} {
+		if !strings.Contains(bundle, embeddedAsset(t, asset)) {
+			t.Fatalf("on-demand ship fitting bundle omits %s", asset)
+		}
+	}
+}
+
+func TestNearestSearchAssetsLoadOnDemand(t *testing.T) {
+	document := HTML("1111111111111111111111111111111111111111", false)
+	if !strings.Contains(document, "workspace/nearest.js") || strings.Contains(document, "window.NearestOptions =") {
+		t.Fatal("nearby search options must load on demand")
+	}
+	bundle := string(NearestBundle())
+	for _, asset := range []string{"nearest.js", "nearest-options.js"} {
+		if !strings.Contains(bundle, embeddedAsset(t, asset)) {
+			t.Fatalf("on-demand nearby search bundle omits %s", asset)
+		}
+	}
 }

@@ -23,7 +23,7 @@ func (p *Planner) RoadmapWithContext(query, observations M) (M, error) {
 	defer p.mu.RUnlock()
 
 	ids := []string{}
-	for _, key := range roadmapData.engineerOrder {
+	for _, key := range roadmapData().engineerOrder {
 		if len(q.engineers) > 0 && !q.engineers[key] {
 			continue
 		}
@@ -43,7 +43,7 @@ func (p *Planner) RoadmapWithContext(query, observations M) (M, error) {
 	rows := make([]M, 0, len(ordered))
 	summary := M{"total": len(ordered), "targets": len(ids), "dependencies": len(ordered) - len(ids), "unlocked": 0, "maxRank": 0}
 	for _, key := range ordered {
-		engineer := roadmapData.engineers[key]
+		engineer := roadmapData().engineers[key]
 		state := p.roadmapEngineerState(key)
 		state["dependency"] = !selected[key]
 		if state["status"] == "unlocked" {
@@ -53,11 +53,11 @@ func (p *Planner) RoadmapWithContext(query, observations M) (M, error) {
 			summary["maxRank"] = v.Int(summary["maxRank"]) + 1
 		}
 		caps := []M{}
-		for _, cap := range roadmapData.capabilities[key] {
+		for _, cap := range roadmapData().capabilities[key] {
 			if selected[key] && !q.capabilityMatches(cap) {
 				continue
 			}
-			module, blueprint := roadmapData.modules[cap.module], roadmapData.blueprint(cap.blueprint)
+			module, blueprint := roadmapData().modules[cap.module], roadmapData().blueprint(cap.blueprint)
 			var accessible any
 			switch {
 			case state["status"] == "unlocked" && state["kind"] == "odyssey":
@@ -87,7 +87,7 @@ func (p *Planner) RoadmapWithContext(query, observations M) (M, error) {
 	}
 	result := M{
 		"filters":   p.roadmapFilters(q, equipment),
-		"engineers": rows, "recipe": recipe, "summary": summary, "verifiedAt": roadmapData.verifiedAt,
+		"engineers": rows, "recipe": recipe, "summary": summary, "verifiedAt": roadmapData().verifiedAt,
 		"limitations": M{"equipmentScope": "journal-observed", "unknownIsLocked": false},
 	}
 	if q.module != "" {
@@ -97,7 +97,7 @@ func (p *Planner) RoadmapWithContext(query, observations M) (M, error) {
 }
 
 func engineerHasCapability(key string, q roadmapQuery) bool {
-	for _, capability := range roadmapData.capabilities[key] {
+	for _, capability := range roadmapData().capabilities[key] {
 		if q.capabilityMatches(capability) {
 			return true
 		}
@@ -106,7 +106,7 @@ func engineerHasCapability(key string, q roadmapQuery) bool {
 }
 
 func (p *Planner) roadmapEngineerState(key string) M {
-	engineer, progress := roadmapData.engineers[key], p.progress[key]
+	engineer, progress := roadmapData().engineers[key], p.progress[key]
 	status := strings.ToLower(v.Text(progress["status"], "unknown"))
 	manualUsed := false
 	if unlocked, manual := p.manual[key].(bool); manual && status == "unknown" {
@@ -129,13 +129,13 @@ func (p *Planner) roadmapOrder(ids []string) []string {
 	visiting := map[string]bool{}
 	var visit func(string)
 	visit = func(key string) {
-		if visiting[key] || roadmapData.engineers[key] == nil {
+		if visiting[key] || roadmapData().engineers[key] == nil {
 			return
 		}
 		visiting[key] = true
 		status := v.Str(p.roadmapEngineerState(key)["status"])
-		if !knownEngineer(status) || roadmapData.engineers[key]["kind"] == "odyssey" && status == "known" {
-			for _, step := range v.Rows(roadmapData.engineers[key]["requirements"]) {
+		if !knownEngineer(status) || roadmapData().engineers[key]["kind"] == "odyssey" && status == "known" {
+			for _, step := range v.Rows(roadmapData().engineers[key]["requirements"]) {
 				visit(v.Str(step["engineerKey"]))
 			}
 		}
@@ -281,7 +281,7 @@ func (p *Planner) roadmapRankStep(key string, state M) M {
 		return step
 	}
 	best, unitCost := roadmapCapability{}, 1<<30
-	for _, cap := range roadmapData.capabilities[key] {
+	for _, cap := range roadmapData().capabilities[key] {
 		recipe := v.Rows(v.Obj(blueprints[cap.blueprint]["grades"])["1"])
 		if len(recipe) == 0 {
 			continue
@@ -295,7 +295,7 @@ func (p *Planner) roadmapRankStep(key string, state M) M {
 		}
 	}
 	if best.module != "" {
-		m, b := roadmapData.modules[best.module], roadmapData.blueprint(best.blueprint)
+		m, b := roadmapData().modules[best.module], roadmapData().blueprint(best.blueprint)
 		step["practice"] = M{"moduleKey": best.module, "blueprintKey": best.blueprint, "moduleName": m["name"], "moduleEnglish": m["english"], "blueprintName": b["name"], "blueprintEnglish": b["english"], "maxGrade": best.maxGrade}
 	}
 	return step
@@ -313,7 +313,7 @@ func (p *Planner) roadmapEquipment(module string) []M {
 			}
 		}
 	}
-	for _, model := range roadmapData.personalEquipment {
+	for _, model := range roadmapData().personalEquipment {
 		if model["moduleKey"] != module {
 			continue
 		}
@@ -332,13 +332,13 @@ func (p *Planner) roadmapEquipment(module string) []M {
 
 func (p *Planner) roadmapFilters(q roadmapQuery, equipment []M) M {
 	erows, mods, bps, exs := []M{}, []M{}, []M{}, []M{}
-	for _, key := range roadmapData.engineerOrder {
+	for _, key := range roadmapData().engineerOrder {
 		erows = append(erows, p.roadmapEngineerState(key))
 	}
 	bpMax, effectKeys := map[string]int{}, map[string]bool{}
 	bpModules := map[string][]string{}
-	for _, key := range roadmapData.moduleOrder {
-		mods = append(mods, v.Copy(roadmapData.modules[key]))
+	for _, key := range roadmapData().moduleOrder {
+		mods = append(mods, v.Copy(roadmapData().modules[key]))
 		for _, raw := range v.Arr(modules[key]["blueprints"]) {
 			id := v.Str(raw)
 			bpModules[id] = append(bpModules[id], key)
@@ -354,14 +354,14 @@ func (p *Planner) roadmapFilters(q roadmapQuery, equipment []M) M {
 			}
 		}
 	}
-	for key, row := range roadmapData.personalRecipes {
+	for key, row := range roadmapData().personalRecipes {
 		bpModules[key] = []string{v.Str(row["moduleKey"])}
 		if q.module == "" || row["moduleKey"] == q.module {
 			bpMax[key] = 1
 		}
 	}
 	for key, grade := range bpMax {
-		bp := roadmapData.blueprint(key)
+		bp := roadmapData().blueprint(key)
 		if bp == nil || grade == 0 {
 			continue
 		}
@@ -370,7 +370,7 @@ func (p *Planner) roadmapFilters(q roadmapQuery, equipment []M) M {
 		row["maxGrade"] = grade
 		row["damageType"] = bp["damageType"]
 		row["kind"] = "ship"
-		if roadmapData.personalRecipes[key] != nil {
+		if roadmapData().personalRecipes[key] != nil {
 			row["kind"] = "odyssey"
 		}
 		bps = append(bps, row)

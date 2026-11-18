@@ -8,7 +8,8 @@ require (
 	github.com/lxn/walk v0.0.0-20210112085537-c389da54e794
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
 	github.com/wailsapp/go-webview2 v1.0.23
-	golang.org/x/sys v0.27.0
+	go.etcd.io/bbolt v1.5.0
+	golang.org/x/sys v0.45.0
 )
 
 require (

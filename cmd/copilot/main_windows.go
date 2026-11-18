@@ -133,7 +133,7 @@ func main() {
 			smokeFixture = nil
 		}
 	}
-	options := app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: isolated}
+	options := app.Options{DataDir: *dataDir, JournalDir: *journalDir, DisableNetwork: isolated, BackgroundJournal: !isolated}
 	engine, err := app.New(options)
 	if smokeFixture != nil {
 		smokeFixture.BackendElapsed = time.Since(smokeFixture.Started)

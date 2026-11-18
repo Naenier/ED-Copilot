@@ -127,7 +127,7 @@ func shipPlanTarget(target M, installed currentShipModule, loadoutKnown bool) sh
 	goal := shipPlanGoal{row: row, current: installed.row}
 	symbol := symbolText(target["item"])
 	module := shipModule(symbol)
-	row["name"], row["english"], row["moduleClass"] = modules[module]["name"], roadmapData.modules[module]["english"], shipModuleClass(symbol)
+	row["name"], row["english"], row["moduleClass"] = modules[module]["name"], roadmapData().modules[module]["english"], shipModuleClass(symbol)
 	bp, effect := blueprints[v.Str(target["blueprintKey"])], effects[v.Str(target["experimentalKey"])]
 	row["blueprintName"], row["blueprintEnglish"] = bp["name"], bp["english"]
 	row["experimentalName"], row["experimentalEnglish"] = effect["name"], effect["english"]
@@ -145,7 +145,7 @@ func shipPlanTarget(target M, installed currentShipModule, loadoutKnown bool) sh
 	choice := shipBlueprintChoice(installed.choices, q.blueprint)
 	if err != nil || q.grade <= 0 || q.grade > v.Int(choice["maxGrade"]) ||
 		len(v.Rows(v.At(bp, "grades", strconv.Itoa(q.grade)))) == 0 ||
-		q.effect != "" && (!contains(modules[module]["experimentals"], q.effect) || v.Bool(roadmapData.effectExclusions[symbol][q.effect])) {
+		q.effect != "" && (!contains(modules[module]["experimentals"], q.effect) || v.Bool(journalUpgradeIndex().effectExclusions[symbol][q.effect])) {
 		row["reason"] = "goal-incompatible"
 		return goal
 	}

@@ -37,7 +37,21 @@ function applyLanguage(rebuild=false){
 window.copilotReceive=message=>{
  if(message.event==='notice'){toast(message.data?.message||t("Не удалось сохранить изменение."),true);return;}
  if(message.event==='response'){const entry=pending.get(message.data.id);if(entry){pending.delete(message.data.id);clearTimeout(entry.timeout);message.data.error?entry.reject(new Error(message.data.error)):entry.resolve(message.data.result);}return;}
- if(message.event==='update'){const update=message.data;const changed=JSON.stringify(update.settings)!==JSON.stringify(C.state.settings),previousStatus=connectionStatus(),oldShip=shipLabel(),oldSystem=stateCmd().system,selectorChanged=updateOverlayColonies(update.overlayColonies,update.revision);C.state.settings=update.settings;C.state.connection=update.connection;C.state.commander=update.commander;applyLanguage(true);if(C.page&&!C.layer){if(changed||previousStatus!==connectionStatus()||oldShip!==shipLabel()||oldSystem!==stateCmd().system)renderChrome();else if(selectorChanged)renderActivity();}if(update.surfaceNavigation)window.SurfaceNavigationUI?.receive(C,uiContext(),update.surfaceNavigation);if(update.revision!==C.lastRevision){C.lastRevision=update.revision;C.needsRefresh=true;}}
+ if(message.event==='update'){
+  const update=message.data,revision=selectorRevision(update.revision);
+  if(revision>=0&&revision<Math.max(selectorRevision(C.state.revision),selectorRevision(C.lastRevision)))return;
+  const completedScan=C.state.connection?.scanning&&!update.connection?.scanning;
+  const changed=JSON.stringify(update.settings)!==JSON.stringify(C.state.settings),previousStatus=connectionStatus(),oldShip=shipLabel(),oldSystem=stateCmd().system,selectorChanged=updateOverlayColonies(update.overlayColonies,update.revision);
+  C.state.settings=update.settings;C.state.connection=update.connection;C.state.commander=update.commander;applyLanguage(true);
+  if(update.shipBuildRevision!=null&&(completedScan||update.shipBuildRevision!==C.state.shipBuildRevision)){
+   C.state.shipBuildRevision=update.shipBuildRevision;
+   window.EDCopilotShipFits?.refreshMaterials?.(C,uiContext());
+  }
+  if(C.page&&!C.layer){if(changed||previousStatus!==connectionStatus()||oldShip!==shipLabel()||oldSystem!==stateCmd().system)renderChrome();else if(selectorChanged)renderActivity();}
+  if(update.surfaceNavigation)window.SurfaceNavigationUI?.receive(C,uiContext(),update.surfaceNavigation);
+  if(update.revision!==C.lastRevision||completedScan){C.lastRevision=update.revision;C.needsRefresh=true;}
+  if(completedScan&&C.tab==='overview'&&C.page)void loadView(true);
+ }
 };
 function call(op,params={}){return new Promise((resolve,reject)=>{const id=String(++sequence);const timeout=setTimeout(()=>{pending.delete(id);reject(new Error(t("Ответ приложения задерживается. Повторите действие.")));},45000);pending.set(id,{resolve,reject,timeout});window.chrome.webview.postMessage(JSON.stringify({id,op,params}));});}
 function toast(text,error=false){
@@ -116,7 +130,7 @@ function renderChrome(){
  const avatar=$('.rail .avatar');if(avatar)avatar.textContent=(stateCmd().name||'CMDR').slice(0,2).toUpperCase();renderActivity();
 }
 function selectorRevision(value){return Number.isSafeInteger(value)&&value>=0?value:-1;}
-function colonySelectorSource(){return C.overlayColonies&&selectorRevision(C.overlayColoniesRevision)>=0&&selectorRevision(C.overlayColoniesRevision)>=selectorRevision(C.state.revision)?C.overlayColonies:C.state.colonization||{};}
+function colonySelectorSource(){return C.overlayColonies&&selectorRevision(C.overlayColoniesRevision)>=0&&selectorRevision(C.overlayColoniesRevision)>=selectorRevision(C.state.revision)?C.overlayColonies:C.state.colonization||C.state.coloniesSelectors||{};}
 function updateOverlayColonies(value,revision){
  if(!value||!Array.isArray(value.projects)||selectorRevision(revision)<0||revision<Math.max(selectorRevision(C.overlayColoniesRevision),selectorRevision(C.state.revision)))return false;
  const signature=()=>{const model=colonySelectorModel();return JSON.stringify([model.selected,model.known,model.projects.map(item=>[item.id,item.name,item.targetSystem,item.status])]);},before=signature();
@@ -157,7 +171,7 @@ async function selectColony(id){
  catch(error){if(C.colonySelection?.sequence===sequence){delete C.colonySelection;const confirmed=colonySelectorModel().selected;for(const name of ['overlay-colony','colony-select']){const control=document.getElementById(name);if(control)control.value=confirmed;}}renderActivity();throw error;}
 }
 function heading(title,description,extra='',search=''){return `<div class="page-heading${search?' search-heading':''}"><div><h1>${esc(title)}</h1>${description?`<p class="description">${esc(description)}</p>`:''}</div>${extra?`<div class="heading-actions">${extra}</div>`:''}${search}</div>`;}
-function sectionSevenRenderer(){return [window.ExplorationUI,window.ShipRouteUI,window.SurfaceNavigationUI,window.SurfaceRadarUI,window.ShipBuildUI,window.ShipEngineeringUI,window.EngineeringItineraryUI,window.SectionSevenToolsUI,window.ColonyHistoryUI].find(view=>view?.active?.(C));}
+function sectionSevenRenderer(){return [window.NearestUI,window.EDCopilotShipFits,window.ExplorationUI,window.ShipRouteUI,window.SurfaceNavigationUI,window.SurfaceRadarUI,window.ShipBuildUI,window.ShipEngineeringUI,window.EngineeringItineraryUI,window.SectionSevenToolsUI,window.ColonyHistoryUI].find(view=>view?.active?.(C));}
 function renderPage({preserveContent=false}={}){if(!C.page)return;applyPalette();renderChrome();renderNavigation();const container=$('#page');let markup;const sectionSeven=sectionSevenRenderer();if(sectionSeven)markup=sectionSeven.render(C,uiContext());else if(C.tab==='overview'&&(!C.mode||C.mode==="Обзор"))markup=renderOverview();else if(C.tab==='commander')markup=window.CommanderUI.render(C,uiContext());else if(C.tab==='ranks')markup=window.RanksUI.render(C,uiContext());else if(C.tab==='politics')markup=window.PoliticsUI.render(C,uiContext());else if(C.tab==='learning')markup=renderLearning();else if(C.tab==='carrier-calculator')markup=renderCalculator();else if(referenceActive())markup=window.ReferenceUI.render(C,uiContext());else if(window.MiningComparisonUI?.active(C))markup=window.MiningComparisonUI.render(C,uiContext());else if(window.OdysseyUI?.active(C))markup=window.OdysseyUI.render(C,uiContext());else if(window.EngineeringRoadmapUI?.active(C))markup=window.EngineeringRoadmapUI.render(C,uiContext());else if(C.tab==='carrier-trade')markup=window.CarrierTradeUI.render(C,uiContext());else if(C.tab==='deals')markup=window.DealsUI.render(C,uiContext());else if(C.tab==='exobiology')markup=window.ExobiologyUI.render(C,uiContext());else if(C.tab==='riches')markup=window.RichesUI.render(C,uiContext());else if(C.tab==='help')markup=renderHelp();else if(C.tab==='statistics'&&C.mode==='Торговля'&&window.TradeStatsUI)markup=window.TradeStatsUI.render(C,uiContext());else if(C.tab==='settings')markup=window.SettingsPaneUI.render(C,uiContext(),renderSettings());else markup=renderGeneral();if(!preserveContent||C.renderedPage!==container||C.renderedMarkup!==markup){container.innerHTML=markup;C.renderedPage=container;C.renderedMarkup=markup;}if(C.restoreScroll!==undefined){$('#page-scroll').scrollTop=C.restoreScroll;delete C.restoreScroll;}document.querySelector('.workspace')?.classList.toggle('reading-focus',C.focus&&C.tab==='learning'&&!!C.lesson);window.AcademyUI?.init?.(C,uiContext());window.CalculatorUI?.init?.(C,uiContext());if(referenceActive())window.ReferenceUI?.init?.(C,uiContext());window.EngineeringRoadmapUI?.init(C,uiContext());window.OdysseyUI?.init(C,uiContext());window.MiningComparisonUI?.init(C,uiContext());if(C.tab==='carrier-trade')window.CarrierTradeUI?.init?.(C,uiContext());if(C.tab==='deals')window.DealsUI?.init?.(C,uiContext());if(C.tab==='settings')window.SettingsPaneUI?.init?.(C,uiContext());if(C.tab==='route')window.RouteWorkspaceUI?.init?.(C,uiContext());if(C.tab==='colonization')window.ColonyWorkspaceUI?.init?.(C,uiContext());if(C.tab==='exobiology')window.ExobiologyUI?.init?.(C,uiContext());if(C.tab==='commander')window.CommanderUI?.init?.(C,uiContext());if(C.tab==='ranks')window.RanksUI?.init?.(C,uiContext());if(C.tab==='politics')window.PoliticsUI?.init?.(C,uiContext());window.SystemSearchUI?.init?.(C,uiContext());sectionSeven?.init?.(C,uiContext());}
 function referenceActive(){return C.tab==='encyclopedia'||(['engineering','targets'].includes(C.tab)&&C.mode==='Инженеры');}
 function renderOverview(){return window.OverviewUI.render(C,{...uiContext(),renderModes});}
@@ -304,11 +318,22 @@ function restoreView(saved){
 }
 function captureDisclosures(){return $$('#page details').map((node,index)=>({index,kind:String(node.className||''),owner:node.closest?.('[data-deals-route]')?.dataset?.dealsRoute||'',open:node.open}));}
 function restoreDisclosures(saved){const nodes=$$('#page details');for(const item of saved){const node=nodes[item.index];if(node&&String(node.className||'')===item.kind&&(node.closest?.('[data-deals-route]')?.dataset?.dealsRoute||'')===item.owner)node.open=item.open;}}
-async function loadView(quiet=false,{smokeProbe=false}={}){
+async function loadView(quiet=false,{smokeProbe=false,initial=null}={}){
  if(quiet&&((window.COPILOT_SMOKE&&!smokeProbe)||document.hidden||C.layer||document.activeElement?.closest('input,select,textarea,#inara-connection-form')))return;
  const epoch=++viewEpoch,firstView=!C.page;
  try{
-  let result=await call('view',context());if(epoch!==viewEpoch)return;
+  const assets=window.WorkspaceAssets?.load(C.tab,C.mode);
+  const requested=initial || call('view',context());
+  let result;
+  if(assets) [result]=await Promise.all([requested,assets]);
+  else result=await requested;
+  if(epoch!==viewEpoch)return;
+  const revision=selectorRevision(result.state?.revision);
+  if(C.tab==='overview'&&revision>=0&&revision<selectorRevision(C.lastRevision)){
+   C.needsRefresh=true;
+   if(!quiet)return loadView();
+   return;
+  }
   const page=result.page||{},rows=page.Rows||[],modes=page.Modes||[],oldContext=context();
   if(result.context&&typeof result.context.mode==='string'&&typeof result.context.selected==='string'){
    C.mode=result.context.mode;C.selected=result.context.selected;
@@ -335,7 +360,7 @@ async function loadView(quiet=false,{smokeProbe=false}={}){
   window.UpdatesUI?.showNotice?.(C,uiContext());
  }catch(error){if(!quiet){toast(error.message,true);if(epoch===viewEpoch&&firstView){C.page=null;C.lastSignature='';const page=$('#page');if(page){page.removeAttribute?.('aria-busy');page.innerHTML=`<div class="empty-state"><h3>${th("Не удалось открыть раздел")}</h3><p>`+esc(error.message)+'</p>'+btn(t("Повторить"),'reload-page','refresh-cw')+'</div>';}}}}
 }
-function beginNavigation(){for(const view of [window.ExplorationUI,window.ShipBuildUI,window.EngineeringItineraryUI,window.SectionSevenToolsUI])view?.leave?.(C);window.EngineeringRoadmapUI?.leave(C);window.OdysseyUI?.leave(C);window.SystemSearchUI?.close?.();++viewEpoch;C.renderedMarkup=null;C.page=null;C.actions=[];C.help='';const page=$('#page');if(page){page.innerHTML='<div class="page-loading" role="status">'+icon('refresh-cw')+`<span>${th("Открываю раздел…")}</span></div>`;page.setAttribute?.('aria-busy','true');}}
+function beginNavigation(){window.NearestUI?.leave?.(C,uiContext());for(const view of [window.ExplorationUI,window.ShipBuildUI,window.EngineeringItineraryUI,window.SectionSevenToolsUI])view?.leave?.(C);window.EngineeringRoadmapUI?.leave(C);window.OdysseyUI?.leave(C);window.SystemSearchUI?.close?.();++viewEpoch;C.renderedMarkup=null;C.page=null;C.actions=[];C.help='';const page=$('#page');if(page){page.innerHTML='<div class="page-loading" role="status">'+icon('refresh-cw')+`<span>${th("Открываю раздел…")}</span></div>`;page.setAttribute?.('aria-busy','true');}}
 const history=[];
 async function navigate(id,opts={}){if(['account','integrations'].includes(id))id='settings';if(id==='overview'&&['Планы','Состояние'].includes(opts.mode))opts={...opts,mode:'Обзор'};if(id==='commander'&&opts.mode==='Репутация')opts={...opts,mode:'Сводка'};if(id==='colonization'&&['Очередь снабжения','Поставки','Снабжение','supplies'].includes(opts.mode))opts={...opts,mode:opts.mode==='Очередь снабжения'?'Строительство':'Журнал снабжения'};if(!C.tabs.some(t=>t.ID===id))return;if(!opts.back)history.push({tab:C.tab,mode:C.mode});C.tab=id;C.mode=opts.mode||window.NavigationUI?.group(window.NavigationUI?.groupFor(id))?.modes?.[0]?.[0]||(id==='exploration'?'Экспедиции':'');const group=window.NavigationUI?.groupFor(id,C.mode);if(group){C.group=group;C.groupLast[group]={tab:id,mode:C.mode};}C.query='';C.selected='';if(id!=='learning'){C.lesson='';C.course='';C.focus=false;}if(window.ReferenceUI?.navigate)window.ReferenceUI.navigate(id,opts,C);C.prefill=opts.prefill||{};beginNavigation();if(!C.nav.includes(id)&&['work','fleet','knowledge'].includes(group)&&id!=='help'){C.nav.push(id);await saveNavigation();}renderNavigation();renderChrome();$('#page-scroll').scrollTop=0;await loadView();}
 async function saveNavigation(){await call('navigation',{tabs:C.nav});}
@@ -518,14 +543,14 @@ async function boot(){
  try{
   await call('window',{action:'ready'});
   const data=await call('boot');
-  C.boot=data;C.tabs=data.tabs.filter(tab=>!['account','integrations'].includes(tab.ID));
+  C.boot={activities:data.activities};C.tabs=data.tabs.filter(tab=>!['account','integrations'].includes(tab.ID));
   C.nav=(data.navigation?.tabs||[]).filter(id=>C.tabs.some(tab=>tab.ID===id));
   C.state=data.state;applyLanguage();
   if(typeof C.state.desktop?.sidebarCollapsed==="boolean")C.collapsed=C.state.desktop.sidebarCollapsed;
   if(typeof C.state.desktop?.inspectorOpen==="boolean")C.inspector=C.state.desktop.inspectorOpen;
   shell();window.TooltipUI?.init?.();window.SystemSearchUI?.init?.(C,uiContext());window.AcademyUI?.init?.(C,uiContext());window.CalculatorUI?.init?.(C,uiContext());
   if(!window.COPILOT_SMOKE)C.workspaceReady=false;
-  await loadView();
+  await loadView(false,{initial:data.view?{...data.view,state:data.state}:null});
   if(window.COPILOT_SMOKE){
    if(!window.COPILOT_README&&C.page){await smokePaintOpportunity();await call('smoke-performance',{checkpoint:'firstView'});}
    setTimeout(()=>window.COPILOT_README?window.ReadmeCapture.run(C,uiContext()):smoke(),300);

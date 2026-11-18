@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/Naenier/ED-Copilot/internal/data"
 	"github.com/Naenier/ED-Copilot/internal/localization"
@@ -17,9 +18,6 @@ type roadmapCapability struct {
 
 type roadmapCatalogue struct {
 	engineers, modules, personalRecipes, personalMaterials map[string]M
-	engineerIDs, blueprintKeys, effectKeys                 map[string]string
-	moduleSymbols                                          map[string]string
-	effectExclusions                                       map[string]M
 	capabilities                                           map[string][]roadmapCapability
 	moduleOrder, engineerOrder                             []string
 	personalGrades                                         []M
@@ -28,74 +26,105 @@ type roadmapCatalogue struct {
 	verifiedAt                                             any
 }
 
-var roadmapData = newRoadmapCatalogue()
+var roadmapData = sync.OnceValue(newRoadmapCatalogue)
 
-func newRoadmapCatalogue() roadmapCatalogue {
-	r := roadmapCatalogue{
-		engineers: map[string]M{}, modules: map[string]M{}, personalRecipes: map[string]M{}, personalMaterials: map[string]M{},
-		engineerIDs: map[string]string{}, blueprintKeys: map[string]string{}, effectKeys: map[string]string{},
-		capabilities: map[string][]roadmapCapability{}, moduleSymbols: map[string]string{}, effectExclusions: map[string]M{},
-	}
-	// The supplementary dataset enriches the existing ship catalogue without
-	// changing the historical keys used by saved material plans.
+var roadmapExtension = sync.OnceValue(func() M {
+	raw, _ := data.Load("engineering-roadmap.json")
+	return v.Obj(raw)
+})
+
+type engineerIndex struct {
+	byKey   map[string]M
+	byAlias map[string]string
+	order   []string
+}
+
+// Journal updates need identity lookup even when the engineering planner
+// is closed. Build the engineer lookup independently of the advice tables.
+var roadmapEngineers = sync.OnceValue(func() engineerIndex {
+	index := engineerIndex{byKey: map[string]M{}, byAlias: map[string]string{}}
 	for _, raw := range v.Rows(catalog["engineers"]) {
 		key := v.Str(raw["key"])
-		r.engineers[key] = v.Merge(v.Copy(raw), M{"kind": "ship"})
+		index.byKey[key] = v.Merge(v.Copy(raw), M{"kind": "ship"})
 	}
-	raw, err := data.Load("engineering-roadmap.json")
-	if err == nil {
-		extension := v.Obj(raw)
-		r.verifiedAt = extension["verifiedAt"]
-		for _, row := range v.Rows(extension["engineers"]) {
-			key := v.Str(row["key"])
-			r.engineers[key] = v.Merge(v.Copy(r.engineers[key]), row)
-		}
-		r.personalMaterials = byKey(v.Rows(extension["odysseyMaterials"]))
-		r.personalRecipes = byKey(v.Rows(extension["odysseyRecipes"]))
-		r.personalGrades = v.Rows(extension["odysseyGradeRecipes"])
-		r.personalEquipment = v.Rows(extension["odysseyEquipment"])
-		r.specialShipRecipes = v.Rows(extension["specialShipRecipes"])
+	for _, row := range v.Rows(roadmapExtension()["engineers"]) {
+		key := v.Str(row["key"])
+		index.byKey[key] = v.Merge(v.Copy(index.byKey[key]), row)
 	}
-	for key, row := range r.engineers {
+	for key, row := range index.byKey {
 		for _, alias := range append(v.Arr(row["aliases"]), key, row["journalId"], row["english"], row["name"]) {
 			if normalized := v.Key(alias); normalized != "" {
-				r.engineerIDs[normalized] = key
+				index.byAlias[normalized] = key
 			}
 		}
-		r.engineerOrder = append(r.engineerOrder, key)
+		index.order = append(index.order, key)
 	}
-	sort.Slice(r.engineerOrder, func(i, j int) bool {
-		a, b := r.engineers[r.engineerOrder[i]], r.engineers[r.engineerOrder[j]]
+	sort.Slice(index.order, func(i, j int) bool {
+		a, b := index.byKey[index.order[i]], index.byKey[index.order[j]]
 		if a["kind"] != b["kind"] {
 			return a["kind"] == "ship"
 		}
 		return v.Str(a["english"]) < v.Str(b["english"])
 	})
+	return index
+})
+
+type upgradeIndex struct {
+	moduleSymbols, blueprintKeys, effectKeys map[string]string
+	effectExclusions                         map[string]M
+}
+
+var journalUpgradeIndex = sync.OnceValue(func() upgradeIndex {
+	index := upgradeIndex{
+		moduleSymbols: map[string]string{}, blueprintKeys: map[string]string{}, effectKeys: map[string]string{},
+		effectExclusions: map[string]M{},
+	}
+	for _, raw := range v.Rows(catalog["modules"]) {
+		key := v.Str(raw["key"])
+		for _, symbol := range v.Arr(raw["journalSymbols"]) {
+			index.moduleSymbols[symbolText(symbol)] = key
+		}
+	}
 	for key := range blueprints {
-		r.blueprintKeys[v.Key(key)] = key
+		index.blueprintKeys[v.Key(key)] = key
 	}
 	for key := range effects {
-		r.effectKeys[v.Key(key)] = key
+		index.effectKeys[v.Key(key)] = key
 	}
 	for symbol, exclusions := range v.Obj(catalog["journalEffectExclusions"]) {
 		keys := M{}
 		for _, key := range v.Arr(exclusions) {
 			keys[v.Str(key)] = true
 		}
-		r.effectExclusions[symbolText(symbol)] = keys
+		index.effectExclusions[symbolText(symbol)] = keys
+	}
+	return index
+})
+
+func newRoadmapCatalogue() *roadmapCatalogue {
+	extension, engineers := roadmapExtension(), roadmapEngineers()
+	r := &roadmapCatalogue{
+		engineers: engineers.byKey, engineerOrder: engineers.order, modules: map[string]M{},
+		capabilities:       map[string][]roadmapCapability{},
+		verifiedAt:         extension["verifiedAt"],
+		personalMaterials:  byKey(v.Rows(extension["odysseyMaterials"])),
+		personalRecipes:    byKey(v.Rows(extension["odysseyRecipes"])),
+		personalGrades:     v.Rows(extension["odysseyGradeRecipes"]),
+		personalEquipment:  v.Rows(extension["odysseyEquipment"]),
+		specialShipRecipes: v.Rows(extension["specialShipRecipes"]),
 	}
 	for _, raw := range v.Rows(catalog["modules"]) {
 		key := v.Str(raw["key"])
-		english := v.Text(raw["english"], localization.T("en", v.Str(raw["name"])))
-		r.modules[key] = M{"key": key, "name": raw["name"], "english": english, "kind": "ship"}
-		for _, symbol := range v.Arr(raw["journalSymbols"]) {
-			r.moduleSymbols[symbolText(symbol)] = key
+		english := v.Text(raw["english"])
+		if english == "" {
+			english = localization.T("en", v.Str(raw["name"]))
 		}
+		r.modules[key] = M{"key": key, "name": raw["name"], "english": english, "kind": "ship"}
 		for blueprint, grades := range v.Obj(raw["engineers"]) {
 			maxGrades := map[string]int{}
 			for grade, names := range v.Obj(grades) {
 				for _, name := range v.Arr(names) {
-					if engineer := r.engineerIDs[v.Key(name)]; engineer != "" {
+					if engineer := engineers.byAlias[v.Key(name)]; engineer != "" {
 						maxGrades[engineer] = max(maxGrades[engineer], v.Int(grade))
 					}
 				}
@@ -133,7 +162,7 @@ func newRoadmapCatalogue() roadmapCatalogue {
 	return r
 }
 
-func (r roadmapCatalogue) blueprint(key string) M {
+func (r *roadmapCatalogue) blueprint(key string) M {
 	if row := blueprints[key]; row != nil {
 		return row
 	}
@@ -141,10 +170,14 @@ func (r roadmapCatalogue) blueprint(key string) M {
 }
 
 func roadmapEngineerKey(id, name any) string {
-	if key := roadmapData.engineerIDs[v.Key(id)]; key != "" {
-		return key
+	if idKey, nameKey := v.Key(id), v.Key(name); idKey != "" || nameKey != "" {
+		aliases := roadmapEngineers().byAlias
+		if key := aliases[idKey]; key != "" {
+			return key
+		}
+		return aliases[nameKey]
 	}
-	return roadmapData.engineerIDs[v.Key(name)]
+	return ""
 }
 
 func journalUpgradeKey(module, field, normalized string, catalogue map[string]M, fallback map[string]string) string {
@@ -172,7 +205,7 @@ func parseRoadmapQuery(body M) (roadmapQuery, error) {
 		}
 		for _, value := range values {
 			key, ok := value.(string)
-			if !ok || roadmapData.engineers[key] == nil {
+			if !ok || roadmapData().engineers[key] == nil {
 				return q, fmt.Errorf("Инженер не найден")
 			}
 			q.engineers[key] = true
@@ -191,10 +224,10 @@ func parseRoadmapQuery(body M) (roadmapQuery, error) {
 			*field.dst = value
 		}
 	}
-	if q.module != "" && roadmapData.modules[q.module] == nil {
+	if q.module != "" && roadmapData().modules[q.module] == nil {
 		return q, fmt.Errorf("Модуль не найден")
 	}
-	if q.blueprint != "" && roadmapData.blueprint(q.blueprint) == nil {
+	if q.blueprint != "" && roadmapData().blueprint(q.blueprint) == nil {
 		return q, fmt.Errorf("Чертёж не найден")
 	}
 	if q.effect != "" && effects[q.effect] == nil {

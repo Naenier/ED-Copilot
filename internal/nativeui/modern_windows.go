@@ -69,7 +69,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 		return nil, errors.New("Для интерфейса нужен Microsoft Edge WebView2. Запустите установщик ED Copilot — он предложит добавить этот компонент Windows.")
 	}
 	u := &Window{backend: backend, options: options, page: "overview", modes: map[string]string{}, queries: map[string]string{}, prefill: M{}, stop: make(chan struct{}), refreshRequested: make(chan struct{}, 1)}
-	u.state = nativeHUDSnapshot(backend)
+	u.state = nativeWindowSnapshot(backend)
 	var err error
 	u.main, err = walk.NewMainWindow()
 	if err != nil {
@@ -373,7 +373,7 @@ func (m *modernShell) watch() {
 				return
 			}
 			if gate.due(now) {
-				state := attachRouteClipboard(nativeHUDSnapshot(u.backend), u.backend)
+				state := attachRouteClipboard(nativeRefreshSnapshot(u.backend), u.backend)
 				if m.showSurfaceNav.Load() && state["surfaceNavigation"] == nil {
 					if provider, ok := u.backend.(interface{ SurfaceNavigationSnapshot() M }); ok {
 						state["surfaceNavigation"] = provider.SurfaceNavigationSnapshot()
@@ -569,6 +569,9 @@ func (u *Window) applyModernSnapshot(state M) {
 	}
 	if u.modern.ready && !u.modern.closed && win.IsWindowVisible(u.main.Handle()) && !win.IsIconic(u.main.Handle()) {
 		update := M{"revision": u.state["revision"], "connection": u.state["connection"], "settings": u.state["settings"], "commander": u.state["commander"]}
+		if revision, ok := u.state["shipBuildRevision"]; ok {
+			update["shipBuildRevision"] = revision
+		}
 		if u.modern.showSurfaceNav.Load() && u.state["surfaceNavigation"] != nil {
 			update["surfaceNavigation"] = u.state["surfaceNavigation"]
 		}
@@ -642,15 +645,29 @@ func (m *modernShell) serveWorkspace(req *edge.ICoreWebView2WebResourceRequest, 
 	method, methodErr := req.GetMethod()
 	status, reason := 404, "Not Found"
 	headers := "Cache-Control: no-store\r\nX-Content-Type-Options: nosniff"
-	if uriErr == nil && methodErr == nil && uri == workspaceURL && method == "GET" {
-		status, reason = 200, "OK"
-		headers += "\r\nContent-Type: text/html; charset=utf-8"
+	var body []byte
+	if uriErr == nil && methodErr == nil && method == "GET" {
+		switch uri {
+		case workspaceURL:
+			headers += "\r\nContent-Type: text/html; charset=utf-8"
+			body = m.document
+		default:
+			if path, ok := strings.CutPrefix(uri, workspaceOrigin); ok {
+				if asset, exists := frontend.WorkspaceBundle(path); exists {
+					headers += "\r\nContent-Type: application/javascript; charset=utf-8"
+					body = asset
+				}
+			}
+		}
+		if body != nil {
+			status, reason = 200, "OK"
+		}
 	}
 	response, err := m.view.Environment().CreateWebResourceResponse(nil, status, reason, headers)
 	if err == nil {
 		defer response.Release()
 		if status == 200 {
-			err = response.PutByteContent(m.document)
+			err = response.PutByteContent(body)
 		}
 		if err == nil {
 			err = args.PutResponse(response)
@@ -706,9 +723,12 @@ func (m *modernShell) handleRequest(req webRequest) {
 		return
 	}
 	if req.Op == "view" {
-		m.showSurfaceNav.Store(req.Params["tab"] == "surface-navigation")
+		surface := req.Params["tab"] == "surface-navigation"
+		if m.showSurfaceNav.Swap(surface) != surface {
+			m.owner.refreshModern()
+		}
 	}
-	if m.soak != nil && req.Op == "view" {
+	if m.soak != nil && (req.Op == "boot" || req.Op == "view") {
 		m.soak.readyOnce.Do(func() { close(m.soak.webReady) })
 	}
 	if req.Op == "window" {
@@ -762,7 +782,7 @@ func (m *modernShell) handleRequest(req webRequest) {
 		return
 	}
 	switch req.Op {
-	case "system-search", "system-search-cancel", "galaxy.system", "galaxy.nearby", "exo.sites", "engineering-roadmap", "controls.view", "controls.status":
+	case "boot", "view", "system-search", "system-search-cancel", "galaxy.system", "galaxy.nearby", "exo.sites", "engineering-roadmap", "controls.view", "controls.status", "ship-fits-list", "ship-fit-get", "ship-fit-materials", "ship-fits-export", "nearest.search", "nearest.cancel":
 		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 		return
 	}
@@ -891,6 +911,20 @@ func (m *modernShell) windowAction(action string) (M, error) {
 		return nil, errors.New("Неизвестная команда окна")
 	}
 	return M{"ok": true, "maximized": win.IsZoomed(u.main.Handle())}, nil
+}
+
+func nativeWindowSnapshot(backend Controller) M {
+	if scoped, ok := backend.(interface{ SnapshotForWindow() M }); ok {
+		return scoped.SnapshotForWindow()
+	}
+	return nativeHUDSnapshot(backend)
+}
+
+func nativeRefreshSnapshot(backend Controller) M {
+	if scoped, ok := backend.(interface{ SnapshotForNativeRefresh() M }); ok {
+		return scoped.SnapshotForNativeRefresh()
+	}
+	return nativeHUDSnapshot(backend)
 }
 
 func nativeHUDSnapshot(backend Controller) M {

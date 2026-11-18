@@ -1,0 +1,10 @@
+{
+  "Тип станции исключён остальными фильтрами.": "The other filters exclude this station type.",
+  "Выберите корабль или модуль для поиска скидок.": "Choose a ship or module to search for discounts.",
+  "Показаны станции с магазином Pioneer Supplies. Наличие конкретных костюмов и оружия в открытом каталоге неизвестно.": "These stations have a Pioneer Supplies shop. Stock for specific suits and weapons is unavailable in the public catalogue.",
+  "Скидки рассчитаны по опубликованным ценам и базовой стоимости выбранных кораблей и модулей.": "Discounts compare reported prices with standard prices for the selected ships and modules.",
+  "Укажите державу командира для поиска её носителей укрепления.": "A Power pledge is needed to match its stronghold carriers.",
+  "Проверены станции в первых 200 системах, подходящих по дополнительным фильтрам.": "The advanced filters checked stations in the first 200 matching systems.",
+  "Статус фракции игроков подтверждён через EDSM для части систем.": "EDSM confirmed player faction status for a subset of the systems.",
+  "Дополнительные условия проверены по ограниченной выборке ближайших станций.": "The advanced conditions checked a limited sample of nearby stations."
+}

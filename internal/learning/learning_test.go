@@ -354,6 +354,9 @@ func TestBlankUnicodeSearchKeepsCompleteIndependentSnapshot(t *testing.T) {
 	}
 }
 
+var contentJSON, _ = contentFiles.ReadFile("content.json")
+var englishContentJSON, _ = contentFiles.ReadFile("content_en.json")
+
 func BenchmarkMatchesBlankQuery(b *testing.B) {
 	// Build and decode the catalogue before timing the common no-search path.
 	lesson := Catalog()[1]

@@ -49,6 +49,20 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/exploration/update", input)
 	case "exploration.export":
 		return backend.Do("/api/exploration/export", input)
+	case "ship-fits-list":
+		return backend.Do("/api/ship-fits", input)
+	case "ship-fit-get":
+		return backend.Do("/api/ship-fits/get", input)
+	case "ship-fit-materials":
+		return backend.Do("/api/ship-fits/materials", input)
+	case "ship-fit-save":
+		return backend.Do("/api/ship-fits/save", input)
+	case "ship-fit-delete":
+		return backend.Do("/api/ship-fits/delete", input)
+	case "ship-fits-import":
+		return backend.Do("/api/ship-fits/import", input)
+	case "ship-fits-export":
+		return backend.Do("/api/ship-fits/export", input)
 	case "ship-builds":
 		return backend.Do("/api/ship-builds", input)
 	case "ship-builds-update":
@@ -168,6 +182,16 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/trading/search", v.Obj(input["values"]))
 	case "reference.markets":
 		return v.Obj(snapshotForWeb(backend, "reference")["trading"]), nil
+	case "nearest.search":
+		if provider, ok := backend.(interface{ SearchNearest(M) (M, error) }); ok {
+			return provider.SearchNearest(input)
+		}
+		return M{"status": "disabled"}, nil
+	case "nearest.cancel":
+		if provider, ok := backend.(interface{ CancelNearest(M) (M, error) }); ok {
+			return provider.CancelNearest(input)
+		}
+		return M{"ok": true}, nil
 	case "galaxy.system", "galaxy.nearby":
 		if provider, ok := backend.(interface{ Galaxy(string, M) M }); ok {
 			return provider.Galaxy(op, input), nil
@@ -278,7 +302,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	if op == "view" {
 		scope := ""
 		switch {
-		case tab == "engineering" && (mode == p.EngineeringShipBuild || mode == p.EngineeringItinerary):
+		case tab == "engineering" && (mode == p.EngineeringShipBuild || mode == p.EngineeringShipFitter || mode == p.EngineeringItinerary):
 			scope = "section-seven"
 		case tab == "exobiology" && mode == p.SurfaceRadarMode:
 			scope = "surface-radar"
@@ -298,12 +322,18 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			return M{"page": page, "actions": []M{}, "state": webState(state), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": ""}}, nil
 		}
 	}
-	state := snapshotForWeb(backend, tab)
-	if op == "boot" {
-		return M{"app": state["app"], "tabs": p.Tabs, "navigation": state["navigation"], "activities": p.Activities, "state": webState(state)}, nil
+	var state M
+	if tab == "overview" && (mode == "" || mode == "Обзор") {
+		mode = "Обзор"
+		if scoped, ok := backend.(interface{ SnapshotForOverview() M }); ok {
+			state = scoped.SnapshotForOverview()
+		}
+	}
+	if state == nil {
+		state = snapshotForWeb(backend, tab)
 	}
 	page := p.Build(tab, mode, query, state)
-	if op == "view" && mode == "" && len(page.Modes) > 0 {
+	if (op == "view" || op == "boot") && mode == "" && len(page.Modes) > 0 {
 		mode = page.Modes[0]
 		page = p.Build(tab, mode, query, state)
 	}
@@ -321,7 +351,7 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 			break
 		}
 	}
-	if op == "view" && !found {
+	if (op == "view" || op == "boot") && !found {
 		// The Academy reader can show a lesson while its underlying table is
 		// the course catalogue. Keep that explicit, valid reading selection.
 		if tab == "learning" && selectedID != "" {
@@ -342,12 +372,17 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	}
 	actions := p.CoreActions(tab, mode, state, selected, v.Obj(input["prefill"]))
 	switch op {
-	case "view":
+	case "view", "boot":
 		viewState := webState(state)
 		if tab == "engineering" && p.EngineeringMaterialMode(mode) {
 			viewState["engineeringTrade"] = v.Copy(v.Obj(v.At(state, "engineering", "trader")))
 		}
-		return M{"page": page, "actions": webActions(actions), "state": viewState, "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}, nil
+		view := M{"page": page, "actions": webActions(actions), "help": p.HelpForLanguage(tab, p.Language(state)), "context": M{"mode": mode, "selected": selectedID}}
+		if op == "boot" {
+			return M{"app": state["app"], "tabs": p.Tabs, "navigation": state["navigation"], "activities": p.Activities, "state": viewState, "view": view}, nil
+		}
+		view["state"] = viewState
+		return view, nil
 	case "action":
 		if strings.HasPrefix(v.Str(input["actionId"]), "goal.") {
 			if expected, present := input["planWorkspace"]; present && expected != v.Str(v.At(state, "planWorkspace", "key")) {
@@ -446,7 +481,7 @@ func snapshotForWeb(backend Controller, tab string) M {
 
 func webState(state M) M {
 	out := M{}
-	for _, key := range []string{"shipRoute", "surfaceRadar", "surfaceNavigation", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory", "tradeRun"} {
+	for _, key := range []string{"revision", "shipRoute", "surfaceRadar", "surfaceNavigation", "shipBuildRevision", "engineeringItineraryRevision", "explorationRevision", "colonyHistory", "tradeRun"} {
 		if value, exists := state[key]; exists {
 			out[key] = value
 		}

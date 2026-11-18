@@ -309,11 +309,12 @@ func (l *Library) Snapshot() M {
 // never changes persisted search text, lesson IDs or personal study progress.
 func (l *Library) SnapshotForLanguage(language string) M {
 	c := catalogForLanguage(language)
+	view := catalogProjectionFor(c.Language)
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	courses, lessons, recent := []M{}, []M{}, []M{}
 	for index, course := range c.Courses {
-		row := copyCatalogRow(c.courseRows[index])
+		row := copyCatalogRow(view.courseRows[index])
 		completed := 0
 		for _, id := range course.LessonIDs {
 			if l.completed[id] != nil {
@@ -335,7 +336,7 @@ func (l *Library) SnapshotForLanguage(language string) M {
 	}
 	active := M{}
 	for index, lesson := range c.Lessons {
-		row := copyCatalogRow(c.lessonRows[index])
+		row := copyCatalogRow(view.lessonRows[index])
 		row["completed"], row["completedAt"], row["bookmarked"], row["openedAt"] = l.completed[lesson.ID] != nil, l.completed[lesson.ID], v.Bool(l.bookmarks[lesson.ID]), l.opened[lesson.ID]
 		row["position"] = v.Copy(v.Obj(l.positions[lesson.ID]))
 		row["checklistState"] = v.Copy(v.Obj(l.checklists[lesson.ID]))
@@ -382,7 +383,7 @@ func (l *Library) SnapshotForLanguage(language string) M {
 		if filter == "bookmarked" && !v.Bool(lesson["bookmarked"]) || filter == "completed" && !v.Bool(lesson["completed"]) || filter == "in-progress" && lesson["status"] != "in-progress" {
 			continue
 		}
-		if matchesSearchText(c.searchText[v.Str(lesson["id"])], v.Str(l.options["query"])) {
+		if matchesSearchText(view.searchText[v.Str(lesson["id"])], v.Str(l.options["query"])) {
 			filtered = append(filtered, copyCatalogRow(lesson))
 		}
 	}

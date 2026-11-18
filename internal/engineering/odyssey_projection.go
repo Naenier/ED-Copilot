@@ -121,7 +121,7 @@ func (p *Planner) odysseyWork(owner string, ws *odysseyWorkspace, kit M, detaile
 		if identity == "" {
 			identity = v.Str(kit["id"]) + ":" + strconv.Itoa(index)
 		}
-		model := odysseyEquipmentByKey[v.Str(item["itemKey"])]
+		model := odysseyEquipmentByKey()[v.Str(item["itemKey"])]
 		observed := p.odysseyEquipmentFor(owner, ws, bound)
 		target, start := v.Int(item["targetGrade"]), v.Int(item["startingGrade"])
 		currentGrade := start
@@ -146,7 +146,7 @@ func (p *Planner) odysseyWork(owner string, ws *odysseyWorkspace, kit M, detaile
 			goal.mods[v.Str(mod)] = true
 		}
 		for _, mod := range desired {
-			recipe := roadmapData.personalRecipes[v.Str(mod)]
+			recipe := roadmapData().personalRecipes[v.Str(mod)]
 			goal.mods[v.Str(recipe["journalSymbol"])] = true
 		}
 		blocked := len(goal.mods) > odysseySlots(model, goal.grade)
@@ -159,7 +159,7 @@ func (p *Planner) odysseyWork(owner string, ws *odysseyWorkspace, kit M, detaile
 
 		steps := []M{}
 		for grade := min(start+1, max(2, currentGrade+1)); grade <= target; grade++ {
-			recipe := odysseyGradeRecipes[v.Str(model["itemSymbol"])+"-"+strconv.Itoa(grade)]
+			recipe := odysseyGradeRecipes()[v.Str(model["itemSymbol"])+"-"+strconv.Itoa(grade)]
 			status := "pending"
 			switch {
 			case currentGrade == 0:
@@ -182,7 +182,7 @@ func (p *Planner) odysseyWork(owner string, ws *odysseyWorkspace, kit M, detaile
 		}
 		for _, raw := range desired {
 			key := v.Str(raw)
-			recipe := roadmapData.personalRecipes[key]
+			recipe := roadmapData().personalRecipes[key]
 			journalKey := v.Str(recipe["journalSymbol"])
 			status := "pending"
 			switch {
@@ -250,7 +250,7 @@ func (p *Planner) odysseyEngineers(recipe M) []M {
 	rows := []M{}
 	for _, raw := range v.Arr(recipe["engineerKeys"]) {
 		key := v.Str(raw)
-		e := roadmapData.engineers[key]
+		e := roadmapData().engineers[key]
 		rows = append(rows, M{"key": key, "name": e["name"], "english": e["english"], "entryId": "engineer/" + key, "status": p.roadmapEngineerState(key)["status"]})
 	}
 	return rows
@@ -258,7 +258,7 @@ func (p *Planner) odysseyEngineers(recipe M) []M {
 
 func (p *Planner) odysseyCatalogues() ([]M, []M) {
 	equipment := []M{}
-	for _, raw := range roadmapData.personalEquipment {
+	for _, raw := range roadmapData().personalEquipment {
 		row := v.Copy(raw)
 		row["slot"] = odysseyWeaponSlot(row)
 		if row["moduleKey"] == "suit" {
@@ -268,8 +268,8 @@ func (p *Planner) odysseyCatalogues() ([]M, []M) {
 	}
 	sort.Slice(equipment, func(i, j int) bool { return v.Str(equipment[i]["english"]) < v.Str(equipment[j]["english"]) })
 	mods := []M{}
-	for _, key := range sortedOdysseyKeys(roadmapData.personalRecipes) {
-		recipe := roadmapData.personalRecipes[key]
+	for _, key := range sortedOdysseyKeys(roadmapData().personalRecipes) {
+		recipe := roadmapData().personalRecipes[key]
 		mods = append(mods, M{"key": key, "name": recipe["name"], "english": recipe["english"], "moduleKey": recipe["moduleKey"],
 			"journalSymbol": recipe["journalSymbol"], "damageType": recipe["damageType"], "engineers": p.odysseyEngineers(recipe)})
 	}
@@ -296,7 +296,7 @@ func (p *Planner) odysseyOwnedEquipment(owner string, ws *odysseyWorkspace) []M 
 	}
 	for _, key := range sortedOdysseyKeys(keys) {
 		observed := p.odysseyEquipmentFor(owner, ws, key)
-		model := odysseyEquipmentByKey[odysseyItemKey(observed["symbol"])]
+		model := odysseyEquipmentByKey()[odysseyItemKey(observed["symbol"])]
 		if model != nil {
 			rows = append(rows, M{"key": key, "itemKey": model["key"], "name": model["name"], "english": model["english"], "grade": observed["grade"],
 				"mods": v.Clone(observed["mods"]), "observedAt": observed["observedAt"]})

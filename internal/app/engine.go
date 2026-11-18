@@ -30,6 +30,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/trading"
 	"github.com/Naenier/ED-Copilot/internal/updater"
 	v "github.com/Naenier/ED-Copilot/internal/value"
+	"maps"
 	"net"
 	"net/http"
 	"os"
@@ -42,7 +43,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.19"
+const Version = "2.8.20"
 
 type Options struct {
 	DataDir, JournalDir            string
@@ -50,6 +51,7 @@ type Options struct {
 	HTTPClient                     *http.Client
 	CallbackPort                   int
 	DisableNetwork, ManualPolling  bool
+	BackgroundJournal              bool
 }
 type Engine struct {
 	section7                                        sectionSeven
@@ -61,6 +63,9 @@ type Engine struct {
 	ctx                                             context.Context
 	cancel                                          context.CancelFunc
 	Reader                                          *journal.Reader
+	journalDone                                     chan struct{}
+	journalStarting                                 bool
+	overviewBeforeReplay                            overviewObservations
 	Colonies                                        *colonization.Planner
 	Engineering                                     *engineering.Planner
 	Exobiology                                      *exobiology.Service
@@ -210,7 +215,25 @@ func New(o Options) (*Engine, error) {
 		x.finishPlanReplay()
 		x.restoreRemoteCache()
 	}
-	x.Reader.Poll()
+	x.journalStarting = o.BackgroundJournal && !o.ManualPolling
+	x.Reader.AfterScan = func(initial, complete bool) {
+		x.domainMu.Lock()
+		if initial {
+			x.journalStarting = false
+		}
+		if complete {
+			x.overviewBeforeReplay = overviewObservations{}
+		}
+		x.mu.Lock()
+		x.revision++
+		x.mu.Unlock()
+		x.domainMu.Unlock()
+		x.Notify()
+		x.wakeFrontier()
+	}
+	if !x.journalStarting {
+		x.Reader.Poll()
+	}
 	if !o.DisableNetwork {
 		port := o.CallbackPort
 		if port < 0 {
@@ -239,14 +262,18 @@ func New(o Options) (*Engine, error) {
 			return nil, e
 		}
 	}
-	if !o.ManualPolling {
-		go x.Reader.Run(ctx)
-	}
 	x.initializeUpdates()
 	x.startAutomaticFrontier()
 	x.startColonyHistory()
 	if !o.DisableNetwork {
 		x.startSectionSeven()
+	}
+	if !o.ManualPolling {
+		x.journalDone = make(chan struct{})
+		go func() {
+			defer close(x.journalDone)
+			x.Reader.Run(ctx)
+		}()
 	}
 	return x, nil
 }
@@ -263,6 +290,9 @@ func (e *Engine) resetObserved() {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
 	e.mu.Lock()
+	if e.Reader != nil && !e.planReplay {
+		e.overviewBeforeReplay = e.overviewObservationsLocked(true)
+	}
 	e.engineeringRoadmapRevision++
 	e.resetCarrierTradeSearchLocked()
 	e.resetRichesSearchLocked()
@@ -387,7 +417,7 @@ func (e *Engine) applyLocked(event, meta M) {
 		e.adoptRichesJourneyLocked()
 		e.clearClipboardLocked("trade-route")
 	}
-	cmd = ships.ApplyEvent(cmd, event)
+	ships.ObserveEvent(cmd, event)
 	if kind == "Loadout" {
 		cmd["jumpRangeLy"] = event["MaxJumpRange"]
 	} else if kind == "LoadGame" {
@@ -422,9 +452,11 @@ func (e *Engine) applyLocked(event, meta M) {
 	if !side {
 		e.gameRunning = kind != "Shutdown"
 	}
-	settings, game := v.Copy(e.settings), v.Copy(e.game)
+	// Event consumers treat these values as read-only. The engine replaces
+	// coordinate samples and settings values instead of editing them in place.
+	settings, game := maps.Clone(e.settings), maps.Clone(e.game)
 	since := e.statsSince
-	cmdCopy := v.Copy(cmd)
+	cmdCopy := maps.Clone(cmd)
 	workspace := e.planWorkspace.key
 	if v.Bool(meta["replay"]) {
 		workspace = e.replayedPlanWorkspace.key
@@ -471,17 +503,18 @@ func (e *Engine) applyLocked(event, meta M) {
 	}
 	e.Mining.ApplyTradeResult(tradeResult, ctx)
 	e.Engineering.Apply(event, ctx)
-	e.Exobiology.Apply(event, v.Merge(v.Copy(meta), ctx))
+	observation := v.Merge(make(M, len(meta)+len(ctx)), meta, ctx)
+	e.Exobiology.Apply(event, observation)
 	e.Pilot.Apply(event, ctx)
 	e.CommanderProfile.Apply(event, ctx)
 	e.Ranks.Apply(event, ctx)
 	e.Politics.Apply(event)
-	e.Colonies.Apply(event, v.Merge(v.Copy(meta), ctx))
+	e.Colonies.Apply(event, observation)
 	if previousWorkspace != e.planWorkspace.key {
 		e.sectionSevenContext()
 	}
-	e.observeSectionSeven(workspace, event, v.Merge(v.Copy(meta), ctx), richesCopied)
-	advanced := e.Route.ObserveCarrier(e.Carrier.Snapshot(ctx))
+	e.observeSectionSeven(workspace, event, observation, richesCopied)
+	advanced := e.Route.ObserveCarrierLocation(v.Obj(e.Carrier.Current()["location"]))
 	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
 		e.queueNextRouteClipboard()
 	}
@@ -493,7 +526,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	if kind == "Market" && event["Items"] != nil {
 		e.market(event, cmdCopy)
 	}
-	if e.Inara != nil {
+	if e.Inara != nil && !e.journalStarting {
 		m := v.Merge(v.Copy(meta), M{"commander": cmdCopy, "game": game, "connection": M{"scanning": meta["replay"], "gameRunning": running}, "app": M{"version": Version}})
 		if side {
 			e.Inara.ApplySide(event, m)
@@ -501,7 +534,9 @@ func (e *Engine) applyLocked(event, meta M) {
 			e.Inara.ApplyJournal(event, m)
 		}
 	}
-	e.Notify()
+	if !v.Bool(meta["replay"]) {
+		e.Notify()
+	}
 }
 func (e *Engine) market(event, commander M) {
 	e.mu.Lock()
@@ -726,6 +761,9 @@ func (e *Engine) CloseWithSave() error {
 	}
 	e.mu.Unlock()
 	e.cancel()
+	if e.journalDone != nil {
+		<-e.journalDone
+	}
 	e.section7.screens.Stop()
 	if e.frontierAuto != nil && e.frontierAuto.done != nil {
 		<-e.frontierAuto.done

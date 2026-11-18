@@ -3,7 +3,9 @@ package frontend
 import (
 	"embed"
 	"encoding/base64"
+	"encoding/json"
 	"strings"
+	"sync"
 
 	"github.com/Naenier/ED-Copilot/internal/data"
 	"github.com/Naenier/ED-Copilot/internal/localization"
@@ -12,32 +14,117 @@ import (
 //go:embed *.html *.css *.js
 var Files embed.FS
 
+func read(name string) string {
+	data, err := Files.ReadFile(name)
+	if err != nil {
+		panic("Required frontend asset missing: " + name)
+	}
+	return string(data)
+}
+
+func joinAssets(names []string) string {
+	var bundle strings.Builder
+	for _, name := range names {
+		bundle.WriteString(read(name))
+		bundle.WriteByte('\n')
+	}
+	return bundle.String()
+}
+
+var shellCSS = sync.OnceValue(func() string {
+	return joinAssets([]string{
+		"app.css", "tooltips.css", "navigation.css", "commander.css", "ranks.css", "politics.css",
+		"freshness.css", "updates.css", "overview.css", "reference.css", "galaxy.css",
+		"workspace-fixes.css", "system-search.css", "surface-navigation.css",
+	})
+})
+
+var shellJS = sync.OnceValue(func() string {
+	brand, _ := data.Files.ReadFile("copilot.png")
+	return "window.CopilotBrand='data:image/png;base64," + base64.StdEncoding.EncodeToString(brand) + "';\n" +
+		"window.CopilotTranslations=" + strings.ReplaceAll(localization.CatalogJSON(), "<", "\\u003c") + ";\n" +
+		joinAssets([]string{
+			"i18n.js", "icons.js", "tooltips.js", "rank-insignia.js", "navigation.js", "commander.js",
+			"ranks.js", "freshness.js", "politics.js", "updates.js", "overview.js", "galaxy.js", "reference.js",
+			"system-search.js", "surface-navigation.js", "workspace-assets.js", "ship-fits-lazy.js",
+		})
+})
+
+var smokeJS = sync.OnceValue(func() string {
+	return joinAssets([]string{"v27-smoke.js", "v26-smoke.js", "v24-smoke.js", "v23-smoke.js", "v22-smoke.js"})
+})
+
+var workspaceHTML = sync.OnceValue(func() string { return read("index.html") })
+var controllerJS = sync.OnceValue(func() string { return read("app.js") })
+
 func HTML(nonce string, smoke bool) string {
 	return HTMLMode(nonce, smoke, false)
 }
 
 func HTMLMode(nonce string, smoke, readme bool) string {
-	read := func(name string) string {
-		b, err := Files.ReadFile(name)
-		if err != nil {
-			panic("Required frontend asset missing: " + name)
-		}
-		return string(b)
-	}
-	flag := "false"
+	flag, extras := "false", ""
 	if smoke {
 		flag = "true"
+		if readme {
+			extras = "window.COPILOT_README=true;\n" + read("readme-capture.js")
+		} else {
+			extras = smokeJS()
+		}
 	}
-	brand, _ := data.Files.ReadFile("copilot.png")
-	brandScript := "window.CopilotBrand='data:image/png;base64," + base64.StdEncoding.EncodeToString(brand) + "';\n"
-	brandScript += "window.CopilotTranslations=" + strings.ReplaceAll(localization.CatalogJSON(), "<", "\\u003c") + ";\n" + read("i18n.js") + "\n"
-	if readme && smoke {
-		brandScript += "window.COPILOT_README=true;\n"
+	return strings.NewReplacer(
+		"{{NONCE}}", nonce, "{{CSS}}", shellCSS(),
+		"{{JS}}", shellJS()+extras+controllerJS(), "{{SMOKE}}", flag,
+	).Replace(workspaceHTML())
+}
+
+const ShipFitsAssetPath = "/workspace/ship-fits.js"
+const NearestAssetPath = "/workspace/nearest.js"
+
+var NearestBundle = makeBundle([]string{"nearest.css"}, "nearest-options.js", "nearest-strings.js", "nearest.js")
+
+// ShipFitsBundle keeps the fitting catalogue out of the WebView startup document.
+var ShipFitsBundle = makeBundle([]string{"ship-fits.css"}, "ship-fit-ru.js", "ship-fit-engine.js", "ship-fits.js")
+
+var workspaceBundles = map[string]func() []byte{
+	ShipFitsAssetPath:                ShipFitsBundle,
+	NearestAssetPath:                 NearestBundle,
+	"/workspace/academy.js":          makeBundle([]string{"academy.css"}, "academy.js"),
+	"/workspace/calculator.js":       makeBundle([]string{"calculator.css"}, "calculator.js"),
+	"/workspace/settings.js":         makeBundle([]string{"settings-pane.css", "controls.css"}, "settings-pane.js", "controls-action-labels.js", "controls.js"),
+	"/workspace/trade-routes.js":     makeBundle([]string{"deals.css"}, "deals.js"),
+	"/workspace/carrier-trade.js":    makeBundle([]string{"carrier-trade.css"}, "carrier-trade.js"),
+	"/workspace/trade-statistics.js": makeBundle([]string{"trade-statistics.css"}, "trade-statistics.js"),
+	"/workspace/engineering.js": makeBundle(
+		[]string{"engineering-roadmap.css", "odyssey-workspace.css", "ship-builds.css", "ship-engineering.css", "engineering-itinerary.css"},
+		"engineering-roadmap.js", "odyssey-workspace.js", "ship-builds.js", "ship-engineering.js", "engineering-itinerary.js",
+	),
+	"/workspace/colonization.js":  makeBundle([]string{"colonization-workspace.css", "colony-history.css"}, "colonization-workspace.js", "colony-history.js"),
+	"/workspace/exobiology.js":    makeBundle([]string{"exobiology.css", "surface-radar.css"}, "exobiology.js", "surface-radar.js"),
+	"/workspace/mining.js":        makeBundle([]string{"mining-comparison.css"}, "mining-comparison.js"),
+	"/workspace/carrier-route.js": makeBundle([]string{"route-workspace.css"}, "route-workspace.js"),
+	"/workspace/ship-route.js":    makeBundle([]string{"ship-route.css"}, "ship-route.js"),
+	"/workspace/exploration.js":   makeBundle([]string{"exploration.css"}, "exploration.js"),
+	"/workspace/cartography.js":   makeBundle([]string{"riches.css"}, "riches.js"),
+	"/workspace/section-tools.js": makeBundle([]string{"section-seven-tools.css"}, "section-seven-tools.js"),
+}
+
+// WorkspaceBundle returns only explicitly registered embedded assets.
+func WorkspaceBundle(path string) ([]byte, bool) {
+	bundle, ok := workspaceBundles[path]
+	if !ok {
+		return nil, false
 	}
-	sectionSevenCSS, sectionSevenJS := "", ""
-	for _, name := range []string{"exploration", "ship-route", "surface-navigation", "surface-radar", "ship-builds", "ship-engineering", "engineering-itinerary", "section-seven-tools", "colony-history"} {
-		sectionSevenCSS += "\n" + read(name+".css")
-		sectionSevenJS += "\n" + read(name+".js")
-	}
-	return strings.NewReplacer("{{NONCE}}", nonce, "{{CSS}}", read("app.css")+"\n"+read("tooltips.css")+"\n"+read("navigation.css")+"\n"+read("commander.css")+"\n"+read("ranks.css")+"\n"+read("politics.css")+"\n"+read("freshness.css")+"\n"+read("updates.css")+"\n"+read("academy.css")+"\n"+read("calculator.css")+"\n"+read("overview.css")+"\n"+read("reference.css")+"\n"+read("galaxy.css")+"\n"+read("engineering-roadmap.css")+"\n"+read("odyssey-workspace.css")+"\n"+read("carrier-trade.css")+"\n"+read("settings-pane.css")+"\n"+read("controls.css")+"\n"+read("deals.css")+"\n"+read("trade-statistics.css")+"\n"+read("mining-comparison.css")+"\n"+read("route-workspace.css")+"\n"+read("colonization-workspace.css")+"\n"+read("workspace-fixes.css")+"\n"+read("system-search.css")+"\n"+read("exobiology.css")+"\n"+read("riches.css")+sectionSevenCSS, "{{JS}}", brandScript+read("icons.js")+"\n"+read("tooltips.js")+"\n"+read("rank-insignia.js")+"\n"+read("navigation.js")+"\n"+read("commander.js")+"\n"+read("ranks.js")+"\n"+read("freshness.js")+"\n"+read("politics.js")+"\n"+read("updates.js")+"\n"+read("academy.js")+"\n"+read("calculator.js")+"\n"+read("overview.js")+"\n"+read("galaxy.js")+"\n"+read("reference.js")+"\n"+read("engineering-roadmap.js")+"\n"+read("odyssey-workspace.js")+"\n"+read("carrier-trade.js")+"\n"+read("settings-pane.js")+"\n"+read("controls-action-labels.js")+"\n"+read("controls.js")+"\n"+read("deals.js")+"\n"+read("trade-statistics.js")+"\n"+read("mining-comparison.js")+"\n"+read("route-workspace.js")+"\n"+read("colonization-workspace.js")+"\n"+read("readme-capture.js")+"\n"+read("v27-smoke.js")+"\n"+read("v26-smoke.js")+"\n"+read("v24-smoke.js")+"\n"+read("v23-smoke.js")+"\n"+read("v22-smoke.js")+"\n"+read("exobiology.js")+"\n"+read("system-search.js")+"\n"+read("riches.js")+"\n"+sectionSevenJS+"\n"+read("app.js"), "{{SMOKE}}", flag).Replace(read("index.html"))
+	return bundle(), true
+}
+
+func makeBundle(styles []string, scripts ...string) func() []byte {
+	return sync.OnceValue(func() []byte {
+		style, _ := json.Marshal(joinAssets(styles))
+		var script strings.Builder
+		script.WriteString("(()=>{const style=document.createElement('style');style.textContent=")
+		script.Write(style)
+		script.WriteString(";document.head.append(style);})();\n")
+		script.WriteString(joinAssets(scripts))
+		return []byte(script.String())
+	})
 }

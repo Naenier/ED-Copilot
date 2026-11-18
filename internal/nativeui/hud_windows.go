@@ -203,6 +203,11 @@ func (h *hudWindow) refresh() {
 		return
 	}
 	s := h.owner.state
+	running := v.At(s, "connection", "gameRunning")
+	if !v.Bool(v.At(s, "settings", "overlayEnabled")) || running == false || v.Bool(v.At(s, "connection", "scanning")) {
+		h.hide()
+		return
+	}
 	var foreground win.HWND
 	var process string
 	if h.owner.options.Soak != nil {
@@ -211,7 +216,7 @@ func (h *hudWindow) refresh() {
 	} else {
 		foreground, process = foregroundGame()
 	}
-	if !p.HUDVisible(v.Bool(v.At(s, "settings", "overlayEnabled")), v.At(s, "connection", "gameRunning"), process) {
+	if !p.HUDVisible(true, running, process) {
 		h.hide()
 		return
 	}

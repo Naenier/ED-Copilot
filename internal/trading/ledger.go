@@ -481,6 +481,21 @@ func (s *Service) Apply(event, context M) M {
 	}
 	return result
 }
+
+// CargoTons sums the active hold without building market statistics or price lists.
+func (s *Service) CargoTons(vessel string) float64 {
+	if vessel != "ship" && vessel != "srv" {
+		vessel = s.ActiveVessel
+	}
+	total := float64(0)
+	for _, lots := range s.Holds[Vessel(vessel)] {
+		for _, lot := range lots {
+			total += lot.Count
+		}
+	}
+	return total
+}
+
 func (s *Service) Snapshot(context M) M {
 	cmd := context
 	if c, ok := context["commander"]; ok {

@@ -75,7 +75,7 @@ func validateOdysseyProgress(row M) M {
 		return out
 	}
 	symbol := symbolText(row["symbol"])
-	model := odysseyEquipmentByKey[odysseyItemKey(symbol)]
+	model := odysseyEquipmentByKey()[odysseyItemKey(symbol)]
 	if model == nil {
 		return nil
 	}

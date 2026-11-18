@@ -139,7 +139,7 @@ func (p *Planner) observeRoadmap(kind string, event M) {
 }
 
 func shipModule(symbol string) string {
-	if key := roadmapData.moduleSymbols[symbol]; key != "" {
+	if key := journalUpgradeIndex().moduleSymbols[symbol]; key != "" {
 		return key
 	}
 	// Symbols use a family prefix followed by equipment-specific size, rating,
@@ -262,12 +262,12 @@ func (r *roadmapObservations) invalidateStoredSlot(event M) {
 
 func applyShipUpgrade(row, mod M) {
 	if key := roadmapEngineerKey(mod["EngineerID"], mod["Engineer"]); key != "" {
-		engineer := roadmapData.engineers[key]
+		engineer := roadmapEngineers().byKey[key]
 		row["engineerKey"], row["engineerName"], row["engineerEnglish"] = key, engineer["name"], engineer["english"]
 	}
 	if name := v.First(mod["BlueprintName"], mod["EngineerModifications"]); v.Key(name) != "" {
 		symbol := v.Key(name)
-		key := journalUpgradeKey(v.Str(row["moduleKey"]), "blueprints", symbol, blueprints, roadmapData.blueprintKeys)
+		key := journalUpgradeKey(v.Str(row["moduleKey"]), "blueprints", symbol, blueprints, journalUpgradeIndex().blueprintKeys)
 		if key == "" {
 			row["unmappedBlueprint"] = name
 		} else {
@@ -292,7 +292,7 @@ func applyShipUpgrade(row, mod M) {
 		row["quality"] = quality
 	}
 	if symbol := v.Key(v.First(mod["ApplyExperimentalEffect"], mod["ExperimentalEffect"])); symbol != "" {
-		key := journalUpgradeKey(v.Str(row["moduleKey"]), "experimentals", symbol, effects, roadmapData.effectKeys)
+		key := journalUpgradeKey(v.Str(row["moduleKey"]), "experimentals", symbol, effects, journalUpgradeIndex().effectKeys)
 		row["experimentalKey"] = key
 		row["effectKnown"] = key != ""
 	}

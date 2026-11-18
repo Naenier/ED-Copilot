@@ -193,7 +193,7 @@ func New(saved M) *Planner {
 	}
 	p.configure(v.Obj(saved["options"]))
 	for k, x := range v.Obj(saved["manualEngineers"]) {
-		if roadmapData.engineers[k] != nil {
+		if roadmapEngineers().byKey[k] != nil {
 			if _, ok := x.(bool); ok {
 				p.manual[k] = x
 			}
@@ -283,7 +283,7 @@ func (p *Planner) Update(body M) error {
 		return p.configure(body)
 	case "engineer":
 		key := v.Text(body["key"], body["id"])
-		if roadmapData.engineers[key] == nil {
+		if roadmapData().engineers[key] == nil {
 			return errors.New("Инженер не найден")
 		}
 		if body["unlocked"] == nil {

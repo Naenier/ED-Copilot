@@ -301,7 +301,7 @@ func (p *Planner) itineraryEngineer(item, observations M) (M, M) {
 		return nil, nil
 	}
 	var ready, best M
-	for _, key := range roadmapData.engineerOrder {
+	for _, key := range roadmapData().engineerOrder {
 		if !engineerHasCapability(key, query) {
 			continue
 		}
@@ -335,7 +335,7 @@ func (p *Planner) itineraryEngineer(item, observations M) (M, M) {
 		}
 		return best, rank
 	}
-	for _, raw := range v.Rows(roadmapData.engineers[key]["requirements"]) {
+	for _, raw := range v.Rows(roadmapData().engineers[key]["requirements"]) {
 		step := p.roadmapRequirement(key, best, raw, observations)
 		if step["status"] == "done" {
 			continue

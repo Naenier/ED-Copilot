@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/Naenier/ED-Copilot/internal/journal"
 	"github.com/Naenier/ED-Copilot/internal/ships"
@@ -15,11 +16,11 @@ type shipWorkshop struct {
 	maxGrade int
 }
 
-var shipWorkshops = func() map[string]map[string][]shipWorkshop {
+var shipWorkshops = sync.OnceValue(func() map[string]map[string][]shipWorkshop {
 	index := map[string]map[string][]shipWorkshop{}
-	for _, key := range roadmapData.engineerOrder {
-		for _, cap := range roadmapData.capabilities[key] {
-			if roadmapData.modules[cap.module]["kind"] != "ship" || cap.maxGrade == 0 {
+	for _, key := range roadmapData().engineerOrder {
+		for _, cap := range roadmapData().capabilities[key] {
+			if roadmapData().modules[cap.module]["kind"] != "ship" || cap.maxGrade == 0 {
 				continue
 			}
 			if index[cap.module] == nil {
@@ -29,7 +30,7 @@ var shipWorkshops = func() map[string]map[string][]shipWorkshop {
 		}
 	}
 	return index
-}()
+})
 
 // CurrentShipEngineering uses a complete current Loadout, keeping equal items
 // in different slots independent. Recipes are calculated only for the selected slot.
@@ -101,7 +102,7 @@ func (p *Planner) currentShipModules(loadout, observations M) []currentShipModul
 		}
 		row := M{"id": currentSlot, "slot": currentSlot, "item": raw["Item"], "moduleKey": module, "symbol": symbol,
 			"name":        v.Text(modules[module]["name"], raw["Item_Localised"], raw["Item"]),
-			"english":     v.Text(roadmapData.modules[module]["english"], raw["Item_Localised"], raw["Item"]),
+			"english":     v.Text(roadmapData().modules[module]["english"], raw["Item_Localised"], raw["Item"]),
 			"moduleClass": shipModuleClass(symbol), "effectKnown": true, "grade": 0}
 		applyShipUpgrade(row, installed)
 		bp, effect := v.Str(row["blueprintKey"]), v.Str(row["experimentalKey"])
@@ -158,8 +159,8 @@ func currentShipStatus(row, installed M, choices []M, current M) string {
 }
 
 func (p *Planner) shipBlueprintChoices(module string, legacy bool) []M {
-	rows := make([]M, 0, len(shipWorkshops[module]))
-	for bp, workshops := range shipWorkshops[module] {
+	rows := make([]M, 0, len(shipWorkshops()[module]))
+	for bp, workshops := range shipWorkshops()[module] {
 		blueprint := blueprints[bp]
 		if legacy && v.Bool(blueprint["liveOnly"]) {
 			continue

@@ -61,7 +61,7 @@ func (p *Planner) buildNeed(goal, observations M) M {
 	q := roadmapQuery{module: module, blueprint: bp, effect: effect, grade: grade}
 	candidates := []string{}
 	var best M
-	for _, key := range roadmapData.engineerOrder {
+	for _, key := range roadmapData().engineerOrder {
 		if !engineerHasCapability(key, q) {
 			continue
 		}

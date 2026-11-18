@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode/utf8"
 
 	v "github.com/Naenier/ED-Copilot/internal/value"
@@ -13,8 +14,8 @@ import (
 const maxOdysseyLoadouts = 40
 
 var (
-	odysseyEquipmentByKey = byKey(roadmapData.personalEquipment)
-	odysseyGradeRecipes   = byKey(roadmapData.personalGrades)
+	odysseyEquipmentByKey = sync.OnceValue(func() map[string]M { return byKey(v.Rows(roadmapExtension()["odysseyEquipment"])) })
+	odysseyGradeRecipes   = sync.OnceValue(func() map[string]M { return byKey(v.Rows(roadmapExtension()["odysseyGradeRecipes"])) })
 	odysseyScopePattern   = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,80}$`)
 	odysseyItemPattern    = regexp.MustCompile(`^(suit|weapon):[0-9]{1,20}$`)
 )
@@ -84,7 +85,7 @@ func validateOdysseyLoadout(raw M) (M, error) {
 	suit := ""
 	for _, item := range rows {
 		key := v.Str(item["itemKey"])
-		model := odysseyEquipmentByKey[key]
+		model := odysseyEquipmentByKey()[key]
 		if model == nil {
 			return nil, errors.New("Выберите модель костюма или оружия из справочника.")
 		}
@@ -112,7 +113,7 @@ func validateOdysseyLoadout(raw M) (M, error) {
 		}
 		for _, rawMod := range mods {
 			mod := v.Str(rawMod)
-			if contains(modKeys, mod) || !odysseyModCompatible(model, roadmapData.personalRecipes[mod]) {
+			if contains(modKeys, mod) || !odysseyModCompatible(model, roadmapData().personalRecipes[mod]) {
 				return nil, errors.New("Выберите совместимые модификации без повторов.")
 			}
 			modKeys = append(modKeys, mod)

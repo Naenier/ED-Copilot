@@ -822,3 +822,36 @@ test('a live colony update keeps the pending choice and focused selector until b
  document.activeElement=null;listeners.get('focusout')({target:control});await Promise.resolve();await Promise.resolve();
  assert.equal(renders,1);assert.match(html,/value="b" selected/);assert.match(html,/New C/);assert.equal(writes,0);
 });
+
+test('the first overview uses the supplied boot projection without a second view request', async () => {
+ const {api}=fixture();let renders=0;
+ api.setCall(async()=>{throw Error('duplicate view request');});
+ api.setRender(()=>{renders++;});
+ const initial={context:{mode:'Обзор',selected:''},page:{Title:'Обзор',Modes:['Обзор'],Rows:[]},actions:[],state:{commander:{ship:'Python'}}};
+ await api.loadView(false,{initial});
+ assert.equal(api.C.state.commander.ship,'Python');
+ assert.equal(api.C.mode,'Обзор');
+ assert.equal(renders,1);
+});
+
+test('a completed journal scan refreshes the overview and discards older messages',async()=>{
+ const {api,window,nodes}=fixture(),renders=[];
+ const {C}=api,settings={language:'ru'},reply=(revision,scanning,system,destination)=>({
+  context:{mode:'Обзор',selected:''},page:{Title:'Обзор',Modes:['Обзор'],Rows:[]},actions:[],
+  state:{revision,settings,connection:{scanning},commander:{system},riches:{progress:{nextSystem:destination}}},
+ });
+ C.page={Title:'Обзор',Rows:[],Modes:['Обзор']};C.state=reply(9,true,'Published System','Published Destination').state;
+ nodes.set('page-toolbar',{});nodes.set('sidebar-system',{});
+ api.setRender(()=>renders.push([C.state.commander.system,C.state.riches.progress.nextSystem]));
+ let resolveOld,calls=0;
+ api.setCall(()=>++calls===1?new Promise(resolve=>{resolveOld=resolve;}):Promise.resolve(reply(11,false,'Latest System','Latest Destination')));
+ const old=api.loadView(true);
+ const push=state=>window.copilotReceive({event:'update',data:state});
+ push(reply(11,false,'Latest System','Latest Destination').state);
+ resolveOld(reply(10,true,'Published System','Published Destination'));
+ await old;
+ push(reply(10,true,'Published System','Published Destination').state);
+ assert.deepEqual(renders,[['Latest System','Latest Destination']]);
+ assert.equal(nodes.get('sidebar-system').textContent,'Latest System');
+ assert.equal(C.state.connection.scanning,false);
+});

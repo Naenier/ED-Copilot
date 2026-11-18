@@ -269,6 +269,13 @@ func (t *Tracker) Credits() any {
 	return t.credits
 }
 
+// OverviewSnapshot returns the balance and fuel for the dashboard cards.
+func (t *Tracker) OverviewSnapshot() M {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	return M{"credits": t.credits, "fuel": v.Copy(t.fuel)}
+}
+
 func (t *Tracker) Snapshot() M {
 	t.mu.RLock()
 	defer t.mu.RUnlock()

@@ -280,3 +280,28 @@ func TestWebViewKeepsTheExplicitAcademyReadingLesson(t *testing.T) {
 		t.Fatal("reader actions target another lesson")
 	}
 }
+
+func TestBootSuppliesCanonicalFirstViewWithoutDuplicatingState(t *testing.T) {
+	backend := &scopedDispatchProbe{dispatchProbeController: dispatchProbeController{platformController: platformController{
+		state: M{"commander": M{"name": "Synthetic"}, "settings": M{"language": "ru"}, "objectives": []M{{"id": "goal-1", "title": "First goal"}}},
+	}}}
+	boot, err := dispatchWeb(backend, "boot", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	view, err := dispatchWeb(backend, "view", M{"tab": "overview"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefetched, ok := boot["view"].(M)
+	if !ok || prefetched["state"] != nil || !reflect.DeepEqual(boot["state"], view["state"]) {
+		t.Fatalf("unexpected bootstrap response or duplicated state: %v", boot)
+	}
+	delete(view, "state")
+	if !reflect.DeepEqual(prefetched, view) || v.At(view, "context", "mode") != "Обзор" {
+		t.Fatalf("prefetched view differs from navigation: %v / %v", prefetched, view)
+	}
+	if backend.snapshots != 0 || !reflect.DeepEqual(backend.scopes, []string{"overview", "overview"}) {
+		t.Fatalf("each command must use a single scoped snapshot: %v (%d full snapshots)", backend.scopes, backend.snapshots)
+	}
+}

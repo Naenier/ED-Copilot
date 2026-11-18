@@ -4,12 +4,13 @@ const EngineeringProgression = "Прокачка"
 const EngineeringCurrentShip = "Текущий корабль"
 const EngineeringMaterials = "Материалы"
 const EngineeringOdyssey = "Снаряжение Odyssey"
+const EngineeringShipFitter = "Конструктор кораблей"
 const EngineeringShipBuild = "Оснащение корабля"
 const EngineeringItinerary = "Поездка к инженерам"
 const ColonyHistoryMode = "Динамика системы"
 
 func EngineeringModes() []string {
-	return []string{EngineeringProgression, EngineeringCurrentShip, "План", EngineeringOdyssey, EngineeringShipBuild, EngineeringItinerary, EngineeringMaterials, "Инженеры"}
+	return []string{EngineeringProgression, EngineeringCurrentShip, "План", EngineeringOdyssey, EngineeringShipFitter, EngineeringShipBuild, EngineeringItinerary, EngineeringMaterials, "Инженеры"}
 }
 
 func EngineeringMode(mode string) string {
@@ -27,10 +28,10 @@ func EngineeringMaterialMode(mode string) bool {
 // SectionSevenCustom marks pages whose renderer owns its controls and rows.
 func SectionSevenCustom(tab, mode string) bool {
 	switch tab {
-	case "ship-route", "surface-navigation", "exploration", "notifications", "second-screen":
+	case "ship-route", "surface-navigation", "exploration", "notifications", "second-screen", "nearest":
 		return true
 	case "engineering":
-		return mode == EngineeringCurrentShip || mode == EngineeringShipBuild || mode == EngineeringItinerary
+		return mode == EngineeringCurrentShip || mode == EngineeringShipBuild || mode == EngineeringShipFitter || mode == EngineeringItinerary
 	case "exobiology":
 		return mode == SurfaceRadarMode
 	case "colonization":

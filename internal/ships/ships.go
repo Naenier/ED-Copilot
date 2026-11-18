@@ -92,22 +92,28 @@ func CAPI(ship v.M) v.M {
 }
 func ApplyEvent(current, event v.M) v.M {
 	next := v.Copy(current)
+	ObserveEvent(next, event)
+	return next
+}
+
+// ObserveEvent updates a caller-owned ship identity in place.
+func ObserveEvent(current, event v.M) {
 	typ := v.String(event, "event")
 	raw := v.Text(event["Ship"], event["ShipType"])
 	switch typ {
 	case "LoadGame", "Loadout", "ShipyardSwap", "ShipyardNew":
 		if raw == "" {
-			return next
+			return
 		}
 		kind := VehicleKind(raw)
 		if typ == "LoadGame" {
-			next["vehicle"] = kind
+			current["vehicle"] = kind
 		}
 		if kind != "ship" {
-			next["vehicleType"] = raw
-			next["vehicleName"] = DisplayShip(raw, v.String(event, "Ship_Localised"))
-			next["vehicleId"] = event["ShipID"]
-			return next
+			current["vehicleType"] = raw
+			current["vehicleName"] = DisplayShip(raw, v.String(event, "Ship_Localised"))
+			current["vehicleId"] = event["ShipID"]
+			return
 		}
 		id := event["ShipID"]
 		if typ == "ShipyardNew" {
@@ -128,28 +134,27 @@ func ApplyEvent(current, event v.M) v.M {
 		if value, ok := event["ShipIdent"]; ok {
 			ident = clean(value)
 		}
-		v.Merge(next, Identity(raw, v.String(event, "Ship_Localised"), id, name, ident))
+		v.Merge(current, Identity(raw, v.String(event, "Ship_Localised"), id, name, ident))
 		if typ != "Loadout" {
-			next["vehicle"] = "ship"
-			next["vehicleName"] = ""
-			next["vehicleType"] = ""
-			next["vehicleId"] = nil
+			current["vehicle"] = "ship"
+			current["vehicleName"] = ""
+			current["vehicleType"] = ""
+			current["vehicleId"] = nil
 		}
 	case "SetUserShipName":
 		if raw != "" && VehicleKind(raw) != "ship" || event["ShipID"] != nil && current["shipId"] != nil && v.Str(event["ShipID"]) != v.Str(current["shipId"]) || raw != "" && v.String(current, "shipType") != "" && key(raw) != key(v.String(current, "shipType")) {
-			return next
+			return
 		}
 		if raw != "" && v.String(current, "shipType") == "" {
-			v.Merge(next, Identity(raw, v.String(event, "Ship_Localised"), event["ShipID"], "", ""))
+			v.Merge(current, Identity(raw, v.String(event, "Ship_Localised"), event["ShipID"], "", ""))
 		}
 		if x, ok := event["UserShipName"]; ok {
-			next["shipName"] = clean(x)
+			current["shipName"] = clean(x)
 		}
 		if x, ok := event["UserShipId"]; ok {
-			next["shipIdent"] = clean(x)
+			current["shipIdent"] = clean(x)
 		} else if x, ok := event["UserShipID"]; ok {
-			next["shipIdent"] = clean(x)
+			current["shipIdent"] = clean(x)
 		}
 	}
-	return next
 }

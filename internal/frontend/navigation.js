@@ -5,10 +5,10 @@ const groups=[
  {id:'trade',title:'Торговля',icon:'arrow-left-right',tabs:['deals','sale','carrier-trade'],default:'deals'},
  {id:'colonization',title:'Колонизация',icon:'orbit',tabs:['colonization'],modes:[['Обзор','house'],['Выбор системы','search'],['Строительство','wrench'],['Журнал снабжения','package'],['Бюджет','wallet'],['Динамика системы','chart-no-axes-combined']]},
  {id:'mining',title:'Добыча',icon:'pickaxe',tabs:['mining'],modes:[['Текущий заход','pickaxe'],['История','history'],['Сравнение заходов','chart-no-axes-combined'],['Снаряжение','package'],['План','target']]},
- {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['Текущий корабль','ship'],['План','target'],['Поездка к инженерам','route'],['Оснащение корабля','layout-grid'],['Снаряжение Odyssey','shield-check'],['Материалы','package'],['Инженеры','users']]},
+ {id:'engineering',title:'Инженерия',icon:'wrench',tabs:['engineering'],modes:[['Прокачка','wrench'],['Текущий корабль','ship'],['План','target'],['Поездка к инженерам','route'],['Конструктор кораблей','ship'],['Оснащение корабля','layout-grid'],['Снаряжение Odyssey','shield-check'],['Материалы','package'],['Инженеры','users']]},
  {id:'exobiology',title:'Экзобиология',icon:'leaf',tabs:['exobiology'],modes:[['Обзор','house'],['Планеты','orbit'],['Образцы','leaf'],['Радар поверхности','compass'],['Продажи','wallet'],['Находки','target'],['Места','map-pin'],['Статистика','chart-no-axes-combined']]},
  {id:'fleet',title:'Флотоносцы',icon:'ship',tabs:['carrier','route','carrier-calculator']},
- {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['politics','riches','ship-route','surface-navigation','exploration']},
+ {id:'galaxy',title:'Галактика',icon:'orbit',tabs:['nearest','politics','riches','ship-route','surface-navigation','exploration']},
  {id:'knowledge',title:'Библиотека',icon:'book-open',tabs:['encyclopedia','learning','help']},
  {id:'commander',title:'Командир',icon:'users',tabs:['commander','ranks']},
 ];
@@ -19,12 +19,13 @@ function entries(C,id){
  if(id==='commander')return commanderModes.map(([title,icon])=>({tab:title==='Ранги'?'ranks':'commander',mode:title==='Ранги'?'':title,title,icon}));
  if(id==='galaxy'){
   const politics=window.PoliticsUI?.navigationModes?.(C)||[['Политика','orbit'],['Цели сообщества','target'],['Пауэрплей','shield-check']].map(([title,icon])=>({tab:'politics',mode:title,title,icon}));
+  const nearby=C.tabs.find(tab=>tab.ID==='nearest');
   const cartography=C.tabs.find(tab=>tab.ID==='riches');
   const riches=cartography?[{tab:cartography.ID,mode:'',title:cartography.Title,icon:'route'}]:[];
   const route=C.tabs.find(tab=>tab.ID==='ship-route');
   const surface=C.tabs.find(tab=>tab.ID==='surface-navigation');
   const exploration=C.tabs.some(tab=>tab.ID==='exploration')?[['Экспедиции','route'],['Находки','target'],['Обследования','layout-grid']].map(([title,icon])=>({tab:'exploration',mode:title,title,icon})):[];
-  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...riches,...(route?[{tab:route.ID,mode:'',title:route.Title,icon:'route'}]:[]),...(surface?[{tab:surface.ID,mode:'',title:surface.Title,icon:'map-pin'}]:[]),...exploration,...politics];
+  return [{tab:'encyclopedia',mode:'Системы',title:'Системы',icon:'compass'},...(nearby?[{tab:nearby.ID,mode:'',title:nearby.Title,icon:'search'}]:[]),...riches,...(route?[{tab:route.ID,mode:'',title:route.Title,icon:'route'}]:[]),...(surface?[{tab:surface.ID,mode:'',title:surface.Title,icon:'map-pin'}]:[]),...exploration,...politics];
  }
  const g=group(id);
  if(g.modes)return g.modes.map(([title,icon])=>({tab:g.tabs[0],mode:title,title,icon}));

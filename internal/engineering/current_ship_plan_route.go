@@ -23,14 +23,14 @@ func (p *Planner) shipPlanVisit(stops map[string]*shipPlanStop, engineer, observ
 	}
 	stop := &shipPlanStop{engineer: engineer, tasks: []M{}, steps: []M{}}
 	stops[key] = stop
-	for _, requirement := range v.Rows(roadmapData.engineers[key]["requirements"]) {
+	for _, requirement := range v.Rows(roadmapData().engineers[key]["requirements"]) {
 		step := p.roadmapRequirement(key, engineer, requirement, observations)
 		dependency := v.Str(step["engineerKey"])
 		if step["status"] == "done" || dependency != "" && step["status"] == "available" {
 			continue
 		}
 		stop.steps = append(stop.steps, step)
-		if dependency != "" && dependency != key && roadmapData.engineers[dependency] != nil {
+		if dependency != "" && dependency != key && roadmapData().engineers[dependency] != nil {
 			prerequisite := p.shipPlanVisit(stops, p.roadmapEngineerState(dependency), observations)
 			stop.deps = append(stop.deps, dependency)
 			if v.Int(step["rank"]) > 0 && shipPlanReferralRank(step) > shipPlanReferralRank(prerequisite.referral) {
@@ -69,7 +69,7 @@ func (p *Planner) shipPlanStopRow(stop *shipPlanStop) M {
 	if row["status"] == "access-required" || row["status"] == "access-unknown" {
 		row["action"] = "unlock"
 	}
-	row["systemAddress"] = roadmapData.engineers[key]["systemAddress"]
+	row["systemAddress"] = roadmapData().engineers[key]["systemAddress"]
 	dependencies := make([]string, 0, len(stop.deps))
 	for _, dependency := range stop.deps {
 		dependencies = append(dependencies, "engineer:"+dependency)
@@ -170,7 +170,7 @@ func shipPlanCoordinates(system string, observations M) any {
 	if position := v.First(positions[system], positions[v.Key(system)]); len(v.Arr(position)) == 3 {
 		return position
 	}
-	return workshopCoordinates(system)
+	return WorkshopCoordinates(system)
 }
 
 func shipPlanDistance(from, to, fromSystem, toSystem any) any {

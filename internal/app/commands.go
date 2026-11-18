@@ -81,6 +81,10 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return result, err
 	}
 	switch path {
+	case "/api/ship-fits/materials":
+		return e.shipFitMaterials(body)
+	case "/api/ship-fits", "/api/ship-fits/get", "/api/ship-fits/save", "/api/ship-fits/delete", "/api/ship-fits/import", "/api/ship-fits/export":
+		return e.shipFitsCommand(path, body)
 	case "/api/controls":
 		return e.controls.View(body)
 	case "/api/controls/status":

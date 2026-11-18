@@ -14,8 +14,8 @@ func (p *Planner) roadmapRecipe(q roadmapQuery, ids []string, equipment []M, obs
 	if q.module == "" || q.blueprint == "" && q.effect == "" {
 		return nil, nil
 	}
-	module, bp := modules[q.module], roadmapData.blueprint(q.blueprint)
-	personal := roadmapData.modules[q.module]["kind"] == "odyssey"
+	module, bp := modules[q.module], roadmapData().blueprint(q.blueprint)
+	personal := roadmapData().modules[q.module]["kind"] == "odyssey"
 	if q.effect != "" && !contains(module["experimentals"], q.effect) {
 		return nil, fmt.Errorf("Экспериментальный эффект несовместим с модулем")
 	}
@@ -25,7 +25,7 @@ func (p *Planner) roadmapRecipe(q roadmapQuery, ids []string, equipment []M, obs
 	grade := q.grade
 	if grade == 0 && q.blueprint != "" {
 		for _, key := range ids {
-			for _, cap := range roadmapData.capabilities[key] {
+			for _, cap := range roadmapData().capabilities[key] {
 				if q.capabilityMatches(cap) {
 					grade = max(grade, cap.maxGrade)
 				}
@@ -104,7 +104,7 @@ func (p *Planner) shipRecipe(recipe, bp, current, observations M) {
 		recipe["conditions"] = append(conditions, "live-only")
 		return
 	}
-	if key := v.Str(recipe["experimentalKey"]); key != "" && v.Bool(roadmapData.effectExclusions[v.Str(current["symbol"])][key]) {
+	if key := v.Str(recipe["experimentalKey"]); key != "" && v.Bool(journalUpgradeIndex().effectExclusions[v.Str(current["symbol"])][key]) {
 		recipe["compatible"], recipe["totals"] = false, nil
 		recipe["conditions"] = append(conditions, "experimental-incompatible")
 		return
@@ -260,7 +260,7 @@ func (p *Planner) odysseySlots(recipe, current, observations M, conditions *[]st
 	mods := v.Arr(current["mods"])
 	item := strings.SplitN(v.Str(current["symbol"]), "_class", 2)[0]
 	upgradeRows := []M{}
-	for _, raw := range roadmapData.personalGrades {
+	for _, raw := range roadmapData().personalGrades {
 		if raw["itemSymbol"] != item || v.Num(raw["grade"]) <= grade {
 			continue
 		}
@@ -315,7 +315,7 @@ func (p *Planner) ingredientRows(raw []M, multiplier int, personal bool, observa
 		key := v.Str(material["key"])
 		label := materials[key]
 		if personal {
-			label = roadmapData.personalMaterials[key]
+			label = roadmapData().personalMaterials[key]
 		}
 		category := v.Str(label["category"])
 		count := v.Int(material["count"]) * multiplier
@@ -339,7 +339,7 @@ func roadmapMaterialEntry(key, category string) string {
 			return "material/" + canonical
 		}
 	case "item", "items", "component", "components", "data", "consumable", "consumables":
-		if roadmapData.personalMaterials[key] != nil {
+		if roadmapData().personalMaterials[key] != nil {
 			return "material/odyssey-" + key
 		}
 	}
@@ -359,7 +359,7 @@ func (p *Planner) roadmapStock(key, category string, observations M) (int, bool)
 		if !v.Bool(inventory["known"]) || v.Bool(inventory["truncated"]) || v.Bool(inventory["uncertain"]) {
 			return 0, false
 		}
-		lookup := v.Key(v.Text(roadmapData.personalMaterials[key]["symbol"], key))
+		lookup := v.Key(v.Text(roadmapData().personalMaterials[key]["symbol"], key))
 		count := 0
 		for _, row := range v.Rows(inventory["entries"]) {
 			mission := v.Str(row["missionId"])
@@ -374,7 +374,7 @@ func (p *Planner) roadmapStock(key, category string, observations M) (int, bool)
 
 func (p *Planner) specialShipVariants(module string, observations M) []M {
 	rows := []M{}
-	for _, raw := range roadmapData.specialShipRecipes {
+	for _, raw := range roadmapData().specialShipRecipes {
 		variants := []M{}
 		for _, variant := range v.Rows(raw["variants"]) {
 			if shipModule(symbolText(variant["itemSymbol"])) == module {

@@ -33,6 +33,19 @@ func oneOf(value string, values ...string) bool {
 func (e *Engine) snapshotScoped(tab string) M {
 	e.domainMu.Lock()
 	defer e.domainMu.Unlock()
+	if tab == "overview" || tab == "hud" {
+		connection := e.windowConnection(nil)
+		if e.journalObservationPending(connection) {
+			if tab == "overview" {
+				return e.snapshotOverviewLocked(connection, true)
+			}
+			return e.snapshotWindowLocked(connection)
+		}
+	}
+	return e.snapshotScopedLocked(tab)
+}
+
+func (e *Engine) snapshotScopedLocked(tab string) M {
 	e.mu.RLock()
 	cmd, settings, game := v.Copy(e.commander), v.Copy(e.settings), v.Copy(e.game)
 	running, revision, statsSince := e.gameRunning, e.revision, e.statsSince
@@ -84,6 +97,9 @@ func (e *Engine) snapshotScoped(tab string) M {
 	state := M{"revision": revision, "app": M{"name": "ED Copilot", "version": Version, "language": settings["language"], "profileDir": e.opts.DataDir, "runtime": "Go · native Windows"}, "commander": cmd, "settings": settings, "game": game, "connection": connection, "pilot": e.Pilot.Snapshot()}
 	if tab == "engineering-roadmap" {
 		state["engineeringRoadmapRevision"] = engineeringRevision
+	}
+	if hud {
+		state["shipBuildRevision"] = engineeringRevision
 	}
 	if tab == "engineering-odyssey" {
 		state["odysseyRevision"] = engineeringRevision

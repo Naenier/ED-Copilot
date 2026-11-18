@@ -22,7 +22,7 @@ func (p *Planner) currentShipDetail(current M, choices []M, selected M, q roadma
 	}
 	for _, raw := range v.Arr(modules[module]["experimentals"]) {
 		key := v.Str(raw)
-		if v.Bool(roadmapData.effectExclusions[symbol][key]) {
+		if v.Bool(journalUpgradeIndex().effectExclusions[symbol][key]) {
 			continue
 		}
 		validEffect = validEffect || q.effect == key
@@ -91,7 +91,7 @@ func (p *Planner) currentShipUnlockSteps(key string, grade int, observations M) 
 	for _, id := range p.roadmapOrder([]string{key}) {
 		engineer := p.roadmapEngineerState(id)
 		steps := []M{}
-		for _, requirement := range v.Rows(roadmapData.engineers[id]["requirements"]) {
+		for _, requirement := range v.Rows(roadmapData().engineers[id]["requirements"]) {
 			step := p.roadmapRequirement(id, engineer, requirement, observations)
 			if step["status"] != "done" {
 				steps = append(steps, step)

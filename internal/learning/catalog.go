@@ -16,9 +16,6 @@ import (
 //go:embed content*.json
 var contentFiles embed.FS
 
-var contentJSON, _ = contentFiles.ReadFile("content.json")
-var englishContentJSON, englishContentErr = contentFiles.ReadFile("content_en.json")
-
 type Course struct {
 	ID         string   `json:"id"`
 	Title      string   `json:"title"`
@@ -78,10 +75,6 @@ type catalogData struct {
 	Lessons    []Lesson
 	ReviewedAt string
 	Language   string
-	courseRows []M
-	lessonRows []M
-	searchText map[string]string
-	courseByID map[string]Course
 }
 
 var catalogOnce [2]sync.Once
@@ -91,18 +84,29 @@ func catalog() catalogData {
 	return catalogForLanguage("ru")
 }
 
-func catalogForLanguage(language string) catalogData {
-	index, raw := 0, contentJSON
+func catalogueIndex(language string) int {
 	if strings.EqualFold(strings.TrimSpace(language), "en") {
-		if englishContentErr != nil {
-			// During content authoring the English seed can be absent. The
-			// release contract test requires both complete paired catalogues.
-			return catalog()
-		}
-		index, raw = 1, englishContentJSON
+		return 1
 	}
+	return 0
+}
+
+func catalogForLanguage(language string) catalogData {
+	index := catalogueIndex(language)
 	catalogOnce[index].Do(func() {
-		lang := []string{"ru", "en"}[index]
+		lang, filename := "ru", "content.json"
+		if index == 1 {
+			lang, filename = "en", "content_en.json"
+		}
+		raw, err := contentFiles.ReadFile(filename)
+		if err != nil {
+			if index == 1 {
+				// The paired seed may be absent during content authoring.
+				catalogValue[index] = catalog()
+				return
+			}
+			panic(err)
+		}
 		value, err := buildCatalog(raw, lang)
 		if err != nil {
 			panic(fmt.Errorf("learning content (%s): %w", lang, err))
@@ -117,6 +121,44 @@ func catalogForLanguage(language string) catalogData {
 	return catalogValue[index]
 }
 
+type catalogProjection struct {
+	courseRows []M
+	lessonRows []M
+	searchText map[string]string
+}
+
+var catalogProjections = [...]func() catalogProjection{
+	sync.OnceValue(func() catalogProjection { return projectCatalog(catalog()) }),
+	sync.OnceValue(func() catalogProjection { return projectCatalog(catalogForLanguage("en")) }),
+}
+
+// The home page uses lesson IDs for study progress. Build the JSON rows and
+// full-text search index only when an Academy view or catalogue opens.
+func catalogProjectionFor(language string) catalogProjection {
+	return catalogProjections[catalogueIndex(language)]()
+}
+
+func projectCatalog(value catalogData) catalogProjection {
+	projection := catalogProjection{
+		courseRows: make([]M, 0, len(value.Courses)),
+		lessonRows: make([]M, 0, len(value.Lessons)),
+		searchText: make(map[string]string, len(value.Lessons)),
+	}
+	courses := make(map[string]Course, len(value.Courses))
+	for _, course := range value.Courses {
+		courses[course.ID] = course
+		projection.courseRows = append(projection.courseRows, mapValue(course))
+	}
+	for _, lesson := range value.Lessons {
+		row := mapValue(lesson)
+		course := courses[lesson.CourseID]
+		row["courseTitle"], row["category"] = course.Title, course.Category
+		projection.lessonRows = append(projection.lessonRows, row)
+		projection.searchText[lesson.ID] = lessonSearchText(row)
+	}
+	return projection
+}
+
 func buildCatalog(raw []byte, language string) (catalogData, error) {
 	var source struct {
 		ReviewedAt string       `json:"reviewedAt"`
@@ -125,7 +167,7 @@ func buildCatalog(raw []byte, language string) (catalogData, error) {
 	if err := json.Unmarshal(raw, &source); err != nil {
 		return catalogData{}, err
 	}
-	value := catalogData{ReviewedAt: source.ReviewedAt, Language: language, searchText: map[string]string{}, courseByID: map[string]Course{}}
+	value := catalogData{ReviewedAt: source.ReviewedAt, Language: language}
 	text := func(ru, en string) string {
 		if language == "en" {
 			return en
@@ -163,20 +205,10 @@ func buildCatalog(raw []byte, language string) (catalogData, error) {
 		checkpoint.Quiz = seed.Quiz
 		course := Course{ID: seed.ID, Title: seed.Title, Summary: seed.Summary, Category: seed.Category, Icon: seed.Icon, Difficulty: seed.Difficulty, Minutes: basics.Minutes + practice.Minutes + checkpoint.Minutes, Tags: seed.Tags, LessonIDs: ids, SourceURLs: []string{seed.SourceURL}}
 		value.Courses = append(value.Courses, course)
-		value.courseByID[course.ID] = course
 		value.Lessons = append(value.Lessons, basics, practice, checkpoint)
 	}
 	if err := validateCatalog(value); err != nil {
 		return catalogData{}, err
-	}
-	for _, course := range value.Courses {
-		value.courseRows = append(value.courseRows, mapValue(course))
-	}
-	for _, lesson := range value.Lessons {
-		row := mapValue(lesson)
-		row["courseTitle"], row["category"] = value.courseByID[lesson.CourseID].Title, value.courseByID[lesson.CourseID].Category
-		value.lessonRows = append(value.lessonRows, row)
-		value.searchText[lesson.ID] = lessonSearchText(row)
 	}
 	return value, nil
 }
@@ -296,7 +328,7 @@ func Catalog() []v.M {
 
 func CatalogForLanguage(language string) []v.M {
 	rows := []v.M{}
-	for _, lesson := range catalogForLanguage(language).lessonRows {
+	for _, lesson := range catalogProjectionFor(language).lessonRows {
 		rows = append(rows, copyCatalogRow(lesson))
 	}
 	return rows
@@ -308,7 +340,7 @@ func CourseCatalog() []v.M {
 
 func CourseCatalogForLanguage(language string) []v.M {
 	rows := []v.M{}
-	for _, course := range catalogForLanguage(language).courseRows {
+	for _, course := range catalogProjectionFor(language).courseRows {
 		rows = append(rows, copyCatalogRow(course))
 	}
 	return rows

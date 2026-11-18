@@ -18,7 +18,7 @@ func TestCurrentShipPlanCombinesTwoSlotsAndUsesStockOnce(t *testing.T) {
 		{"slot": "SmallHardpoint1", "item": "hpt_pulselaser_fixed_small", "blueprintKey": "Weapon_Efficient", "grade": 1},
 		{"slot": "SmallHardpoint2", "item": "hpt_pulselaser_fixed_small", "blueprintKey": "Weapon_Efficient", "grade": 1},
 	}
-	obs := M{"game": M{"version": "4.4.2", "live": true}, "system": "Wyrd", "position": workshopCoordinates("Wyrd")}
+	obs := M{"game": M{"version": "4.4.2", "live": true}, "system": "Wyrd", "position": WorkshopCoordinates("Wyrd")}
 	result := p.CurrentShipPlan(loadout, targets, obs)
 	sulphur := findRoadmapRow(result["materials"], "sulphur")
 	stops := v.Rows(v.At(result, "itinerary", "stops"))
@@ -79,7 +79,7 @@ func TestCurrentShipPlanVisitsPrerequisitesFirstAndCombinesHandIns(t *testing.T)
 		{"slot": "TinyHardpoint1", "item": "hpt_shieldbooster_size0_class5", "blueprintKey": "ShieldBooster_HeavyDuty", "grade": 5},
 		{"slot": "TinyHardpoint2", "item": "hpt_shieldbooster_size0_class5", "blueprintKey": "ShieldBooster_Resistive", "grade": 5},
 	}
-	obs := M{"game": M{"version": "4.4.2", "live": true}, "system": "Leesti", "position": workshopCoordinates("Leesti")}
+	obs := M{"game": M{"version": "4.4.2", "live": true}, "system": "Leesti", "position": WorkshopCoordinates("Leesti")}
 	result := p.CurrentShipPlan(loadout, targets, obs)
 	stops := v.Rows(v.At(result, "itinerary", "stops"))
 	if len(stops) != 3 || stops[0]["id"] != "engineer:300260" || stops[1]["id"] != "engineer:300210" ||

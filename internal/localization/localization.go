@@ -18,16 +18,16 @@ var files embed.FS
 
 var once sync.Once
 var dictionary map[string]string
-var folded map[string]string
 
 type phraseNode struct {
-	children map[byte]*phraseNode
-	value    string
-	source   string
+	prefix, value string
+	children      []phraseNode
 }
 
-var root phraseNode
-var catalog string
+type phraseIndex struct {
+	first     [256]*phraseNode
+	templates []formatPattern
+}
 
 type formatPattern struct {
 	expression *regexp.Regexp
@@ -47,7 +47,7 @@ func Normalize(language string) string {
 
 func load() {
 	once.Do(func() {
-		dictionary, folded = map[string]string{}, map[string]string{}
+		dictionary = map[string]string{}
 		entries, err := files.ReadDir(".")
 		if err != nil {
 			panic(err)
@@ -68,59 +68,101 @@ func load() {
 				dictionary[source] = translation
 			}
 		}
-		keys := make([]string, 0, len(dictionary))
-		for key := range dictionary {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-		root.children = map[byte]*phraseNode{}
-		for _, source := range keys {
-			translation := dictionary[source]
-			folded[strings.ToLower(source)] = translation
-			if !containsCyrillic(source) {
-				continue
-			}
-			if parts := printfDirective.Split(source, -1); len(parts) > 1 {
-				translatedParts := printfDirective.Split(translation, -1)
-				if len(parts) == len(translatedParts) {
-					expression, anchor := "^", ""
-					for i, part := range parts {
-						expression += regexp.QuoteMeta(part)
-						if i < len(parts)-1 {
-							expression += `(.+?)`
-						}
-						if len(part) > len(anchor) && containsCyrillic(part) {
-							anchor = part
-						}
-					}
-					if len(anchor) >= 4 {
-						templates = append(templates, formatPattern{regexp.MustCompile(expression + "$"), anchor, translatedParts})
-					}
-				}
-			}
-			node := &root
-			for i := 0; i < len(source); i++ {
-				if node.children == nil {
-					node.children = map[byte]*phraseNode{}
-				}
-				next := node.children[source[i]]
-				if next == nil {
-					next = &phraseNode{}
-					node.children[source[i]] = next
-				}
-				node = next
-			}
-			node.value, node.source = translation, source
-		}
-		body, err := json.Marshal(dictionary)
-		if err != nil {
-			panic(err)
-		}
-		catalog = string(body)
 	})
 }
 
-func CatalogJSON() string { load(); return catalog }
+var foldedCatalogue = sync.OnceValue(func() map[string]string {
+	load()
+	keys := make([]string, 0, len(dictionary))
+	for key := range dictionary {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	folded := make(map[string]string, len(keys))
+	for _, source := range keys {
+		folded[strings.ToLower(source)] = dictionary[source]
+	}
+	return folded
+})
+
+var catalogueJSON = sync.OnceValue(func() string {
+	load()
+	body, err := json.Marshal(dictionary)
+	if err != nil {
+		panic(err)
+	}
+	return string(body)
+})
+
+func CatalogJSON() string { return catalogueJSON() }
+
+var composedPhrases = sync.OnceValue(buildPhraseIndex)
+
+func buildPhraseIndex() *phraseIndex {
+	load()
+	sources := make([]string, 0, len(dictionary))
+	for source := range dictionary {
+		if containsCyrillic(source) {
+			sources = append(sources, source)
+		}
+	}
+	sort.Strings(sources)
+	root := buildPhraseNode("", sources, 0)
+	index := &phraseIndex{}
+	for i := range root.children {
+		child := &root.children[i]
+		index.first[child.prefix[0]] = child
+	}
+	for _, source := range sources {
+		parts := printfDirective.Split(source, -1)
+		if len(parts) <= 1 {
+			continue
+		}
+		translatedParts := printfDirective.Split(dictionary[source], -1)
+		if len(parts) != len(translatedParts) {
+			continue
+		}
+		expression, anchor := "^", ""
+		for i, part := range parts {
+			expression += regexp.QuoteMeta(part)
+			if i < len(parts)-1 {
+				expression += `(.+?)`
+			}
+			if len(part) > len(anchor) && containsCyrillic(part) {
+				anchor = part
+			}
+		}
+		if len(anchor) >= 4 {
+			index.templates = append(index.templates, formatPattern{regexp.MustCompile(expression + "$"), anchor, translatedParts})
+		}
+	}
+	return index
+}
+
+// Each node covers a shared prefix of sorted dictionary entries. Storing
+// complete shared fragments avoids a child map and allocation for every byte.
+func buildPhraseNode(prefix string, sources []string, offset int) phraseNode {
+	node := phraseNode{prefix: prefix}
+	if len(sources) > 0 && len(sources[0]) == offset {
+		node.value = dictionary[sources[0]]
+		sources = sources[1:]
+	}
+	for first := 0; first < len(sources); {
+		last := first + 1
+		a := sources[first]
+		for last < len(sources) && sources[last][offset] == a[offset] {
+			last++
+		}
+		b := sources[last-1]
+		common := offset + 1
+		for common < min(len(a), len(b)) && a[common] == b[common] {
+			common++
+		}
+		node.children = append(node.children, buildPhraseNode(a[offset:common], sources[first:last], common))
+		first = last
+	}
+	return node
+}
 
 // T translates an explicit UI string; it does not inspect arbitrary model data.
 func T(language, source string) string {
@@ -135,8 +177,12 @@ func T(language, source string) string {
 	if translated, ok := dictionary[trimmed]; ok {
 		return source[:len(source)-len(strings.TrimLeftFunc(source, unicode.IsSpace))] + translated + source[len(strings.TrimRightFunc(source, unicode.IsSpace)):]
 	}
-	if translated, ok := folded[strings.ToLower(trimmed)]; ok && strings.ToUpper(trimmed) == trimmed {
-		return strings.ToUpper(translated)
+	if !strings.ContainsFunc(trimmed, func(r rune) bool { return unicode.ToUpper(r) != r }) {
+		if lower := strings.ToLower(trimmed); lower != trimmed {
+			if translated, ok := foldedCatalogue()[lower]; ok {
+				return strings.ToUpper(translated)
+			}
+		}
 	}
 	return source
 }
@@ -153,8 +199,8 @@ func Text(language, source string) string {
 	if !containsCyrillic(source) {
 		return source
 	}
-	load()
-	for _, pattern := range templates {
+	phrases := composedPhrases()
+	for _, pattern := range phrases.templates {
 		if !strings.Contains(source, pattern.anchor) {
 			continue
 		}
@@ -173,15 +219,16 @@ func Text(language, source string) string {
 	// is never re-translated, and Latin star/station names remain untouched.
 	var out strings.Builder
 	for pos := 0; pos < len(source); {
-		node, end, translation := &root, pos, ""
-		for i := pos; i < len(source); i++ {
-			node = node.children[source[i]]
-			if node == nil {
+		end, translation := pos, ""
+		for i, node := pos, phrases.first[source[pos]]; node != nil && strings.HasPrefix(source[i:], node.prefix); {
+			i += len(node.prefix)
+			if node.value != "" && phraseBoundary(source, pos, i, source[pos:i]) {
+				end, translation = i, node.value
+			}
+			if i == len(source) {
 				break
 			}
-			if node.value != "" && phraseBoundary(source, pos, i+1, node.source) {
-				end, translation = i+1, node.value
-			}
+			node = node.child(source[i])
 		}
 		if end > pos {
 			out.WriteString(translation)
@@ -192,6 +239,19 @@ func Text(language, source string) string {
 		}
 	}
 	return out.String()
+}
+
+func (node *phraseNode) child(firstByte byte) *phraseNode {
+	for i := range node.children {
+		child := &node.children[i]
+		if child.prefix[0] == firstByte {
+			return child
+		}
+		if child.prefix[0] > firstByte {
+			break
+		}
+	}
+	return nil
 }
 
 func containsCyrillic(text string) bool {

@@ -29,7 +29,11 @@ type Reader struct {
 	Reset  func()
 	// AfterReplay restores persisted observations after journal records have
 	// rebuilt state, before current side files are applied. It runs unlocked.
-	AfterReplay                      func()
+	AfterReplay func()
+	// AfterScan publishes a completed replay after current side files are applied.
+	// It also runs on failure so callers can leave the loading state.
+	AfterScan                        func(initial, complete bool)
+	initialPoll                      bool
 	Notice                           func(string)
 	positions                        map[string]int64
 	identities                       map[string]journalIdentity
@@ -50,7 +54,7 @@ type journalIdentity struct {
 }
 
 func New(dir string, apply Callback, reset func()) *Reader {
-	return &Reader{Dir: dir, Apply: apply, Reset: reset, positions: map[string]int64{}, identities: map[string]journalIdentity{}, side: map[string][]byte{}, rescan: true}
+	return &Reader{Dir: dir, Apply: apply, Reset: reset, positions: map[string]int64{}, identities: map[string]journalIdentity{}, side: map[string][]byte{}, rescan: true, scanning: true, initialPoll: true}
 }
 
 // GameMode identifies release journals that can establish a persistent workspace.
@@ -127,7 +131,7 @@ func (r *Reader) Rescan() {
 func (r *Reader) Run(ctx context.Context) {
 	ticker := time.NewTicker(750 * time.Millisecond)
 	defer ticker.Stop()
-	for {
+	for ctx.Err() == nil {
 		r.Poll()
 		select {
 		case <-ctx.Done():
@@ -140,7 +144,16 @@ func (r *Reader) Poll() {
 	r.pollMu.Lock()
 	defer r.pollMu.Unlock()
 	r.mu.Lock()
-	defer r.mu.Unlock()
+	initial := r.initialPoll
+	r.initialPoll = false
+	defer func() {
+		scanned, complete := r.scanning, r.errorText == ""
+		r.scanning = false
+		r.mu.Unlock()
+		if scanned && r.AfterScan != nil {
+			r.AfterScan(initial, complete)
+		}
+	}()
 	entries, e := os.ReadDir(r.Dir)
 	if e != nil {
 		r.errorText = "Не удалось прочитать папку журналов: " + e.Error()
@@ -274,7 +287,6 @@ func (r *Reader) Poll() {
 		}
 		r.filesRead++
 	}
-	r.scanning = false
 	if r.errorText == "" {
 		r.previousNames = append([]string(nil), selected...)
 	}

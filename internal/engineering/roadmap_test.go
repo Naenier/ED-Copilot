@@ -136,7 +136,7 @@ func TestOdysseyRoadmapNeedsKnownSlotAndKeepsReferralDependencies(t *testing.T) 
 	}
 	id := json.Number("18446744073709551615")
 	p.Apply(M{"event": "SuitLoadout", "SuitID": id, "SuitName": "utilitysuit_class1", "SuitMods": []string{}}, nil)
-	p.Apply(M{"event": "EngineerProgress", "EngineerID": roadmapData.engineers["odyssey-jude-navarro"]["journalId"], "Progress": "Unlocked"}, nil)
+	p.Apply(M{"event": "EngineerProgress", "EngineerID": roadmapData().engineers["odyssey-jude-navarro"]["journalId"], "Progress": "Unlocked"}, nil)
 	obs := M{"shipLocker": M{"components": M{"known": true, "entries": []M{{"symbol": "microthrusters", "count": 5}}}}}
 	q := M{"engineerIDs": []string{"odyssey-jude-navarro"}, "moduleKey": "suit", "blueprintKey": "suit_increasedmeleedamage", "equipmentKey": "suit:" + string(id)}
 	result := v.Obj(roadmapForTest(t, p, q, obs)["recipe"])

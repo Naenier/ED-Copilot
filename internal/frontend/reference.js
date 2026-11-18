@@ -330,8 +330,9 @@ const th=(value,vars)=>t(value,vars).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
     if (action === 'reference-farming') return setCategory(C, ui, 'articles', farmingActive(r) ? '' : farmingGroup);
     if (action === 'reference-engineering-roadmap') {
       const item=r.entry?.actions?.[Number(button?.dataset?.index)];
-      if(item?.type==='engineering-roadmap'&&item.engineerKey&&window.EngineeringRoadmapUI){
-        window.EngineeringRoadmapUI.preselect(C,item.engineerKey);
+      if(item?.type==='engineering-roadmap'&&item.engineerKey){
+        await window.WorkspaceAssets?.load('engineering','Прокачка');
+        window.EngineeringRoadmapUI?.preselect(C,item.engineerKey);
         await ui.navigate('engineering',{mode:'Прокачка'});
       }
       return true;
