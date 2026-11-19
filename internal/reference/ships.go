@@ -60,6 +60,7 @@ var shipRoles = map[string][2]string{
 }
 
 func (s *Store) buildShips() {
+	s.shipNames = make(map[string]string)
 	primary := map[string]v.M{}
 	for _, row := range objectRows("encyclopedia-reference-ships.json") {
 		primary[v.Str(row["key"])] = row
@@ -132,6 +133,20 @@ func (s *Store) buildShips() {
 		e.Sections = append(e.Sections, Section{ID: "outfitting", Title: "Подготовка рабочей сборки", Type: "requirements", Items: []Item{{Title: "Базовая комплектация", Text: "Справочные скорость, форсаж и щит относятся к базовому оснащению. Модули, масса, распределение энергии и модификации меняют фактические показатели."}, {Title: "Дальность после загрузки", Text: "Масса топлива, груза и установленного оборудования меняет дальность. Базовые характеристики корпуса не заменяют расчёт выбранной сборки.", EntryID: "module/fsd"}, {Title: "Энергия и охлаждение", Text: "Проверьте работу модулей при выпущенном оружии, приоритеты питания и запас температуры.", EntryID: "module/pp"}, {Title: "Резерв восстановления", Text: "После покупки корпуса оставьте деньги на модули, груз и восстановление корабля.", EntryID: "article/ship-budget"}}})
 		r := s.add(e, v.Str(raw["symbol"]), manufacturer)
 		r.imageKey = "ship-" + key
+		for _, name := range []string{key, v.Str(raw["symbol"]), e.Title} {
+			if name != "" {
+				s.shipNames[aliasKey("ship/"+name)] = e.ID
+			}
+		}
 		r.relatedIDs = []string{"module/fsd", "module/pp", "module/pd", "module/sg", "article/optional-modules", "article/ship-budget"}
 	}
+}
+
+// ShipTopView reuses the encyclopedia's top-view schematic without loading the
+// full article or passing its other images through the renderer bridge.
+func (s *Store) ShipTopView(name string) *Image {
+	if r := s.records[s.shipNames[aliasKey("ship/"+name)]]; r != nil {
+		return s.image(r.imageKey, true, r.entry.Title)
+	}
+	return nil
 }

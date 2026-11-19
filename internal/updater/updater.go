@@ -39,6 +39,7 @@ type Options struct {
 	Executable     string
 	HTTPClient     *http.Client
 	OnChange       func()
+	OnCheck        func(status string, started time.Time, err error)
 }
 
 type State struct {
@@ -366,10 +367,14 @@ func (m *Manager) Check(ctx context.Context) (result error) {
 	if !enabled {
 		return nil
 	}
+	started := time.Now()
 	m.change(func(s *State) { s.Status = "checking"; s.Error = "" })
 	defer func() {
 		if result != nil && ctx.Err() == nil {
 			m.change(func(s *State) { s.Status = "error"; s.Error = result.Error() })
+		}
+		if m.opts.OnCheck != nil {
+			m.opts.OnCheck(m.Snapshot().Status, started, result)
 		}
 	}()
 	metaCtx, cancel := context.WithTimeout(ctx, 30*time.Second)

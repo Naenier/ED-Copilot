@@ -462,6 +462,7 @@ func (c *Client) Sync(ctx context.Context, carrier bool) (v.M, error) {
 	}
 	c.mu.Unlock()
 	if profileDue {
+		requested["profile"] = v.ISO(c.opts.Now())
 		profile, err := c.capi(ctx, "profile")
 		if err != nil {
 			c.mu.Lock()

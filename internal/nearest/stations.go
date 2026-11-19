@@ -15,6 +15,7 @@ import (
 const stationSystemLimit = 200
 const stationReviewLimit = 6
 const stationPlayerLookupLimit = 8
+const maxOutfitItems = 40
 
 //go:embed catalog_prices.json
 var stationPriceJSON []byte
@@ -37,6 +38,7 @@ type stationOutfit struct {
 
 type stationCriteria struct {
 	items           []stationOutfit
+	kind            stationKind
 	personal        bool
 	discounted      bool
 	ownerStates     []string
@@ -47,6 +49,7 @@ type stationCriteria struct {
 	ownerGovernment string
 	stronghold      string
 	pledgedPower    string
+	ignoreCarriers  bool
 	minPad          string
 	hasSystemJoin   bool
 }
@@ -94,7 +97,9 @@ func stationFilters(q Query) (M, stationCriteria, error) {
 		ownerControlled: v.Bool(input["ownerControllingOnly"]), ownerPlayer: v.Bool(input["ownerPlayerOnly"]),
 		ownerAllegiance: stationText(input["ownerAllegiance"]), ownerGovernment: stationText(input["ownerGovernment"]),
 		stronghold: stationText(input["stronghold"]), pledgedPower: stationText(input["pledgedPower"]),
-		minPad: strings.ToUpper(stationText(input["minPad"])),
+		ignoreCarriers: v.Bool(input["ignoreCarriers"]),
+		minPad:         strings.ToUpper(stationText(input["minPad"])),
+		kind:           findStationKind(stationText(input["stationType"])),
 	}
 	if v.Bool(input["ignoreStrongholdCarriers"]) {
 		criteria.stronghold = "exclude"
@@ -103,13 +108,15 @@ func stationFilters(q Query) (M, stationCriteria, error) {
 		stationText(input["systemAllegiance"]) != "" || stationText(input["systemGovernment"]) != "" ||
 		stationText(input["security"]) != "" || stationText(input["presenceFaction"]) != ""
 	filters := M{}
-	if q.Name != "" {
-		filters["name"] = stationValue(q.Name)
+	if criteria.kind.fixedName != "" {
+		filters["name"] = stationValue(criteria.kind.fixedName)
+	} else if q.Name != "" {
+		filters["name"] = nameCondition(q.Name)
 	}
-	if radius, ok := v.Number(input["radiusLy"]); q.Origin != "" && ok && radius > 0 {
+	if radius, ok := v.Number(input["radiusLy"]); hasOrigin(q) && ok && radius > 0 {
 		filters["distance"] = M{"min": 0, "max": min(radius, 100000)}
 	}
-	if maxArrival, ok := v.Number(input["maxArrivalLs"]); ok && maxArrival > 0 {
+	if maxArrival, ok := v.Number(input["maxArrivalLs"]); ok && maxArrival >= 0 {
 		filters["distance_to_arrival"] = stationNumberRange(0, min(maxArrival, 1e8))
 	}
 	for form, remote := range map[string]string{
@@ -152,30 +159,19 @@ func stationFilters(q Query) (M, stationCriteria, error) {
 		filters["system_is_colonised"] = stationValue(false)
 		filters["system_is_being_colonised"] = stationValue(false)
 	}
-	var excluded []string
-	if v.Bool(input["ignoreCarriers"]) {
-		excluded = append(excluded, "Drake-Class Carrier")
+	if criteria.kind.fixedName != "" && (criteria.ignoreCarriers || criteria.stronghold == "exclude" || !matchesName(q.Name, criteria.kind.fixedName)) {
+		return nil, criteria, errors.New("Тип станции исключён остальными фильтрами.")
 	}
-	switch input["surface"] {
-	case "no":
-		filters["is_planetary"] = stationValue(false)
-	case "legacy":
-		excluded = append(excluded, "Settlement", "Surface Settlement")
-	}
-	if kind := stationText(input["stationType"]); kind != "" {
-		for _, name := range excluded {
-			if strings.EqualFold(kind, name) {
-				return nil, criteria, errors.New("Тип станции исключён остальными фильтрами.")
-			}
-		}
-		filters["type"] = stationGroup(kind)
-	} else if len(excluded) > 0 {
-		filters["type"] = M{"value": excluded, "logic": "not"}
+	if err := stationTypeFilters(input, filters, criteria.kind); err != nil {
+		return nil, criteria, err
 	}
 	if criteria.minPad == "L" {
 		filters["has_large_pad"] = stationValue(true)
 	}
 	services := stationValues(input["services"], 24)
+	if criteria.kind.dockable {
+		services = append(services, "Dock")
+	}
 	if criteria.personal {
 		services = append(services, "Pioneer Supplies")
 	}
@@ -193,7 +189,7 @@ func stationFilters(q Query) (M, stationCriteria, error) {
 	if q.Category != "outfitting" {
 		return filters, criteria, nil
 	}
-	for _, ship := range stationValues(input["ships"], 30) {
+	for _, ship := range stationValues(input["ships"], maxOutfitItems+1) {
 		criteria.items = append(criteria.items, stationOutfit{kind: "ship", name: ship})
 	}
 	for _, raw := range v.Rows(input["modules"]) {
@@ -202,13 +198,16 @@ func stationFilters(q Query) (M, stationCriteria, error) {
 			continue
 		}
 		size, hasSize := v.Number(raw["class"])
+		if raw["class"] != nil && (!hasSize || size < 0 || size > 8 || size != float64(int(size))) {
+			return nil, criteria, errors.New("Укажите класс модуля от 0 до 8.")
+		}
 		criteria.items = append(criteria.items, stationOutfit{
-			kind: "module", name: name, size: int(size), hasSize: hasSize && size >= 0 && size <= 8 && size == float64(int(size)),
+			kind: "module", name: name, size: int(size), hasSize: hasSize,
 			rating: strings.ToUpper(stationText(raw["rating"])), mount: stationMount(stationText(raw["mount"])),
 		})
-		if len(criteria.items) >= 36 {
-			break
-		}
+	}
+	if len(criteria.items) > maxOutfitItems {
+		return nil, criteria, errors.New("Можно выбрать до 40 кораблей и модулей вместе.")
 	}
 	if len(criteria.items) == 0 && !criteria.personal && len(services) == 0 {
 		return nil, criteria, errors.New("Выберите корабль, модуль или отдел персонального снаряжения.")
@@ -272,8 +271,9 @@ func stationStock(row M, criteria stationCriteria) ([]M, bool) {
 				continue
 			}
 			mount := stockMount(entry)
-			if item.kind == "module" && (item.hasSize && v.Int(entry["class"]) != item.size ||
-				item.rating != "" && entry["rating"] != item.rating || item.mount != "" && mount != item.mount) {
+			size, hasSize := v.Number(entry["class"])
+			if item.kind == "module" && (item.hasSize && (!hasSize || size != float64(item.size)) ||
+				item.rating != "" && !strings.EqualFold(v.Str(entry["rating"]), item.rating) || item.mount != "" && mount != item.mount) {
 				continue
 			}
 			var normalPrice int64
@@ -327,7 +327,7 @@ func stationRow(raw M, items []M) M {
 		}
 	}
 	row := M{"name": name, "station": name, "system": system, "systemAddress": v.Str(raw["system_id64"]), "marketId": market,
-		"type": raw["type"], "distanceLy": raw["distance"], "distanceLs": raw["distance_to_arrival"], "pad": stationPadClass(raw),
+		"type": stationDisplayType(raw), "distanceLy": raw["distance"], "distanceLs": raw["distance_to_arrival"], "pad": stationPadClass(raw),
 		"faction": raw["controlling_minor_faction"], "state": raw["controlling_minor_faction_state"], "government": raw["government"],
 		"allegiance": raw["allegiance"], "economy": raw["primary_economy"], "isPlanetary": raw["is_planetary"], "updatedAt": raw["updated_at"],
 		"services": services, "materialTrader": raw["material_trader"], "technologyBroker": raw["technology_broker"],
@@ -339,21 +339,32 @@ func stationRow(raw M, items []M) M {
 	return row
 }
 
+func stationDisplayType(raw M) string {
+	if strings.EqualFold(v.Str(raw["name"]), stationStronghold) {
+		return stationStronghold
+	}
+	kind := canonicalStationType(v.Str(raw["type"]))
+	if kind == stationMegaship {
+		switch raw["primary_economy"] {
+		case "Rescue":
+			return "Rescue Megaship"
+		case "Prison":
+			return "Prison Megaship"
+		}
+	}
+	return kind
+}
+
 func (filter stationCriteria) needsFactionDetails() bool {
 	return filter.ownerControlled || filter.ownerAllegiance != "" || filter.ownerGovernment != "" || len(filter.ownerStates) > 0
 }
 
 func (filter stationCriteria) reviewsResults() bool {
-	if filter.needsFactionDetails() || filter.ownerPlayer || filter.discounted ||
-		filter.minPad == "S" || filter.minPad == "M" || filter.stronghold == "exclude" || filter.stronghold == "friendly" {
-		return true
-	}
-	for _, item := range filter.items {
-		if item.mount != "" {
-			return true
-		}
-	}
-	return false
+	return filter.needsFactionDetails() || filter.ownerPlayer || len(filter.items) != 0 ||
+		containsStationType(filter.kind.types, "Planetary Outpost") ||
+		filter.kind.fixedName != "" ||
+		filter.minPad == "S" || filter.minPad == "M" || filter.stronghold == "exclude" || filter.stronghold == "friendly" ||
+		filter.ignoreCarriers && len(filter.kind.types) == 0
 }
 
 func (filter stationCriteria) matchesStation(raw M) bool {
@@ -361,7 +372,17 @@ func (filter stationCriteria) matchesStation(raw M) bool {
 	if padRank[stationPadClass(raw)] < padRank[filter.minPad] {
 		return false
 	}
-	if strings.EqualFold(v.Str(raw["name"]), "Stronghold Carrier") {
+	isStronghold := strings.EqualFold(v.Str(raw["name"]), stationStronghold)
+	if filter.ignoreCarriers && (isStronghold || stationTypeMatches(v.Str(raw["type"]), stationCarrier)) {
+		return false
+	}
+	if filter.kind.fixedName != "" && !isStronghold {
+		return false
+	}
+	if isStronghold {
+		if containsStationType(filter.kind.types, "Planetary Outpost") {
+			return false
+		}
 		if filter.stronghold == "exclude" || filter.stronghold == "friendly" &&
 			(filter.pledgedPower == "" || !strings.EqualFold(filter.pledgedPower, v.Str(raw["system_controlling_power"]))) {
 			return false
@@ -392,30 +413,14 @@ func stationFactionMatches(station, system M, filter stationCriteria) bool {
 	if len(filter.ownerStates) == 0 {
 		return true
 	}
-	states := make(map[string]bool)
-	for _, state := range stationValues(faction["active_states"], 30) {
-		states[strings.ToLower(state)] = true
-	}
-	if state := v.Text(faction["state"], station["controlling_minor_faction_state"]); state != "" {
-		states[strings.ToLower(state)] = true
-	}
-	if len(states) == 0 {
-		return false
-	}
-	matched := 0
-	for _, state := range filter.ownerStates {
-		if states[strings.ToLower(state)] {
-			matched++
+	if spaceText(faction["state"]) == "" {
+		faction = v.Copy(faction)
+		if faction == nil {
+			faction = M{}
 		}
+		faction["state"] = station["controlling_minor_faction_state"]
 	}
-	switch filter.ownerStateMode {
-	case "any":
-		return matched > 0
-	case "none":
-		return matched == 0
-	default:
-		return matched == len(filter.ownerStates)
-	}
+	return matchesState(factionStates(faction), filter.ownerStates, filter.ownerStateMode)
 }
 
 func stationBatch(q Query, filters M, page, limit int) M {
@@ -426,16 +431,16 @@ func stationBatch(q Query, filters M, page, limit int) M {
 	case "name":
 		field = "name"
 	default:
-		if q.Origin == "" {
+		if !hasOrigin(q) {
 			field = "name"
 		}
 	}
-	payload := M{"filters": filters, "sort": []M{{field: M{"direction": "asc"}}}, "page": page, "size": limit}
-	if len(q.OriginCoords) == 3 {
-		payload["reference_coords"] = M{"x": q.OriginCoords[0], "y": q.OriginCoords[1], "z": q.OriginCoords[2]}
-	} else if q.Origin != "" {
-		payload["reference_system"] = q.Origin
+	order := []M{{field: M{"direction": "asc"}}}
+	if field != "name" {
+		order = append(order, M{"name": M{"direction": "asc"}})
 	}
+	payload := M{"filters": filters, "sort": order, "page": page, "size": limit}
+	setNearestReference(payload, q)
 	return payload
 }
 
@@ -450,24 +455,30 @@ func (c *Client) stationEligibleSystems(ctx context.Context, q Query, stationFie
 			station[field] = condition
 		}
 	}
+	var services []string
+	for _, row := range v.Rows(stationFields["services"]) {
+		services = append(services, stationValues(v.At(row, "name", "value"), 24)...)
+	}
+	if len(services) > 0 {
+		station["services"] = M{"value": services, "logic": "and"}
+	}
 	if len(station) == 0 {
 		// Restrict the bounded join to systems containing a known port.
-		station["type"] = stationValue([]string{
-			"Asteroid base", "Coriolis Starport", "Dockable Planet Station", "Dodec Starport",
-			"Drake-Class Carrier", "Mega ship", "Ocellus Starport", "Orbis Starport", "Outpost",
-			"Planetary Construction Depot", "Planetary Outpost", "Planetary Port",
-			"Settlement", "Space Construction Depot", "Surface Settlement",
-		})
+		station["type"] = stationValue(knownStationTypes)
 	}
 	fields["stations"] = []M{station}
-	response, err := c.request(ctx, "/systems/search", stationBatch(q, fields, 0, stationSystemLimit))
+	q.Page, q.Limit = 0, stationSystemLimit
+	response, err := c.request(ctx, "/systems/search", spacePayload(q, fields))
 	if err != nil {
 		return nil, false, err
 	}
-	rows := v.Rows(response["results"])
+	rows, err := specialRows(response)
+	if err != nil {
+		return nil, false, err
+	}
 	ids := make([]string, 0, len(rows))
 	for _, system := range rows {
-		if id := v.Str(system["id64"]); id != "" {
+		if id := spaceAddress(system["id64"]); id != "" && matchesSpecialPresence(system, q) {
 			ids = append(ids, id)
 		}
 	}
@@ -491,7 +502,11 @@ func (c *Client) stationFactionView(ctx context.Context, raw []M, cached map[str
 	if err != nil {
 		return err
 	}
-	for _, row := range v.Rows(response["results"]) {
+	rows, err := specialRows(response)
+	if err != nil {
+		return err
+	}
+	for _, row := range rows {
 		if id := v.Str(row["id64"]); id != "" {
 			cached[id] = row
 		}
@@ -500,11 +515,23 @@ func (c *Client) stationFactionView(ctx context.Context, raw []M, cached map[str
 }
 
 func (c *Client) searchStations(ctx context.Context, q Query) (Result, error) {
+	if q.Category == "stations" {
+		kind := stationText(q.Filters["stationType"])
+		if isStationTitan(kind) {
+			return c.searchTitanStations(ctx, q)
+		}
+		if signal := stationSignalKind(kind); signal != "" {
+			return c.searchStationOrbitalSignals(ctx, q, signal)
+		}
+	}
 	filters, criteria, err := stationFilters(q)
 	if err != nil {
 		return Result{Note: err.Error()}, nil
 	}
 	notes := make([]string, 0, 4)
+	if criteria.kind.role {
+		notes = append(notes, "Профиль объектов определяется по основной экономике или правительству.")
+	}
 	if criteria.personal {
 		notes = append(notes, "Показаны станции с магазином Pioneer Supplies. Наличие конкретных костюмов и оружия в открытом каталоге неизвестно.")
 	}
@@ -537,7 +564,11 @@ func (c *Client) searchStations(ctx context.Context, q Query) (Result, error) {
 			return Result{}, err
 		}
 		rows := []M{}
-		for _, raw := range v.Rows(response["results"]) {
+		rawRows, err := specialRows(response)
+		if err != nil {
+			return Result{}, err
+		}
+		for _, raw := range rawRows {
 			if items, matched := stationStock(raw, criteria); matched {
 				if row := stationRow(raw, items); row != nil {
 					rows = append(rows, row)
@@ -562,7 +593,10 @@ func (c *Client) searchStations(ctx context.Context, q Query) (Result, error) {
 			}
 			break
 		}
-		raw := v.Rows(response["results"])
+		raw, err := specialRows(response)
+		if err != nil {
+			return Result{}, err
+		}
 		remoteCount = v.Int(response["count"])
 		checked += len(raw)
 		if criteria.needsFactionDetails() {
@@ -606,7 +640,7 @@ func (c *Client) searchStations(ctx context.Context, q Query) (Result, error) {
 				all = append(all, row)
 			}
 		}
-		if len(raw) < 48 || checked >= remoteCount {
+		if (page+1)*48 >= remoteCount || len(raw) == 0 {
 			break
 		}
 	}

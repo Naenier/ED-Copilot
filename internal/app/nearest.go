@@ -47,7 +47,7 @@ func (e *Engine) SearchNearest(input M) (M, error) {
 		}
 		e.mu.Unlock()
 	}()
-	client := nearest.New(e.opts.HTTPClient)
+	client := nearest.New(e.observedHTTP(e.opts.HTTPClient, nil))
 	client.EDSM = e.EDSM
 	if q.Origin != "" && strings.EqualFold(q.Origin, origin) && len(position) == 3 {
 		for _, component := range position {

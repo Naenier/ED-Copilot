@@ -21,9 +21,13 @@
   const label = (u, text, control) => '<label class="fit-field"><span>' + h(u,text) + '</span>' + control + '</label>';
 
   const groups = [
-    ['core','Основные модули'], ['optional','Дополнительные модули'],
-    ['hardpoint','Оружие'], ['utility','Вспомогательное оборудование'],
-    ['armour','Броня'], ['hatch','Грузовой люк'],
+    ['core','Основные модули','circle-dot'], ['optional','Дополнительные модули','layers'],
+    ['hardpoint','Оружие','target'], ['utility','Вспомогательное оборудование','wrench'],
+    ['armour','Броня','shield-check'], ['hatch','Грузовой люк','package'],
+  ];
+  const moduleTabs = [
+    ['all','Все отсеки'], ['core','Основные'], ['optional','Дополнительные'],
+    ['hardpoint','Оружие'], ['utility','Крепления']
   ];
   const materialGroups = [
     ['raw','Сырьё'], ['manufactured','Промышленные материалы'], ['encoded','Данные'],
@@ -58,14 +62,14 @@
     ['Бой', [
       ['shield','Прочность щита',' МДж'], ['armour','Прочность корпуса',''], ['hardness','Твёрдость корпуса',''],
       ['moduleArmour','Прочность модулей',''],
-      ['moduleProtection','Защита модулей',''], ['shieldRecoveryTime','Восстановление после сбития щита',' с'],
+      ['moduleProtection','Защита модулей','%',100], ['shieldRecoveryTime','Восстановление после сбития щита',' с'],
       ['shieldRegenTime','Зарядка щита',' с'], ['dps','Урон в секунду',''], ['sustainedDps','Урон в секунду с перезарядкой',''],
     ]],
   ];
 
   function model(C) {
     if (!C.shipFitUI || C.shipFitUI.owner !== owner(C)) {
-      C.shipFitUI = {owner:owner(C), fits:[], cfg:{}, expanded:new Set(['Полёт']), importText:'', query:'', limit:30};
+      C.shipFitUI = {owner:owner(C), fits:[], cfg:{}, expanded:new Set(['Полёт']), importText:'', query:'', limit:30, slotGroup:'all'};
     }
     return C.shipFitUI;
   }
@@ -131,8 +135,9 @@
       option(u,'',u.t('Сохранённые сборки'),r.id) +
       fits.map(fit => option(u,fit.id,[fit.name,shipName(u,fit.ship)].filter((text,index) => index===0 || text!==fit.name).join(' · '),r.id)).join('') +
       '</select>' + (r.build ? button(u,'new','Новая сборка',{icon:'plus',disabled:r.busy}) : '') +
-      button(u,'current','Текущий корабль',{icon:'ship',disabled:r.busy}) + '</div><div class="fit-actions">' +
-      button(u,'import','Импорт',{disabled:r.busy}) +
+      '</div><div class="fit-actions">' +
+      button(u,'fleet','Загрузить из флота',{icon:'ship',disabled:r.busy}) +
+      button(u,'import','Импорт JSON / Coriolis',{disabled:r.busy}) +
       (fits.length ? button(u,'export-library','Экспорт библиотеки',{disabled:r.busy}) : '') + '</div></div>';
   };
   function newForm(r,u) {
@@ -172,15 +177,26 @@
     const exp = bp.experimentals?.find(item => item.id === current.experimental);
     return [blueprintName(u,bp),'G'+current.grade,exp && experimentalName(u,exp)].filter(Boolean).join(' · ');
   }
+  function filteredSlots(r,slots) {
+    if (r.slotGroup === 'core') return slots.filter(slot => ['core','armour','hatch'].includes(slot.kind));
+    if (r.slotGroup === 'all') return slots;
+    return slots.filter(slot => slot.kind === r.slotGroup);
+  }
   function slotGroups(r,u,slots) {
-    return groups.map(([kind,title]) => {
-      const rows = slots.filter(slot => slot.kind === kind);
+    const filters = moduleTabs.map(([kind,title]) =>
+      '<button type="button" data-fit-action="slot-group" data-fit-value="' + kind + '" aria-pressed="' +
+      (r.slotGroup === kind) + '">' + h(u,title) + '</button>').join('');
+    const visible = filteredSlots(r,slots);
+    const sections = groups.map(([kind,title,icon]) => {
+      const rows = visible.filter(slot => slot.kind === kind);
       if (!rows.length) return '';
-      return '<section class="panel fit-box fit-slots"><h2>' + h(u,title) + '</h2><ul>' +
+      return '<section class="panel fit-box fit-slots"><header><h2>' + u.icon(icon) + h(u,title) + '</h2>' +
+        '<span class="fit-slot-count" aria-label="' + h(u,'Занято отсеков') + '">' +
+        value(u,rows.filter(slot => slot.module).length) + ' / ' + value(u,rows.length) + '</span></header><ul>' +
         rows.map((slot,index) => {
           const mod = slot.module;
           const details = mod && [className(u,mod),slotEngineering(u,r,slot),mod.preEngineered && u.t('Модуль с заводской доработкой')].filter(Boolean).join(' · ');
-          return '<li class="fit-slot"><div class="fit-slot-label"><span>' + u.esc(slotName(u,slot,index)) + '</span>' +
+          return '<li class="fit-slot' + (r.slotKey === slot.key ? ' is-selected' : '') + '"><div class="fit-slot-label"><span>' + u.esc(slotName(u,slot,index)) + '</span>' +
             (slot.size != null && !['armour','hatch'].includes(slot.kind) ? '<small>' + h(u,'Класс {size}',{size:slot.size}) + '</small>' : '') +
             '</div><button type="button" class="fit-slot-module" data-fit-action="edit-slot" data-fit-value="' + u.esc(slot.key) +
             '" aria-expanded="' + (r.slotKey === slot.key) + '" aria-controls="fit-inspector"><span><strong>' +
@@ -192,6 +208,8 @@
                 h(u,slot.retracted === false ? 'Нет питания при убранном оружии' : 'Нет питания при развёрнутом оружии') + '</small>' : '') + '</div>' : '') + '</li>';
         }).join('') + '</ul></section>';
     }).join('');
+    return '<nav class="fit-slot-filters" aria-label="' + h(u,'Группы модулей') + '">' + filters + '</nav>' +
+      (sections || '<p class="fit-muted" role="status">' + h(u,'Нет отсеков этой группы') + '</p>');
   }
 
   function conditions(r,u,s) {
@@ -236,8 +254,8 @@
       '</th><th scope="col">' + h(u,'Щит') + '</th><th scope="col">' + h(u,'Корпус') +
       '</th></tr></thead><tbody>' + rows + '</tbody></table>' : '';
   }
-  const dl = (u,fields,data) => '<dl>' + fields.filter(([key]) => data[key] != null).map(([key,title,unit]) =>
-    '<div><dt>' + h(u,title) + '</dt><dd>' + value(u,data[key],unit) + '</dd></div>').join('') + '</dl>';
+  const dl = (u,fields,data) => '<dl>' + fields.filter(([key]) => data[key] != null).map(([key,title,unit,scale=1]) =>
+    '<div><dt>' + h(u,title) + '</dt><dd>' + value(u,data[key]*scale,unit) + '</dd></div>').join('') + '</dl>';
   function details(r,u,s) {
     const distributor = s.distributor && dl(u,[
       ['systemsCapacity','Заряд систем',' МДж'], ['enginesCapacity','Заряд двигателей',' МДж'], ['weaponsCapacity','Заряд оружия',' МДж'],
@@ -314,7 +332,8 @@
     return '<section id="fit-inspector" tabindex="-1" class="panel fit-box fit-inspector"><header><h2>' + u.esc(slotName(u,slot,index)) + '</h2>' +
       button(u,'close-slot','Закрыть',{style:'quiet'}) + '</header>' +
       (mod ? '<div class="fit-selected"><strong>' + u.esc(moduleName(u,mod)) + '</strong><small>' + u.esc(className(u,mod)) +
-        '</small>' + dl(u,slot.kind === 'hardpoint' ? moduleStats : moduleStats.slice(0,4),mod) +
+        '</small>' + dl(u,slot.kind === 'hardpoint' ? moduleStats :
+          [...moduleStats.slice(0,4),['probeRadius','Бонус к радиусу зондов','%',100]],mod) +
         (slot.canControlPower !== false && slot.kind !== 'armour' && mod.power > 0 ?
           '<div class="fit-controls">' + label(u,'Приоритет питания','<select id="fit-priority">' +
             [1,2,3,4,5].map(n=>option(u,n,n,slot.priority)).join('') + '</select>') +
@@ -334,7 +353,8 @@
     if (!r.compare) return '<div class="panel fit-box fit-comparison">' + control + '</div>';
     const baseline = engine().stats(r.compare.build,{cargo:s.cargo,fuel:s.fuel,eng:s.eng,sys:s.sys,wep:s.wep});
     const metrics = [
-      ['mass','Текущая масса',' т'],['speed','Скорость',' м/с'],['boostSpeed','Форсаж',' м/с'],
+      ['cargo','Груз',' т'],['fuel','Топливо',' т'],['mass','Текущая масса',' т'],
+      ['speed','Скорость',' м/с'],['boostSpeed','Форсаж',' м/с'],
       ['jumpRange','Текущий прыжок',' св. л.'],['cargoCapacity','Вместимость трюма',' т'],
       ['shield','Прочность щита',' МДж'],['armour','Прочность корпуса',''],['dps','Урон в секунду',''],
       ['powerDeployed','С развёрнутым оружием',' МВт'],['cost','Стоимость сборки',' кр.'],
@@ -350,7 +370,7 @@
   }
   function materialInput(r) {
     if (r.materialInput?.build !== r.build) {
-      const modules = fitState(r).slots.filter(slot => slot.engineering?.blueprint).map(slot => {
+      const modules = fitState(r).slots.filter(slot => slot.engineering?.blueprint || slot.engineering?.experimental).map(slot => {
         const {blueprint,grade,quality,experimental} = slot.engineering;
         const {engineeringLocked,factoryExperimental} = slot.module || {};
         return {slot:slot.key,blueprint,grade,quality,experimental,engineeringLocked,factoryExperimental};
@@ -359,19 +379,22 @@
     }
     return r.materialInput;
   }
-  function materialsContent(r,u) {
+  function materialsContent(r,u,scanning) {
     const {modules,key} = materialInput(r);
     if (!modules.length) return '<p class="fit-muted">' + h(u,'Улучшения не выбраны') + '</p>';
     const result = r.materials?.key === key ? r.materials : null;
     if (result?.error) return '<p class="fit-alert" role="status">' + h(u,'Не удалось рассчитать материалы.') + ' ' +
       button(u,'materials-retry','Повторить',{style:'quiet'}) + '</p>';
-    if (!result?.data) return '<p class="fit-muted" role="status">' + h(u,'Рассчитываем материалы…') + '</p>';
+    if (!result?.data) return '<p class="fit-muted" role="status">' +
+      h(u,scanning ? 'Читаем игровой журнал…' : 'Рассчитываем материалы…') + '</p>';
     const {groups, unavailable, currencies, estimated} = result.data;
     const allGroups = groups || [];
-    const row = (name,required,owned,missing,scope='row') =>
-      '<tr' + (scope === 'rowgroup' ? ' class="fit-material-group"' : '') + '><th scope="' + scope + '">' +
+    const row = (name,required,owned,missing) =>
+      '<tr><th scope="row">' +
       u.esc(name) + '</th><td>' + value(u,required) + '</td><td>' + value(u,owned) +
       '</td><td' + (missing > 0 ? ' class="fit-material-deficit"' : '') + '>' + value(u,missing) + '</td></tr>';
+    const headings = '<thead><tr>' + ['Материал','Нужно','В запасе','Не хватает'].map(title =>
+      '<th scope="col">' + h(u,title) + '</th>').join('') + '</tr></thead>';
     const collator = sort(u);
     const known = rows => rows.every(item => item.owned != null && item.missing != null);
     const stock = rows => rows.reduce((sum,item) => sum+item.owned,0);
@@ -380,9 +403,11 @@
       const rows = [...(group?.rows || [])].sort((a,b) => (b.missing || 0)-(a.missing || 0) ||
         collator.compare(materialName(u,a),materialName(u,b)));
       const covered = known(rows);
-      return '<tbody>' + row(u.t(title),group?.required ?? 0,rows.length && covered ? stock(rows) : null,
-        covered ? group?.missing ?? 0 : null,'rowgroup') +
-        rows.map(item => row(materialName(u,item),item.required,item.owned,item.missing)).join('') + '</tbody>';
+      return '<section class="fit-material-table plate-' + category + '"><table><caption>' + h(u,title) + '</caption>' +
+        headings + '<tbody>' + (rows.length ? rows.map(item => row(materialName(u,item),item.required,item.owned,item.missing)).join('') :
+          '<tr><td colspan="4">' + h(u,'Материалы не требуются') + '</td></tr>') + '</tbody>' +
+        (rows.length ? '<tfoot>' + row(u.t('Итого'),group.required,covered ? stock(rows) : null,
+          covered ? group.missing : null) + '</tfoot>' : '') + '</table></section>';
     }).join('');
     const allRows = allGroups.flatMap(group => group.rows || []);
     const stockUnknown = !known(allRows);
@@ -396,14 +421,12 @@
       const number = slots.slice(0,index).filter(other => other.kind === slot.kind).length;
       return slotName(u,slot,number) + ' · ' + moduleName(u,slot.module);
     });
-    const table = allRows.length ? '<table><thead><tr><th scope="col">' + h(u,'Материал') + '</th><th scope="col">' +
-      h(u,'Нужно') + '</th><th scope="col">' + h(u,'В запасе') + '</th><th scope="col">' +
-      h(u,'Не хватает') + '</th></tr></thead>' + tables + '<tfoot>' +
-      row(u.t('Итого'),total,stockUnknown ? null : stock(allRows),shortage) + '</tfoot></table>' : '';
+    const totals = '<div class="fit-material-totals"><span>' + h(u,'Всего нужно') + ' <strong>' + value(u,total) +
+      '</strong></span><span>' + h(u,'Не хватает') + ' <strong' + (shortage > 0 ? ' class="fit-material-deficit"' : '') +
+      '>' + value(u,shortage) + '</strong></span></div>';
     const currencyList = currencies?.length ? '<dl class="fit-material-currencies">' + currencies.map(item =>
       '<div><dt>' + u.esc(materialName(u,item)) + '</dt><dd>' + value(u,item.required) + '</dd></div>').join('') + '</dl>' : '';
-    if (!table && !currencyList && !missingRecipes.length) return '<p class="fit-muted">' + h(u,'Материалы не требуются') + '</p>';
-    return table + currencyList +
+    return totals + '<div class="fit-material-grid">' + tables + '</div>' + currencyList +
       (estimated ? '<p class="fit-muted">' + h(u,'Расход с нуля при 5-м ранге у инженера.') + '</p>' : '') +
       (stockUnknown ? '<p class="fit-muted">' + h(u,'Запас материалов ещё не получен из журнала.') + '</p>' : '') +
       (missingRecipes.length ? '<p class="fit-muted">' +
@@ -412,31 +435,45 @@
   function materialName(u,item) {
     return russian(u) ? item.name || item.english || item.key : item.english || u.t(item.name || item.key);
   }
-  function materials(r,u) {
-    return '<section class="panel fit-box fit-materials"><h2>' + h(u,'Материалы для сборки') +
-      '</h2><div id="fit-materials-content">' + materialsContent(r,u) + '</div></section>';
+  function schematic(r,u) {
+    const src = r.schematic?.shipId === r.build.shipId && r.schematic.src;
+    return src ? '<img src="' + u.esc(src) + '" alt="' + h(u,'Схема корабля · вид сверху') + '" decoding="async">' :
+      '<span class="fit-hull-placeholder" aria-hidden="true">' + u.icon('ship') + '</span>';
   }
   function editor(r,u) {
     if (!r.build) return '';
     const {slots,stats} = fitState(r);
-    return '<div class="fit-editor"><div class="panel fit-box fit-identity"><div class="fit-identity-main">' +
-      '<span class="fit-identity-icon">' + u.icon('ship') + '</span><div><h2>' + u.esc(shipName(u,r.build.shipId)) + '</h2>' +
-      '<input id="fit-name" aria-label="' + h(u,'Название сборки') + '" maxlength="120" placeholder="' +
-      h(u,'Название сборки') + '" value="' + u.esc(r.name) + '"></div></div><div class="fit-actions">' +
+    const hull = engine().ships().find(ship => ship.id === r.build.shipId);
+    const pad = ['', 'S','M','L'][hull?.size];
+    const drive = slots.find(slot => slot.key === 'FrameShiftDrive');
+    const alerts = [];
+    if (stats.canThrust === false) alerts.push('По ограничениям массы корабль не может разогнаться');
+    else if (stats.canBoost === false) alerts.push('Форсаж недоступен');
+    if (drive && (drive.on === false || drive.retracted === false)) alerts.push('Двигатель FSD выключен или обесточен.');
+    return '<div class="fit-editor"><section class="panel fit-hero"><div class="fit-hero-body"><div class="fit-identity">' +
+      '<span class="fit-hull-meta">' + u.esc(hull?.manufacturer || '') + (pad ? ' · ' + h(u,'Площадка {size}',{size:pad}) : '') +
+      '</span><h2>' + u.esc(shipName(u,r.build.shipId,hull?.name)) + '</h2>' +
+      label(u,'Название сборки','<input id="fit-name" maxlength="120" value="' + u.esc(r.name) + '">') +
+      '<div class="fit-actions">' +
       button(u,'save','Сохранить сборку',{style:'primary',icon:'check',disabled:r.busy}) +
+      button(u,'materials','Материалы',{icon:'layers',disabled:r.busy}) +
+      '</div></div><figure class="fit-schematic"><div id="fit-schematic-image">' + schematic(r,u) +
+      '</div><figcaption>' + h(u,'Вид сверху') + '</figcaption></figure></div>' +
+      '<div class="fit-summary">' + metrics(u,stats) + '</div></section>' +
+      '<div class="fit-editor-tools fit-actions">' +
       (r.id ? button(u,'copy','Сохранить копию',{disabled:r.busy}) : '') +
-      '<select id="fit-export-format" aria-label="' + h(u,'Формат экспорта') + '"' + dis(r.busy) + '>' +
+      '<select id="fit-export-format" aria-label="' + h(u,'Формат экспорта') + '"' +
+      dis(r.busy) + '>' +
       option(u,'native','ED Copilot JSON',r.exportFormat || 'native') + option(u,'slef','SLEF',r.exportFormat) +
       ((engine().supportsCoriolis?.(r.build) ?? true) ? option(u,'coriolis','Coriolis Detailed',r.exportFormat) : '') + '</select>' +
       button(u,'export','Экспорт JSON',{disabled:r.busy}) +
       (engine().toCoriolisURL && (engine().supportsCoriolis?.(r.build) ?? true) ?
         button(u,'link','Скопировать ссылку Coriolis',{disabled:r.busy}) : '') +
-      (r.id ? button(u,'delete','Удалить',{style:'quiet',disabled:r.busy}) : '') + '</div></div>' +
-      '<div class="panel fit-summary">' + metrics(u,stats) + '</div>' +
-      (stats.canThrust === false ? '<p class="fit-alert" role="status">' + h(u,'По ограничениям массы корабль не может разогнаться') + '</p>' :
-        stats.canBoost === false ? '<p class="fit-alert" role="status">' + h(u,'Форсаж недоступен') + '</p>' : '') +
-      '<div class="fit-body"><div class="fit-slot-list">' + slotGroups(r,u,slots) + '</div><aside class="fit-details">' +
-      inspector(r,u,slots) + materials(r,u) + conditions(r,u,stats) + details(r,u,stats) + '</aside></div>' +
+      (r.id ? button(u,'delete','Удалить',{style:'quiet',disabled:r.busy}) : '') + '</div>' +
+      alerts.map(message => '<p class="fit-alert" role="status">' + h(u,message) + '</p>').join('') +
+      '<div class="fit-body"><div class="fit-slot-list">' + slotGroups(r,u,slots) + '</div><aside class="fit-details' +
+      (r.slotKey ? ' is-editing' : '') + '">' +
+      inspector(r,u,slots) + conditions(r,u,stats) + details(r,u,stats) + '</aside></div>' +
       comparison(r,u,stats) + '</div>';
   }
   function content(r,u) {
@@ -458,12 +495,42 @@
       host.fitMarkup = markup;
     }
     if (focus) (u.$(focus,host) || (focus==='#fit-module-search' ? u.$('#fit-inspector',host) : null))?.focus();
+    void loadSchematic(C,u,r);
     void loadMaterials(C,u,r);
   }
 
   const request = (r,u,op,params={}) => u.call(op,{...params,expectedPlanWorkspace:r.owner});
+  async function loadSchematic(C,u,r) {
+    const id = r.build?.shipId;
+    if (!id || r.schematic?.shipId === id) return;
+    const hull = engine().ships().find(ship => ship.id === id);
+    if (!hull) return;
+    const pending = r.schematic = {shipId:id};
+    try {
+      const {image} = await u.call('ship-fit-schematic',{ship:hull.name});
+      if (typeof image?.src === 'string' && /^data:image\/jpeg;base64,[a-z0-9+/]+={0,2}$/i.test(image.src)) {
+        pending.src = image.src;
+      }
+    } catch {
+      // The editor can operate without an image.
+    }
+    if (active(C) && model(C) === r && r.schematic === pending && r.build?.shipId === id) {
+      const target = u.$('#fit-schematic-image');
+      if (target) target.innerHTML = schematic(r,u);
+    }
+  }
   async function loadMaterials(C,u,r) {
-    if (!r.build || C.state?.connection?.scanning) return;
+    const panel = u.$('#fit-materials-content');
+    if (!panel || !active(C)) return;
+    if (!r.build) {
+      u.closeLayer();
+      return;
+    }
+    if (C.state?.connection?.scanning) {
+      r.materials = null;
+      panel.innerHTML = materialsContent(r,u,true);
+      return;
+    }
     const {modules,key} = materialInput(r);
     const revision = C.state?.shipBuildRevision;
     if (!modules.length) {
@@ -478,16 +545,100 @@
     } catch {
       result.error = true;
     }
-    if (!active(C) || model(C) !== r || r.materials !== result || materialInput(r).key !== key) return;
+    if (!active(C) || model(C) !== r || r.materials !== result || materialInput(r).key !== key || C.state?.connection?.scanning) return;
     const content = u.$('#fit-materials-content');
     if (content) content.innerHTML = materialsContent(r,u);
+  }
+  function showMaterials(C,u,r) {
+    const body = '<div id="fit-materials-content" class="fit-materials">' +
+      materialsContent(r,u,C.state?.connection?.scanning) + '</div>';
+    u.dialog(u.t('Материалы для сборки'),body,'',true);
+    const panel = u.$('#fit-materials-content');
+    panel?.addEventListener('click',event => {
+      if (!event.target.closest('[data-fit-action="materials-retry"]')) return;
+      r.materials = null;
+      panel.innerHTML = materialsContent(r,u,C.state?.connection?.scanning);
+      void loadMaterials(C,u,r);
+    });
+    void loadMaterials(C,u,r);
+  }
+  function fleetRows(u,fleet) {
+    if (fleet.pending) return '<p class="fit-muted" role="status">' + h(u,'Читаем игровой журнал…') + '</p>';
+    const collator = sort(u);
+    const rows = [...(fleet.rows || [])].sort((a,b) =>
+      Number(Boolean(b.current))-Number(Boolean(a.current)) || Number(Boolean(b.available))-Number(Boolean(a.available)) ||
+      collator.compare(a.shipName || a.ship,b.shipName || b.ship));
+    if (!rows.length) return '<p class="fit-muted" role="status">' +
+      h(u,'В журнале пока нет списка кораблей. Откройте верфь в игре.') + '</p>';
+    return '<ul class="fit-fleet-list">' + rows.map(row => {
+      const ship = row.ship || row.shipType;
+      const heading = row.shipName || ship;
+      const place = [row.system,row.station].filter(Boolean).join(' · ');
+      const info = [row.shipName ? ship : '',row.shipIdent,place].filter(Boolean).join(' · ');
+      const source = row.source === 'capi' ? 'Frontier' : u.t('Журнал игры');
+      const observed = row.observedAt && (u.date?.(row.observedAt,{dateStyle:'short',timeStyle:'short'}) || row.observedAt);
+      return '<li><span class="fit-fleet-icon" aria-hidden="true">' + u.icon('ship') + '</span>' +
+        '<div class="fit-fleet-info"><strong>' + u.esc(heading) + '</strong>' +
+        (row.current ? '<span class="fit-fleet-current">' + h(u,'Текущий') + '</span>' : '') +
+        (info ? '<small>' + u.esc(info) + '</small>' : '') +
+        (row.available ? '<small>' + u.esc([source,observed].filter(Boolean).join(' · ')) + '</small>' :
+          '<small>' + h(u,'Оснащение пока не считано') + '</small>') + '</div>' +
+        button(u,'fleet-open','Открыть сборку',{value:row.shipId,style:'quiet',disabled:!row.available}) + '</li>';
+    }).join('') + '</ul>' +
+      (rows.some(row=>!row.available) ? '<p class="fit-muted">' +
+        h(u,'Чтобы получить оснащение из журнала, переключитесь на этот корабль в игре.') + '</p>' : '');
+  }
+  const fleetRevision = C => JSON.stringify([owner(C),Boolean(C.state?.connection?.scanning),C.state?.shipBuildRevision]);
+  function fleetStatus(u,message,error=false) {
+    return '<p class="' + (error ? 'fit-alert" role="alert' : 'fit-muted" role="status') + '">' + h(u,message) + '</p>';
+  }
+  async function loadFleet(C,u,panel) {
+    const r = model(C), revision = fleetRevision(C), requestId = Symbol();
+    panel.fitFleetRevision = revision;
+    panel.fitFleetRequest = requestId;
+    const show = (content,loading=false) => {
+      panel.innerHTML = '<div class="fit-fleet-tools">' +
+        button(u,'fleet-refresh','Обновить',{style:'quiet',icon:'refresh-cw',disabled:loading}) + '</div>' + content;
+    };
+    if (C.state?.connection?.scanning || !r.owner) {
+      show(fleetStatus(u,C.state?.connection?.scanning ? 'Читаем игровой журнал…' : 'Сначала подключите журнал командира.'));
+      return;
+    }
+    show(fleetStatus(u,'Читаем список кораблей…'),true);
+    const current = () => active(C) && model(C)===r && u.$('#fit-fleet')===panel && panel.fitFleetRequest===requestId;
+    try {
+      const fleet = await request(r,u,'ship-fits-fleet');
+      if (current()) show(fleetRows(u,fleet));
+    } catch (error) {
+      if (current()) show(fleetStatus(u,error?.message || 'Не удалось загрузить флот.',true));
+    }
+  }
+  function showFleet(C,u) {
+    u.dialog(u.t('Корабли из игры'),'<div id="fit-fleet" class="fit-fleet"></div>','',true);
+    const panel = u.$('#fit-fleet');
+    if (!panel) return;
+    panel.addEventListener('click',event => {
+      const control = event.target.closest('[data-fit-action]');
+      if (!control || control.disabled) return;
+      if (control.dataset.fitAction === 'fleet-refresh' || panel.fitFleetRevision !== fleetRevision(C)) {
+        void loadFleet(C,u,panel);
+        return;
+      }
+      if (control.dataset.fitAction !== 'fleet-open') return;
+      const r = model(C), shipId = control.dataset.fitValue;
+      u.closeLayer();
+      guard(C,u,r,async () => {
+        const {loadout} = await request(r,u,'ship-fit-from-fleet',{shipId});
+        if (model(C)===r) install(r,u,engine().fromLoadout(loadout));
+      });
+    });
+    void loadFleet(C,u,panel);
   }
   async function refresh(C,u,r) {
     const data = await request(r,u,'ship-fits-list');
     if (model(C)!==r) return;
     r.fits = data.fits || [];
     if (r.compare && !r.fits.some(fit=>fit.id===r.compare.id)) r.compare = null;
-    r.observed = data.observed || null;
     r.loaded = true;
   }
   function install(r,u,build,record) {
@@ -499,8 +650,10 @@
     r.dirty = !record;
     r.showNew = false;
     r.showImport = false;
+    r.fileRequest = (r.fileRequest || 0)+1;
     r.exportFormat = 'native';
     r.slotKey = '';
+    r.slotGroup = 'all';
     r.query = '';
     r.confirm = null;
   }
@@ -548,6 +701,10 @@
     if (r.busy || !r.slotKey) return;
     try {
       r.build = engine().edit(r.build,r.slotKey,change);
+      const {stats} = fitState(r);
+      for (const name of ['cargo','fuel']) {
+        if (r.cfg[name] != null && r.cfg[name] !== stats[name]) r.cfg = {...r.cfg,[name]:stats[name]};
+      }
       r.dirty = true;
       r.error = '';
     } catch (error) {
@@ -556,26 +713,41 @@
     draw(C,u,focus);
   }
   function configure(C,u,r,changes,focus) {
+    if (Object.keys(changes).every(key => r.cfg[key] === changes[key])) return;
     r.cfg = {...r.cfg,...changes};
     r.dirty = true;
     draw(C,u,focus);
   }
   function redistribute(r,field,amount) {
     const [a,b] = ['sys','eng','wep'].filter(key=>key!==field);
-    const oldA = r.cfg[a] ?? 2, oldB = r.cfg[b] ?? 2;
+    const oldB = r.cfg[b] ?? 2;
     const nextA = Math.min(4,Math.max(0,6-amount-oldB));
     return {[field]:amount,[a]:nextA,[b]:6-amount-nextA};
   }
 
   async function exportFile(u,name,text) {
     const filename = name.replace(/[<>:"/\\|?*\u0000-\u001f]/g,'_').slice(0,120) + '.json';
-    await u.call('native',{action:'save-json',name:filename,text});
+    return u.call('native',{action:'save-json',name:filename,text});
+  }
+  async function exportLibrary(C,u,r) {
+    let after = '', revision = '', part = 1;
+    do {
+      const page = await request(r,u,'ship-fits-export',{after,revision});
+      if (model(C)!==r) return;
+      const suffix = after || page.next ? ' - ' + String(part).padStart(2,'0') : '';
+      const result = await exportFile(u,'ED Copilot Fittings'+suffix,JSON.stringify(page.fits.map(fit=>fit.build)));
+      if (result?.cancelled || model(C)!==r) return;
+      after = page.next;
+      revision = page.revision;
+      part++;
+    } while (after);
   }
   function action(C,u,r,which,id) {
     if (r.busy) return;
     switch (which) {
       case 'retry': run(C,u,r,() => refresh(C,u,r)); return;
-      case 'materials-retry': r.materials = null; draw(C,u); return;
+      case 'materials': if (r.build) showMaterials(C,u,r); return;
+      case 'fleet': showFleet(C,u); return;
       case 'new':
         r.showNew = !r.showNew; draw(C,u,'#fit-new-ship'); return;
       case 'import':
@@ -585,6 +757,11 @@
       case 'edit-slot':
         r.slotKey = id; r.query = ''; r.limit = 30;
         draw(C,u,'#fit-module-search'); return;
+      case 'slot-group':
+        if (!moduleTabs.some(([kind])=>kind === id) || r.slotGroup === id) return;
+        r.slotGroup = id;
+        if (!filteredSlots(r,fitState(r).slots).some(slot=>slot.key === r.slotKey)) r.slotKey = '';
+        draw(C,u,'[data-fit-action="slot-group"][aria-pressed="true"]'); return;
       case 'close-slot': {
         const slot = r.slotKey;
         r.slotKey = ''; r.query = ''; draw(C,u);
@@ -621,25 +798,16 @@
           r.showImport = false; r.imported = null; r.importText = '';
           u.toast(u.t('Библиотека обновлена.'));
         }); return;
-      case 'current':
-        guard(C,u,r,async () => {
-          await refresh(C,u,r);
-          if (model(C)!==r) return;
-          if (!r.observed) throw new Error('В журнале пока нет оснащения текущего корабля.');
-          install(r,u,engine().fromLoadout(r.observed));
-        }); return;
       case 'save': case 'copy':
         run(C,u,r,() => save(C,u,r,which==='copy')); return;
       case 'export':
         run(C,u,r,() => {
           const {build,name} = record(r.build,r.name,r.cfg);
-          return exportFile(u,name,engine().export(build,(engine().supportsCoriolis?.(build) === false && r.exportFormat === 'coriolis') ? 'native' : r.exportFormat));
+          const format = engine().supportsCoriolis?.(build) === false && r.exportFormat === 'coriolis' ? 'native' : r.exportFormat;
+          return exportFile(u,name,engine().export(build,format,C.state?.app?.version));
         }); return;
       case 'export-library':
-        run(C,u,r,async () => {
-          const {fits} = await request(r,u,'ship-fits-export');
-          if (model(C)===r) await exportFile(u,'ED Copilot Fittings',JSON.stringify(fits.map(fit=>fit.build)));
-        }); return;
+        run(C,u,r,() => exportLibrary(C,u,r)); return;
       case 'link':
         run(C,u,r,async () => {
           const {build} = record(r.build,r.name,r.cfg);
@@ -652,6 +820,7 @@
           await request(r,u,'ship-fit-delete',{id:fitId});
           if (model(C)!==r) return;
           r.id = undefined;
+          r.dirty = true;
           await refresh(C,u,r);
         }};
         draw(C,u,'[data-fit-action="cancel"]'); return;
@@ -703,7 +872,7 @@
     switch (field.id) {
       case 'fit-library': {
         const id = field.value;
-        if (!id) return;
+        if (!id || id === r.id) return;
         field.value = r.id || '';
         guard(C,u,r,async () => {
           const {fit} = await request(r,u,'ship-fit-get',{id});
@@ -731,11 +900,13 @@
     }
     if (field.dataset.fitCondition) {
       const amount = Math.min(Number(field.max),Math.max(0,Number(field.value)||0));
+      field.value = String(amount);
       configure(C,u,r,{[field.dataset.fitCondition]:amount},'#'+field.id);
       return;
     }
     if (field.dataset.fitPip) {
       const amount = Math.min(4,Math.max(0,Math.round(Number(field.value)*2)/2 || 0));
+      field.value = String(amount);
       configure(C,u,r,redistribute(r,field.dataset.fitPip,amount),'#'+field.id);
       return;
     }
@@ -756,6 +927,7 @@
     const host = active(C) && u.$('#ship-fits');
     if (!host || !engine()) return;
     const r = model(C);
+    void loadSchematic(C,u,r);
     void loadMaterials(C,u,r);
     if (host.fitBound) return;
     host.fitBound = true;
@@ -783,9 +955,12 @@
     if (!r.loaded && !r.busy && !r.error) run(C,u,r,() => refresh(C,u,r));
   }
 
-  function refreshMaterials(C,u) {
-    if (active(C)) void loadMaterials(C,u,model(C));
+  function refreshTelemetry(C,u) {
+    if (!active(C)) return;
+    void loadMaterials(C,u,model(C));
+    const fleet = u.$('#fit-fleet');
+    if (fleet && fleet.fitFleetRevision !== fleetRevision(C)) void loadFleet(C,u,fleet);
   }
 
-  window.EDCopilotShipFits = {active,render,attach,init:attach,refreshMaterials};
+  window.EDCopilotShipFits = {active,render,attach,init:attach,refreshTelemetry};
 })();

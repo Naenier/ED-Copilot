@@ -58,6 +58,8 @@ var modernPreviewNames = map[string]bool{
 	"readme-deals-filters": true, "readme-farming-catalog": true, "readme-politics": true,
 	"readme-exo-planets": true, "readme-exo-samples": true,
 	"readme-galaxy": true, "readme-system": true, "readme-engineering": true, "readme-material-exchange": true, "readme-material": true,
+	"readme-road-to-riches": true, "readme-nearest": true, "readme-app-log": true,
+	"readme-ship-fitting": true, "readme-ship-fitting-materials": true, "readme-ship-fitting-fleet": true,
 }
 
 type modernPreviewCapture struct {
@@ -80,7 +82,11 @@ func (m *modernShell) capturePreview(id, name string) error {
 	if m.closed || m.core == nil || !m.ready {
 		return errors.New("Интерфейс не готов к снимку")
 	}
-	if len(m.captures) >= 32 {
+	limit := 32
+	if m.owner.options.ReadmeScreenshots {
+		limit = 40
+	}
+	if len(m.captures) >= limit {
 		return errors.New("Достигнут предел снимков изолированной проверки")
 	}
 	if source, err := m.core.GetSource(); err != nil || !trustedWebSource(source) {
@@ -212,6 +218,8 @@ func (m *modernShell) smokeVisualState(report M) {
 			"readme-colonization", "readme-academy", "exobiology",
 			"readme-deals-filters", "readme-farming-catalog", "readme-politics",
 			"readme-exo-planets", "readme-exo-samples",
+			"readme-road-to-riches", "readme-nearest", "readme-app-log",
+			"readme-ship-fitting", "readme-ship-fitting-materials", "readme-ship-fitting-fleet",
 		}
 	}
 	for _, name := range required {

@@ -1,15 +1,20 @@
-/* System-name combobox for the bounded Spansh and EDSM lookup. */
+/* Journal-compatible system and faction names from the bounded lookup. */
 (() => {
   'use strict';
   const singleNames = new Set(['system','sourceSystem','destinationSystem','originSystem','targetSystem']);
   const listNames = new Set(['waypoints','refuelSystems']);
   const inlineIds = new Set(['colony-workspace-origin','reference-market-system']);
+  const subjects = new Map([
+    ['faction',{label:['Малые фракции','Minor factions'],loading:['Ищем фракции…','Searching factions…'],empty:['Фракция не найдена.','Faction not found.']}],
+    ['station',{label:['Станции','Stations'],loading:['Ищем станции…','Searching stations…'],empty:['Станция не найдена.','Station not found.']}],
+    ['body',{label:['Небесные тела','Celestial bodies'],loading:['Ищем небесные тела…','Searching celestial bodies…'],empty:['Небесное тело не найдено.','Celestial body not found.']}],
+  ]);
   const minimum = 3, delay = 300;
   function fieldMode(node) {
     if (!node || !['INPUT','TEXTAREA'].includes(String(node.tagName).toUpperCase()) || node.disabled || node.readOnly) return '';
     const explicit = node.dataset?.systemSearch;
     if (explicit === 'off') return '';
-    if (explicit === 'lines' || explicit === 'single') return explicit;
+    if (explicit === 'lines' || explicit === 'single' || subjects.has(explicit)) return explicit;
     const name = node.name || node.getAttribute?.('name') || '';
     if (String(node.tagName).toUpperCase() === 'TEXTAREA') return listNames.has(name) ? 'lines' : '';
     if (singleNames.has(name) || inlineIds.has(node.id)) return 'single';
@@ -85,13 +90,14 @@
       popup.style.top = (below >= Math.min(height,230) ? rect.bottom + 6 : Math.max(12,rect.top-height-6))+'px';
     }
     function message() {
-      if (status === 'loading') return text('Ищем системы…','Searching systems…');
+      const subject = subjects.get(fieldMode(node));
+      if (status === 'loading') return subject ? text(...subject.loading) : text('Ищем системы…','Searching systems…');
       if (status === 'too-short') return text('Введите не менее {count} символов','Enter at least {count} characters',{count:minimum});
       if (status === 'rate-limited') return text('Сервис временно ограничил запросы. Повторите через {count} с.','The service has temporarily limited requests. Try again in {count}s.',{count:Math.max(1,Math.ceil(Number(result?.retryAfterMs || 30000)/1000))});
       if (status === 'disabled') return text('Сетевой поиск отключён. Название можно ввести вручную.','Online search is disabled. You can enter the name manually.');
       if (status === 'error') return text('Не удалось получить подсказки. Можно повторить поиск или ввести название вручную.','Suggestions could not be loaded. Retry or enter the name manually.');
-      if (status === 'empty' && result?.limited) return text('Уточните название системы.','Refine the system name.');
-      if (status === 'empty') return text('Подходящая система не найдена. Проверьте написание или уточните название.','No matching system was found. Check the spelling or refine the name.');
+      if (status === 'empty' && result?.limited) return subject ? text('Уточните название.','Refine the name.') : text('Уточните название системы.','Refine the system name.');
+      if (status === 'empty') return subject ? text(...subject.empty) : text('Подходящая система не найдена. Проверьте написание или уточните название.','No matching system was found. Check the spelling or refine the name.');
       return text('Найдено вариантов: {count}','Suggestions found: {count}',{count:suggestions.length});
     }
     function render() {
@@ -104,7 +110,8 @@
         : fieldMode(node)==='lines'
           ? text('Выбор заменит только текущую строку.','Selection replaces only the current line.')
           : text('Enter — выбрать · Esc — закрыть','Enter to select · Esc to close');
-      popup.innerHTML = `<div class="system-search-status ${status === 'error' ? 'is-error' : ''}" id="${popupID}-status" role="status" aria-live="polite">${esc(message())}${retry?`<button type="button" data-system-retry>${esc(text('Повторить','Retry'))}</button>`:''}</div><div class="system-search-list" id="${popupID}-list" role="listbox" aria-label="${esc(text('Звёздные системы','Star systems'))}">${suggestions.map((item,i)=>`<div class="system-search-option ${i===selected?'is-selected':''}" role="option" aria-selected="${i===selected}" id="${popupID}-option-${i}" data-system-option="${i}"><strong>${esc(item.name)}</strong>${item.match==='correction'?`<span>${esc(text('Возможно, вы имели в виду','Did you mean'))}</span>`:''}</div>`).join('')}</div><div class="system-search-footer"><span>${esc(hint)}</span><span>${source}</span></div>`;
+      const label = text(...(subjects.get(fieldMode(node))?.label || ['Звёздные системы','Star systems']));
+      popup.innerHTML = `<div class="system-search-status ${status === 'error' ? 'is-error' : ''}" id="${popupID}-status" role="status" aria-live="polite">${esc(message())}${retry?`<button type="button" data-system-retry>${esc(text('Повторить','Retry'))}</button>`:''}</div><div class="system-search-list" id="${popupID}-list" role="listbox" aria-label="${esc(label)}">${suggestions.map((item,i)=>`<div class="system-search-option ${i===selected?'is-selected':''}" role="option" aria-selected="${i===selected}" id="${popupID}-option-${i}" data-system-option="${i}"><strong>${esc(item.name)}</strong>${item.match==='correction'?`<span>${esc(text('Возможно, вы имели в виду','Did you mean'))}</span>`:''}</div>`).join('')}</div><div class="system-search-footer"><span>${esc(hint)}</span><span>${source}</span></div>`;
       if (selected >= 0) node.setAttribute('aria-activedescendant',popupID+'-option-'+selected); else node.removeAttribute('aria-activedescendant');
       position(); if (selected >= 0) popup.querySelector?.('[data-system-option="'+selected+'"]')?.scrollIntoView?.({block:'nearest'});
     }
@@ -124,7 +131,10 @@
         if (token !== epoch) return;
         if (!connected(element)) { close(); return; }
         if (activePart(element).signature !== part.signature) return;
-        const request = {query:part.query,fieldId:identity(element),sequence:++sequence,limit:20}; current = request;
+        const request = {query:part.query,fieldId:identity(element),sequence:++sequence,limit:20};
+        const mode = fieldMode(element);
+        if (subjects.has(mode)) request.kind = mode;
+        current = request;
         try {
           const response = await u.call('system-search',request);
           if (token !== epoch) return;

@@ -214,8 +214,10 @@ func main() {
 			return
 		}
 	}
+	nativeStarted := time.Now()
 	err = nativeui.Run(controller, nativeui.Options{Smoke: *smoke || *readmeScreens, Demo: *demo, SmokeReport: *report, ReadmeScreenshots: *readmeScreens, SmokeFixture: smokeFixture, Soak: soakFixture})
 	if err != nil {
+		engine.RecordOperation("ui", "window.run", nativeStarted, nil, err)
 		saveErr := engine.CloseWithSave()
 		if *smoke || *readmeScreens || *soak != 0 {
 			b, _ := json.MarshalIndent(v.M{"ok": false, "version": app.Version, "problems": []string{err.Error()}}, "", "  ")

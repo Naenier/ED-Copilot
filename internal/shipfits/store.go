@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -17,9 +18,10 @@ import (
 )
 
 const (
-	maxBuildBytes = 64 << 10
-	maxBatchBytes = 768 << 10
-	maxBatchFits  = 1000
+	maxBuildBytes  = 64 << 10
+	maxBatchBytes  = 768 << 10
+	maxExportBytes = 512 << 10
+	maxBatchFits   = 1000
 )
 
 var (
@@ -27,6 +29,7 @@ var (
 	errMissingFit = errors.New("Сборка не найдена.")
 	errBatchSize  = errors.New("Слишком много сборок для одного импорта или экспорта.")
 	errDatabase   = errors.New("Не удалось открыть или обновить базу сборок.")
+	errExportPage = errors.New("Библиотека сборок изменилась. Начните экспорт заново.")
 	bucketName    = []byte("ship-fits-v1")
 )
 
@@ -97,27 +100,18 @@ func (s Store) Get(id string) (out Record, err error) {
 	return
 }
 
-func (s Store) List(includeBuild bool) ([]Record, error) {
+func (s Store) List() ([]Record, error) {
 	out := []Record{}
-	total := 0
 	err := s.transact(false, func(b *bolt.Bucket) error {
 		if b == nil {
 			return nil
 		}
 		return b.ForEach(func(_, data []byte) error {
 			var fit Record
-			if includeBuild {
-				total += len(data)
-				if total > maxBatchBytes || len(out) == maxBatchFits {
-					return errBatchSize
-				}
-			}
 			if err := json.Unmarshal(data, &fit); err != nil {
 				return errDatabase
 			}
-			if !includeBuild {
-				fit.Build = nil
-			}
+			fit.Build = nil
 			out = append(out, fit)
 			return nil
 		})
@@ -135,6 +129,61 @@ func (s Store) List(includeBuild bool) ([]Record, error) {
 		return strings.Compare(a.ID, b.ID)
 	})
 	return out, nil
+}
+
+type ExportPage struct {
+	Fits     []Record
+	Next     string
+	Revision string
+}
+
+// Export reads a page small enough to reimport in one transaction. The cursor
+// follows the underlying bbolt keys and the transaction ID detects writes
+// between requests before a page can silently skip or duplicate a fit.
+func (s Store) Export(after, revision string) (ExportPage, error) {
+	page := ExportPage{Fits: []Record{}}
+	if after != "" && (!validID(after) || revision == "") {
+		return page, errExportPage
+	}
+	err := s.transact(false, func(b *bolt.Bucket) error {
+		if b == nil {
+			if revision != "" {
+				return errExportPage
+			}
+			return nil
+		}
+		page.Revision = strconv.Itoa(b.Tx().ID())
+		if revision != "" && revision != page.Revision {
+			return errExportPage
+		}
+		cursor := b.Cursor()
+		key, payload := cursor.First()
+		if after != "" {
+			key, payload = cursor.Seek([]byte(after))
+			if string(key) != after {
+				return errExportPage
+			}
+			key, payload = cursor.Next()
+		}
+		var bytes int
+		for ; key != nil; key, payload = cursor.Next() {
+			if payload == nil || len(payload) > maxExportBytes {
+				return errDatabase
+			}
+			if len(page.Fits) == maxBatchFits || bytes+len(payload) > maxExportBytes {
+				page.Next = page.Fits[len(page.Fits)-1].ID
+				break
+			}
+			var fit Record
+			if err := json.Unmarshal(payload, &fit); err != nil || fit.ID != string(key) {
+				return errDatabase
+			}
+			page.Fits = append(page.Fits, fit)
+			bytes += len(payload)
+		}
+		return nil
+	})
+	return page, err
 }
 
 func (s Store) Save(fit Record) (Record, error) {

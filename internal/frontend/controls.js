@@ -24,10 +24,11 @@ function local(C) {
 }
 function active(C) {return C?.tab==='settings'&&local(C).tab==='controls';}
 function tabTitle() {return window.CopilotI18n?.language==='en'?'Controls':'Управление';}
+const settingsTabs={general:'Общие настройки',controls:'Управление',diagnostics:'Журнал приложения'};
 function tabs(C,u) {
   return `<nav class="segmented controls-settings-tabs" aria-label="${th(u,'Разделы настроек')}">
-    ${['general','controls'].map(id=>`<button type="button" data-click="controls-tab" data-tab="${id}"
-      class="${local(C).tab===id?'selected':''}"${local(C).tab===id?' aria-current="page"':''}>${id==='controls'?u.esc(tabTitle()):th(u,'Общие настройки')}</button>`).join('')}
+    ${Object.entries(settingsTabs).map(([id,label])=>`<button type="button" data-click="controls-tab" data-tab="${id}"
+      class="${local(C).tab===id?'selected':''}"${local(C).tab===id?' aria-current="page"':''}>${id==='controls'?u.esc(tabTitle()):th(u,label)}</button>`).join('')}
   </nav>`;
 }
 const contextOf=action=>{
@@ -521,7 +522,7 @@ async function mutate(C,u,body,message,close=true) {
 async function handle(action,node,C,u) {
   const l=local(C), detail=profile(C), name=action.slice('controls-'.length);
   if(name==='tab') {
-    l.tab=node.dataset.tab==='controls'?'controls':'general';
+    l.tab=Object.hasOwn(settingsTabs,node.dataset.tab)?node.dataset.tab:'general';
     if(l.tab==='controls'&&!l.loading) {
       const pending=refresh(C,u);
       u.renderPage();

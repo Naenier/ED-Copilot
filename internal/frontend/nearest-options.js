@@ -421,22 +421,92 @@ window.NearestOptions = {
     "Vulture"
   ],
   "stationTypes": [
-    "Asteroid base",
-    "Coriolis Starport",
-    "Dockable Planet Station",
-    "Dodec Starport",
-    "Drake-Class Carrier",
-    "Mega ship",
-    "Ocellus Starport",
-    "Orbis Starport",
-    "Outpost",
-    "Planetary Construction Depot",
-    "Planetary Outpost",
-    "Planetary Port",
-    "Settlement",
-    "Space Construction Depot",
-    "Surface Settlement"
+    ["orbital-starports", "Все орбитальные порты", ["Starport", "Orbital", "станция"], "Орбитальные порты"],
+    ["Coriolis Starport", "Кориолис", ["Starport (Coriolis)", "Кориолис"], "Орбитальные порты"],
+    ["Orbis Starport", "Орбис", ["Starport (Orbis)"], "Орбитальные порты"],
+    ["Ocellus Starport", "Оцеллус", ["Starport (Ocellus)", "Оцелус"], "Орбитальные порты"],
+    ["Dodec Starport", "Додек", ["Starport (Dodec)", "додекаэдр"], "Орбитальные порты"],
+    ["Asteroid base", "База в астероиде", ["Starport (Asteroid Base)", "астероидная"], "Орбитальные порты"],
+    ["orbital-installations", "Орбитальные установки", ["Installation", "Орбитальная установка", "Orbital Installation"], "Орбитальные порты"],
+    ["Outpost", "Все орбитальные аванпосты", ["Outpost", "пост"], "Орбитальные аванпосты"],
+    ["civilian-outposts", "Гражданские аванпосты", ["Outpost (Civilian)", "Agriculture", "Tourism"], "Аванпосты по профилю"],
+    ["commercial-outposts", "Торговые аванпосты", ["Outpost (Commercial)", "коммерческий", "Service"], "Аванпосты по профилю"],
+    ["industrial-outposts", "Промышленные аванпосты", ["Outpost (Industrial)", "Refinery"], "Аванпосты по профилю"],
+    ["military-outposts", "Военные аванпосты", ["Outpost (Military)"], "Аванпосты по профилю"],
+    ["mining-outposts", "Добывающие аванпосты", ["Outpost (Mining)", "шахтёрский", "Extraction"], "Аванпосты по профилю"],
+    ["scientific-outposts", "Научные аванпосты", ["Outpost (Scientific)", "исследовательский", "High Tech"], "Аванпосты по профилю"],
+    ["anarchy-outposts", "Аванпосты с анархией", ["Outpost (Unsanctioned)", "криминальный", "пиратский"], "Аванпосты по профилю"],
+    ["surface-all", "Все наземные объекты", ["Surface", "Planetary", "Ground"], "Наземные порты и поселения"],
+    ["surface-ports", "Все наземные порты", ["Surface Port", "Ground Port"], "Наземные порты и поселения"],
+    ["Planetary Port", "Планетарный порт", ["Planetary Port", "Surface Port"], "Наземные порты и поселения"],
+    ["Planetary Outpost", "Наземный аванпост", ["Planetary Outpost", "Surface Outpost"], "Наземные порты и поселения"],
+    ["Dockable Planet Station", "Наземная станция с посадкой", ["Dockable Planet Station", "порт"], "Наземные порты и поселения"],
+    ["odyssey-settlements", "Поселения Odyssey", ["Settlement", "Odyssey", "поселение"], "Наземные порты и поселения"],
+    ["agricultural-settlements", "Сельскохозяйственные поселения", ["Settlement (Agriculture)", "ферма"], "Поселения по профилю"],
+    ["industrial-settlements", "Промышленные поселения", ["Settlement (Industrial)", "Refinery"], "Поселения по профилю"],
+    ["mining-settlements", "Добывающие поселения", ["Settlement (Extraction)", "Mining"], "Поселения по профилю"],
+    ["military-settlements", "Военные поселения", ["Settlement (Military)"], "Поселения по профилю"],
+    ["scientific-settlements", "Научные поселения", ["Settlement (Science)", "High Tech"], "Поселения по профилю"],
+    ["tourism-settlements", "Туристические поселения", ["Settlement (Tourism)"], "Поселения по профилю"],
+    ["construction-depots", "Все строительные площадки", ["Construction Depot", "колонизация"], "Строительные площадки"],
+    ["Space Construction Depot", "Орбитальная строительная площадка", ["Space Construction Depot", "Orbital Construction"], "Строительные площадки"],
+    ["Planetary Construction Depot", "Планетарная строительная площадка", ["Planetary Construction Depot", "Surface Construction"], "Строительные площадки"],
+    ["mobile-ports", "Дрейки и мегакорабли", ["Ships", "Carriers", "Mobile Ports"], "Корабли"],
+    ["Drake-Class Carrier", "Флотоносец класса «Дрейк»", ["Fleet Carrier", "Drake", "носитель"], "Корабли"],
+    ["stronghold-carriers", "Флотоносец оплота", ["Stronghold Carrier", "Powerplay", "носитель укрепления"], "Корабли"],
+    ["Mega ship", "Все мегакорабли", ["Mega ship", "Megaship", "суперкорабль"], "Корабли"],
+    ["dockable-megaships", "Мегакорабли с посадкой", ["Dockable Megaship", "суперкорабль"], "Корабли"],
+    ["scannable-megaships", "Сканируемые мегакорабли", ["Scannable Megaship", "суперкорабль"], "Корабли"],
+    ["rescue-megaships", "Спасательные мегакорабли", ["Rescue Ship", "эвакуация"], "Корабли"],
+    ["prison-megaships", "Тюремные мегакорабли", ["Prison Ship", "Detention Centre"], "Корабли"],
+    ["military-megaships", "Военные мегакорабли", ["Military Megaship", "военный суперкорабль"], "Корабли"],
+    ["thargoid-titans", "Титаны таргоидов · обломки", ["Thargoid Titan", "Titan Debris", "торгоидский титан"], "Таргоиды"]
   ],
+  "stationTerms": {
+    "Asteroid base": "База в астероиде",
+    "Dockable Planet Station": "Наземная станция с посадкой",
+    "Dodec Starport": "Орбитальная станция «Додек»",
+    "Drake-Class Carrier": "Флотоносец класса «Дрейк»",
+    "Mega ship": "Мегакорабль",
+    "Installation": "Орбитальная установка",
+    "Scannable Megaship": "Сканируемый мегакорабль",
+    "Thargoid Titan": "Титан таргоидов · обломки",
+    "Rescue Megaship": "Спасательный мегакорабль",
+    "Prison Megaship": "Тюремный мегакорабль",
+    "Planetary Construction Depot": "Планетарная строительная площадка",
+    "Space Construction Depot": "Орбитальная строительная площадка",
+    "Surface Settlement": "Наземное поселение",
+    "Autodock": "Автоматическая стыковка",
+    "Bartender": "Бармен",
+    "Construction Services": "Услуги строительства",
+    "Contacts": "Контакты",
+    "Dock": "Посадка и стыковка",
+    "Fleet Carrier Management": "Управление флотоносцем",
+    "Fleet Carrier Vendor": "Продажа флотоносцев",
+    "Flight Controller": "Диспетчер полётов",
+    "Livery": "Внешний вид",
+    "Missions": "Доска миссий",
+    "Missions Generated": "Генерация миссий",
+    "On Dock Mission": "Миссии при стыковке",
+    "Powerplay": "Контакт державы",
+    "Redemption Office": "Бюро вознаграждений",
+    "Refinery Contact": "Контакт переработки",
+    "Search and Rescue": "Поиск и спасение",
+    "Shop": "Магазины",
+    "Social Space": "Зал станции",
+    "Squadron Bank": "Банк эскадрильи",
+    "Station Menu": "Меню станции",
+    "Station Operations": "Операции станции",
+    "System Colonisation": "Колонизация систем",
+    "Tuning": "Настройка",
+    "Engineer": "Инженер",
+    "Frontline Solutions": "Фронтлайн Солюшнс",
+    "Megaconstruction": "Мегастроительство",
+    "Private Enterprise": "Частное предприятие",
+    "Private Ownership": "Частная собственность",
+    "Rescue": "Спасательные операции",
+    "Thargoid": "Таргоиды"
+  },
   "subtype": [
     "A (Blue-White super giant) Star",
     "A (Blue-White) Star",
@@ -746,3 +816,141 @@ window.NearestOptions = {
     "Water-rich"
   ]
 };
+
+// Keep Spansh's exact filter values while grouping and translating them for the picker.
+(() => {
+  const o = window.NearestOptions;
+  const planetLabels = {
+    'Ammonia world':'Аммиачный мир',
+    'Earth-like world':'Землеподобный мир',
+    'Water world':'Водный мир',
+    'Class I gas giant':'Газовый гигант класса I',
+    'Class II gas giant':'Газовый гигант класса II',
+    'Class III gas giant':'Газовый гигант класса III',
+    'Class IV gas giant':'Газовый гигант класса IV',
+    'Class V gas giant':'Газовый гигант класса V',
+    'Gas giant with ammonia-based life':'Газовый гигант с аммиачной жизнью',
+    'Gas giant with water-based life':'Газовый гигант с водной жизнью',
+    'Helium gas giant':'Гелиевый газовый гигант',
+    'Helium-rich gas giant':'Газовый гигант, богатый гелием',
+    'High metal content world':'Мир с высоким содержанием металлов',
+    'Icy body':'Ледяное тело',
+    'Metal-rich body':'Тело, богатое металлами',
+    'Rocky Ice world':'Каменисто-ледяной мир',
+    'Rocky body':'Каменистое тело',
+    'Water giant':'Водный гигант',
+  };
+  const starLabels = {
+    'A (Blue-White super giant) Star':'Бело-голубой сверхгигант (A)',
+    'A (Blue-White) Star':'Бело-голубая звезда (A)',
+    'B (Blue-White super giant) Star':'Бело-голубой сверхгигант (B)',
+    'B (Blue-White) Star':'Бело-голубая звезда (B)',
+    'Black Hole':'Чёрная дыра',
+    'C Star':'Углеродная звезда (C)',
+    'CJ Star':'Углеродная звезда (CJ)',
+    'CN Star':'Углеродная звезда (CN)',
+    'F (White super giant) Star':'Белый сверхгигант (F)',
+    'F (White) Star':'Белая звезда (F)',
+    'G (White-Yellow super giant) Star':'Бело-жёлтый сверхгигант (G)',
+    'G (White-Yellow) Star':'Бело-жёлтая звезда (G)',
+    'Herbig Ae/Be Star':'Звезда Хербига Ae/Be',
+    'K (Yellow-Orange giant) Star':'Жёлто-оранжевый гигант (K)',
+    'K (Yellow-Orange) Star':'Жёлто-оранжевая звезда (K)',
+    'L (Brown dwarf) Star':'Коричневый карлик (L)',
+    'M (Red dwarf) Star':'Красный карлик (M)',
+    'M (Red giant) Star':'Красный гигант (M)',
+    'M (Red super giant) Star':'Красный сверхгигант (M)',
+    'MS-type Star':'Звезда спектрального класса MS',
+    'Neutron Star':'Нейтронная звезда',
+    'O (Blue-White) Star':'Бело-голубая звезда (O)',
+    'S-type Star':'Звезда спектрального класса S',
+    'Supermassive Black Hole':'Сверхмассивная чёрная дыра',
+    'T (Brown dwarf) Star':'Коричневый карлик (T)',
+    'T Tauri Star':'Звезда типа T Тельца',
+    'Wolf-Rayet Star':'Звезда Вольфа — Райе',
+    'Y (Brown dwarf) Star':'Коричневый карлик (Y)',
+  };
+  const atmosphereLabels = {
+    'Ammonia':'аммиак',
+    'Ammonia and Oxygen':'аммиак и кислород',
+    'Ammonia-rich':'богатая аммиаком',
+    'Argon':'аргон',
+    'Argon-rich':'богатая аргоном',
+    'Carbon dioxide':'углекислый газ',
+    'Carbon dioxide-rich':'богатая углекислым газом',
+    'Helium':'гелий',
+    'Metallic vapour':'пары металлов',
+    'Methane':'метан',
+    'Methane-rich':'богатая метаном',
+    'Neon':'неон',
+    'Neon-rich':'богатая неоном',
+    'Nitrogen':'азот',
+    'No atmosphere':'нет атмосферы',
+    'Oxygen':'кислород',
+    'Silicate vapour':'пары силикатов',
+    'Suitable for water-based life':'пригодна для водной жизни',
+    'Sulphur dioxide':'диоксид серы',
+    'Water':'водяной пар',
+    'Water-rich':'богатая водяным паром',
+  };
+  const volcanoLabels = {
+    'Ammonia Magma':'Аммиачная магма',
+    'Carbon Dioxide Geysers':'Гейзеры углекислого газа',
+    'Metallic Magma':'Металлическая магма',
+    'Methane Magma':'Метановая магма',
+    'Nitrogen Magma':'Азотная магма',
+    'No volcanism':'Без вулканизма',
+    'Rocky Magma':'Каменная магма',
+    'Silicate Vapour Geysers':'Силикатные гейзеры',
+    'Water Geysers':'Водяные гейзеры',
+    'Water Magma':'Водная магма',
+  };
+  function groupOptions(values, classify) {
+    const groups = new Map();
+    for (const value of values) {
+      const group = classify(value);
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push([value,value,value,group]);
+    }
+    return [...groups.values()].flat();
+  }
+  o.spaceLabels = {...planetLabels,...starLabels,
+    'Pilots Federation':'Федерация пилотов','Thargoid':'Таргоиды',
+    'Blight':'Мор','Drought':'Засуха','Infrastructure Failure':'Сбой инфраструктуры',
+    'Natural Disaster':'Стихийное бедствие','Pirate Attack':'Пиратское нападение',
+    'Public Holiday':'Праздник','Terrorist Attack':'Теракт',
+  };
+  o.starTypes = groupOptions(o.subtype.filter(value=>!Object.hasOwn(planetLabels,value)), value=>{
+    if (/White Dwarf/.test(value)) {
+      o.spaceLabels[value]='Белый карлик '+value.match(/\([^)]+\)/)[0];
+    } else if (/^Wolf-Rayet .+ Star$/.test(value) && value!=='Wolf-Rayet Star') {
+      o.spaceLabels[value]='Звезда Вольфа — Райе ('+value.slice(11,-5)+')';
+    }
+    if (/White Dwarf|Hole|Neutron/.test(value)) return 'Компактные объекты';
+    if (/Brown dwarf|Tauri|Herbig/.test(value)) return 'Коричневые карлики и протозвёзды';
+    if (/giant\)/.test(value)) return 'Гиганты и сверхгиганты';
+    if (/^[ABFGKMO] \(/.test(value)) return 'Звёзды главной последовательности';
+    return 'Углеродные звёзды, класс S и Вольфа — Райе';
+  });
+  o.planetTypes = groupOptions(o.subtype.filter(value=>Object.hasOwn(planetLabels,value)), value=>{
+    if (/giant/i.test(value)) return 'Планеты-гиганты';
+    if (/Ammonia world|Earth-like world|Water world/.test(value)) return 'Водные, аммиачные и землеподобные миры';
+    return 'Твёрдые планеты и луны';
+  });
+  o.atmosphereTypes = groupOptions(o.atmosphere,value=>{
+    const [qualifier,group] = [
+      ['Hot thick ','Горячая плотная атмосфера'],['Hot thin ','Горячая разреженная атмосфера'],
+      ['Hot ','Горячая атмосфера'],['Thick ','Плотная атмосфера'],['Thin ','Разреженная атмосфера'],
+    ].find(([prefix])=>value.startsWith(prefix)) || ['', 'Состав атмосферы'];
+    const composition = atmosphereLabels[value.slice(qualifier.length)];
+    if (composition) o.spaceLabels[value] = (qualifier ? group+' · '+composition : composition[0].toUpperCase()+composition.slice(1));
+    return value==='No atmosphere' ? '' : group;
+  });
+  o.volcanismTypes = groupOptions(o.volcanism,value=>{
+    const intensity = value.startsWith('Major ') ? 'Сильный вулканизм' : value.startsWith('Minor ') ? 'Слабый вулканизм' : '';
+    const subtype = value.replace(/^(Major|Minor) /,'');
+    const label = volcanoLabels[subtype] || subtype;
+    o.spaceLabels[value] = intensity ? label+' · '+intensity.toLowerCase() : label;
+    return intensity || (value==='No volcanism' ? '' : 'Виды вулканизма');
+  });
+})();

@@ -53,10 +53,14 @@ func TestCommanderJournalObservationsRebuildWithoutPersistedDuplicateState(t *te
 		commanderEvent("StoredModules", at, M{"Items": []M{{"StorageSlot": 7, "Name": "int_hyperdrive_size6_class5", "Name_Localised": "6A Frame Shift Drive"}}}),
 		commanderEvent("Materials", at, M{"Raw": []M{{"Name": "iron", "Count": 10}}, "Manufactured": []M{}, "Encoded": []M{}}),
 		commanderEvent("Reputation", at, M{"Empire": 0}),
-		commanderEvent("ShipLocker", at, M{"Items": []M{{"Name": "healthpack", "Count": 2}}, "Data": []M{}}),
+		commanderEvent("ShipLocker", at, M{"Consumables": []M{{"Name": "$healthpack_name;", "Name_Localised": "Medkit", "Count": 2}}, "Data": []M{}}),
 	})
 	e.Reader.Poll()
 	before := e.SnapshotForUI("commander")["commanderProfile"]
+	rows := v.Rows(v.At(v.Obj(before), "inventory", "shipLocker", "consumables", "entries"))
+	if len(rows) != 1 || rows[0]["name"] != "Аптечка" || rows[0]["english"] != "Medkit" {
+		t.Fatal("commander inventory did not resolve game names by symbol", rows)
+	}
 	if err := e.Save(); err != nil {
 		t.Fatal(err)
 	}

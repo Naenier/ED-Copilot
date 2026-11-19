@@ -18,6 +18,10 @@ version source; Windows resources are generated from it. The checked-in resource
 JSON is a template. `-SkipTests` is for investigation and produces a manifest
 that cannot pass release validation.
 
+Before preparing a release, follow [the testing guide](TESTING.md) for coverage
+analysis and synthetic README captures. Keep the English and Russian README
+galleries and their SHA256 manifests together in the source commit.
+
 ## Publish source, then deliver automatically
 
 Set `app.Version` and add `docs/RELEASE-{version}.md`. Push the source commit with
@@ -95,8 +99,9 @@ Downgrades are refused. Published versions are immutable: changed source needs
 a new version.
 
 Backups, verified packages and `delivery-last.json` are stored under
-`%LOCALAPPDATA%\ED Copilot Delivery`. Critical commander files are backed up and
-hashed after clean exit. Volatile WebView2 caches and updater bookkeeping are
+`%LOCALAPPDATA%\ED Copilot Delivery`. Critical profile files, including
+`ship-fits.db` when present, are backed up and hashed after clean exit.
+Volatile WebView2 caches and updater bookkeeping are
 excluded from this checkpoint; credentials are neither decrypted nor logged.
 The script does not force a reboot or launch the normal game-connected session.
 

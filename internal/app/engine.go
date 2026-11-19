@@ -9,6 +9,7 @@ import (
 	"github.com/Naenier/ED-Copilot/internal/colonization"
 	"github.com/Naenier/ED-Copilot/internal/commander"
 	"github.com/Naenier/ED-Copilot/internal/controls"
+	"github.com/Naenier/ED-Copilot/internal/diagnostics"
 	"github.com/Naenier/ED-Copilot/internal/edsm"
 	"github.com/Naenier/ED-Copilot/internal/engineering"
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
@@ -43,7 +44,7 @@ import (
 
 type M = v.M
 
-const Version = "2.8.20"
+const Version = "2.9.0"
 
 type Options struct {
 	DataDir, JournalDir            string
@@ -60,6 +61,7 @@ type Engine struct {
 	domainMu                                        sync.Mutex
 	saveMu                                          sync.Mutex
 	opts                                            Options
+	diagnostics                                     *diagnostics.Store
 	ctx                                             context.Context
 	cancel                                          context.CancelFunc
 	Reader                                          *journal.Reader
@@ -123,13 +125,23 @@ type Engine struct {
 	frontierAuto                                    *frontierAutomatic
 }
 
-func New(o Options) (*Engine, error) {
+func New(o Options) (_ *Engine, failure error) {
+	started := time.Now()
 	if o.DataDir == "" {
 		o.DataDir = profile.DefaultDir()
 	}
 	if e := os.MkdirAll(o.DataDir, 0700); e != nil {
 		return nil, e
 	}
+	store := diagnostics.New(filepath.Join(o.DataDir, "logs"))
+	store.Log(diagnostics.Info, "app", "startup.begin", "Запуск приложения"+diagnosticSeparator+Version)
+	defer func() {
+		level, message := diagnostics.Info, "Приложение инициализировано"
+		if failure != nil {
+			level, message = diagnostics.Error, "Не удалось запустить приложение"
+		}
+		store.Log(level, "app", "startup.complete", fmt.Sprintf("%s%s%d ms", message, diagnosticSeparator, time.Since(started).Milliseconds()))
+	}()
 	saved, e := profile.LoadSettings(o.DataDir)
 	if e != nil {
 		return nil, e
@@ -143,6 +155,7 @@ func New(o Options) (*Engine, error) {
 	discoverControlDirectories(&o)
 	ctx, cancel := context.WithCancel(context.Background())
 	x := &Engine{opts: o, ctx: ctx, cancel: cancel, settings: M{"minTier": "medium", "method": "all", "radiusLy": 50, "maxArrivalLs": 10000, "minLaserPercent": 15, "hideDepleted": true, "overlayEnabled": true, "activity": "flight"}, manualPrices: v.Copy(v.Obj(saved["manualPrices"])), prices: M{}, cargoSync: M{}, statsSince: v.Str(saved["statsSince"]), network: map[string]M{}, cancelJobs: map[string]context.CancelFunc{}, jobIDs: map[string]uint64{}, updates: make(chan struct{}, 1)}
+	x.diagnostics = store
 	x.frontierAuto = newFrontierAutomatic()
 	x.controls = newControls(o)
 	x.surfaceNavigation.targets = restoreSurfaceTargets(v.Obj(saved["surfaceNavigationTargets"]))
@@ -170,13 +183,14 @@ func New(o Options) (*Engine, error) {
 	}
 	x.objectives = v.Rows(v.Clone(v.Rows(saved["objectives"])))
 	x.bookmarks = v.Rows(v.Clone(v.Rows(saved["bookmarks"])))
-	x.Colonies = colonization.New(v.Obj(saved["colonization"]))
+	x.Colonies = colonization.New(v.Obj(saved["colonization"]), colonization.WithHTTPClient(x.observedHTTP(nil, &http.Client{Timeout: 25 * time.Second})))
 	x.Engineering = engineering.New(v.Obj(saved["engineering"]))
 	x.Exobiology = exobiology.New(v.Obj(saved["exobiology"]))
 	x.Pilot = pilot.New()
 	x.CommanderProfile = commander.New()
 	x.Ranks = ranks.New(v.Obj(saved["ranks"]))
-	x.Politics = politics.New(v.Obj(saved["politics"]), politics.Options{HTTPClient: o.HTTPClient, DisableNetwork: o.DisableNetwork})
+	observedHTTP := x.observedHTTP(o.HTTPClient, nil)
+	x.Politics = politics.New(v.Obj(saved["politics"]), politics.Options{HTTPClient: observedHTTP, DisableNetwork: o.DisableNetwork})
 	x.Trading = trading.New(M{"tradePlan": saved["tradePlan"], "tradingDestination": saved["tradingDestination"], "savedTradeRoutes": saved["savedTradeRoutes"]})
 	x.tradeRuns = trading.NewLiveRoutes(saved["activeTradeRoutes"])
 	x.Carrier = carrier.New(v.Obj(saved["carrier"]))
@@ -190,16 +204,15 @@ func New(o Options) (*Engine, error) {
 		}
 	}
 	x.Route = carrier.NewRoutePlanner(routeSaved)
-	if o.HTTPClient != nil {
-		x.Route.Client = o.HTTPClient
-	}
+	defaultRouteClient, _ := x.Route.Client.(*http.Client)
+	x.Route.Client = x.observedHTTP(o.HTTPClient, defaultRouteClient)
 	x.Route.OnUpdate = func(M) { x.Notify() }
-	x.richesPlanner = riches.NewPlanner(o.HTTPClient)
+	x.richesPlanner = riches.NewPlanner(x.observedHTTP(o.HTTPClient, http.DefaultClient))
 	x.richesJourneys = restoreRichesJourneys(saved["richesRoutes"])
 	x.Mining = mining.New(v.Obj(saved["mining"]))
-	systemOptions := systems.Options{HTTPClient: o.HTTPClient}
+	systemOptions := systems.Options{HTTPClient: observedHTTP}
 	if !o.DisableNetwork {
-		x.EDSM = edsm.NewClient(o.HTTPClient)
+		x.EDSM = edsm.NewClient(x.observedHTTP(o.HTTPClient, &http.Client{Timeout: 8 * time.Second}))
 		systemOptions.EDSM = x.EDSM
 	}
 	x.Systems = systems.NewClient(systemOptions)
@@ -207,10 +220,17 @@ func New(o Options) (*Engine, error) {
 	var cacheErr error
 	x.onlineCache, cacheErr = openOnlineCache(o.DataDir)
 	if cacheErr != nil {
+		store.Log(diagnostics.Warn, "galaxy", "cache.read", "Не удалось прочитать локальный кэш систем")
 		x.Notice("Не удалось прочитать кэш найденных систем: " + cacheErr.Error())
 	}
 	x.resetObserved()
-	x.Reader = journal.New(o.JournalDir, x.Apply, x.resetObserved)
+	x.Reader = journal.New(o.JournalDir, func(event, meta M) {
+		x.Apply(event, meta)
+		if !v.Bool(meta["replay"]) {
+			x.recordLiveJournalEvent(v.Str(event["event"]))
+		}
+	}, x.resetObserved)
+	x.Reader.AfterPoll = x.recordJournalPoll
 	x.Reader.AfterReplay = func() {
 		x.finishPlanReplay()
 		x.restoreRemoteCache()
@@ -248,15 +268,22 @@ func New(o Options) (*Engine, error) {
 		}
 		x.listener = listener
 		redirect := "http://localhost:" + strconv.Itoa(listener.Addr().(*net.TCPAddr).Port) + "/api/frontier/callback"
-		x.Frontier, e = frontier.New(frontier.Options{DataDir: o.DataDir, HTTPClient: o.HTTPClient, RedirectURI: redirect, GetCommander: x.Commander, OnUpdate: x.Notify})
+		x.Frontier, e = frontier.New(frontier.Options{DataDir: o.DataDir, HTTPClient: observedHTTP, RedirectURI: redirect, GetCommander: x.Commander, OnUpdate: x.Notify})
 		if e != nil {
 			listener.Close()
 			cancel()
 			return nil, e
 		}
 		x.callback = &http.Server{Handler: http.HandlerFunc(x.handleCallback), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 75 * time.Second, MaxHeaderBytes: 16 * 1024}
-		go func() { _ = x.callback.Serve(listener) }()
-		x.Inara, e = inara.New(inara.Options{DataDir: o.DataDir, HTTPClient: o.HTTPClient, AppVersion: Version, GetState: x.SnapshotForSync, OnUpdate: x.Notify})
+		go func() {
+			if err := x.callback.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+				store.Log(diagnostics.Error, "frontier", "callback.server", "Остановлен локальный сервер входа Frontier")
+			}
+		}()
+		x.Inara, e = inara.New(inara.Options{
+			DataDir: o.DataDir, HTTPClient: observedHTTP, AppVersion: Version, GetState: x.SnapshotForSync,
+			OnUpdate: x.Notify, Send: x.sendInaraBatch,
+		})
 		if e != nil {
 			x.Close()
 			return nil, e
@@ -665,7 +692,13 @@ func (e *Engine) Snapshot() M {
 	}
 	return state
 }
-func (e *Engine) Save() error {
+func (e *Engine) Save() (failure error) {
+	started := time.Now()
+	defer func() {
+		if failure != nil {
+			e.RecordOperation("profile", "save", started, nil, failure)
+		}
+	}()
 	e.saveMu.Lock()
 	defer e.saveMu.Unlock()
 	saved, desktop := e.persistenceSnapshot()
@@ -675,7 +708,9 @@ func (e *Engine) Save() error {
 	return profile.Write(filepath.Join(e.opts.DataDir, "desktop-go-v2.json"), desktop)
 }
 
-func (e *Engine) ExportProfile(file string) error {
+func (e *Engine) ExportProfile(file string) (failure error) {
+	started := time.Now()
+	defer func() { e.RecordOperation("profile", "export", started, nil, failure) }()
 	e.saveMu.Lock()
 	defer e.saveMu.Unlock()
 	saved, _ := e.persistenceSnapshot()
@@ -722,6 +757,7 @@ func (e *Engine) Notice(text string) {
 	e.Notify()
 }
 func (e *Engine) handleCallback(w http.ResponseWriter, r *http.Request) {
+	started := time.Now()
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -735,10 +771,12 @@ func (e *Engine) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := e.Frontier.HandleCallbackContext(r.Context(), r.URL.Query()); err != nil {
+		e.RecordOperation("frontier", "callback.login", started, nil, err)
 		http.Error(w, err.Error(), 400)
 		return
 	}
 	fmt.Fprint(w, "Вход Frontier завершён. Можно вернуться в ED Copilot.")
+	e.RecordOperation("frontier", "callback.login", started, nil, nil)
 	e.wakeFrontier()
 	e.Notify()
 }
@@ -755,6 +793,7 @@ func (e *Engine) CloseWithSave() error {
 		return e.closeErr
 	}
 	e.closed = true
+	started := time.Now()
 	e.closeDone = make(chan struct{})
 	for _, cancel := range e.cancelJobs {
 		cancel()
@@ -785,6 +824,7 @@ func (e *Engine) CloseWithSave() error {
 		cancel()
 	}
 	e.closeErr = e.Save()
+	e.RecordOperation("app", "shutdown", started, nil, e.closeErr)
 	close(e.closeDone)
 	return e.closeErr
 }

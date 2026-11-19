@@ -22,6 +22,23 @@
 .settings-help-colors i{width:14px;height:14px;border:1px solid #ffffff30;border-radius:4px}
 .settings-help-colors code{margin-left:auto;color:var(--muted);font-size:10px}
 .settings-help [data-settings-help-content]>.settings-help-warning{padding:10px 12px;border:1px solid var(--danger);border-radius:8px;color:var(--danger)}
+.settings-logs-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.settings-logs-filters label{display:flex;flex:1 1 140px;flex-direction:column;gap:6px;color:var(--muted);font-size:12px}
+.settings-logs-filters label:has(input){flex:2 1 230px}
+.settings-logs-filters :is(input,select){width:100%;min-width:0;min-height:36px;color:var(--text)}
+.settings-logs-actions{display:flex;align-items:center;gap:6px;min-height:36px}
+.settings-logs-status:not(:empty){margin-top:16px;color:var(--muted);font-size:12px}
+.settings-logs-status.is-error{color:var(--danger)}
+.settings-logs-table{margin-top:16px;border:1px solid var(--border);border-radius:8px;max-height:min(56vh,620px)}
+.settings-logs-table tr>*{vertical-align:top}
+.settings-logs-table tr>*:not(:last-child){white-space:nowrap}
+.settings-logs-table td:last-child{width:100%;min-width:200px;white-space:normal;overflow-wrap:anywhere}
+.settings-logs-table time{font-variant-numeric:tabular-nums}
+.settings-logs-table .log-event{display:block;margin-top:4px;color:var(--muted);font-size:11px}
+.settings-logs-table .log-level.info{background:var(--accent-bg);color:var(--accent)}
+.settings-logs-table .log-level.error{color:var(--danger)}
+.settings-logs-paging{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px;color:var(--muted);font-size:12px}
+.settings-logs-paging[hidden]{display:none}
 @media(min-width:1500px){.settings-workspace.has-help .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:1240px){.settings-help.inspector{width:280px}}
 /* A visible inspector must remain reachable on narrow windows, where the base

@@ -160,7 +160,9 @@ func resetFrontierTimer(timer *time.Timer, delay time.Duration) {
 	timer.Reset(delay)
 }
 
-func (e *Engine) syncFrontier(ctx context.Context, carrier bool) (M, error) {
+func (e *Engine) syncFrontier(ctx context.Context, carrier bool) (out M, failure error) {
+	started := time.Now()
+	defer func() { e.RecordOperation("frontier", "capi.sync", started, out, failure) }()
 	if err := e.networkAllowed(); err != nil {
 		return nil, err
 	}

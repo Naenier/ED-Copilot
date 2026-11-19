@@ -50,10 +50,7 @@ func (e *Engine) galaxyNearbyFallback(name string, radius int) M {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "ED-Copilot/"+Version)
-	client := http.Client{}
-	if e.opts.HTTPClient != nil {
-		client = *e.opts.HTTPClient
-	}
+	client := e.observedHTTP(e.opts.HTTPClient, nil)
 	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	resp, err := client.Do(req)
 	if err != nil {

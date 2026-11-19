@@ -80,7 +80,7 @@ func HTMLMode(nonce string, smoke, readme bool) string {
 const ShipFitsAssetPath = "/workspace/ship-fits.js"
 const NearestAssetPath = "/workspace/nearest.js"
 
-var NearestBundle = makeBundle([]string{"nearest.css"}, "nearest-options.js", "nearest-strings.js", "nearest.js")
+var NearestBundle = makeBundle([]string{"nearest.css"}, "nearest-options.js", "nearest-strings.js", "nearest-picker.js", "nearest.js")
 
 // ShipFitsBundle keeps the fitting catalogue out of the WebView startup document.
 var ShipFitsBundle = makeBundle([]string{"ship-fits.css"}, "ship-fit-ru.js", "ship-fit-engine.js", "ship-fits.js")

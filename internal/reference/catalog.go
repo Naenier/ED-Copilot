@@ -26,6 +26,7 @@ type Store struct {
 	categories []Category
 	groupNames map[string]string
 	aliases    map[string]string
+	shipNames  map[string]string
 	media      sync.Map
 }
 

@@ -96,7 +96,9 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	if options.Soak != nil {
 		u.modern.soak = &nativeSoak{webReady: make(chan struct{}), dpi: u.main.DPI()}
 	}
+	hudStarted := time.Now()
 	u.hud, err = newHUD(u)
+	recordWebOperation(u.backend, "overlay", "initialize", hudStarted, nil, err)
 	if err != nil {
 		u.dispose()
 		return nil, fmt.Errorf("Создание игрового оверлея: %w", err)
@@ -569,6 +571,9 @@ func (u *Window) applyModernSnapshot(state M) {
 	}
 	if u.modern.ready && !u.modern.closed && win.IsWindowVisible(u.main.Handle()) && !win.IsIconic(u.main.Handle()) {
 		update := M{"revision": u.state["revision"], "connection": u.state["connection"], "settings": u.state["settings"], "commander": u.state["commander"]}
+		if workspace, ok := u.state["planWorkspace"]; ok {
+			update["planWorkspace"] = workspace
+		}
 		if revision, ok := u.state["shipBuildRevision"]; ok {
 			update["shipBuildRevision"] = revision
 		}
@@ -782,7 +787,7 @@ func (m *modernShell) handleRequest(req webRequest) {
 		return
 	}
 	switch req.Op {
-	case "boot", "view", "system-search", "system-search-cancel", "galaxy.system", "galaxy.nearby", "exo.sites", "engineering-roadmap", "controls.view", "controls.status", "ship-fits-list", "ship-fit-get", "ship-fit-materials", "ship-fits-export", "nearest.search", "nearest.cancel":
+	case "boot", "view", "system-search", "system-search-cancel", "galaxy.system", "galaxy.nearby", "exo.sites", "engineering-roadmap", "controls.view", "controls.status", "diagnostics.logs", "ship-fits-list", "ship-fit-get", "ship-fit-materials", "ship-fit-schematic", "ship-fits-export", "ship-fits-fleet", "ship-fit-from-fleet", "nearest.search", "nearest.cancel":
 		m.runReadOnlyResponse(req.ID, func() (M, error) { return dispatchWeb(m.owner.backend, req.Op, req.Params) }, webInputIdentities(req.Params)...)
 		return
 	}
@@ -810,6 +815,7 @@ func (m *modernShell) runResponse(id string, work func() (M, error), refresh boo
 		packet := webResponse(id, result, e)
 		wire, marshalErr := encodeWebEvent("response", packet)
 		if marshalErr != nil {
+			recordWebOperation(m.owner.backend, "ui", "response.serialize", time.Now(), nil, marshalErr)
 			wire, _ = encodeWebEvent("response", webResponse(id, nil, marshalErr))
 		}
 		if m.owner.disposed.Load() {
@@ -1004,11 +1010,28 @@ func (m *modernShell) flushDesktop() {
 	}
 }
 
-func (m *modernShell) nativeAction(params M) (any, error) {
+func (m *modernShell) nativeAction(params M) (response any, failure error) {
 	u := m.owner
 	u.dialogOpen = true
 	defer func() { u.dialogOpen = false }()
-	switch v.Str(params["action"]) {
+	action := v.Str(params["action"])
+	switch action {
+	case "controls-import", "controls-export", "profile-export", "profile-import", "open", "copy", "save-json", "folder", "import-plan", "export":
+		started := time.Now()
+		defer func() {
+			event := "native." + action
+			if work, ok := response.(func() (M, error)); ok && failure == nil {
+				response = func() (M, error) {
+					out, err := work()
+					recordWebOperation(u.backend, "ui", event, started, out, err)
+					return out, err
+				}
+				return
+			}
+			recordWebOperation(u.backend, "ui", event, started, v.Obj(response), failure)
+		}()
+	}
+	switch action {
 	case "controls-import", "controls-export":
 		return u.controlsFileAction(params)
 	case "profile-export":

@@ -11,6 +11,7 @@ function fixture(){
  const C={tab:'settings',inspector:true,state:{desktop:{displayMode:'windowed'},settings:{},connection:{}},actions:[{id:'settings.prices'},{id:'settings.import.palette',kind:'theme-import'},{id:'settings.journals',kind:'folder'},{id:'settings.filters'}]};
  const calls=[];
  const ui={esc,icon:name=>'<svg data-icon="'+esc(name)+'"></svg>',fmt:value=>String(value),
+  heading:(title,description)=>'<h1>'+esc(title)+'</h1><p>'+esc(description)+'</p>',
   btn:(label,action,icon,kind,attrs)=>'<button data-click="'+action+'" '+attrs+'>'+esc(label)+'</button>',
   $:selector=>selector==='[data-settings-workspace]'?host:selector==='[data-settings-help-content]'?body:null,
   $$:selector=>selector==='[data-settings-topic]'?buttons:selector==='.settings-group'?groups:[],
@@ -22,7 +23,7 @@ function fixture(){
   return item;
  }
  for(const topic of ['workspace','overlay','theme','journal','mining','prices'])buttons.push(control({settingsTopic:topic}));
- return {api:window.SettingsPaneUI,C,ui,calls,host,handlers,body,buttons,groups,control,
+ return {api:window.SettingsPaneUI,window,C,ui,calls,host,handlers,body,buttons,groups,control,
   fire(type,target){for(const handler of handlers.get(type)||[])handler({target});},
  };
 }
@@ -136,4 +137,80 @@ test('profile backup uses native file dialogs and reports the restore folder saf
  assert.equal(button.disabled,false);
  assert.equal(messages[0].title,'Профиль восстановлен');
  assert.match(messages[0].body,/Test &amp; Restore/);
+});
+
+test('settings show the installed version and load log pages only in the log viewer',async()=>{
+ const f=fixture(),fields={level:{name:'level'},subsystem:{name:'subsystem',dataset:{}},search:{name:'search'}};
+ const hostListeners={},formListeners={},node=()=>({classList:{toggle(){}},setAttribute(key,value){this[key]=value;}});
+ const form={elements:{namedItem:key=>fields[key]},addEventListener(type,callback){formListeners[type]=callback;}};
+ const host={addEventListener(type,callback){hostListeners[type]=callback;}};
+ const result=node(),status=node(),paging=node(),pageNumber=node(),previous=node(),next=node(),refresh=node();
+ const nodes={'[data-settings-logs]':host,form,'#settings-logs-subsystem':fields.subsystem,
+  '[data-logs-results]':result,'[data-logs-status]':status,'[data-logs-paging]':paging,
+  '[data-logs-page]':pageNumber,'[data-logs-action="previous"]':previous,
+  '[data-logs-action="next"]':next,'[data-logs-action="refresh"]':refresh};
+ const oldQuery=f.ui.$,pending=[];
+ f.ui.$=selector=>nodes[selector]||oldQuery(selector);
+ f.ui.call=(op,params)=>new Promise((resolve,reject)=>pending.push({op,params,resolve,reject}));
+ f.C.state.app={version:'2.8.19 <test>'};
+ f.C.controlsUI={tab:'general'};
+ const i18nSource=fs.readFileSync(path.join(__dirname,'i18n.js'),'utf8');
+ const dictionary=JSON.parse(fs.readFileSync(path.join(__dirname,'../localization/settings_diagnostics_en.json'),'utf8'));
+ vm.runInNewContext(i18nSource,{window:f.window});
+ f.window.CopilotTranslations=dictionary;
+ f.window.CopilotI18n.setLanguage('ru');
+ assert.match(f.api.render(f.C,f.ui,()=>'<div>general settings</div>'),/Версия приложения 2.8.19 &lt;test&gt;/);
+ f.api.init(f.C,f.ui);
+ assert.equal(pending.length,0);
+
+ f.C.controlsUI.tab='diagnostics';
+ const html=f.api.render(f.C,f.ui,()=>assert.fail('General settings should not be rendered'));
+ assert.match(html,/Журнал приложения/);
+ assert.doesNotMatch(html,/settings-help/);
+ assert.equal(f.api.canToggle('settings',f.C),false);
+ f.api.init(f.C,f.ui);f.api.init(f.C,f.ui);
+ assert.equal(pending.length,1);
+ assert.equal(pending[0].op,'diagnostics.logs');
+ assert.equal(pending[0].params.before,'');
+ assert.equal(result['aria-busy'],'true');
+ const entry={timestamp:'2026-11-19T14:23:00.123456789Z',level:'error',subsystem:'journal',event:'journal.read.failed',message:'<script>untrusted</script>'};
+ const flush=()=>new Promise(resolve=>setImmediate(resolve));
+ pending[0].resolve({entries:[entry],next:'older-cursor',subsystems:['journal','ui']});
+ await flush();
+ assert.match(fields.subsystem.innerHTML,/Журналы игры/);
+ assert.match(result.innerHTML,/journal\.read\.failed/);
+ assert.match(result.innerHTML,/&lt;script&gt;untrusted/);
+ assert.doesNotMatch(result.innerHTML,/<script>/);
+ assert.equal(next.disabled,false);
+ assert.equal(previous.disabled,true);
+ assert.equal(paging.hidden,false);
+ const click=action=>hostListeners.click({target:{closest:()=>({dataset:{logsAction:action}})}});
+ click('next');
+ assert.equal(pending[1].params.before,'older-cursor');
+ pending[1].resolve({entries:[entry],next:'',subsystems:['journal','ui']});
+ await flush();
+ assert.equal(next.disabled,true);
+ assert.equal(previous.disabled,false);
+ assert.match(pageNumber.textContent,/2/);
+
+ const filter=(name,value)=>formListeners.input({target:{name,value}});
+ const submit=()=>formListeners.submit({preventDefault(){}});
+ filter('level','info');submit();
+ filter('level','error');filter('subsystem','ui');filter('search','  failed  ');submit();
+ assert.deepEqual({...pending[3].params},{level:'error',subsystem:'ui',search:'failed',before:'',limit:75});
+ pending[3].resolve({entries:[],next:'',subsystems:['journal','ui']});
+ await flush();
+ pending[2].resolve({entries:[entry],next:'other-cursor',subsystems:['journal']});
+ await flush();
+ assert.equal(status.textContent,'Записей по этим фильтрам нет.');
+ assert.equal(result.innerHTML,'');
+ assert.equal(paging.hidden,true);
+ click('refresh');
+ pending[4].reject(new Error('Internal details'));
+ await flush();
+ assert.match(status.textContent,/Не удалось загрузить журнал приложения/);
+ assert.equal(refresh.disabled,false);
+ f.window.CopilotI18n.setLanguage('en');
+ assert.match(f.api.render(f.C,f.ui,''),/App version 2.8.19/);
+ assert.match(f.api.render(f.C,f.ui,''),/Application log/);
 });

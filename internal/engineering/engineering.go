@@ -22,6 +22,9 @@ var aliases = func() map[string]string {
 		for _, field := range []string{"key", "symbol", "english", "name"} {
 			r[v.Key(m[field])] = v.Str(m["key"])
 		}
+		for _, name := range v.Arr(m["nameAliases"]) {
+			r[v.Key(name)] = v.Str(m["key"])
+		}
 	}
 	r[v.Key("Adaptive Encyptors Capture")] = "adaptiveencryptors"
 	return r
@@ -35,6 +38,12 @@ func byKey(rows []M) map[string]M {
 	return r
 }
 func MaterialKey(name any) string { return aliases[v.Key(name)] }
+
+func MaterialNames(symbol any) (russian, english string) {
+	row := materials[MaterialKey(symbol)]
+	return v.Str(row["name"]), v.Str(row["english"])
+}
+
 func contains(a any, s string) bool {
 	for _, x := range v.Arr(a) {
 		if v.Str(x) == s {

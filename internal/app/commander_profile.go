@@ -1,6 +1,9 @@
 package app
 
-import v "github.com/Naenier/ED-Copilot/internal/value"
+import (
+	"github.com/Naenier/ED-Copilot/internal/engineering"
+	v "github.com/Naenier/ED-Copilot/internal/value"
+)
 
 // applyVerifiedProfileCAPI binds the returned authenticated account identity to
 // the still active journal FID while excluding a concurrent owner transition.
@@ -19,6 +22,7 @@ func (e *Engine) applyVerifiedProfileCAPILocked(result M) bool {
 	e.Colonies.ApplyCAPI(result, cmd)
 	context := M{"identityVerified": true, "commander": cmd, "observedAt": v.At(result, "metadata", "observedAt", "profile")}
 	profile := v.Obj(v.At(result, "data", "profile"))
+	e.observeFrontierFleet(result, profile, cmd)
 	changed := e.Ranks.ApplyCAPI(profile, context)
 	return e.CommanderProfile.ApplyCAPI(profile, context) || changed
 }
@@ -37,6 +41,11 @@ func (e *Engine) commanderProfileSnapshot(inventory M) M {
 		// category can stay current without a new snapshot of its contents.
 		previousAt := v.Str(previous["updatedAt"])
 		if previousAt != "" && (at == "" || v.Time(at).Before(v.Time(previousAt))) {
+			for _, row := range v.Rows(previous["entries"]) {
+				if name, english := engineering.MaterialNames(row["symbol"]); name != "" {
+					row["name"], row["english"] = name, english
+				}
+			}
 			continue
 		}
 		rows, total := []M{}, 0
@@ -58,7 +67,7 @@ func (e *Engine) commanderProfileSnapshot(inventory M) M {
 			if count == 0 {
 				continue
 			}
-			rows = append(rows, M{"key": raw["key"], "symbol": raw["symbol"], "name": raw["name"], "count": count, "ownerId": "", "missionId": ""})
+			rows = append(rows, M{"key": raw["key"], "symbol": raw["symbol"], "name": raw["name"], "english": raw["english"], "count": count, "ownerId": "", "missionId": ""})
 		}
 		var count any
 		if complete {
@@ -69,6 +78,15 @@ func (e *Engine) commanderProfileSnapshot(inventory M) M {
 			updatedAt = at
 		}
 		materials[category] = M{"known": complete, "entries": rows, "count": count, "updatedAt": updatedAt, "source": "journal", "truncated": false, "uncertain": v.Bool(known[category]) && !complete, "projection": "engineeringInventory"}
+	}
+	for _, container := range []string{"shipLocker", "backpack"} {
+		for _, group := range v.Obj(v.At(state, "inventory", container)) {
+			for _, row := range v.Rows(v.Obj(group)["entries"]) {
+				if name, english := engineering.OdysseyMaterialNames(row["symbol"]); name != "" {
+					row["name"], row["english"] = name, english
+				}
+			}
+		}
 	}
 	return state
 }

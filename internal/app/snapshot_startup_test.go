@@ -79,12 +79,16 @@ func TestNativeRefreshSkipsHUDOnlyWhenItCannotBeVisible(t *testing.T) {
 
 func TestOverviewPublishesCompletedJournalReplay(t *testing.T) {
 	e, file, _ := fixtureEngine(t, nil)
+	previousWorkspace := v.At(e.SnapshotForWindow(), "planWorkspace", "key")
+	if v.Str(previousWorkspace) == "" {
+		t.Fatal("window snapshot is missing the active workspace")
+	}
 	doOK(t, e, "/api/settings", M{"overlayEnabled": true})
 	e.Apply(testEvent("FSDJump", M{"StarSystem": "Published System"}), nil)
 	e.Apply(testEvent("FSDTarget", M{"Name": "Published Destination", "RemainingJumpsInRoute": 1}), nil)
 	writeEvents(t, file, false, []M{
 		testEvent("Fileheader", M{"gameversion": "4.4.2"}),
-		testEvent("LoadGame", M{"Commander": "Synthetic Commander", "FID": "FSYNTHETIC", "Ship": "Python", "ShipID": 1}),
+		testEvent("LoadGame", M{"Commander": "New Commander", "FID": "FSYNTHSECOND", "Ship": "Python", "ShipID": 1}),
 		testEvent("Location", M{"StarSystem": "Historical System"}),
 		testEvent("FSDTarget", M{"Name": "Historical Destination"}),
 		testEvent("FSDJump", M{"StarSystem": "Latest System"}),
@@ -106,6 +110,9 @@ func TestOverviewPublishesCompletedJournalReplay(t *testing.T) {
 		for _, view := range []M{e.SnapshotForOverview(), e.SnapshotForWindow(), e.SnapshotForNativeRefresh(), e.SnapshotForUI("overview")} {
 			if !v.Bool(v.At(view, "connection", "scanning")) || v.At(view, "commander", "system") != "Published System" {
 				t.Fatalf("replay exposed an incomplete location: %v, %v", view["commander"], view["connection"])
+			}
+			if v.At(view, "planWorkspace", "key") != previousWorkspace {
+				t.Fatalf("replay exposed the new commander before completion: %v", view["planWorkspace"])
 			}
 		}
 		view := e.SnapshotForUI("overview")
@@ -129,6 +136,9 @@ func TestOverviewPublishesCompletedJournalReplay(t *testing.T) {
 	for _, latest := range []M{view, e.SnapshotForOverview(), e.SnapshotForWindow(), e.SnapshotForNativeRefresh()} {
 		if v.At(latest, "commander", "system") != "Latest System" {
 			t.Fatalf("finished replay missed the latest location: %v", latest["commander"])
+		}
+		if next := v.At(latest, "planWorkspace", "key"); v.Str(next) == "" || next == previousWorkspace {
+			t.Fatalf("finished replay missed the new commander: %v", latest["planWorkspace"])
 		}
 	}
 	e.Apply(testEvent("FSDJump", M{"StarSystem": "Live System"}), nil)

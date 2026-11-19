@@ -42,6 +42,13 @@ test('debounce and minimum length prevent eager requests and only final text is 
  node.value='Sol';f.controller.input({target:node});await f.tick(100);node.value='Sola';f.controller.input({target:node});await f.tick(299);assert.equal(f.calls.length,0);await f.tick(1);
  assert.equal(f.calls.filter(c=>c.op==='system-search').length,1);assert.equal(f.calls[0].params.query,'Sola');assert.equal(f.calls[0].params.limit,20);assert.equal(f.controller.inspect().status,'ready');
 });
+test('a faction field requests faction names and keeps the exact selection',async()=>{
+ const f=fixture(),node=f.input('Sol Work',{name:'owner',dataset:{systemSearch:'faction'}});
+ f.setRPC(r=>({...r,status:'ready',suggestions:[{name:"Sol Workers' Party"}]}));
+ f.controller.focus({target:node});await f.tick();
+ assert.equal(f.calls[0].params.kind,'faction');assert.match(f.controller.inspect().popup.innerHTML,/Малые фракции/);
+ f.key(node,'ArrowDown');f.key(node,'Enter');assert.equal(node.value,"Sol Workers' Party");
+});
 test('stale response, removed control and cancelled fields cannot reopen or overwrite current suggestions',async()=>{
  const f=fixture(),old=deferred();let oldRequest;
  f.setRPC(r=>{if(r.query==='Old'){oldRequest=r;return old.promise;}return {...r,status:'ready',suggestions:[{name:'New canonical',match:'prefix'}]};});

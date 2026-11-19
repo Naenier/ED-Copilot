@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -27,6 +28,7 @@ type sectionSeven struct {
 	builds, itineraries             M
 	currentShipEngineeringPlans     M
 	loadout, stored                 M
+	fleetFits                       fleetFitObservations
 	loadoutChangedAt                time.Time
 	observedOwner, observedShipID   string
 	lowFuel, engineeringReady       bool
@@ -42,7 +44,7 @@ func (e *Engine) initSectionSeven(saved M) {
 	e.section7 = sectionSeven{
 		exploration:                 exploration.New(v.Obj(saved["exploration"])),
 		routes:                      shiproute.New(saved["shipRoutes"]),
-		routePlanner:                shiproute.NewPlanner(e.opts.HTTPClient),
+		routePlanner:                shiproute.NewPlanner(e.observedHTTP(e.opts.HTTPClient, &http.Client{Timeout: 20 * time.Second})),
 		notifications:               notifications.New(saved["notifications"]),
 		screens:                     secondscreen.New(e.secondScreenView),
 		builds:                      v.Copy(v.Obj(saved["shipBuilds"])),
@@ -74,6 +76,7 @@ func (e *Engine) startSectionSeven() {
 
 func (e *Engine) resetSectionSevenObservations() {
 	s := &e.section7
+	s.fleetFits.reset("")
 	s.loadout, s.stored, s.carrierJump, s.observedOwner = nil, nil, nil, ""
 	s.observedShipID = ""
 	s.loadoutChangedAt = time.Time{}
@@ -121,6 +124,12 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	s := &e.section7
 	if owner == "" {
 		return
+	}
+	if s.fleetFits.owner != owner {
+		s.fleetFits.reset(owner)
+	}
+	if !v.Bool(meta["side"]) {
+		s.fleetFits.journal(event)
 	}
 	if owner != s.observedOwner {
 		s.loadout, s.stored, s.carrierJump = nil, nil, nil

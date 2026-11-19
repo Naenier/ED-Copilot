@@ -53,6 +53,9 @@ async function run(C,u){
   await capture('readme-deals-filters');
   await u.navigate('carrier-trade',{mode:'Рейс'});await capture('readme-carrier-trade');
   await u.navigate('route');await capture('route-details');
+  await u.navigate('riches');await visible('.riches-table tbody tr');await capture('readme-road-to-riches');
+  await u.navigate('nearest');(await visible('#nearest-form')).requestSubmit();
+  await visible('.near-results tbody tr');await capture('readme-nearest');
   await u.navigate('encyclopedia',{mode:'Системы'});await ready();
   const nearbySystem=await visible('#galaxy-directory-table tbody tr:nth-child(2) [data-id^="system/"]');
   check('Systems shows nearby results and filters',!!u.$('[data-galaxy-filter="allegiance"]'));
@@ -74,6 +77,19 @@ async function run(C,u){
   blueprint.dispatchEvent(new Event('change',{bubbles:true}));
   await visible('.eng-card h3 [data-reference-id^="engineer/"]');
   await capture('readme-engineering');
+  await u.navigate('engineering',{mode:'Конструктор кораблей'});
+  (await visible('[data-fit-action="fleet"]:enabled')).click();
+  const observedFit=await visible('#fit-fleet [data-fit-action="fleet-open"]:enabled');
+  await capture('readme-ship-fitting-fleet');
+  observedFit.click();
+  await visible('#fit-schematic-image img');
+  check('Fitter loaded the observed modules and hull diagram',!!u.$('.fit-slot'));
+  await capture('readme-ship-fitting');
+  (await visible('[data-fit-action="materials"]:enabled')).click();
+  await visible('#fit-materials-content .fit-material-table table');
+  check('All three material categories are visible',u.$$('#fit-materials-content .fit-material-table').length===3);
+  await capture('readme-ship-fitting-materials');
+  u.closeLayer();
   await u.navigate('engineering',{mode:'Материалы'});
   await visible('[data-action-id="engineering.trade"]');
   await u.call('action',{tab:'engineering',mode:'Материалы',actionId:'engineering.trade',values:{
@@ -100,6 +116,10 @@ async function run(C,u){
   await u.navigate('exobiology',{mode:'Планеты'});await capture('readme-exo-planets');
   await u.navigate('exobiology',{mode:'Образцы'});await capture('readme-exo-samples');
   await u.navigate('politics',{mode:'Политика'});await capture('readme-politics');
+  await u.navigate('settings');
+  await u.handleClick('controls-tab',await visible('[data-click="controls-tab"][data-tab="diagnostics"]'));
+  await visible('[data-logs-results] tbody tr');
+  await capture('readme-app-log');
   await u.call('smoke-result',{ok:problems.length===0,scenarios,pages,problems,documentation:true,language});
  }catch(error){await u.call('smoke-result',{ok:false,scenarios,pages,problems:[...problems,error.message],documentation:true,language});}
 }

@@ -33,9 +33,11 @@ var signalFilters = map[string]signalFilter{
 	"guardian-structure": {"landmarks", "Guardian Structure"},
 	"thargoid-structure": {"landmarks", "Thargoid Structure"},
 	"thargoid-spire":     {"landmarks", "Thargoid Spires"},
+	"thargoid-barnacle":  {"landmarks", "Thargoid Barnacle"},
+	"barnacle-matrix":    {"landmarks", "Thargoid Barnacle Matrix"},
+	"crashed-ship":       {"landmarks", "Crashed Ship"},
 	"wrecked-ship":       {"landmarks", "Wrecked Ship"},
 	"abandoned-base":     {"landmarks", "Abandoned Base"},
-	"installation":       {"landmarks", "Installation"},
 	"megaship":           {"station", "Mega ship"},
 	"biological":         {"signals", "Biological"},
 	"geological":         {"signals", "Geological"},
@@ -43,6 +45,7 @@ var signalFilters = map[string]signalFilter{
 	"guardian":           {"signals", "Guardian"},
 	"thargoid":           {"signals", "Thargoid"},
 	"planetary-mining":   {"signals", "Planetary Mining Location"},
+	"major-anomaly":      {"signals", "Major Anomaly"},
 }
 
 func (c *Client) searchSpecial(ctx context.Context, q Query) (Result, error) {
@@ -59,8 +62,10 @@ func (c *Client) searchSpecial(ctx context.Context, q Query) (Result, error) {
 		return c.searchFactions(ctx, q, "multi-state")
 	case "engineers":
 		return c.searchEngineers(ctx, q)
-	case "restore", "mining", "massacre":
-		return Result{Note: "Подбор этих заданий доступен в Inara. Наличие конкретного задания проверяется на доске миссий станции."}, nil
+	case "restore", "mining":
+		return c.searchMissionCandidates(ctx, q, spaceText(q.Filters["kind"]))
+	case "massacre":
+		return c.searchMassacre(ctx, q)
 	default:
 		return Result{}, errors.New("Выберите вид поиска.")
 	}
@@ -85,6 +90,9 @@ func (c *Client) searchFactions(ctx context.Context, q Query, kind string) (Resu
 			return Result{}, nil
 		}
 		setSpaceGroup(factionFilter, "name", names)
+		if v.Bool(q.Filters["controllerOnly"]) && filters["controlling_minor_faction"] == nil {
+			setSpaceGroup(filters, "controlling_minor_faction", names)
+		}
 	}
 	setSpaceGroup(factionFilter, "allegiance", spaceValues(q.Filters["factionAllegiance"]))
 	setSpaceGroup(factionFilter, "government", spaceValues(q.Filters["factionGovernment"]))
@@ -108,7 +116,7 @@ func (c *Client) searchFactions(ctx context.Context, q Query, kind string) (Resu
 		q.Limit = min(specialPageSize(q), conflictSystemLimit)
 		result.Note = "Противники указаны по данным EliteHub или недавней записи журнала. Для остальных систем показаны состояния фракций."
 	} else if kind == "multi-state" {
-		result.Note = "Показаны фракции с двумя или более активными состояниями."
+		result.Note = "Учитываются одновременно действующие состояния фракций."
 	}
 
 	raw, err := c.request(ctx, "/systems/search", spacePayload(q, filters))
@@ -119,7 +127,7 @@ func (c *Client) searchFactions(ctx context.Context, q Query, kind string) (Resu
 	if err != nil {
 		return result, err
 	}
-	result.HasMore = specialHasMore(q, raw, len(systems))
+	result.HasMore = specialHasMore(q, raw)
 	var conflictsBySystem map[string][]M
 	if kind == "conflicts" {
 		conflictsBySystem = c.publicConflicts(ctx, systems)
@@ -194,7 +202,12 @@ func (c *Client) searchFactions(ctx context.Context, q Query, kind string) (Resu
 }
 
 func factionStates(faction M) []string {
-	states := spaceValues(v.First(faction["active_states"], faction["activeStates"]))
+	states := []string{}
+	for _, state := range spaceValues(v.First(faction["active_states"], faction["activeStates"])) {
+		if !strings.EqualFold(state, "None") && !containsState(states, state) {
+			states = append(states, state)
+		}
+	}
 	primary := spaceText(faction["state"])
 	if primary != "" && (len(states) == 0 || !strings.EqualFold(primary, "None")) && !containsState(states, primary) {
 		return append(states, primary)
@@ -223,6 +236,9 @@ func warState(states []string) string {
 func matchesState(states, wanted []string, mode string) bool {
 	if len(wanted) == 0 {
 		return true
+	}
+	if len(states) == 0 {
+		return false
 	}
 	count := 0
 	for _, want := range wanted {
@@ -286,7 +302,8 @@ func matchesFaction(q Query, faction, system M, kind string) bool {
 	case "conflicts":
 		return warState(states) != ""
 	case "multi-state":
-		return len(states) > 1
+		minimum := max(2, min(10, v.Int(q.Filters["minimumStates"])))
+		return len(states) >= minimum
 	default:
 		mode := spaceText(v.First(q.Filters["factionStateMode"], q.Filters["stateMode"]))
 		return matchesState(states, spaceValues(q.Filters["factionStates"]), mode)
@@ -337,39 +354,44 @@ func journalConflicts(observations []M, system M) []M {
 
 func (c *Client) searchSignals(ctx context.Context, q Query) (Result, error) {
 	signal := spaceText(q.Filters["signal"])
-	if signal == "" || signal == "navigation-beacon" || signal == "compromised-nav-beacon" {
-		parameters := url.Values{"ps1": {q.Origin}, "formbrief": {"1"}}
-		if signal == "compromised-nav-beacon" {
-			parameters.Set("pi30", "1")
-		}
-		link := "https://inara.cz/elite/nearest-signals/?" + parameters.Encode()
-		return Result{Note: "Поиск навигационных маяков доступен в Inara.", Link: link}, nil
+	if signal == "" {
+		signal = "tourist-beacon"
+	}
+	if signal == "titan-wreck" {
+		return c.searchTitanStations(ctx, q)
+	}
+	if _, ok := orbitalSignalLabels[signal]; ok {
+		return c.searchOrbitalSignals(ctx, q, signal)
 	}
 	entry, ok := signalFilters[signal]
 	if !ok {
 		return Result{}, errors.New("Выберите тип сигнала.")
 	}
 	filters := M{}
+	var systemFilters M
 	resource := "/bodies/search"
 	if entry.field == "station" {
 		resource = "/stations/search"
 		setSpaceGeometry(filters, q, "system_region")
 		delete(filters, "system_region")
 		setSpaceGroup(filters, "type", []string{entry.value})
+		filters["services"] = []M{{"name": stationGroup("Dock")}}
+		systemFilters = M{"stations": []M{{"type": filters["type"], "services": stationGroup("Dock")}}}
 	} else {
 		filters = spaceBodyFilters(q)
 		if entry.field == "signals" {
 			filters["signals"] = []M{{"name": entry.value, "value": []int{1, 10000}, "comparison": "<=>"}}
 		} else {
 			filters["landmarks"] = []M{{"subtype": M{"value": []string{entry.value}}}}
-			if signal != "guardian-beacon" && signal != "installation" && signal != "thargoid-spire" {
+			if signal != "guardian-beacon" && signal != "thargoid-spire" {
 				filters["landmarks"] = []M{{"type": M{"value": []string{entry.value}}}}
 			}
+			systemFilters = M{"landmarks": filters["landmarks"]}
 		}
 	}
 	result := Result{}
 	if hasSpecialSystemFilters(q) || entry.field == "station" && q.Region != "" {
-		ids, partial, err := c.spaceBodyFactionIDs(ctx, q)
+		ids, partial, err := c.specialSystemIDs(ctx, q, systemFilters)
 		if err != nil {
 			return result, err
 		}
@@ -382,7 +404,7 @@ func (c *Client) searchSignals(ctx context.Context, q Query) (Result, error) {
 		setSpaceGroup(filters, "system_id64", ids)
 	}
 	if q.Name != "" {
-		filters["name"] = M{"value": q.Name}
+		filters["name"] = nameCondition(q.Name)
 	}
 	raw, err := c.request(ctx, resource, spacePayload(q, filters))
 	if err != nil {
@@ -400,7 +422,7 @@ func (c *Client) searchSignals(ctx context.Context, q Query) (Result, error) {
 		result.Rows = append(result.Rows, row)
 	}
 	result.Total = v.Int(raw["count"])
-	result.HasMore = specialHasMore(q, raw, len(rows))
+	result.HasMore = specialHasMore(q, raw)
 	return result, nil
 }
 
@@ -440,7 +462,7 @@ func signalRow(raw M, signal signalFilter) M {
 			return row
 		}
 		if strings.EqualFold(spaceText(item["type"]), signal.value) || strings.EqualFold(spaceText(item["subtype"]), signal.value) {
-			row["count"] = v.Int(row["count"]) + 1
+			row["count"] = v.Int(row["count"]) + max(1, v.Int(item["count"]))
 			if row["latitude"] == nil && item["latitude"] != nil && item["longitude"] != nil {
 				row["latitude"], row["longitude"] = item["latitude"], item["longitude"]
 			}
@@ -466,8 +488,8 @@ func specialPageSize(q Query) int {
 	return q.Limit
 }
 
-func specialHasMore(q Query, raw M, pageCount int) bool {
-	return pageCount == specialPageSize(q) && (q.Page+1)*specialPageSize(q) < v.Int(raw["count"])
+func specialHasMore(q Query, raw M) bool {
+	return (q.Page+1)*specialPageSize(q) < v.Int(raw["count"])
 }
 
 func specialSystemRow(raw M) M {
@@ -493,7 +515,7 @@ func matchesName(query string, names ...any) bool {
 	return false
 }
 
-func (c *Client) searchEngineers(ctx context.Context, q Query) (Result, error) {
+func (c *Client) specialOriginCoordinates(ctx context.Context, q Query) ([]float64, error) {
 	origin := q.OriginCoords
 	if len(origin) != 3 {
 		origin = engineering.WorkshopCoordinates(q.Origin)
@@ -501,7 +523,7 @@ func (c *Client) searchEngineers(ctx context.Context, q Query) (Result, error) {
 	if len(origin) != 3 && q.Origin != "" {
 		index, err := c.request(ctx, "/systems/field_values/system_names?q="+url.QueryEscape(q.Origin), nil)
 		if err != nil {
-			return Result{}, err
+			return nil, err
 		}
 		for _, candidate := range v.Rows(index["min_max"]) {
 			if strings.EqualFold(spaceText(candidate["name"]), q.Origin) {
@@ -512,8 +534,16 @@ func (c *Client) searchEngineers(ctx context.Context, q Query) (Result, error) {
 			}
 		}
 		if len(origin) != 3 {
-			return Result{}, errors.New("Не найдены координаты исходной системы.")
+			return nil, errors.New("Не найдены координаты исходной системы.")
 		}
+	}
+	return origin, nil
+}
+
+func (c *Client) searchEngineers(ctx context.Context, q Query) (Result, error) {
+	origin, err := c.specialOriginCoordinates(ctx, q)
+	if err != nil {
+		return Result{}, err
 	}
 	catalog, err := data.Load("engineering-roadmap.json")
 	if err != nil {
@@ -531,7 +561,13 @@ func (c *Client) searchEngineers(ctx context.Context, q Query) (Result, error) {
 			"type": engineer["kind"],
 		}
 		if coordinates := engineering.WorkshopCoordinates(system); len(coordinates) == 3 && len(origin) == 3 {
-			row["distanceLy"] = math.Hypot(math.Hypot(coordinates[0]-origin[0], coordinates[1]-origin[1]), coordinates[2]-origin[2])
+			distance := math.Hypot(math.Hypot(coordinates[0]-origin[0], coordinates[1]-origin[1]), coordinates[2]-origin[2])
+			if radius := v.Num(q.Filters["radiusLy"]); radius > 0 && distance > radius {
+				continue
+			}
+			row["distanceLy"] = distance
+		} else if v.Num(q.Filters["radiusLy"]) > 0 {
+			continue
 		}
 		rows = append(rows, row)
 	}

@@ -16,11 +16,13 @@ const damageTypes = ['absolute', 'kinetic', 'thermal', 'explosive', 'caustic'];
 const namedSlots = { Military: 'Military', Limpets: 'LimpetController', Fighter: 'FighterBay', Cargo: 'Cargo', Passenger: 'Passenger' };
 const maxCodeLength = 32768;
 const settings = ['cargo', 'fuel', 'eng', 'sys', 'wep'];
+const rewardRackBlueprint = 'CargoRack_IncreasedCapacity';
+const legacyRailEffects = new Set(['special_feedback_cascade', 'special_super_penetrator', 'special_plasma_slug']);
 const own = (object, key) => Object.hasOwn(object, key);
 const finite = n => Number.isFinite(n) ? n : null;
 const clamp = (n, max, fallback) => Number.isFinite(n) ? Math.min(max, Math.max(0, n)) : fallback;
 const lower = value => String(value ?? '').toLowerCase();
-const itemSymbol = value => lower(value).replace(/^\$/, '').replace(/_name;?$/, '');
+const itemSymbol = value => lower(value).trim().replace(/^\$/, '').replace(/;$/, '').replace(/_name$/, '');
 const normalShipName = value => lower(value).replace(/[^a-z0-9]/g, '');
 const fail = message => { throw new Error(message); };
 const roundPips = value => Math.round(value * 2) / 2;
@@ -78,6 +80,10 @@ function restore(fit, mutable = false) {
   if (ship.standard.some(slot => !slot.m) || !Number.isFinite(ship.dryMass)) {
     fail('В сборке отсутствует обязательный модуль.');
   }
+  const moduleCode = fit.code.split('.')[0];
+  if (moduleCode.startsWith('A') && ship.toString().split('.')[0].replace(/-+$/, '') !== moduleCode.replace(/-+$/, '')) {
+    fail('Код сборки содержит неподдерживаемый модуль или отсек.');
+  }
   if (!mutable) memo = { shipId: fit.shipId, code: fit.code, ship };
   return ship;
 }
@@ -132,6 +138,7 @@ function describeModule(m) {
     range: finite(m.getRange()), damage: finite(m.getDamage()), dps: finite(m.getDps()), sustainedDps: finite(m.getSDps()),
     eps: finite(m.getEps()), hps: finite(m.getHps()), ammo: finite(m.getAmmo()), clip: finite(m.getClip()),
     rateOfFire: finite(m.getRoF()), piercing: finite(m.getPiercing()), falloff: finite(m.getFalloff()), shotSpeed: finite(m.getShotSpeed()),
+    probeRadius: finite(m.get('proberadius')),
   };
 }
 
@@ -148,14 +155,17 @@ function describeEngineering(m) {
 
 export function slots(fit) {
   const ship = restore(fit);
-  return descriptors(ship).map(({ slot, key, kind, name, required }) => ({
-    key, kind, name, required: Boolean(required), size: slot.maxClass ?? 0,
-    module: describeModule(slot.m), on: kind === 'armour' || Boolean(slot.enabled),
-    priority: (slot.priority ?? 0) + 1,
-    engineering: describeEngineering(slot.m),
-    retracted: kind === 'armour' || ship.getSlotStatus(slot, false) === 3,
-    deployed: kind === 'armour' || ship.getSlotStatus(slot, true) === 3,
-  }));
+  return descriptors(ship).map(({ slot, key, kind, name, required }) => {
+    const retracted = ship.getSlotStatus(slot, false);
+    return {
+      key, kind, name, required: Boolean(required), size: slot.maxClass ?? 0,
+      module: describeModule(slot.m), on: kind === 'armour' || Boolean(slot.enabled),
+      priority: (slot.priority ?? 0) + 1,
+      engineering: describeEngineering(slot.m),
+      retracted: kind === 'armour' ? true : retracted ? retracted === 3 : null,
+      deployed: kind === 'armour' || ship.getSlotStatus(slot, true) === 3,
+    };
+  });
 }
 
 function descriptor(ship, slotKey) {
@@ -201,12 +211,19 @@ function blueprintEntries(module) {
   return Object.entries(rules?.blueprints || {}).flatMap(([id, spec]) => {
     const definition = Modifications.blueprints[id];
     if (!definition) return [];
+    const readOnlyRack = id === rewardRackBlueprint && !module.preEngineered;
+    if (readOnlyRack && module.blueprint?.fdname !== rewardRackBlueprint) return [];
+    const factory = module.preEngineered;
+    const currentEffect = module.blueprint?.special?.edname;
     return [{
       id, symbol: definition.fdname, name: definition.name || id,
-      grades: Object.keys(spec.grades || definition.grades || {}).map(Number).sort((a, b) => a - b),
-      experimentals: (rules.specials || []).map(specialId => Modifications.specials[specialId]).filter(Boolean).map(special => ({
-        id: special.edname, symbol: special.edname, name: special.name || special.edname,
-      })),
+      grades: readOnlyRack ? [module.blueprint.grade] : Object.keys(spec.grades || definition.grades || {}).map(Number).sort((a, b) => a - b),
+      experimentals: (rules.specials || []).filter(specialId =>
+        (specialId === currentEffect || factory?.canApplyExperimental !== false) &&
+        (module.grp !== 'rg' || specialId === currentEffect || !legacyRailEffects.has(specialId)))
+        .map(specialId => Modifications.specials[specialId]).filter(Boolean).map(special => ({
+          id: special.edname, symbol: special.edname, name: special.name || special.edname,
+        })),
     }];
   });
 }
@@ -229,9 +246,14 @@ function editEngineering(ship, module, change) {
   const id = change.blueprint ?? current?.blueprint;
   const grade = change.grade ?? current?.grade;
   const experiment = change.experimental ?? current?.experimental ?? '';
+  const sameRecipe = current && id === current.blueprint && grade === current.grade;
+  const keepModifiers = sameRecipe && (!Number.isFinite(change.quality) || change.quality === current.quality);
   const quality = clamp(change.quality ?? current?.quality, 1, 1);
   const choice = blueprintEntries(module).find(candidate => candidate.id === id || candidate.symbol === id);
   if (!choice || !choice.grades.includes(grade)) fail('Эта ступень чертежа недоступна для модуля.');
+  if (choice.id === rewardRackBlueprint && !module.preEngineered && !keepModifiers) {
+    fail('Эта ступень чертежа недоступна для модуля.');
+  }
   const special = experiment ? choice.experimentals.find(item => item.id === experiment) : null;
   if (experiment && !special) fail('Этот экспериментальный эффект недоступен для модуля.');
   if (locked) {
@@ -242,11 +264,36 @@ function editEngineering(ship, module, change) {
     ship.setModuleSpecial(module, special ? Modifications.specials[special.id] : null);
     return;
   }
+  if (keepModifiers) {
+    ship.setModuleSpecial(module, special ? Modifications.specials[special.id] : null);
+    return;
+  }
   const bp = structuredClone(Modifications.blueprints[choice.id]);
   bp.grade = grade;
   ship.setModuleBlueprint(module, bp);
   setQualityCB(bp, quality, (feature, value) => ship.setModification(module, feature, value, false, true));
   ship.setModuleSpecial(module, special ? Modifications.specials[special.id] : null);
+}
+
+function experimentalWeaponExcess(modules) {
+  let equipped = 0;
+  let limit = 4;
+  for (const module of modules) {
+    if (module?.limitGroup === 'experimentalWeapon') equipped++;
+    if (module?.limitIncrease?.group === 'experimentalWeapon') limit += module.limitIncrease.amount;
+  }
+  return Math.max(0, equipped - limit);
+}
+
+function enforceFittingLimits(ship, slot, template) {
+  const others = [...ship.internal, ...ship.hardpoints].filter(other => other !== slot).map(other => other.m);
+  if (template?.exclusionGroup && template.exclusionGroup !== slot.m?.exclusionGroup &&
+      others.some(module => module?.exclusionGroup === template.exclusionGroup)) {
+    fail('Модуль этого типа уже установлен в другом отсеке.');
+  }
+  if (experimentalWeaponExcess([...others, template]) > experimentalWeaponExcess([...others, slot.m])) {
+    fail('Превышен лимит экспериментального вооружения.');
+  }
 }
 
 export function edit(fit, slotKey, change = {}) {
@@ -259,6 +306,7 @@ export function edit(fit, slotKey, change = {}) {
     const template = id ? templates(ship, entry).find(module => String(module.id) === String(id)) : null;
     if (id && !template) fail('Модуль не подходит к этому отсеку.');
     if (id !== String(slot.m?.id ?? '')) {
+      enforceFittingLimits(ship, slot, template);
       if (kind === 'armour') ship.useBulkhead(template.index);
       else ship.use(slot, template ? new Module({ template }) : null);
     }
@@ -292,17 +340,27 @@ export function stats(fit, options = {}) {
   const mass = ship.dryMass + fuel + cargo;
   const jumpFuel = Math.min(fuel, fsd.getMaxFuelPerJump());
   const maxJumpFuel = Math.min(ship.fuelCapacity, fsd.getMaxFuelPerJump());
-  const distance = (shipMass, usableFuel) => usableFuel > 0 ? finite(Calc.jumpRange(shipMass, fsd, usableFuel, ship)) : 0;
-  const shields = Calc.shieldMetrics(ship, sys);
+  const fsdOnline = ship.getSlotStatus(ship.standard[2]) === 3;
+  const distance = (shipMass, usableFuel) => fsdOnline && usableFuel > 0 ? finite(Calc.jumpRange(shipMass, fsd, usableFuel, ship)) : 0;
+  // Combat figures use the deployed power budget. Keep passive protection
+  // even if the reactor cannot power other modules from the same band.
+  const powered = slot => slot.m && (slot.m.getPowerUsage() === 0 || ship.getSlotStatus(slot, true) === 3);
+  const combat = Object.assign(Object.create(ship), {
+    hardpoints: ship.hardpoints.filter(powered),
+    internal: ship.internal.filter(powered),
+  });
+  combat.recalculateDps().recalculateEps().recalculateHps();
+  const shields = Calc.shieldMetrics(combat, sys);
   const rotation = (axis, minimum, formula) => {
     if (!canThrust) return 0;
     const pipsRatio = Number.isFinite(minimum) ? (1 - minimum / axis) / 4 : ship.pipSpeed;
     return finite(formula(mass + (ship.reserveFuelCapacity || 0), axis, ship.standard[1].m, pipsRatio, eng, ship.boost / ship.speed, false));
   };
-  const armour = Calc.armourMetrics(ship);
-  const shield = ship.shield;
+  const armour = Calc.armourMetrics(combat);
+  const shield = shields.summary || 0;
+  const distOnline = ship.getSlotStatus(ship.standard[4], true) === 3;
   const metricsByType = (metrics, total, field, resistances) => Object.fromEntries(damageTypes.flatMap(type => {
-    const multiplier = metrics[type]?.[field] ?? (type === 'absolute' ? (metrics === shields ? 1 - Calc.sysResistance(sys) : 1) : null);
+    const multiplier = metrics[type]?.[field] ?? (type === 'absolute' && field === 'base' ? 1 : null);
     return multiplier == null ? [] : [[type, finite(resistances ? 1 - multiplier : total / multiplier)]];
   }));
   return {
@@ -322,7 +380,7 @@ export function stats(fit, options = {}) {
     maximumRange: distance(ship.dryMass + maxJumpFuel - (ship.reserveFuelCapacity || 0), maxJumpFuel),
     unladenRange: distance(ship.dryMass + ship.fuelCapacity, maxJumpFuel),
     ladenRange: distance(ship.ladenMass, maxJumpFuel),
-    totalRange: fuel > 0 && jumpFuel > 0 ? finite(Calc.totalJumpRange(mass, fsd, fuel, ship)) : 0,
+    totalRange: fsdOnline && jumpFuel > 0 ? finite(Calc.totalJumpRange(mass, fsd, fuel, ship)) : 0,
     powerAvailable: ship.powerAvailable, powerRetracted: ship.powerRetracted, powerDeployed: ship.powerDeployed,
     powerPriorities: ship.priorityBands.map((p, index) => ({ ...p, priority: index + 1 })),
     shield, armour: ship.armour, hardness: ship.hardness, shieldCells: ship.shieldCells,
@@ -331,15 +389,15 @@ export function stats(fit, options = {}) {
     armourResistances: metricsByType(armour, armour.total, 'total', true),
     armourEffective: metricsByType(armour, armour.total, 'total', false),
     moduleArmour: armour.modulearmour, moduleProtection: armour.moduleprotection,
-    shieldRecoveryTime: shield ? finite(shields.recover) : null,
-    shieldRegenTime: shield ? finite(shields.recharge) : null,
+    shieldRecoveryTime: shield && distOnline ? finite(shields.recover) : null,
+    shieldRegenTime: shield && distOnline ? finite(shields.recharge) : null,
     distributor: {
       systemsCapacity: pd.getSystemsCapacity(), enginesCapacity: pd.getEnginesCapacity(), weaponsCapacity: pd.getWeaponsCapacity(),
       systemsRecharge: pd.getSystemsRechargeRate(), enginesRecharge: pd.getEnginesRechargeRate(), weaponsRecharge: pd.getWeaponsRechargeRate(),
     },
     thermalEfficiency: finite(pp.getThermalEfficiency()), heatCapacity: finite(ship.heatCapacity), heatDissipation: finite(ship.heatDissipation),
-    dps: ship.totalDps, sustainedDps: ship.totalSDps, eps: ship.totalEps, hps: ship.totalHps,
-    weaponDrainTime: finite(Calc.timeToDrainWep(ship, wep)),
+    dps: combat.totalDps, sustainedDps: combat.totalSDps, eps: combat.totalEps, hps: combat.totalHps,
+    weaponDrainTime: distOnline ? finite(Calc.timeToDrainWep(combat, wep)) : null,
     cost: ship.totalCost, rebuy: ship.totalCost * 0.05,
   };
 }
@@ -347,14 +405,17 @@ export function stats(fit, options = {}) {
 function journalModule(ship, entry, observed) {
   const symbol = itemSymbol(observed.Item);
   const candidates = templates(ship, entry);
-  return candidates.find(template => observed.Engineering && observed.Engineering.ExperimentalEffect &&
-    template.preEngineered?.experimentalEffects?.some(effect => lower(effect) === lower(observed.Engineering.ExperimentalEffect)) &&
-    itemSymbol(template.symbol) === symbol)
-    || candidates.find(template => {
-      const observedID = observed.ModuleID || observed.edId;
-      return observedID != null && observedID === template.edID;
-    })
-    || candidates.find(template => itemSymbol(template.symbol) === symbol && symbol)
+  const named = candidates.filter(template => symbol && itemSymbol(template.symbol) === symbol);
+  const observedID = Number(observed.ModuleID ?? observed.edId);
+  // The size 5/6 CG rewards share ordinary cargo-rack item and item IDs,
+  // but are the only articles that ever carry this fixed blueprint.
+  const reward = lower(observed.Engineering?.BlueprintName) === lower(rewardRackBlueprint) &&
+    Number(observed.Engineering?.Level) === 5
+    ? named.find(template => template.preEngineered?.blueprints?.includes(rewardRackBlueprint)) : null;
+  return reward
+    || named.find(template => observedID > 0 && observedID === template.edID)
+    || named.find(template => !template.preEngineered)
+    || named[0]
     || (entry.kind === 'armour' && /_armour_(grade1(?:_default)?|grade2|grade3|mirrored|reactive)$/.test(symbol)
       ? ship.availCS.bulkheads[/(grade1_default|grade1|grade2|grade3|mirrored|reactive)$/.exec(symbol)[1] === 'grade1_default' ? 0
         : ['grade1', 'grade2', 'grade3', 'mirrored', 'reactive'].indexOf(/(grade1|grade2|grade3|mirrored|reactive)$/.exec(symbol)[1]) + (ship.availCS.bulkheads.length > 5 ? 1 : 0)]
@@ -365,6 +426,44 @@ function journalKey(value) {
   return lower(value).replace(/_size\d+$/, '').replace(/(hardpoint|slot|military|cargo|limpetcontroller|fighterbay)0+(\d+)$/, '$1$2');
 }
 
+function applyJournalFireRate(module, perSecond) {
+  if (!(perSecond > 0)) return;
+  const baseInterval = 1 / module.get('rof', false);
+  const burst = module.get('burst') || 1;
+  const burstRate = module.get('burstrof') || 1;
+  const charge = module.get('charge') || 0;
+  const interval = burst / perSecond - (burst - 1) / burstRate - charge;
+  // The journal gives shots per second, while Coriolis stores a modifier of
+  // the time between bursts. Applying the ratio as-is reverses the change.
+  if (Number.isFinite(baseInterval) && baseInterval > 0 && interval > 0) {
+    module.setModValue('rof', (interval / baseInterval - 1) * 10000, true);
+  }
+}
+
+function importEngineering(module, engineering) {
+  if (!module || !engineering || typeof engineering !== 'object') return;
+  const name = lower(engineering.BlueprintName);
+  const grade = Number(engineering.Level);
+  const blueprint = blueprintEntries(module).find(entry =>
+    entry.grades.includes(grade) && (lower(entry.symbol) === name || lower(entry.id) === name));
+  const experimental = itemSymbol(engineering.ExperimentalEffect);
+  const special = own(Modifications.specials, experimental) || experimental === 'special_plasma_slug' ? experimental : null;
+  const quality = clamp(engineering.Quality, 1, 1);
+  const modifiers = Array.isArray(engineering.Modifiers) ? engineering.Modifiers.slice(0, 100).filter(mod =>
+    mod && typeof mod.Label === 'string' && Number.isFinite(mod.Value) && Number.isFinite(mod.OriginalValue) &&
+    (mod.Value !== 0 || mod.OriginalValue !== 0)) : [];
+  const isRate = mod => /^(outfittingfieldtype_)?rateoffire$/i.test(mod.Label);
+  if (modifiers.length || quality > 0) {
+    _addModifications(module, modifiers.length ? modifiers.filter(mod => !isRate(mod)) : null, quality, blueprint?.id || null, grade, special);
+    applyJournalFireRate(module, modifiers.find(isRate)?.Value);
+  } else if (blueprint) {
+    // Quality zero still has the recipe's starting values. The shared journal
+    // converter treats zero as missing when there are no explicit modifiers.
+    module.blueprint = { ...Modifications.blueprints[blueprint.id], grade, special: Modifications.specials[special] };
+    setQualityCB(module.blueprint, 0, (feature, value) => module.setModValue(feature, value, false));
+  }
+}
+
 export function fromLoadout(loadout) {
   if (!loadout || !Array.isArray(loadout.Modules) || loadout.Modules.length > 120) fail('В файле нет данных оснащения корабля.');
   const shipId = shipIds.get(normalShipName(loadout.Ship));
@@ -372,6 +471,7 @@ export function fromLoadout(loadout) {
   const ship = makeShip(shipId).buildWith(Ships[shipId].defaults);
   const entries = descriptors(ship);
   const unknown = [];
+  const fitted = new Set();
   const cosmetics = /^(?:paintjob|shipname[0-9]+|shipid[0-9]+|decal[0-9]+|bobble[0-9]+|shipkit.+|weaponcolour|enginecolour|vesselvoice|hologram|shipcockpit|stringlights)$/i;
   for (const { kind, slot, required } of entries) {
     if (!required && kind !== 'hatch') ship.use(slot, null, true);
@@ -386,6 +486,8 @@ export function fromLoadout(loadout) {
       unknown.push(observed.Item);
       continue;
     }
+    if (fitted.has(entry.key)) fail('Один отсек указан в сборке несколько раз.');
+    fitted.add(entry.key);
     const { slot, kind } = entry;
     if (kind !== 'hatch') {
       const template = journalModule(ship, entry, observed);
@@ -396,17 +498,15 @@ export function fromLoadout(loadout) {
       if (kind === 'armour') ship.useBulkhead(template.index, true);
       else ship.use(slot, new Module({ template }), true);
     }
-    slot.enabled = observed.On !== false;
+    slot.enabled = observed.On !== false && observed.On !== 0;
     slot.priority = Number.isInteger(observed.Priority) ? clamp(observed.Priority, 4, 0) : 0;
-    const engineering = observed.Engineering;
-    if (engineering && slot.m) {
-      const blueprint = Object.keys(Modifications.blueprints).find(id => /^[a-z0-9_]+$/i.test(engineering.BlueprintName) && lower(engineering.BlueprintName) === lower(id));
-      _addModifications(slot.m, Array.isArray(engineering.Modifiers) ? engineering.Modifiers.slice(0, 100).filter(mod => mod && typeof mod.Label === 'string' && Number.isFinite(mod.Value) && Number.isFinite(mod.OriginalValue)) : null,
-        clamp(engineering.Quality, 1, 1), blueprint || null, Number(engineering.Level),
-        own(Modifications.specials, engineering.ExperimentalEffect) || engineering.ExperimentalEffect === 'special_plasma_slug' ? engineering.ExperimentalEffect : null);
-    }
+    importEngineering(slot.m, observed.Engineering);
   }
   if (unknown.length) fail('Не найдены модули или отсеки: ' + unknown.slice(0, 5).join(', '));
+  if (loadout.event === 'Loadout' && entries.some(entry =>
+    (entry.kind === 'core' || entry.kind === 'armour') && !fitted.has(entry.key))) {
+    fail('В журнале отсутствуют обязательные модули корабля.');
+  }
   const fit = toFit(ship.updatePowerPrioritesString().updatePowerEnabledString().updateModificationsString(), loadout.ShipName);
   return toFit(restore(fit), fit.name);
 }
@@ -450,7 +550,8 @@ function parseRecord(value) {
     const shipId = reference.shipId || shipIds.get(normalShipName(value.ship));
     return fromCoriolisCode({ shipId, name: value.name, code: reference.code });
   }
-  if (value.header?.appURL && typeof value.header.appURL === 'string' && ['Coriolis', 'ED Copilot'].includes(value.header.appName)) {
+  if (value.data?.Modules && value.header?.appName !== 'ED Copilot') return fromLoadout(value.data);
+  if (typeof value.header?.appURL === 'string' && ['Coriolis', 'ED Copilot'].includes(value.header.appName)) {
     const fit = parseURL(value.header.appURL);
     if (fit) return fit;
   }
@@ -492,7 +593,47 @@ export function toCoriolisURL(fit) {
   return 'https://coriolis.io/outfit/' + ship.id + '?' + params;
 }
 
-function exportFit(fit, format = 'native') {
+const journalStats = [
+  ['mass', 'Mass'], ['integrity', 'Integrity'], ['power', 'PowerDraw'],
+  ['pgen', 'PowerCapacity'], ['eff', 'HeatEfficiency'], ['boot', 'BootTime'],
+  ['maxfuel', 'MaxFuelPerJump'], ['engcap', 'EnginesCapacity'], ['engrate', 'EnginesRecharge'],
+  ['syscap', 'SystemsCapacity'], ['sysrate', 'SystemsRecharge'], ['wepcap', 'WeaponsCapacity'],
+  ['weprate', 'WeaponsRecharge'], ['damage', 'Damage'], ['distdraw', 'DistributorDraw'],
+  ['ammo', 'AmmoMaximum'], ['clip', 'AmmoClipSize'], ['reload', 'ReloadTime'],
+  ['range', 'Range'], ['piercing', 'ArmourPenetration'], ['shotspeed', 'ShotSpeed'], ['jitter', 'Jitter'],
+  ['regen', 'RegenRate'], ['brokenregen', 'BrokenRegenRate'], ['thermload', 'ThermalLoad'],
+  ['shieldreinforcement', 'ShieldBankReinforcement'], ['duration', 'ShieldBankDuration'],
+  ['spinup', 'ShieldBankSpinUp'], ['hullreinforcement', 'DefenceModifierHealthAddition'],
+  ['ranget', 'FSDInterdictorRange'], ['facinglimit', 'FSDInterdictorFacingLimit'],
+  ['scanrate', 'DSS_RateMult'], ['scantime', 'ScannerTimeToScan'], ['angle', 'SensorTargetScanAngle'],
+  ['cargo', 'CargoCapacity'], ['proberadius', 'DSS_PatchRadius', 100],
+  ['kinres', 'KineticResistance', 100], ['thermres', 'ThermicResistance', 100],
+  ['explres', 'ExplosiveResistance', 100], ['causres', 'CausticResistance', 100],
+  ['shieldboost', 'DefenceModifierShieldMultiplier', 100], ['hullboost', 'DefenceModifierHealthMultiplier', 100],
+];
+
+function slefModifiers(module) {
+  const attributes = journalStats.slice();
+  if (module.grp === 'fsd') attributes.push(['optmass', 'FSDOptimalMass']);
+  if (module.grp === 't') attributes.push(['optmass', 'EngineOptimalMass'], ['optmul', 'EngineOptPerformance']);
+  if (['sg', 'psg', 'bsg'].includes(module.grp)) attributes.push(['optmass', 'ShieldGenOptimalMass'], ['optmul', 'ShieldGenStrength']);
+  const output = [];
+  function changed(label, value, original) {
+    if (Number.isFinite(value) && Number.isFinite(original) && Math.abs(value - original) > 1e-8) {
+      output.push({ Label: label, Value: Number(value.toFixed(6)), OriginalValue: Number(original.toFixed(6)) });
+    }
+  }
+  for (const [field, label, scale = 1] of attributes) {
+    const value = module.get(field);
+    const original = module.get(field, false);
+    if (value != null && original != null) changed(label, value * scale, original * scale);
+  }
+  changed('RateOfFire', module.getRoF(), module.getRoF(false));
+  changed('DamageFalloffRange', module.getFalloff(), module.get('falloff', false));
+  return output;
+}
+
+function exportFit(fit, format = 'native', appVersion = '1') {
   const ship = restore(fit);
   const name = validName(fit.name, ship.name);
   if (format === 'coriolis') {
@@ -514,16 +655,19 @@ function exportFit(fit, format = 'native') {
       }
       if (!symbol) fail('У модуля отсутствует игровой идентификатор для экспорта.');
       const engineering = describeEngineering(slot.m);
+      const modifiers = engineering ? slefModifiers(slot.m) : [];
       return [{
         Slot: key, Item: symbol, On: kind === 'armour' || Boolean(slot.enabled), Priority: slot.priority ?? 0,
+        ...(slot.m.edID ? { ModuleID: slot.m.edID } : {}),
         ...(engineering ? { Engineering: {
           BlueprintName: engineering.symbol, Level: engineering.grade, Quality: engineering.quality ?? 1,
           ...(engineering.experimental ? { ExperimentalEffect: engineering.experimental } : {}),
+          ...(modifiers.length ? { Modifiers: modifiers } : {}),
         } } : {}),
       }];
     });
     return JSON.stringify([{
-      header: { appName: 'ED Copilot', ...(supportsCoriolis(fit) ? { appURL: toCoriolisURL(fit) } : {}) },
+      header: { appName: 'ED Copilot', appVersion, ...(supportsCoriolis(fit) ? { appURL: toCoriolisURL(fit) } : {}) },
       data: { Ship: Ships[ship.id].frontierSymbol || ship.id, ShipName: name, Modules },
     }], null, 2);
   }

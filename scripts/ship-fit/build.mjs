@@ -60,6 +60,12 @@ try {
 
   patch(join(upstream, 'shipyard/Ship.js'), "const zlib = require('zlib');", "const zlib = require('zlib');\nconst { Buffer } = require('buffer');");
   patch(join(upstream, 'shipyard/Ship.js'), "new Buffer(Utils.fromUrlSafe(modstr), 'base64')", "Buffer.from(Utils.fromUrlSafe(modstr), 'base64')");
+  // A load exactly at the reactor's capacity is still powered.
+  const shipSource = join(upstream, 'shipyard/Ship.js');
+  patch(shipSource, 'deployedSum >= this.powerAvailable', 'deployedSum - this.powerAvailable > 1e-9');
+  patch(shipSource, 'retractedSum >= this.powerAvailable', 'retractedSum - this.powerAvailable > 1e-9');
+  patch(shipSource, 'this.powerAvailable = this.standard[0].m.getPowerGeneration();', 'this.powerAvailable = this.standard[0].enabled ? this.standard[0].m.getPowerGeneration() : 0;');
+  patch(shipSource, 'this.dryMass + (cargo || 0) + (fuel || 0) < this.standard[1].m.getMaxMass()', 'this.dryMass + (cargo || 0) + (fuel || 0) + (this.reserveFuelCapacity || 0) <= this.standard[1].m.getMaxMass()');
   // An invalid FSD imported from an external build must never make the fuel loop stall.
   // The upstream webpack build preserves namespace call receivers. Direct calls make
   // the same calculation functions portable to this tree-shaken browser bundle.
@@ -74,6 +80,7 @@ try {
   patch(join(upstream, 'shipyard/Calculations.js'), 'while (fuelRemaining > 0) {', 'for (let i = 0; fuelRemaining > 0 && i < 10000; i++) {');
   patch(join(upstream, 'shipyard/Calculations.js'), 'return totalRange;', 'return fuelRemaining > 0 ? NaN : totalRange;');
   patch(join(upstream, 'utils/JournalUtils.js'), 'function _addModifications(', 'export function _addModifications(');
+  patch(join(upstream, 'utils/JournalUtils.js'), 'value = (modifiers[i].Value / module.range - 1) * 100;', 'value = modifiers[i].OriginalValue === 0 ? 0 : (modifiers[i].Value / modifiers[i].OriginalValue - 1) * 10000;');
   // The adapter uses only the pure calculation portion of these modules.
   const react = join(staging, 'unused-ui.cjs');
   writeFileSync(react, 'module.exports = {};\n');

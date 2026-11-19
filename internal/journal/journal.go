@@ -33,6 +33,7 @@ type Reader struct {
 	// AfterScan publishes a completed replay after current side files are applied.
 	// It also runs on failure so callers can leave the loading state.
 	AfterScan                        func(initial, complete bool)
+	AfterPoll                        func(PollReport)
 	initialPoll                      bool
 	Notice                           func(string)
 	positions                        map[string]int64
@@ -45,6 +46,14 @@ type Reader struct {
 	lastEvent, lastUpdate, errorText string
 	rescan                           bool
 	previousNames                    []string
+}
+
+// PollReport contains counters and status changes without journal contents.
+type PollReport struct {
+	Scan, Failed, ErrorChanged bool
+	FilesRead, TotalFiles      int
+	Events                     int
+	Elapsed                    time.Duration
 }
 
 type journalIdentity struct {
@@ -146,12 +155,21 @@ func (r *Reader) Poll() {
 	r.mu.Lock()
 	initial := r.initialPoll
 	r.initialPoll = false
+	started, previousError := time.Now(), r.errorText
 	defer func() {
 		scanned, complete := r.scanning, r.errorText == ""
+		var report PollReport
+		if r.AfterPoll != nil {
+			report = PollReport{Scan: scanned, Failed: !complete, ErrorChanged: previousError != r.errorText,
+				FilesRead: r.filesRead, TotalFiles: r.total, Events: r.events, Elapsed: time.Since(started)}
+		}
 		r.scanning = false
 		r.mu.Unlock()
 		if scanned && r.AfterScan != nil {
 			r.AfterScan(initial, complete)
+		}
+		if r.AfterPoll != nil && (report.Scan || report.ErrorChanged) {
+			r.AfterPoll(report)
 		}
 	}()
 	entries, e := os.ReadDir(r.Dir)

@@ -75,6 +75,22 @@ func TestCatalogCoverage(t *testing.T) {
 	}
 }
 
+func TestMaterialTraderNameAndLegacyAlias(t *testing.T) {
+	catalog := Catalog()
+	const id = "material/scrambledemissiondata"
+	const name = "Исключительные зашифрованные данные об излучении"
+	for _, query := range []string{name, "Исключительные искажённые данные излучения", "Exceptional Scrambled Emission Data"} {
+		entry, ok := catalog.Entry("material/" + query)
+		if !ok || entry.ID != id || entry.Title != name {
+			t.Errorf("material link %q resolved to %+v", query, entry)
+		}
+		result := catalog.List(Query{Category: "materials", Query: query})
+		if len(result.Entries) != 1 || result.Entries[0].ID != id || result.Entries[0].Title != name {
+			t.Errorf("material search %q returned %+v", query, result.Entries)
+		}
+	}
+}
+
 func checkJPEG(t *testing.T, image *Image, maxWidth, maxHeight, maxBytes int) {
 	t.Helper()
 	if !strings.HasPrefix(image.Src, "data:image/jpeg;base64,") {
@@ -438,5 +454,20 @@ func BenchmarkEntryEngineer(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = s.Entry("engineer/300100")
+	}
+}
+
+// The fitter and the ship cards share the same top-view images.
+func TestEveryShipHasTopViewByHullName(t *testing.T) {
+	catalog := Catalog()
+	for _, ship := range objectRows("encyclopedia-ships.json") {
+		name := v.Str(ship["name"])
+		image := catalog.ShipTopView(name)
+		if image == nil || !strings.HasPrefix(image.Src, "data:image/jpeg;base64,") || image.Alt != name {
+			t.Errorf("missing schematic for %q", name)
+		}
+	}
+	if img := catalog.ShipTopView("../../media/ship-sidewinder.jpg"); img != nil {
+		t.Fatal("unrecognized hull name resolved to an image")
 	}
 }

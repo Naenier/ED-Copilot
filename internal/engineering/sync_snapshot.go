@@ -19,7 +19,7 @@ func (p *Planner) InventorySnapshot() M {
 		if p.known[group] && !p.uncertain[key] {
 			owned = p.stock[key]
 		}
-		rows = append(rows, M{"key": key, "symbol": material["symbol"], "name": material["name"], "category": group, "owned": owned, "updatedAt": p.at[group]})
+		rows = append(rows, M{"key": key, "symbol": material["symbol"], "name": material["name"], "english": material["english"], "category": group, "owned": owned, "updatedAt": p.at[group]})
 	}
 	statuses := make([]M, 0, len(engineers))
 	for _, engineer := range v.Rows(catalog["engineers"]) {

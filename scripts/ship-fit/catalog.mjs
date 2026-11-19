@@ -106,12 +106,20 @@ const supplementalIDs = {
   Int_MkII_PassengerCabin_Size5_Class2: 'qM',
   Int_MkII_PassengerCabin_Size6_Class1: 'qN',
   Int_MkII_PassengerCabin_Size6_Class2: 'qO',
+  Int_LargeBuggyBay_Size2_Class3: 'qP',
+  Int_LargeBuggyBay_Size2_Class3_Free: 'qQ',
+  Int_LargeBuggyBay_Size4_Class3: 'qR',
+  Int_LargeBuggyBay_Size4_Class3_Free: 'qS',
+  Int_LargeBuggyBay_Size6_Class3: 'qT',
+  Int_LargeBuggyBay_Size6_Class3_Free: 'qU',
 };
 
 export function extend(rawData, almanac) {
   const hulls = readJSONC(almanac, 'ships');
   const core = readJSONC(almanac, 'modules-core');
   const internal = readJSONC(almanac, 'modules-internal');
+  const hardpointData = readJSONC(almanac, 'modules-hardpoint');
+  const utilityData = readJSONC(almanac, 'modules-utility');
   const loadouts = readJSONC(almanac, 'default-loadouts');
   const hardpoints = Object.values(rawData.Modules.hardpoints).flat();
   const allModules = Object.values(rawData.Modules).flatMap(groups => Object.values(groups).flat());
@@ -131,14 +139,18 @@ export function extend(rawData, almanac) {
       extraModule(row, 'internal', 'fh', {
         bays: row.class === 5 ? 1 : 2, rebuildsperbay: { 5: 6, 6: 8, 7: 30 }[row.class],
       });
-    } else if (/^Int_MkIILargeBuggyBay_Size[246]_Class3(?:_Free)?$/i.test(row.symbol)) {
+    } else if (/^Int_(?:MkII)?LargeBuggyBay_Size[246]_Class3(?:_Free)?$/i.test(row.symbol)) {
+      const mkII = row.symbol.startsWith('Int_MkII');
+      const edID = mkII ? { 2: 129046058, 4: 129046059, 6: 129046060 }[row.class]
+        : { 2: 129046055, 4: 129046056, 6: 129046057 }[row.class];
+      const freeID = mkII ? { 2: 129046184, 4: 129046185, 6: 129046186 }[row.class]
+        : { 2: 129046181, 4: 129046182, 6: 129046183 }[row.class];
       const stats = { bays: { 2: 1, 4: 2, 6: 4 }[row.class], vesselHangar: true };
-      extraModule(row, 'internal', 'pv', stats);
+      extraModule(row, 'internal', 'pv', { ...stats, edID: row.symbol.endsWith('_Free') ? freeID : edID });
       if (!row.symbol.endsWith('_Free') && !internal.some(module => module.symbol === row.symbol + '_Free')) {
         // The bundled versions use the same mass and power draw. Their item IDs and
         // zero purchase price are recorded in EDSY's pinned October 2026 specifications.
-        const edID = { 2: 129046184, 4: 129046185, 6: 129046186 }[row.class];
-        extraModule({ ...row, symbol: row.symbol + '_Free', cost: 0 }, 'internal', 'pv', { ...stats, edID });
+        extraModule({ ...row, symbol: row.symbol + '_Free', cost: 0 }, 'internal', 'pv', { ...stats, edID: freeID });
       }
     } else if (/^Int_MkII_PassengerCabin_/i.test(row.symbol)) {
       const group = /Class1$/i.test(row.symbol) ? 'pce' : 'pci';
@@ -147,6 +159,20 @@ export function extend(rawData, almanac) {
       extraModule(row, 'internal', 'crl', { cargo: row.cargoCapacity });
     }
   }
+  const moduleRules = new Map([...internal, ...hardpointData, ...utilityData].map(row => [buildSymbol(row.symbol), row]));
+  for (const module of [...hardpoints, ...Object.values(rawData.Modules.internal).flat()]) {
+    const source = moduleRules.get(buildSymbol(module.symbol || ''));
+    for (const key of ['exclusionGroup', 'limitGroup', 'limitIncrease']) {
+      if (source?.[key] !== undefined) module[key] = source[key];
+    }
+  }
+  Object.assign(rawData.Modifications.modifierActions, {
+    OutfittingFieldType_DSS_PatchRadius: { proberadius: 1 },
+    OutfittingFieldType_MaxFuelPerJump: { maxfuel: 1 },
+    OutfittingFieldType_ThermalResistance: { thermres: 1 },
+    OutfittingFieldType_CausticResistance: { causres: 1 },
+    OutfittingFieldType_DamageFalloffRange: { falloff: 1 },
+  });
   const internals = Object.values(rawData.Modules.internal).flat();
   const additions = {
     lynx_highliner: { symbol: 'MediumTransport01', edID: 129041442, minThrust: 73.75, boostEnergy: 14, boostInterval: 5 },

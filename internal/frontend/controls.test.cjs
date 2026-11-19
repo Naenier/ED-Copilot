@@ -77,6 +77,9 @@ test('Settings opens the controls editor and displays all active contexts with b
   const f=fixture('en');
   assert.match(f.api.tabs(f.C,f.u),/Controls/);
   assert.equal(f.api.active(f.C),false);
+  await f.click('tab',{tab:'diagnostics'});
+  assert.match(f.api.tabs(f.C,f.u),/data-tab="diagnostics"\s+class="selected" aria-current="page">Application log/);
+  assert.deepEqual(f.calls,[]);
   await f.open();
   assert.deepEqual(f.calls,[{op:'controls.view',params:{profileId:''}}]);
   const html=f.api.render(f.C,f.u);

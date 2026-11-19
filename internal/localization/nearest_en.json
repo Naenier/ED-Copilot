@@ -1,4 +1,11 @@
 {
   "Поиск ближайших": "Search nearby",
-  "Не удалось загрузить раздел.": "Could not load the workspace."
+  "Не удалось загрузить раздел.": "Could not load the workspace.",
+  "Проверьте номер страницы поиска.": "Check the search page number.",
+  "Числовой фильтр находится вне допустимого диапазона.": "A numeric filter is outside its valid range.",
+  "Минимальное значение превышает максимальное.": "The minimum is higher than the maximum.",
+  "Диапазон населения не совпадает с выбранным типом системы.": "The population range conflicts with the selected population filter.",
+  "Доступны первые 100 страниц. Уточните условия поиска.": "The first 100 pages are available. Narrow the search criteria to find more specific results.",
+  "Укажите класс модуля от 0 до 8.": "Enter a module class from 0 to 8.",
+  "Можно выбрать до 40 кораблей и модулей вместе.": "Select up to 40 ships and modules in total."
 }

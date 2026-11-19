@@ -495,6 +495,18 @@ test('large tables keep all rows searchable while mounting at most one hundred r
 
 test('asynchronous desktop save errors remain visible to the user',()=>{const {window,messages}=fixture();window.copilotReceive({event:'notice',data:{message:'Не удалось сохранить настройки'}});assert.equal(messages.length,1);assert.equal(messages[0].message,'Не удалось сохранить настройки');assert.equal(messages[0].error,true);});
 
+test('live updates notify the open fitting workspace when replay starts or the commander changes',()=>{
+ const {window,api}=fixture(),observed=[];
+ api.C.tab='engineering';api.C.layer=true;
+ api.C.state={planWorkspace:{key:'live:first'},connection:{scanning:false},shipBuildRevision:3};
+ window.EDCopilotShipFits={refreshTelemetry(C){observed.push([C.state.planWorkspace.key,C.state.connection.scanning,C.state.shipBuildRevision]);}};
+ const update=data=>window.copilotReceive({event:'update',data:{settings:{},commander:{},...data}});
+ update({connection:{scanning:true},revision:5});
+ update({connection:{scanning:true},revision:6,planWorkspace:{key:'live:first'}});
+ update({connection:{scanning:false},revision:7,planWorkspace:{key:'legacy:second'},shipBuildRevision:4});
+ assert.deepEqual(observed,[['live:first',true,3],['legacy:second',false,4]]);
+});
+
 
 test('canonical view context opens a screen with matching actions in one request',async()=>{const {api}=fixture();let calls=0,renders=0;api.C.tab='overview';api.C.mode='';api.C.selected='';api.setCall(async()=>{calls++;return {context:{mode:'Планы',selected:'goal-b'},page:{Title:'Обзор',Modes:['Планы'],Rows:[{ID:'goal-a'},{ID:'goal-b'}]},actions:[{id:'goal.edit',fields:[{key:'title',default:'Вторая цель'}]}],state:{}};});api.setRender(()=>{renders++;});await api.loadView();assert.equal(calls,1);assert.equal(renders,1);assert.equal(api.C.selected,'goal-b');assert.equal(api.C.mode,'Планы');assert.equal(api.C.actions[0].fields[0].default,'Вторая цель');});
 

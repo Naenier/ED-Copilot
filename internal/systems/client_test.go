@@ -25,6 +25,44 @@ func query(t *testing.T, c *Client, name string, seq uint64) Result {
 	}
 	return got
 }
+
+func TestMinorFactionLookupUsesItsOwnIndexAndSharesBoundedCache(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		switch r.URL.Path {
+		case "/":
+			fmt.Fprint(w, `{"values":["Sol"]}`)
+		case lookupPaths["faction"]:
+			names := make([]string, 32)
+			for i := range names {
+				names[i] = fmt.Sprintf("Workers of Sector %d", i)
+			}
+			names = append(names, "Sol Workers' Party", "Sol Constitution Party")
+			_ = json.NewEncoder(w).Encode(map[string]any{"values": map[string]any{"name": names}, "min_max": map[string]any{}})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	c := NewClient(options(server))
+	defer c.Close()
+	if got := query(t, c, "Sol", 1); len(got.Suggestions) != 1 || got.Suggestions[0].Name != "Sol" {
+		t.Fatalf("system suggestions = %v", got)
+	}
+	req := Request{Kind: "faction", Query: "Sol", FieldID: "owner", Sequence: 1, Limit: 1}
+	got, err := c.Query(context.Background(), req)
+	if err != nil || len(got.Suggestions) != 1 || got.Suggestions[0].Name != "Sol Workers' Party" || !got.Limited {
+		t.Fatalf("faction suggestions = %v, %v", got, err)
+	}
+	req.Sequence++
+	req.Limit = MaxResults
+	got, err = c.Query(context.Background(), req)
+	if err != nil || !got.Cached || len(got.Suggestions) != 2 || requests.Load() != 2 {
+		t.Fatalf("cached faction suggestions = %v, %v; requests %d", got, err, requests.Load())
+	}
+}
+
 func TestPublicWireShapeCanonicalNamesAndPrecisionArePreserved(t *testing.T) {
 	var calls atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

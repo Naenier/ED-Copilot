@@ -22,6 +22,20 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
    if(selector==='#toasts')return {replaceChildren(){}};
    if(selector.startsWith('[data-commander-section='))return C.tab==='commander'?{}:null;
    if(selector==='[data-click="sidebar"]')return {dataset:{click:'sidebar'}};
+   if(C.tab==='riches'&&selector==='.riches-table tbody tr')return {};
+   if(C.tab==='nearest'&&selector==='#nearest-form')return {requestSubmit(){calls.push({op:'nearest-search'});}};
+   if(C.tab==='nearest'&&selector==='.near-results tbody tr')return calls.some(row=>row.op==='nearest-search')?{}:null;
+   if(C.mode==='Конструктор кораблей'){
+    if(selector==='[data-fit-action="fleet"]:enabled')return {click(){C.fitLayer='fleet';}};
+    if(selector==='#fit-fleet [data-fit-action="fleet-open"]:enabled')return C.fitLayer==='fleet'?{click(){C.fitLayer=null;C.fitted=true;}}:null;
+    if(selector==='#fit-schematic-image img'||selector==='.fit-slot')return C.fitted?{}:null;
+    if(selector==='[data-fit-action="materials"]:enabled')return C.fitted?{click(){C.fitLayer='materials';}}:null;
+    if(selector==='#fit-materials-content .fit-material-table table')return C.fitLayer==='materials'?{}:null;
+   }
+   if(C.tab==='settings'){
+    if(selector==='[data-click="controls-tab"][data-tab="diagnostics"]')return {dataset:{tab:'diagnostics'}};
+    if(selector==='[data-logs-results] tbody tr')return C.diagnostics?{}:null;
+   }
    if(C.tab==='deals'){
     if(selector==='[data-click="deals-view"][data-view="search"]')return tradeSearch;
     if(selector==='[data-deals-filter="sourcePowerState"]')return C.dealsUI.view==='search'?{}:null;
@@ -37,15 +51,16 @@ function fixture(language='en',bodyText=language==='ru'?'Командир и е�
    if(selector==='.eng-exchange tbody [data-reference-id^="material/"]')return calls.some(row=>row.op==='action'&&row.body.actionId==='engineering.trade')?{}:null;
    return null;
   },
-  $$(selector){if(selector==='[data-rank-card]')return Array.from({length:8},()=>({}));if(selector==='.rail [data-click="settings-nav"]')return [{}];if(selector==='.sidebar [data-nav="settings"]')return [];return [];},
+  $$(selector){if(selector==='[data-rank-card]')return Array.from({length:8},()=>({}));if(selector==='.rail [data-click="settings-nav"]')return [{}];if(selector==='#fit-materials-content .fit-material-table'&&C.fitLayer==='materials')return [{},{},{}];return [];},
   async call(op,body){calls.push({op,body});if(op==='window'&&body.action==='status')return {displayMode:'fullscreen'};if(op==='reference.list')return {entries:[{id:'article/example'}]};return {};},
   async navigate(tab,options={}){C.tab=tab;C.mode=options.mode||'';if(tab==='deals')C.dealsUI={};if(tab==='encyclopedia')C.reference={loading:false,entryLoading:false,list:{entries:[]}};},
   async handleClick(action,button){
+   if(action==='controls-tab'){assert.equal(button.dataset.tab,'diagnostics');C.diagnostics=true;return;}
    if(action==='reference-galaxy-tab'){assert.equal(button.dataset.id,'bodies');C.systemBodies=true;return;}
    if(action==='deals-view'){assert.equal(button.dataset.view,'search');C.dealsUI.view='search';calls.push({op:'trade-search'});return;}
    assert.equal(action,'sidebar');C.collapsed=!C.collapsed;calls.push({op:'sidebar',collapsed:C.collapsed});
   },
-  renderPage(){},async loadView(){},async smokeCapture(name){captures.push(name);}
+  closeLayer(){C.fitLayer=null;},renderPage(){},async loadView(){},async smokeCapture(name){captures.push(name);}
  };
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'readme-capture.js'),'utf8'),{window,document,innerWidth:1920,innerHeight:1080,requestAnimationFrame:fn=>fn(),setTimeout,Date,Event});
  return {C,u,window,document,calls,captures,run:()=>window.ReadmeCapture.run(C,u),report:()=>calls.find(row=>row.op==='smoke-result')?.body};
@@ -59,8 +74,9 @@ test('true documentation flags still reject real commanders and invalid language
 
 test('English and Russian capture flows visit commander sections and restore compact navigation',async()=>{
  for(const language of ['en','ru']){
-  const f=fixture(language);await f.run();const report=f.report();assert.equal(report.ok,true,JSON.stringify(report.problems));assert.equal(report.language,language);assert.equal(f.captures.length,28);assert.equal(new Set(f.captures).size,28);
-  for(const name of ['readme-commander','readme-ranks','readme-fleet','readme-inventory','readme-navigation','readme-navigation-compact','readme-farming','readme-galaxy','readme-system','readme-engineering','readme-material-exchange','readme-material','readme-deals-filters','readme-farming-catalog','readme-exo-planets','readme-exo-samples','readme-politics'])assert.ok(f.captures.includes(name),name);
+  const f=fixture(language);await f.run();const report=f.report();assert.equal(report.ok,true,JSON.stringify(report.problems));assert.equal(report.language,language);assert.equal(f.captures.length,34);assert.equal(new Set(f.captures).size,34);
+  for(const name of ['readme-commander','readme-ranks','readme-fleet','readme-inventory','readme-navigation','readme-navigation-compact','readme-farming','readme-galaxy','readme-system','readme-engineering','readme-material-exchange','readme-material','readme-deals-filters','readme-farming-catalog','readme-exo-planets','readme-exo-samples','readme-politics','readme-road-to-riches','readme-nearest','readme-ship-fitting','readme-ship-fitting-materials','readme-ship-fitting-fleet','readme-app-log'])assert.ok(f.captures.includes(name),name);
+  assert.ok(f.calls.some(row=>row.op==='nearest-search'));assert.equal(f.C.fitLayer,null);
   assert.ok(f.calls.some(row=>row.op==='trade-search'));
   assert.ok(f.calls.some(row=>row.op==='blueprint'&&row.type==='change'&&row.value==='FSD_LongRange'));
   assert.ok(f.calls.some(row=>row.op==='reference-farming'));

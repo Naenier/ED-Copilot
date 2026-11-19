@@ -4,13 +4,13 @@
 
 **English** · [Русский](README.ru.md)
 
-A desktop companion for Elite Dangerous. Look up star systems, plan engineering and colonisation, compare trading and mining opportunities, manage fleet carrier routes, and track exobiology.
+A desktop companion for Elite Dangerous. Build and compare ships, search for stations and outfitting, plan engineering and colonisation, compare trading and mining opportunities, manage fleet carrier routes, and track exobiology.
 
 **[Download for Windows](https://github.com/Naenier/ED-Copilot/releases/latest)** · [User guide (RU)](docs/USER-GUIDE.md) · [Installation and updates (RU)](docs/INSTALLATION.md)
 
 ![Commander overview in ED Copilot](docs/screenshots/en/overview.png)
 
-*Screenshots use a demonstration profile. Commander data, balances, market quotes, and the sample mapping route are fictional.*
+*Screenshots use a demonstration profile. Commander data, fits, market quotes, search results and the sample mapping route are fictional.*
 
 ## Getting started
 
@@ -33,9 +33,13 @@ Your avatar opens **Commander**, with pages for Summary, Ranks, Finances, Invent
 
 Open **Settings → Controls**, choose an assignment and press a button or move a stick to capture it. To record a gamepad combination, hold the modifier and press the other button. Switch profiles for general controls, ship, SRV and on-foot play independently. Import or export a `.binds` file, save a backup or restore a previous copy. Exit Elite Dangerous before changing its control files.
 
-## Star system search
+## Search nearby and explore systems
 
-Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. When nearby search falls back to Spansh, the results identify the provider and include up to 50 of the nearest systems.
+**Galaxy → Search nearby** has seven categories with separate filters. Find stations by pad size and services, check outfitting by module class, rating and mount, and filter factions, systems, bodies, signals and other destinations. Search around a system within a specified radius or choose a galactic region where available. Station and system searches cover indexed observations. Orbital signals use EDDN observations, and mission results point to likely locations to check in the game. [Directive 47 EDDN index](https://github.com/dseelinger/d47/releases/tag/signals-1) · [ED Tools](https://edtools.cc/)
+
+![Nearby station search with filters and indexed results](docs/screenshots/en/nearest.png)
+
+Open **Galaxy → Systems** to find a system by name or browse systems within 100 ly of a chosen reference system. Filter nearby results by population, allegiance, government, economy, and security. System pages load coordinates, permits, celestial bodies and materials, stations, and faction influence from EDSM. When this system list falls back to Spansh, it identifies the provider and includes up to 50 of the nearest systems.
 
 Star system fields offer up to twenty suggestions from Spansh and EDSM. Type three characters and select a name with the mouse or ↑/↓ and Enter. In multiline route stops, selecting a suggestion replaces only the current line. You can also enter a name manually.
 
@@ -58,6 +62,8 @@ Copilot copies the next system when the route is ready and after you arrive at e
 Open **Galaxy → Expeditions** to record a journey, add stops and notes, and review the travel map. Visits, FSS completion, DSS mapping and Universal Cartographics payouts are tracked separately. Configure rules in **Discoveries** to pick out bodies and observations you care about. **Surveys** tracks named systems or a range in a procedural boxel and supports JSON import and export.
 
 In **Galaxy → Ship route**, import the in-game route, assemble a waypoint list, or calculate a route with Spansh. Check scoopable stars, fuel information and the next stop. Enable auto-copy to put the following destination on the clipboard after a confirmed arrival. The **Flight and Navigation** overlay shows the next waypoint.
+
+Use **Galaxy → Surface coordinates** to enter a target latitude and longitude for the current body. When the game supplies a current position, Copilot shows the bearing and, if the radius of the body is known, the surface distance. The flight overlay can show the same guidance.
 
 ## Exobiology
 
@@ -152,7 +158,19 @@ The **Budget** view values every commodity at its latest observed galactic avera
 
 ![Colonisation plan](docs/screenshots/en/colonization.png)
 
-## Engineering
+## Ship builder and engineering
+
+Open **Engineering → Ship builder** to start with a hull, import JSON or a Coriolis link, or select **Load from fleet**. The editor uses top-view ship schematics and filters slots by module group. Compare jump range, speed, combat and power statistics under different loads. Save builds locally, compare saved fits and export as ED Copilot JSON or SLEF. Coriolis Detailed JSON and share links are available for compatible builds. Large libraries export as numbered, independently importable JSON files.
+
+![Ship builder with a hull schematic, module groups and performance estimates](docs/screenshots/en/ship-fitting.png)
+
+Fleet import lists ships observed for the current commander and game mode. An importable ship has a recorded loadout. If only its identity or location is known, switch to the ship in Elite Dangerous and refresh the list.
+
+![Fleet import with observed loadouts and ships awaiting an observation](docs/screenshots/en/ship-fitting-fleet.png)
+
+Select **Materials** in the builder for the build's engineering budget. Three side-by-side tables show requirements, known inventory and shortages for raw materials, manufactured materials and encoded data. The builder budgets the design from unmodified equipment at engineer rank 5. Use **Current ship** for the remaining work on a module you already own.
+
+![Ship builder material requirements, inventory and shortages in three tables](docs/screenshots/en/ship-fitting-materials.png)
 
 **Current ship** reads fitted modules and upgrades from the game journal. Save a target blueprint, grade and experimental effect for each slot you want to upgrade. The ship plan combines material requirements, compares them with your inventory, and suggests an order for visiting engineers and meeting their unlock requirements.
 
@@ -163,6 +181,8 @@ Use **Engineering → Progression** to follow unlock steps and filter engineers 
 ![Engineering progression and links to upgrade requirements](docs/screenshots/en/engineering.png)
 
 Open **Engineering → Materials** to review stock or select **Calculate material trade**. The calculator compares exchange options for the selected material and shows which ones your available stock can cover.
+
+The Russian catalogue uses in-game names for ship engineering materials and Odyssey resources. Earlier material names still find the same reference entries. [Game-name sources](https://github.com/Elite-Dangerous-Almanac/Almanac-Core/blob/47f07b921b4d2b795d17c42c6b43370f55e4a3c6/data/i18n/SOURCES.md#material-namesjsonc)
 
 ![Materials inventory and exchange options](docs/screenshots/en/material-exchange.png)
 
@@ -210,9 +230,13 @@ The application starts in **English** on first launch. Choose English or Russian
 
 This README is also available [in Russian](README.ru.md).
 
-## Connections and updates
+## Connections, diagnostics and updates
 
 In **Settings → Connections**, sign in to Frontier to refresh supported account information in the background. Under **Inara**, add your personal API key and enable event sending.
+
+The installed version appears below the **Settings** heading. Open **Application log** to filter local diagnostics by component, level or text. Logs cover application startup, journal reading, overlay activity, request outcomes and updates. The current week and previous three weeks are retained, with a total limit of 32 MiB.
+
+![Settings version and the filterable Application log](docs/screenshots/en/app-log.png)
 
 Automatic updates are enabled by default and can be switched off in Settings. Stable GitHub releases download quietly and are checked against published SHA256 digests. Installation waits until you fully exit Copilot; the next launch shows the changes. Setup provides separate Start Menu and desktop shortcut choices and preserves them during updates.
 
@@ -222,4 +246,4 @@ Plans, settings and progress are stored in `%LOCALAPPDATA%\ED Copilot`, separate
 
 Embedded reference data, the Academy and local plans work offline. New market searches, system suggestions, route planning and synchronisation require an internet connection. A dash means a value is unknown; check quote timestamps before travelling. Purchases, orders, construction and jump scheduling take place in the game.
 
-[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.8.7](docs/RELEASE-2.8.7.md) · [Build and delivery](docs/DELIVERY.md)
+[Full user guide (RU)](docs/USER-GUIDE.md) · [Installation (RU)](docs/INSTALLATION.md) · [What's new in 2.9.0](docs/RELEASE-2.9.0.md) · [Build and delivery](docs/DELIVERY.md)

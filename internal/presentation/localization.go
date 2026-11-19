@@ -279,6 +279,11 @@ func LocalizeWebState(state M) M {
 	for _, category := range []string{"raw", "manufactured", "encoded"} {
 		localizeRows(v.At(state, "commanderProfile", "inventory", "materials", category, "entries"))
 	}
+	for _, container := range []string{"shipLocker", "backpack"} {
+		for _, group := range v.Obj(v.At(state, "commanderProfile", "inventory", container)) {
+			localizeRows(v.Obj(group)["entries"])
+		}
+	}
 	for _, r := range v.Rows(state["notices"]) {
 		r["text"] = localization.Text("en", v.Str(r["text"]))
 	}

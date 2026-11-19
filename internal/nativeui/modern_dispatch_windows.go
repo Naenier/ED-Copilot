@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/exobiology"
 	"github.com/Naenier/ED-Copilot/internal/frontend"
@@ -19,7 +20,11 @@ import (
 
 // The renderer receives serializable views and action descriptions. Raw engine
 // methods, API keys and arbitrary filesystem paths are not exposed to scripts.
-func dispatchWeb(backend Controller, op string, input M) (M, error) {
+func dispatchWeb(backend Controller, op string, input M) (out M, failure error) {
+	if subsystem := webDiagnosticSubsystem(op); subsystem != "" {
+		started := time.Now()
+		defer func() { recordWebOperation(backend, subsystem, op, started, out, failure) }()
+	}
 	tab, mode, query := v.Text(input["tab"], "overview"), v.Str(input["mode"]), v.Str(input["query"])
 	if tab == "engineering" {
 		mode = p.EngineeringMode(mode)
@@ -37,6 +42,8 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 	// every page before saving a checkbox made even small interactions wait on
 	// the full observation catalogue and its global snapshot lock.
 	switch op {
+	case "diagnostics.logs":
+		return backend.Do("/api/diagnostics/logs", input)
 	case "controls.view":
 		return backend.Do("/api/controls", input)
 	case "controls.status":
@@ -51,6 +58,12 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return backend.Do("/api/exploration/export", input)
 	case "ship-fits-list":
 		return backend.Do("/api/ship-fits", input)
+	case "ship-fits-fleet":
+		return backend.Do("/api/ship-fits/fleet", input)
+	case "ship-fit-from-fleet":
+		return backend.Do("/api/ship-fits/fleet/loadout", input)
+	case "ship-fit-schematic":
+		return M{"image": reference.Catalog().ShipTopView(v.Str(input["ship"]))}, nil
 	case "ship-fit-get":
 		return backend.Do("/api/ship-fits/get", input)
 	case "ship-fit-materials":
@@ -444,6 +457,33 @@ func dispatchWeb(backend Controller, op string, input M) (M, error) {
 		return nil, errors.New("Действие больше недоступно. Обновите раздел.")
 	}
 	return nil, errors.New("Неизвестный запрос интерфейса")
+}
+
+func webDiagnosticSubsystem(op string) string {
+	switch op {
+	case "boot":
+		return "ui"
+	case "nearest.search", "nearest.cancel":
+		return "search"
+	case "galaxy.system", "galaxy.nearby":
+		return "galaxy"
+	case "engineering-roadmap", "odyssey.loadouts":
+		return "engineering"
+	case "exo.sites":
+		return "exobiology"
+	case "reference.entry", "reference.markets":
+		return "reference"
+	default:
+		return ""
+	}
+}
+
+func recordWebOperation(backend Controller, subsystem, event string, started time.Time, out M, err error) {
+	if recorder, ok := backend.(interface {
+		RecordOperation(string, string, time.Time, M, error)
+	}); ok {
+		recorder.RecordOperation(subsystem, event, started, out, err)
+	}
 }
 
 func enrichEngineeringRecipe(recipe M, language string) {

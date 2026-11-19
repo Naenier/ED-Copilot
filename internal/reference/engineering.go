@@ -117,7 +117,11 @@ func recipeIngredients(rows []v.M, materials map[string]v.M) []Ingredient {
 
 func (s *Store) addMaterial(m v.M) {
 	e, groupTitle := materialEntry(m)
-	s.add(e, v.Str(m["symbol"]), e.EnglishTitle)
+	aliases := stringArray(m["nameAliases"])
+	s.add(e, append([]string{v.Str(m["symbol"]), e.EnglishTitle}, aliases...)...)
+	for _, alias := range aliases {
+		s.aliases["material/"+alias] = e.ID
+	}
 	s.groupNames[e.Group] = groupTitle
 }
 

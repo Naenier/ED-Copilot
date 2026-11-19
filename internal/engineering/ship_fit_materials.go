@@ -32,9 +32,13 @@ func (p *Planner) ShipFitMaterials(parts []M, stockReady bool) M {
 					}
 					rolls := g
 					if g == grade {
-						// A design stops at the first whole craft that reaches the
-						// requested quality. Coriolis can round fractional inputs.
-						rolls = max(1, int(math.Ceil(float64(g)*quality-1e-8)))
+						// The fitter shows whole percentages. For example, the
+						// second G3 craft reaches 2/3, displayed as 67%.
+						rolls = 1
+						targetPercent := math.Round(quality * 100)
+						for rolls < g && math.Round(100*float64(rolls)/float64(g)) < targetPercent {
+							rolls++
+						}
 					}
 					accumulateIngredients(totals, rows, rolls)
 					estimated = true

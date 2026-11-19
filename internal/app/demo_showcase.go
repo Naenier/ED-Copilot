@@ -43,7 +43,7 @@ func (e *Engine) SeedDemoShowcase() error {
 	e.domainMu.Lock()
 	e.Route = carrier.NewRoutePlanner(M{"state": routeState})
 	if e.opts.HTTPClient != nil {
-		e.Route.Client = e.opts.HTTPClient
+		e.Route.Client = e.observedHTTP(e.opts.HTTPClient, nil)
 	}
 	e.Route.OnUpdate = func(M) { e.Notify() }
 	e.domainMu.Unlock()

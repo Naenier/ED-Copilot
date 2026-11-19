@@ -65,7 +65,7 @@ func (e *Engine) shipFitsCommand(path string, body M) (M, error) {
 		if err != nil {
 			return nil, err
 		}
-		fits, err := store.List(false)
+		fits, err := store.List()
 		return M{"fits": fits, "observed": observed}, err
 	case "/api/ship-fits/get":
 		fit, err := store.Get(v.Str(body["id"]))
@@ -81,8 +81,8 @@ func (e *Engine) shipFitsCommand(path string, body M) (M, error) {
 		err := store.Delete(v.Str(body["id"]))
 		return M{"ok": err == nil}, err
 	case "/api/ship-fits/export":
-		fits, err := store.List(true)
-		return M{"fits": fits}, err
+		page, err := store.Export(v.Str(body["after"]), v.Str(body["revision"]))
+		return M{"fits": page.Fits, "next": page.Next, "revision": page.Revision}, err
 	case "/api/ship-fits/import":
 		rows := v.Rows(body["fits"])
 		if len(rows) == 0 || len(rows) > 1000 || len(rows) != len(v.Arr(body["fits"])) {

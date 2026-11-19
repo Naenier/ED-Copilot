@@ -1,6 +1,8 @@
 package nearest
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -62,6 +64,10 @@ func TestNearestFactionsMatchNamedPresenceAndAllActiveStates(t *testing.T) {
 
 func TestNearestSignalsReturnObservedCountsAndKeepUnknownUnavailable(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/signals.tsv.gz" {
+			http.Error(w, "provider unavailable", http.StatusServiceUnavailable)
+			return
+		}
 		if r.URL.Path != "/bodies/search" {
 			t.Errorf("unexpected network request %s", r.URL.Path)
 			http.NotFound(w, r)
@@ -81,6 +87,7 @@ func TestNearestSignalsReturnObservedCountsAndKeepUnknownUnavailable(t *testing.
 	defer server.Close()
 	c := New(server.Client())
 	c.BaseURL = server.URL
+	c.signalFeed = server.URL + "/signals.tsv.gz"
 
 	result, err := c.Search(context.Background(), Query{Category: "signals", Origin: "Sol", Filters: M{"signal": "biological"}})
 	if err != nil || len(result.Rows) != 1 || v.Int(result.Rows[0]["count"]) != 4 || result.Rows[0]["system"] != "Example" {
@@ -89,6 +96,87 @@ func TestNearestSignalsReturnObservedCountsAndKeepUnknownUnavailable(t *testing.
 	result, err = c.Search(context.Background(), Query{Category: "signals", Origin: "Sol", Filters: M{"signal": "compromised-nav-beacon"}})
 	if err != nil || len(result.Rows) != 0 || result.Note == "" || !strings.Contains(result.Link, "pi30=1") {
 		t.Fatalf("unavailable signal must have a relevant external search: %+v, %v", result, err)
+	}
+}
+
+func TestNearestOrbitalSignalsSearchByTypeRadiusAndSystemProperties(t *testing.T) {
+	var data bytes.Buffer
+	zipped := gzip.NewWriter(&data)
+	now := time.Now().UTC().Format(time.DateOnly)
+	yesterday := time.Now().UTC().AddDate(0, 0, -1).Format(time.DateOnly)
+	_, _ = zipped.Write([]byte(orbitalSignalHeader + "\n" +
+		"100\tExcluded nearby\t3\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO80_TITLE;\t" + now + "\n" +
+		"101\tFiltered nearby\t8\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO80_TITLE;\t" + now + "\n" +
+		"102\tFar away\t65\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO80_TITLE;\t" + now + "\n" +
+		"103\tOrdinary nearby\t1\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO42_TITLE;\t" + now + "\n" +
+		"105\tRecovered beacon\t2\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO80_TITLE;\t" + yesterday + "\n" +
+		"105\tRecovered beacon\t2\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO42_TITLE;\t" + now + "\n" +
+		"104\tExpired nearby\t2\t0\t0\tNavBeacon\t$MULTIPLAYER_SCENARIO80_TITLE;\t2001-01-01\n"))
+	_ = zipped.Close()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/signals.tsv.gz":
+			_, _ = w.Write(data.Bytes())
+		case "/systems/search":
+			var input M
+			_ = json.NewDecoder(r.Body).Decode(&input)
+			if !slices.Equal(spaceValues(v.At(input, "filters", "id64", "value")), []string{"100", "101"}) ||
+				!slices.Equal(spaceValues(v.At(input, "filters", "security", "value")), []string{"Low"}) {
+				t.Errorf("wrong join filters: %v", input)
+			}
+			_ = json.NewEncoder(w).Encode(M{"count": 1, "results": []M{{"name": "Filtered nearby", "id64": "101"}}})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	client := New(server.Client())
+	client.BaseURL, client.signalFeed = server.URL, server.URL+"/signals.tsv.gz"
+	q := Query{Category: "signals", Origin: "Sol", OriginCoords: []float64{0, 0, 0}, Limit: 1, Filters: M{
+		"signal": "compromised-nav-beacon", "radiusLy": 20, "security": "Low",
+	}}
+	result, err := client.Search(context.Background(), q)
+	if err != nil || result.Total != 1 || result.HasMore || len(result.Rows) != 1 || v.Num(result.Rows[0]["distanceLy"]) != 8 ||
+		result.Rows[0]["type"] != "Compromised Nav Beacon" {
+		t.Fatalf("wrong orbital signal results: %+v %v", result, err)
+	}
+	rows, err := readOrbitalSignals(context.Background(), data.Bytes(), Query{Region: "Inner Orion Spur"}, "compromised-nav-beacon", nil, time.Now())
+	if err != nil || len(rows) != 3 || rows[0]["distanceLy"] != nil || orbitalRegion(0, 0) != "Inner Orion Spur" {
+		t.Fatalf("region filters must work without reference coordinates: %v %v", rows, err)
+	}
+}
+
+func TestNearestMiscUsesRealMissionCandidateRoutesAndStationRows(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/pve":
+			if r.URL.Query().Get("lo") != "on" || r.URL.Query().Get("sc") != "3" {
+				t.Errorf("missing request filters: %v", r.URL.Query())
+			}
+			_, _ = w.Write([]byte(`<table id="sys_tbl"><tr><td>6.20</td><td><a>Civic &amp; Union</a></td><td>489</td><td>30</td><td></td><td></td><td></td><td></td><td>3</td><td><a>Target System</a> / <a>[ 4 ]</a></td><td>high,low</td></tr></table>`))
+		case "/minmis":
+			_, _ = w.Write([]byte(`<table id="sys_tbl"><tr><td>4.20</td><td>System A</td><td>Station 1</td><td>4,520</td><td>L</td><td>Service</td><td>Orbis Starport</td><td>Boom,Civil liberty (6h)</td></tr><tr><td></td><td></td><td>Station 2</td><td>6</td><td>M</td><td>Industrial</td><td>Outpost</td><td>None (6h)</td></tr></table>`))
+		}
+	}))
+	defer server.Close()
+	client := New(server.Client())
+	client.missionSearchURL = server.URL
+	q := Query{Category: "misc", Origin: "Sol", Limit: 1, Filters: M{"kind": "massacre", "missionPad": "L", "minimumSources": 3}}
+	result, err := client.Search(context.Background(), q)
+	if err != nil || len(result.Rows) != 1 || result.Rows[0]["system"] != "Civic & Union" ||
+		result.Rows[0]["destinationSystem"] != "Target System" || result.Rows[0]["sourceSystems"] != float64(4) ||
+		!strings.Contains(result.Link, "pi20=9") {
+		t.Fatalf("invalid massacre result: %+v %v", result, err)
+	}
+	q.Filters = M{"kind": "mining"}
+	result, err = client.Search(context.Background(), q)
+	if err != nil || result.Total != 2 || !result.HasMore || result.Rows[0]["station"] != "Station 1" || v.Num(result.Rows[0]["distanceLs"]) != 4520 {
+		t.Fatalf("invalid first mining page: %+v %v", result, err)
+	}
+	q.Page++
+	result, err = client.Search(context.Background(), q)
+	if err != nil || result.Total != 2 || result.HasMore || result.Rows[0]["station"] != "Station 2" || result.Rows[0]["system"] != "System A" {
+		t.Fatalf("invalid second mining page: %+v %v", result, err)
 	}
 }
 
@@ -130,5 +218,39 @@ func TestNearestEngineersHaveKnownDistances(t *testing.T) {
 		if _, ok := v.Number(row["distanceLy"]); !ok || row["referenceId"] == "engineer/" || row["station"] == "" {
 			t.Fatalf("engineer without searchable workshop location: %v", row)
 		}
+	}
+	result, err = client.Search(context.Background(), Query{Category: "misc", Origin: "Sol", Limit: 64, Filters: M{
+		"kind": "engineers", "radiusLy": 60,
+	}})
+	if err != nil || len(result.Rows) == 0 || len(result.Rows) >= 38 {
+		t.Fatalf("radius did not restrict the engineer catalogue: %+v, %v", result, err)
+	}
+	for _, row := range result.Rows {
+		if distance, ok := v.Number(row["distanceLy"]); !ok || distance > 60 {
+			t.Fatalf("engineer outside the requested radius: %+v", row)
+		}
+	}
+}
+
+func TestDockableMegashipSignalUsesStationNameAndDockService(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var input M
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			t.Error(err)
+			return
+		}
+		services := v.Rows(v.At(input, "filters", "services"))
+		if r.URL.Path != "/stations/search" || v.At(input, "filters", "name", "value") != "*Rescue*" ||
+			len(services) != 1 || stationText(v.At(services[0], "name", "value")) != "Dock" {
+			t.Errorf("missing megaship conditions: %s %v", r.URL.Path, input)
+		}
+		_, _ = w.Write([]byte(`{"count":1,"results":[{"name":"Rescue Ship","system_name":"Sol","market_id":1}]}`))
+	}))
+	defer server.Close()
+	client := New(server.Client())
+	client.BaseURL = server.URL
+	result, err := client.Search(t.Context(), Query{Category: "signals", Origin: "Sol", Name: "Rescue", Filters: M{"signal": "megaship"}})
+	if err != nil || len(result.Rows) != 1 || result.Rows[0]["station"] != "Rescue Ship" {
+		t.Fatalf("invalid megaship result: %+v %v", result, err)
 	}
 }

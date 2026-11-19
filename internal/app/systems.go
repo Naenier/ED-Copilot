@@ -30,7 +30,7 @@ func (e *Engine) QuerySystems(input M) (M, error) {
 	if err != nil {
 		return nil, err
 	}
-	request := systems.Request{Query: v.Str(input["query"]), FieldID: v.Str(input["fieldId"]), Sequence: seq, Limit: v.Int(input["limit"])}
+	request := systems.Request{Query: v.Str(input["query"]), Kind: v.Str(input["kind"]), FieldID: v.Str(input["fieldId"]), Sequence: seq, Limit: v.Int(input["limit"])}
 	if e.opts.DisableNetwork || e.Systems == nil {
 		return M{"query": request.Query, "fieldId": request.FieldID, "sequence": request.Sequence, "status": "disabled", "minChars": systems.MinChars, "source": "Spansh", "suggestions": []M{}, "errorCode": "network-disabled"}, nil
 	}

@@ -61,9 +61,11 @@ func (e *Engine) snapshotWindowLocked(connection M) M {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	commander, running := e.commander, e.gameRunning
+	workspace := e.planWorkspace
 	pending := e.journalObservationPending(connection)
 	if pending {
 		commander, running = e.overviewBeforeReplay.commander, false
+		workspace = e.overviewBeforeReplay.workspace
 	}
 	connection["gameRunning"] = running
 	state := e.windowStateLocked()
@@ -71,6 +73,7 @@ func (e *Engine) snapshotWindowLocked(connection M) M {
 		state["shipBuildRevision"] = e.engineeringRoadmapRevision
 	}
 	state["commander"], state["connection"] = v.Copy(commander), connection
+	state["planWorkspace"] = workspace.snapshot()
 	return state
 }
 

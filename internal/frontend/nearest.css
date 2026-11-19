@@ -9,6 +9,17 @@
 .near-field>span,.near-multiple label>span{color:var(--muted);font-size:11px}
 .near-field input,.near-field select,.near-multiple select{width:100%;min-width:0;height:36px}
 .near-field select,.near-multiple select{white-space:nowrap;text-overflow:ellipsis}
+.near-picker{display:block;min-width:0}
+.near-picker select[hidden]{display:none}
+.near-picker>button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:36px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);text-align:start}
+.near-picker>button:hover,.near-picker>button[aria-expanded=true]{border-color:var(--accent)}
+.near-picker>button>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.near-picker>button>.icon{width:14px;height:14px;color:var(--muted)}
+.near-picker-popup>input{margin:7px;flex:none;height:34px;padding:5px 10px;background:var(--bg);border-color:var(--line)}
+.near-picker-popup>.system-search-list{flex:1;max-height:none}
+.near-picker-option{padding:7px 9px}
+.near-picker-group,.near-picker-empty{color:var(--muted);font-size:11px;padding:8px 9px 4px}
+.near-picker-empty{margin:0;padding:5px 12px 10px}
 .near-span{grid-column:1/-1;min-width:0}
 .near-check{display:flex;align-items:center;min-height:36px;gap:7px;color:var(--muted);font-size:12px;align-self:end}
 .near-check input{flex:none}
@@ -28,6 +39,7 @@
 .near-modules legend{color:var(--muted);font-size:11px}
 .near-modules .near-chips:not(:empty){margin-top:9px}
 .near-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.near-actions [hidden],.nearest-workspace>[data-near-results]:empty{display:none}
 .near-results{display:grid;gap:8px;min-width:0}
 .near-results header,.near-pager{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .near-results header{justify-content:space-between}

@@ -45,7 +45,7 @@ func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 	if err := json.Unmarshal(body, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if manifest.Language != language || len(manifest.Images) == 0 || len(manifest.Images) > 32 {
+	if manifest.Language != language || len(manifest.Images) == 0 || len(manifest.Images) > 40 {
 		t.Fatalf("%s: expected %s and a bounded nonempty gallery, got %s and %d images", name, language, manifest.Language, len(manifest.Images))
 	}
 	// The original Russian gallery predates capture metadata. Any replacement
@@ -77,7 +77,7 @@ func checkedReadmeManifest(t *testing.T, english bool) map[string]bool {
 			t.Fatalf("%s no longer matches its published %s SHA256", item.File, name)
 		}
 	}
-	baseline := []string{"overview.png", "deals.png", "carrier-trade.png", "route.png", "ships.png", "ship.png", "engineer.png", "article.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png"}
+	baseline := []string{"overview.png", "deals.png", "carrier-trade.png", "route.png", "ships.png", "ship.png", "engineer.png", "article.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png", "road-to-riches.png", "nearest.png", "app-log.png", "ship-fitting.png", "ship-fitting-materials.png", "ship-fitting-fleet.png"}
 	for _, name := range baseline {
 		if !images[name] {
 			t.Fatalf("%s gallery lost a baseline documentation screenshot: %s", language, name)
@@ -137,7 +137,7 @@ func TestReadmeImagesExistAndKeepLanguageGalleriesSeparate(t *testing.T) {
 					referenced[file] = true
 				}
 			}
-			for _, file := range []string{"overview.png", "commander.png", "ranks.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png"} {
+			for _, file := range []string{"overview.png", "commander.png", "ranks.png", "colonization.png", "academy.png", "exobiology.png", "galaxy.png", "system.png", "engineering.png", "material-exchange.png", "material.png", "road-to-riches.png", "nearest.png", "app-log.png", "ship-fitting.png", "ship-fitting-materials.png", "ship-fitting-fleet.png"} {
 				if !referenced[file] {
 					t.Fatalf("%s omits a required product workflow screenshot: %s", name, file)
 				}

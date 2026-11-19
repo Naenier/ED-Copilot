@@ -207,7 +207,7 @@
             {
               "key": "shieldpatternanalysis",
               "count": 50,
-              "name": "Аномальный анализ схемы щита",
+              "name": "Анализ аномального поведения щита",
               "english": "Aberrant Shield Pattern Analysis",
               "category": "encoded"
             }
@@ -1168,7 +1168,7 @@
             {
               "key": "decodedemissiondata",
               "count": 50,
-              "name": "Декодированные данные излучения",
+              "name": "Расшифрованные данные об излучении",
               "english": "Decoded Emission Data",
               "category": "encoded"
             }

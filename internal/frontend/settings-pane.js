@@ -14,7 +14,8 @@ const topics=[
 ];
 const bindings=new WeakMap();
 function active(C){return C?.tab==='settings';}
-function canToggle(kind){return kind==='table'||kind==='settings';}
+const logsActive=C=>active(C)&&C.controlsUI?.tab==='diagnostics';
+function canToggle(kind,C){return kind==='table'||kind==='settings'&&(!C||!logsActive(C)&&!window.ControlsUI?.active(C));}
 function session(C){
  if(!C.settingsPane||!topics.some(topic=>topic.id===C.settingsPane.topic))C.settingsPane={topic:'workspace'};
  return C.settingsPane;
@@ -73,10 +74,156 @@ function pane(C,u){
  return `<aside class="inspector settings-help" aria-label="${th("Подробности настроек")}"><div class="inspector-title"><span>`+u.icon('circle-help')+`${th("Подробности настроек")}</span>`+u.btn('','inspector','x','quiet settings-help-close',`title="${th("Скрыть подробности")}" aria-label="${th("Скрыть подробности")}"`)+`</div><nav class="settings-help-topics" aria-label="${th("Темы настроек")}">`+topics.map(topic=>'<button data-settings-topic="'+topic.id+'" aria-pressed="'+(session(C).topic===topic.id)+'">'+u.icon(topic.icon)+u.esc(t(topic.title))+'</button>').join('')+'</nav><div data-settings-help-content aria-live="polite">'+content(C,u)+'</div></aside>';
 }
 function render(C,u,mainHTML){
- if(!active(C))return mainHTML;
- if(window.ControlsUI?.active(C))return '<div class="settings-workspace" data-settings-workspace><div class="settings-main">'+
-  u.heading(t("Настройки"),'')+window.ControlsUI.tabs(C,u)+window.ControlsUI.render(C,u)+'</div></div>';
- return '<div class="settings-workspace'+(C.inspector?' has-help':'')+'" data-settings-workspace><div class="settings-main">'+mainHTML+'</div>'+(C.inspector?pane(C,u):'')+'</div>';
+ const general=()=>typeof mainHTML==='function'?mainHTML():mainHTML;
+ if(!active(C))return general();
+ const version=C.state?.app?.version;
+ const header=u.heading(t("Настройки"),version?t("Версия приложения {version}",{version}):'')+(window.ControlsUI?.tabs(C,u)||'');
+ if(logsActive(C))return '<div class="settings-workspace" data-settings-workspace><div class="settings-main">'+header+renderLogs(u)+'</div></div>';
+ if(window.ControlsUI?.active(C))return '<div class="settings-workspace" data-settings-workspace><div class="settings-main">'+header+window.ControlsUI.render(C,u)+'</div></div>';
+ return '<div class="settings-workspace'+(C.inspector?' has-help':'')+'" data-settings-workspace><div class="settings-main">'+header+general()+'</div>'+(C.inspector?pane(C,u):'')+'</div>';
+}
+const logBindings=new WeakSet();
+const logLevels={debug:'Отладка',info:'Информация',warn:'Предупреждение',error:'Ошибка'};
+const logSubsystems={
+ app:'Приложение',journal:'Журналы игры',ui:'Интерфейс',overlay:'Игровой оверлей',network:'Сеть',settings:'Настройки',
+ updates:'Обновления',frontier:'Frontier',inara:'Inara',edsm:'EDSM',spansh:'Spansh',github:'GitHub',edtools:'EDTools',
+ trade:'Торговля',carrier:'Флотоносцы',colony:'Колонизация',engineering:'Инженерия',fits:'Сборки кораблей',
+ controls:'Управление игрой',galaxy:'Галактика',search:'Поиск',exploration:'Исследования',exobiology:'Экзобиология',
+ materials:'Материалы',reference:'Энциклопедия',profile:'Профиль',mining:'Добыча',powerplay:'Игра сил',
+ surface:'Полёт по координатам',
+};
+const logLabel=(labels,key)=>Object.hasOwn(labels,key)?t(labels[key]):key;
+function logState(C){
+ return C.diagnosticsUI??={draft:{level:'',subsystem:'',search:''},filters:{},subsystems:[],cursors:[''],page:null,request:0,loading:false,failed:false};
+}
+function renderLogs(u){
+ const levels=Object.entries(logLevels).map(([id,label])=>`<option value="${id}">${th(label)}</option>`).join('');
+ return `<section class="settings-group settings-logs" data-settings-logs aria-label="${th("Журнал приложения")}">
+  <form class="settings-logs-filters">
+   <label for="settings-logs-level">${th("Уровень записи")}
+    <select id="settings-logs-level" name="level"><option value="">${th("Все уровни")}</option>${levels}</select>
+   </label>
+   <label for="settings-logs-subsystem">${th("Компонент")}
+    <select id="settings-logs-subsystem" name="subsystem"><option value="">${th("Все компоненты")}</option></select>
+   </label>
+   <label for="settings-logs-search">${th("Поиск по журналу")}
+    <input id="settings-logs-search" name="search" type="search" maxlength="120" autocomplete="off">
+   </label>
+   <div class="settings-logs-actions">
+    <button type="submit" class="pill primary">${th("Применить")}</button>
+    <button type="button" class="pill quiet" data-logs-action="refresh">${u.icon('refresh-cw')}${th("Обновить")}</button>
+   </div>
+  </form>
+  <div class="settings-logs-status" data-logs-status role="status"></div>
+  <div data-logs-results></div>
+  <nav class="settings-logs-paging" data-logs-paging aria-label="${th("Страницы журнала")}" hidden>
+   <button type="button" class="pill" data-logs-action="previous">${th("Более новые")}</button>
+   <span data-logs-page></span>
+   <button type="button" class="pill" data-logs-action="next">${th("Более ранние")}</button>
+  </nav>
+ </section>`;
+}
+function logTable(entries,u){
+ const rows=entries.map(entry=>{
+  const time=u.date?.(entry.timestamp,{dateStyle:'short',timeStyle:'medium'})||entry.timestamp;
+  const severity=Object.hasOwn(logLevels,entry.level)?entry.level:'';
+  return `<tr>
+   <td><time datetime="${u.esc(entry.timestamp)}" title="${u.esc(entry.timestamp)}">${u.esc(time)}</time></td>
+   <td><span class="badge log-level ${severity}">${u.esc(logLabel(logLevels,entry.level))}</span></td>
+   <td title="${u.esc(entry.subsystem)}">${u.esc(logLabel(logSubsystems,entry.subsystem))}</td>
+   <td>${th(entry.message)}<code class="log-event">${u.esc(entry.event)}</code></td>
+  </tr>`;
+ }).join('');
+ return `<div class="table-scroll settings-logs-table"><table>
+  <thead><tr><th scope="col">${th("Время")}</th><th scope="col">${th("Уровень записи")}</th><th scope="col">${th("Компонент")}</th><th scope="col">${th("Сообщение журнала")}</th></tr></thead>
+  <tbody>${rows}</tbody>
+ </table></div>`;
+}
+function paintLogs(C,u){
+ if(!logsActive(C))return;
+ const host=u.$('[data-settings-logs]');
+ if(!host)return;
+ const state=logState(C);
+ const select=u.$('#settings-logs-subsystem',host);
+ const subsystems=new Set(state.subsystems);
+ if(state.draft.subsystem)subsystems.add(state.draft.subsystem);
+ const options=[...subsystems].sort((a,b)=>logLabel(logSubsystems,a).localeCompare(logLabel(logSubsystems,b),u.locale?.()));
+ const optionHTML=`<option value="">${th("Все компоненты")}</option>`+options.map(id=>`<option value="${u.esc(id)}">${u.esc(logLabel(logSubsystems,id))}</option>`).join('');
+ if(select.dataset.options!==optionHTML){
+  select.innerHTML=optionHTML;
+  select.dataset.options=optionHTML;
+  select.value=state.draft.subsystem;
+ }
+ const results=u.$('[data-logs-results]',host),status=u.$('[data-logs-status]',host);
+ const entries=state.page?.entries||[];
+ results.setAttribute('aria-busy',String(state.loading));
+ results.innerHTML=entries.length?logTable(entries,u):'';
+ status.classList.toggle('is-error',state.failed);
+ let message='';
+ if(state.loading)message=t("Загружаем журнал…");
+ else if(state.failed)message=t("Не удалось загрузить журнал приложения.");
+ else if(!entries.length){
+  if(state.cursors.length>1)message=t("На этой странице нет записей.");
+  else if(Object.values(state.filters).some(Boolean))message=t("Записей по этим фильтрам нет.");
+  else message=t("В журнале пока нет записей.");
+ }
+ status.textContent=message;
+ const paging=u.$('[data-logs-paging]',host);
+ paging.hidden=!(state.page?.next||state.cursors.length>1);
+ u.$('[data-logs-page]',host).textContent=t("Страница {page}",{page:state.cursors.length});
+ u.$('[data-logs-action="previous"]',host).disabled=state.loading||state.cursors.length<=1;
+ u.$('[data-logs-action="next"]',host).disabled=state.loading||!state.page?.next;
+ u.$('[data-logs-action="refresh"]',host).disabled=state.loading;
+}
+async function loadLogs(C,u,cursors){
+ const state=logState(C),request=++state.request;
+ state.loading=true;
+ state.failed=false;
+ paintLogs(C,u);
+ try {
+  const page=await u.call('diagnostics.logs',{...state.filters,before:cursors.at(-1),limit:75});
+  if(request!==state.request)return;
+  state.page=page;
+  state.subsystems=page.subsystems||[];
+  state.cursors=cursors;
+ }catch{
+  if(request===state.request)state.failed=true;
+ }finally{
+  if(request===state.request){state.loading=false;paintLogs(C,u);}
+ }
+}
+function initLogs(C,u){
+ const host=u.$('[data-settings-logs]');
+ if(!host||logBindings.has(host))return;
+ logBindings.add(host);
+ const state=logState(C),form=u.$('form',host);
+ for(const field of ['level','search'])form.elements.namedItem(field).value=state.draft[field];
+ form.addEventListener('input',event=>{
+  const {name,value}=event.target;
+  if(Object.hasOwn(state.draft,name))state.draft[name]=value;
+ });
+ form.addEventListener('submit',event=>{
+  event.preventDefault();
+  const {level,subsystem,search}=state.draft;
+  state.filters={level,subsystem,search:search.trim()};
+  state.cursors=[''];
+  state.page=null;
+  void loadLogs(C,u,state.cursors);
+ });
+ host.addEventListener('click',event=>{
+  const action=event.target?.closest?.('[data-logs-action]')?.dataset.logsAction;
+  if(state.loading)return;
+  if(action==='refresh')void loadLogs(C,u,['']);
+  if(action==='previous'&&state.cursors.length>1)void loadLogs(C,u,state.cursors.slice(0,-1));
+  if(action==='next'&&state.page?.next)void loadLogs(C,u,[...state.cursors,state.page.next]);
+ });
+ const language=window.CopilotI18n?.language;
+ if(!state.request||state.language!==language){
+  state.language=language;
+  state.cursors=[''];
+  state.page=null;
+  void loadLogs(C,u,state.cursors);
+ }else paintLogs(C,u);
 }
 function renderProfile(u){
  return '<section class="settings-group"><h3>'+u.icon('shield-check')+th("Резервная копия профиля")+'</h3>'+
@@ -112,6 +259,7 @@ function topicFor(target,C,u,host){
  return '';
 }
 function init(C,u){
+ if(logsActive(C)){initLogs(C,u);return;}
  if(window.ControlsUI?.active(C)){window.ControlsUI.init(C,u);return;}
  if(!active(C)||!C.inspector)return;
  const host=u.$('[data-settings-workspace]');

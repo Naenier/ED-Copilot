@@ -27,6 +27,12 @@ const (
 	maxScopes        = 32
 )
 
+var lookupPaths = map[string]string{
+	"faction": "/api/systems/field_values/minor_faction_presences/name",
+	"station": "/api/stations/field_values/name",
+	"body":    "/api/bodies/field_values/name",
+}
+
 type Options struct {
 	HTTPClient  *http.Client
 	Endpoint    string
@@ -38,6 +44,7 @@ type Options struct {
 }
 type Request struct {
 	Query    string `json:"query"`
+	Kind     string `json:"kind,omitempty"`
 	FieldID  string `json:"fieldId"`
 	Sequence uint64 `json:"sequence"`
 	Limit    int    `json:"limit"`
@@ -275,7 +282,7 @@ func (c *Client) putCached(q string, r Result) {
 // with an errorCode, so renderers can translate status without exposing a body.
 func (c *Client) Query(ctx context.Context, req Request) (result Result, err error) {
 	result = Result{Query: normalize(req.Query), FieldID: req.FieldID, Sequence: req.Sequence, Status: "empty", Source: "Spansh", MinChars: MinChars, Suggestions: []Suggestion{}}
-	if req.FieldID == "" || len(req.FieldID) > 128 || !validText(req.Query) {
+	if req.FieldID == "" || len(req.FieldID) > 128 || !validText(req.Query) || req.Kind != "" && lookupPaths[req.Kind] == "" {
 		result.Status, result.ErrorCode = "error", "INVALID_QUERY"
 		return result, &queryError{code: result.ErrorCode}
 	}
@@ -305,7 +312,12 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 			result.Suggestions = result.Suggestions[:limit]
 		}
 	}()
-	if cached, ok := c.getCached(result.Query); ok {
+	system := req.Kind == ""
+	cacheKey := result.Query
+	if !system {
+		cacheKey = req.Kind + "\x00" + cacheKey
+	}
+	if cached, ok := c.getCached(cacheKey); ok {
 		return cached, nil
 	}
 	select {
@@ -314,26 +326,26 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 	case <-child.Done():
 		return result, child.Err()
 	}
-	if cached, ok := c.getCached(result.Query); ok {
+	if cached, ok := c.getCached(cacheKey); ok {
 		return cached, nil
 	}
 	deadline, cancel := context.WithTimeout(child, 8*time.Second)
 	defer cancel()
 	spanshBudget := 8 * time.Second
-	if c.edsm != nil {
+	if c.edsm != nil && system {
 		spanshBudget = 5 * time.Second
 	}
 	spansh, cancelSpansh := context.WithTimeout(deadline, spanshBudget)
 	var names []Suggestion
-	names, result.Limited, err = c.fetch(spansh, result.Query)
+	names, result.Limited, err = c.fetch(spansh, result.Query, req.Kind)
 	if err == nil {
 		result.Suggestions = relevant(names, result.Query, false)
 		// A known spelling correction is only a lookup hint. The selected
 		// canonical record must actually be returned by the remote provider.
-		if len(result.Suggestions) == 0 && correctionQuery(result.Query) != "" {
+		if system && len(result.Suggestions) == 0 && correctionQuery(result.Query) != "" {
 			var extra []Suggestion
 			var capped bool
-			extra, capped, err = c.fetch(spansh, correctionQuery(result.Query))
+			extra, capped, err = c.fetch(spansh, correctionQuery(result.Query), "")
 			result.Limited = result.Limited || capped
 			if err == nil {
 				result.Suggestions = relevant(extra, result.Query, true)
@@ -341,9 +353,9 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 		}
 	}
 	cancelSpansh()
-	if err != nil || !hasPrefixMatch(result.Suggestions, result.Query) {
+	if system && (err != nil || !hasPrefixMatch(result.Suggestions, result.Query)) {
 		if alternative, found := c.edsmFallback(deadline, result); found {
-			c.putCached(result.Query, alternative)
+			c.putCached(cacheKey, alternative)
 			return alternative, nil
 		}
 	}
@@ -362,11 +374,15 @@ func (c *Client) Query(ctx context.Context, req Request) (result Result, err err
 	if len(result.Suggestions) > 0 {
 		result.Status = "ready"
 	}
-	c.putCached(result.Query, result)
+	if len(result.Suggestions) > MaxResults {
+		result.Suggestions = result.Suggestions[:MaxResults]
+		result.Limited = true
+	}
+	c.putCached(cacheKey, result)
 	return result, nil
 }
 
-func (c *Client) fetch(ctx context.Context, q string) ([]Suggestion, bool, error) {
+func (c *Client) fetch(ctx context.Context, q, kind string) ([]Suggestion, bool, error) {
 	c.mu.Lock()
 	blocked, last := c.blockedUntil, c.lastRequest
 	c.mu.Unlock()
@@ -386,9 +402,12 @@ func (c *Client) fetch(ctx context.Context, q string) ([]Suggestion, bool, error
 	if err != nil {
 		return nil, false, &queryError{code: "ENDPOINT"}
 	}
-	values := uri.Query()
-	values.Set("q", q)
-	uri.RawQuery = values.Encode()
+	if kind != "" {
+		uri.Path, uri.RawPath = lookupPaths[kind], ""
+	}
+	query := uri.Query()
+	query.Set("q", q)
+	uri.RawQuery = query.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, false, &queryError{code: "ENDPOINT"}
@@ -427,26 +446,41 @@ func (c *Client) fetch(ctx context.Context, q string) ([]Suggestion, bool, error
 		return nil, false, &queryError{code: "RESPONSE_TOO_LARGE"}
 	}
 	var payload struct {
-		Values  []string `json:"values"`
-		Details []struct {
-			Name string      `json:"name"`
-			ID64 json.Number `json:"id64"`
-			X    *float64    `json:"x"`
-			Y    *float64    `json:"y"`
-			Z    *float64    `json:"z"`
-		} `json:"min_max"`
+		Values  json.RawMessage `json:"values"`
+		Details json.RawMessage `json:"min_max"`
 	}
 	if err = json.Unmarshal(body, &payload); err != nil {
 		return nil, false, &queryError{code: "RESPONSE_INVALID"}
 	}
-	if payload.Values == nil && payload.Details == nil {
-		var shape map[string]json.RawMessage
-		if json.Unmarshal(body, &shape) != nil || shape["values"] == nil {
+	var values []string
+	var positions []struct {
+		Name string      `json:"name"`
+		ID64 json.Number `json:"id64"`
+		X    *float64    `json:"x"`
+		Y    *float64    `json:"y"`
+		Z    *float64    `json:"z"`
+	}
+	responseLimit := MaxResults
+	if kind != "" {
+		responseLimit = 300
+	}
+	if kind == "faction" {
+		var fields struct {
+			Name []string `json:"name"`
+		}
+		if json.Unmarshal(payload.Values, &fields) != nil || fields.Name == nil {
+			return nil, false, &queryError{code: "RESPONSE_INVALID"}
+		}
+		values = fields.Name
+	} else {
+		if kind == "" && payload.Details != nil && json.Unmarshal(payload.Details, &positions) != nil ||
+			payload.Values != nil && json.Unmarshal(payload.Values, &values) != nil ||
+			payload.Values == nil && positions == nil {
 			return nil, false, &queryError{code: "RESPONSE_INVALID"}
 		}
 	}
 	details := map[string]Suggestion{}
-	for _, row := range payload.Details {
+	for _, row := range positions {
 		s := Suggestion{Name: row.Name}
 		if _, e := strconv.ParseUint(string(row.ID64), 10, 64); e == nil {
 			s.ID64 = string(row.ID64)
@@ -457,7 +491,7 @@ func (c *Client) fetch(ctx context.Context, q string) ([]Suggestion, bool, error
 		details[key(row.Name)] = s
 	}
 	rows, seen := []Suggestion{}, map[string]bool{}
-	for _, name := range payload.Values {
+	for _, name := range values {
 		if !validText(name) || strings.TrimSpace(name) == "" || seen[key(name)] {
 			continue
 		}
@@ -465,9 +499,9 @@ func (c *Client) fetch(ctx context.Context, q string) ([]Suggestion, bool, error
 		s := details[key(name)]
 		s.Name = name
 		rows = append(rows, s)
-		if len(rows) == MaxResults {
+		if len(rows) == responseLimit {
 			break
 		}
 	}
-	return rows, len(payload.Values) >= MaxResults, nil
+	return rows, len(values) >= responseLimit, nil
 }

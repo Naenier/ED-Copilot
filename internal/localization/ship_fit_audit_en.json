@@ -1,0 +1,7 @@
+{
+  "Код сборки содержит неподдерживаемый модуль или отсек.": "The build code contains an unsupported module or slot.",
+  "Модуль этого типа уже установлен в другом отсеке.": "A module of this type is already fitted in another slot.",
+  "Превышен лимит экспериментального вооружения.": "This change exceeds the experimental weapon limit.",
+  "Один отсек указан в сборке несколько раз.": "The build lists the same slot more than once.",
+  "В журнале отсутствуют обязательные модули корабля.": "The journal loadout is missing required ship modules."
+}

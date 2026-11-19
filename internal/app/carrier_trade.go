@@ -218,13 +218,18 @@ func (e *Engine) startCarrierTradeOpportunities(input M) (M, error) {
 	job := &carrierTradeSearch{request: request, context: key, view: M{"running": true, "options": request.options(), "results": []M{}}}
 	e.carrierTradeSearch = job
 	e.cancelJobs[carrierTradeOpportunityJob] = cancel
-	client := carrierTradeHTTPClient(e.opts.HTTPClient)
+	client := e.observedHTTP(carrierTradeHTTPClient(e.opts.HTTPClient), nil)
 	go func() {
 		defer cancel()
+		started := time.Now()
 		result, err := carrier.FindTradeOpportunities(ctx, client, trade, snapshot, request.options(), func(state M) {
 			e.publishCarrierTradeSearch(ctx, job, state, true, nil)
 		})
 		e.publishCarrierTradeSearch(ctx, job, result, false, err)
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		}
+		e.RecordOperation("carrier", "trade.opportunities", started, result, err)
 	}()
 	e.Notify()
 	return M{"ok": true, "started": true}, nil

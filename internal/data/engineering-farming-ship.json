@@ -598,7 +598,7 @@
           {
             "title": "Проводники и кристаллы",
             "englishTitle": "Conductors and crystals",
-            "text": "Две промышленные строки закрываются наградами или обменом. Для биотехнологических проводников и безупречных фокусирующих кристаллов смотрите задания или берите излишек G5 к промышленному торговцу.",
+            "text": "Биотехнические проводники и отборные фокусировочные кристаллы получайте за задания или у торговца произведёнными материалами, обменяв излишки G5.",
             "englishText": "Two manufactured families are supplied by rewards or trade. For Biotech Conductors and Exquisite Focus Crystals, check mission rewards or take surplus G5 to a Manufactured Material Trader."
           }
         ]
@@ -666,13 +666,13 @@
         "englishTitle": "Two reward families",
         "steps": [
           {
-            "title": "Биотехнологические проводники G5",
+            "title": "Биотехнические проводники G5",
             "englishTitle": "Biotech Conductors G5",
             "text": "Проверяйте награды высокоуровневых заданий. Небольшой дефицит можно закрыть обменом избытка из HGE у промышленного торговца. Младшие классы этой строки — Проводящие полимеры G4 · Проводящая керамика G3 · Проводящие компоненты G2 · Простые проводники G1.",
             "englishText": "Check higher-level mission rewards. For a small shortage, exchange surplus HGE salvage at a Manufactured Material Trader. Lower grades in this family are Conductive Polymers G4 · Conductive Ceramics G3 · Conductive Components G2 · Basic Conductors G1."
           },
           {
-            "title": "Безупречные фокусирующие кристаллы G5",
+            "title": "Отборные фокусировочные кристаллы G5",
             "englishTitle": "Exquisite Focus Crystals G5",
             "text": "Выбирайте награду за перевозку пассажиров, добычу или боевое задание, когда на доске указаны именно эти кристаллы. Для фокусирующих кристаллов G3 обменяйте один G5 на девять G3 из той же строки. Младшие классы этой строки — Обработанные фокусировочные кристаллы G4 · Фокусировочные кристаллы G3 · Поврежденные фокусировочные кристаллы G2 · Осколки кристаллов G1.",
             "englishText": "Take a passenger, mining or combat mission reward when the board explicitly lists these crystals. For G3 Focus Crystals, one G5 trades down to nine G3 in the same family. Lower grades in this family are Refined Focus Crystals G4 · Focus Crystals G3 · Flawed Focus Crystals G2 · Crystal Shards G1."
@@ -816,13 +816,13 @@
           {
             "title": "Захват адаптивного шифровальщика G5",
             "englishTitle": "Adaptive Encryptors Capture G5",
-            "text": "Сохраните запас G5 для рецептов и обменяйте избыток вниз. Если архивы G4 собраны напрямую, сначала используйте их для небольших дефицитов. Младшие классы этой строки — Нетипичные архивы шифрования G4 · Открытые симметричные ключи G3 · Меченые коды шифрования G2 · Необычные зашифрованные файлы G1.",
+            "text": "Сохраните запас G5 для рецептов и обменяйте избыток вниз. Если архивы G4 собраны напрямую, сначала используйте их для небольших дефицитов. Младшие классы этой строки — Нетипичные архивы шифрования G4 · Открытые симметричные ключи G3 · Меченые шифровальные коды G2 · Особые зашифрованные файлы G1.",
             "englishText": "Reserve the G5 needed by your recipes and trade surplus down. If you collected G4 archives directly, use those first for small shortages. Lower grades in this family are Atypical Encryption Archives G4 · Open Symmetric Keys G3 · Tagged Encryption Codes G2 · Unusual Encrypted Files G1."
           },
           {
-            "title": "Модифицированное встроенное ПО G5",
+            "title": "Измененные встроенные микропрограммы G5",
             "englishTitle": "Modified Embedded Firmware G5",
-            "text": "Для полного запаса этой строки выбирайте модифицированное встроенное ПО в наградах, если оно доступно, или обменивайте G5 другой строки по курсу 6 к 1. Младшие классы этой строки — Патч защитного ПО G4 · Взломанные промышленные микропрограммы G3 · Измененные пользовательские микропрограммы G2 · Специальные микропрограммы предыдущего поколения G1.",
+            "text": "Выбирайте «Измененные встроенные микропрограммы» в наградах или обменивайте G5 другой строки по курсу 6 к 1. Младшие классы этой строки — Обновление для защитной микропрограммы G4 · Взломанные промышленные микропрограммы G3 · Измененные пользовательские микропрограммы G2 · Специальные микропрограммы предыдущего поколения G1.",
             "englishText": "To stock this family, choose Modified Embedded Firmware when it appears as a mission reward, or trade a different G5 at 6 to 1. Lower grades in this family are Security Firmware Patch G4 · Cracked Industrial Firmware G3 · Modified Consumer Firmware G2 · Specialised Legacy Firmware G1."
           },
           {
@@ -920,21 +920,21 @@
         "englishTitle": "Ships, beacons and archives",
         "steps": [
           {
-            "title": "Необычные данные частоты щита G5",
+            "title": "Специфические данные о частоте щитов G5",
             "englishTitle": "Peculiar Shield Frequency Data G5",
-            "text": "Выберите проходящие корабли целью и держите их в секторе датчиков до завершения обычного сканирования. В местах с потоком боевых кораблей удобно собрать младшие данные щитов. G5 пополняйте наградой или обменом, если прямое выпадение редкое. Младшие классы этой строки — Аномальный анализ схемы щита G4 · Нетипичные сканирования щита G3 · Несогласованный анализ поглощения щита G2 · Искажённые записи циклов щита G1.",
+            "text": "Выберите проходящие корабли целью и держите их в секторе датчиков до завершения обычного сканирования. В местах с потоком боевых кораблей удобно собрать младшие данные щитов. G5 пополняйте наградой или обменом, если прямое выпадение редкое. Младшие классы этой строки — Анализ аномального поведения щита G4 · Нетипичные данные сканирования щитов G3 · Неполный анализ поглощения щита G2 · Поврежденные цикличные записи щита G1.",
             "englishText": "Target passing ships and keep them in the sensor arc until the standard scan completes. Traffic with combat ships helps collect lower shield grades. Use a reward or exchange for G5 if direct drops are scarce. Lower grades in this family are Aberrant Shield Pattern Analysis G4 · Untypical Shield Scans G3 · Inconsistent Shield Soak Analysis G2 · Distorted Shield Cycle Recordings G1."
           },
           {
-            "title": "Аномальные компактные данные излучения G5",
+            "title": "Аномальные компактные данные об излучении G5",
             "englishTitle": "Abnormal Compact Emissions Data G5",
-            "text": "Ищите частные маяки в сигналах Encoded Emissions и сканируйте их сканером линии передачи данных. Низкие классы также появляются при обычном сканировании кораблей. Младшие классы этой строки — Декодированные данные излучения G4 · Неожиданные данные излучения G3 · Нерегулярные данные излучения G2 · Исключительные искажённые данные излучения G1.",
+            "text": "Ищите частные маяки в сигналах Encoded Emissions и сканируйте их сканером линии передачи данных. Низкие классы также появляются при обычном сканировании кораблей. Младшие классы этой строки — Расшифрованные данные об излучении G4 · Неожиданные данные об излучении G3 · Нестандартные данные об излучении G2 · Исключительные зашифрованные данные об излучении G1.",
             "englishText": "Look for private beacons in Encoded Emissions and use the Data Link Scanner. Standard ship scans can also produce lower grades. Lower grades in this family are Decoded Emission Data G4 · Unexpected Emission Data G3 · Irregular Emission Data G2 · Exceptional Scrambled Emission Data G1."
           },
           {
-            "title": "Засекреченный фрагмент сканирования G5",
+            "title": "Засекреченные фрагменты данных сканирования G5",
             "englishTitle": "Classified Scan Fragment G5",
-            "text": "Проверяйте награды миссий и сканируйте корабли службы безопасности или военные суда. Некоторые наземные точки данных также дают материалы этой строки. Учитывайте законность доступа к частным терминалам. Младшие классы этой строки — Расходящиеся данные сканирования G4 · Засекреченные базы данных сканирования G3 · Неопознанные архивы сканирования G2 · Аномальный массив данных сканирования G1.",
+            "text": "Проверяйте награды миссий и сканируйте корабли службы безопасности или военные суда. Некоторые наземные точки данных также дают материалы этой строки. Учитывайте законность доступа к частным терминалам. Младшие классы этой строки — Неформатные данные сканирования G4 · Засекреченные базы данных сканирования G3 · Неопознанные архивы сканирования G2 · Аномальный массив данных сканирования G1.",
             "englishText": "Check mission rewards and scan security or military ships. Some surface data points also yield this family. Check whether accessing a private terminal is legal. Lower grades in this family are Divergent Scan Data G4 · Classified Scan Databanks G3 · Unidentified Scan Archives G2 · Anomalous Bulk Scan Data G1."
           }
         ]

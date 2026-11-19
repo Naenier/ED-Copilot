@@ -196,13 +196,13 @@
           {
             "title": "Подбирать материалы по контактам",
             "englishTitle": "Collect materials through Contacts",
-            "text": "Обследуйте несколько участков поля от крупных обломков до периферии. В контактах ищите Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts, Wreckage Components и Caustic Crystal. Подбирайте их ковшом или дронами. Для массового сбора настройте список игнорирования и выпускайте дроны без выбранной цели. Titan Drive Component для предмодифицированного SCO — отдельный редкий грузовой предмет. Проверьте его название и свободное место в трюме.",
+            "text": "Обследуйте несколько участков поля от крупных обломков до периферии. В контактах ищите «Реактивные элементы», «Биомеханические энергопроводники», «Детали вооружения», «Обломки кораблекрушений» и «Едкий кристалл». Подбирайте их ковшом или дронами. Для массового сбора настройте список игнорирования и выпускайте дроны без выбранной цели. Titan Drive Component для предмодифицированного SCO — отдельный редкий грузовой предмет. Проверьте его название и свободное место в трюме.",
             "englishText": "Cover several parts of the field, from the main wreck to the edges. Watch Contacts for Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts, Wreckage Components and Caustic Crystal. Scoop them or use collectors. For bulk collection, configure the ignore list and launch limpets without a target. A Titan Drive Component for the pre-engineered SCO is a separate rare cargo item. Check its name and available cargo space."
           },
           {
             "title": "Альтернатива для четырёх деталей",
             "englishTitle": "Alternative for the four parts",
-            "text": "В сигналах NHSS с угрозой 4 или 5, где появились Thargoid Scouts, бой и подбор обломков дают альтернативный источник элементов двигательной установки, биомеханических проводников, деталей вооружения и компонентов обломков. Возьмите AX-оснащение. Для едких кристаллов используйте поле обломков.",
+            "text": "Ищите таргоидских разведчиков в сигналах NHSS с угрозой 4 или 5. После боя подбирайте «Реактивные элементы», «Биомеханические энергопроводники», «Детали вооружения» и «Обломки кораблекрушений». Возьмите AX-оснащение. «Едкий кристалл» ищите в поле обломков титана.",
             "englishText": "In Threat 4 or 5 NHSS instances that spawn Thargoid Scouts, combat salvage is an alternative source of Propulsion Elements, Bio-Mechanical Conduits, Weapon Parts and Wreckage Components. Bring an AX loadout. For Caustic Crystals, use a Titan debris field."
           }
         ]
@@ -215,14 +215,14 @@
           {
             "title": "Комплект на один модуль",
             "englishTitle": "Cost per module",
-            "text": "Для Anti-Guardian Zone Resistance у Рам Таха в Meene нужны 2 Hardened Surface Fragments и 1 Caustic Crystal на совместимый модуль. Сверьте совместимость и итог по количеству модулей в плане. Тактический чип фигурирует в старых руководствах, а в текущем рецепте каталога его нет.",
+            "text": "Для Anti-Guardian Zone Resistance у Рам Таха в Meene нужны 2 единицы материала «Окаменелые фрагменты поверхности» и 1 «Едкий кристалл» на совместимый модуль. Сверьте совместимость и итог по количеству модулей в плане. В старых руководствах фигурирует «Чип тактического ядра».",
             "englishText": "Ram Tah in Meene asks for 2 Hardened Surface Fragments and 1 Caustic Crystal per compatible module for Anti-Guardian Zone Resistance. Check compatibility and multiply the cost by the modules in your plan. Tactical Core Chips appear in older guides and are absent from the current recipe in the catalogue.",
             "system": "Meene"
           },
           {
             "title": "Как читать старые маршруты",
             "englishTitle": "How to read older routes",
-            "text": "Во время войны Hardened Surface Fragments сбивали с Coarse Hull Surface живого титана абразивным бластером. Cocijo был последним активным титаном и погиб в декабре 2024 года. На ноябрь 2026 устойчивый способ добычи этих фрагментов на кладбищах не подтверждён. Старые сообщения о единичных выпадениях относятся к периоду войны или её окончанию. Планируйте модификацию по уже имеющемуся запасу, пока в игре не появится подтверждённый источник.",
+            "text": "Во время войны материал «Окаменелые фрагменты поверхности» сбивали с Coarse Hull Surface живого титана абразивным бластером. Cocijo был последним активным титаном и погиб в декабре 2024 года. На ноябрь 2026 устойчивый способ добычи этих фрагментов на кладбищах не подтверждён. Старые сообщения о единичных выпадениях относятся к периоду войны или её окончанию. Планируйте модификацию по уже имеющемуся запасу, пока в игре не появится подтверждённый источник.",
             "englishText": "During the war, Hardened Surface Fragments were mined with an Abrasion Blaster from Coarse Hull Surface deposits on a live Titan. Cocijo was the last active Titan and fell in December 2024. As of November 2026, a repeatable graveyard route for these fragments is unconfirmed. Older one-off reports date from the war or its aftermath. Base the engineering plan on your existing stock until a current source is confirmed."
           }
         ]

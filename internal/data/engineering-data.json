@@ -733,12 +733,15 @@
       "key": "exquisitefocuscrystals",
       "symbol": "ExquisiteFocusCrystals",
       "english": "Exquisite Focus Crystals",
-      "name": "Безупречные фокусирующие кристаллы",
+      "name": "Отборные фокусировочные кристаллы",
       "category": "manufactured",
       "family": "Crystals",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Безупречные фокусирующие кристаллы"
+      ]
     },
     {
       "key": "militarygradealloys",
@@ -755,12 +758,15 @@
       "key": "biotechconductors",
       "symbol": "BiotechConductors",
       "english": "Biotech Conductors",
-      "name": "Биотехнологические проводники",
+      "name": "Биотехнические проводники",
       "category": "manufactured",
       "family": "Conductive",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Биотехнологические проводники"
+      ]
     },
     {
       "key": "improvisedcomponents",
@@ -843,12 +849,15 @@
       "key": "encryptedfiles",
       "symbol": "EncryptedFiles",
       "english": "Unusual Encrypted Files",
-      "name": "Необычные зашифрованные файлы",
+      "name": "Особые зашифрованные файлы",
       "category": "encoded",
       "family": "Encryption Files",
       "grade": 1,
       "capacity": 300,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Необычные зашифрованные файлы"
+      ]
     },
     {
       "key": "bulkscandata",
@@ -876,23 +885,29 @@
       "key": "scrambledemissiondata",
       "symbol": "ScrambledEmissionData",
       "english": "Exceptional Scrambled Emission Data",
-      "name": "Исключительные искажённые данные излучения",
+      "name": "Исключительные зашифрованные данные об излучении",
       "category": "encoded",
       "family": "Emission Data",
       "grade": 1,
       "capacity": 300,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Исключительные искажённые данные излучения"
+      ]
     },
     {
       "key": "shieldcyclerecordings",
       "symbol": "ShieldCycleRecordings",
       "english": "Distorted Shield Cycle Recordings",
-      "name": "Искажённые записи циклов щита",
+      "name": "Поврежденные цикличные записи щита",
       "category": "encoded",
       "family": "Shield Data",
       "grade": 1,
       "capacity": 300,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Искажённые записи циклов щита"
+      ]
     },
     {
       "key": "consumerfirmware",
@@ -909,12 +924,15 @@
       "key": "encryptioncodes",
       "symbol": "EncryptionCodes",
       "english": "Tagged Encryption Codes",
-      "name": "Меченые коды шифрования",
+      "name": "Меченые шифровальные коды",
       "category": "encoded",
       "family": "Encryption Files",
       "grade": 2,
       "capacity": 250,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Меченые коды шифрования"
+      ]
     },
     {
       "key": "scanarchives",
@@ -942,23 +960,29 @@
       "key": "archivedemissiondata",
       "symbol": "ArchivedEmissionData",
       "english": "Irregular Emission Data",
-      "name": "Нерегулярные данные излучения",
+      "name": "Нестандартные данные об излучении",
       "category": "encoded",
       "family": "Emission Data",
       "grade": 2,
       "capacity": 250,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Нерегулярные данные излучения"
+      ]
     },
     {
       "key": "shieldsoakanalysis",
       "symbol": "ShieldSoakAnalysis",
       "english": "Inconsistent Shield Soak Analysis",
-      "name": "Несогласованный анализ поглощения щита",
+      "name": "Неполный анализ поглощения щита",
       "category": "encoded",
       "family": "Shield Data",
       "grade": 2,
       "capacity": 250,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Несогласованный анализ поглощения щита"
+      ]
     },
     {
       "key": "industrialfirmware",
@@ -1008,34 +1032,43 @@
       "key": "emissiondata",
       "symbol": "EmissionData",
       "english": "Unexpected Emission Data",
-      "name": "Неожиданные данные излучения",
+      "name": "Неожиданные данные об излучении",
       "category": "encoded",
       "family": "Emission Data",
       "grade": 3,
       "capacity": 200,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Неожиданные данные излучения"
+      ]
     },
     {
       "key": "shielddensityreports",
       "symbol": "ShieldDensityReports",
       "english": "Untypical Shield Scans",
-      "name": "Нетипичные сканирования щита",
+      "name": "Нетипичные данные сканирования щитов",
       "category": "encoded",
       "family": "Shield Data",
       "grade": 3,
       "capacity": 200,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Нетипичные сканирования щита"
+      ]
     },
     {
       "key": "securityfirmware",
       "symbol": "SecurityFirmware",
       "english": "Security Firmware Patch",
-      "name": "Патч защитного ПО",
+      "name": "Обновление для защитной микропрограммы",
       "category": "encoded",
       "family": "Encoded Firmware",
       "grade": 4,
       "capacity": 150,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Патч защитного ПО"
+      ]
     },
     {
       "key": "encryptionarchives",
@@ -1052,12 +1085,15 @@
       "key": "encodedscandata",
       "symbol": "EncodedScanData",
       "english": "Divergent Scan Data",
-      "name": "Расходящиеся данные сканирования",
+      "name": "Неформатные данные сканирования",
       "category": "encoded",
       "family": "Data Archives",
       "grade": 4,
       "capacity": 150,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Расходящиеся данные сканирования"
+      ]
     },
     {
       "key": "hyperspacetrajectories",
@@ -1074,34 +1110,43 @@
       "key": "decodedemissiondata",
       "symbol": "DecodedEmissionData",
       "english": "Decoded Emission Data",
-      "name": "Декодированные данные излучения",
+      "name": "Расшифрованные данные об излучении",
       "category": "encoded",
       "family": "Emission Data",
       "grade": 4,
       "capacity": 150,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Декодированные данные излучения"
+      ]
     },
     {
       "key": "shieldpatternanalysis",
       "symbol": "ShieldPatternAnalysis",
       "english": "Aberrant Shield Pattern Analysis",
-      "name": "Аномальный анализ схемы щита",
+      "name": "Анализ аномального поведения щита",
       "category": "encoded",
       "family": "Shield Data",
       "grade": 4,
       "capacity": 150,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Аномальный анализ схемы щита"
+      ]
     },
     {
       "key": "embeddedfirmware",
       "symbol": "EmbeddedFirmware",
       "english": "Modified Embedded Firmware",
-      "name": "Модифицированное встроенное ПО",
+      "name": "Измененные встроенные микропрограммы",
       "category": "encoded",
       "family": "Encoded Firmware",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Модифицированное встроенное ПО"
+      ]
     },
     {
       "key": "adaptiveencryptors",
@@ -1118,12 +1163,15 @@
       "key": "classifiedscandata",
       "symbol": "ClassifiedScanData",
       "english": "Classified Scan Fragment",
-      "name": "Засекреченный фрагмент сканирования",
+      "name": "Засекреченные фрагменты данных сканирования",
       "category": "encoded",
       "family": "Data Archives",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Засекреченный фрагмент сканирования"
+      ]
     },
     {
       "key": "dataminedwake",
@@ -1140,23 +1188,29 @@
       "key": "compactemissionsdata",
       "symbol": "CompactEmissionsData",
       "english": "Abnormal Compact Emissions Data",
-      "name": "Аномальные компактные данные излучения",
+      "name": "Аномальные компактные данные об излучении",
       "category": "encoded",
       "family": "Emission Data",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Аномальные компактные данные излучения"
+      ]
     },
     {
       "key": "shieldfrequencydata",
       "symbol": "ShieldFrequencyData",
       "english": "Peculiar Shield Frequency Data",
-      "name": "Необычные данные частоты щита",
+      "name": "Специфические данные о частоте щитов",
       "category": "encoded",
       "family": "Shield Data",
       "grade": 5,
       "capacity": 100,
-      "tradeable": true
+      "tradeable": true,
+      "nameAliases": [
+        "Необычные данные частоты щита"
+      ]
     },
     {
       "key": "unknownenergysource",
@@ -1184,67 +1238,85 @@
       "key": "unknownwakedata",
       "symbol": "UnknownWakeData",
       "english": "Thargoid Wake Data",
-      "name": "Данные таргоидского следа",
+      "name": "Данные следа таргоидского корабля",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные таргоидского следа"
+      ]
     },
     {
       "key": "ancientlanguagedata",
       "symbol": "AncientLanguageData",
       "english": "Pattern Delta Obelisk Data",
-      "name": "Данные обелиска: паттерн Дельта",
+      "name": "Данные с обелиска «Дельта»",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные обелиска: паттерн Дельта"
+      ]
     },
     {
       "key": "ancientbiologicaldata",
       "symbol": "AncientBiologicalData",
       "english": "Pattern Alpha Obelisk Data",
-      "name": "Данные обелиска: паттерн Альфа",
+      "name": "Данные с обелиска «Альфа»",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные обелиска: паттерн Альфа"
+      ]
     },
     {
       "key": "ancientculturaldata",
       "symbol": "AncientCulturalData",
       "english": "Pattern Beta Obelisk Data",
-      "name": "Данные обелиска: паттерн Бета",
+      "name": "Данные с обелиска «Бета»",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные обелиска: паттерн Бета"
+      ]
     },
     {
       "key": "ancienthistoricaldata",
       "symbol": "AncientHistoricalData",
       "english": "Pattern Gamma Obelisk Data",
-      "name": "Данные обелиска: паттерн Гамма",
+      "name": "Данные с обелиска «Гамма»",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные обелиска: паттерн Гамма"
+      ]
     },
     {
       "key": "ancienttechnologicaldata",
       "symbol": "AncientTechnologicalData",
       "english": "Pattern Epsilon Obelisk Data",
-      "name": "Данные обелиска: паттерн Эпсилон",
+      "name": "Данные с обелиска «Эпсилон»",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные обелиска: паттерн Эпсилон"
+      ]
     },
     {
       "key": "tgcompositiondata",
@@ -1261,23 +1333,29 @@
       "key": "tgresiduedata",
       "symbol": "TG_ResidueData",
       "english": "Thargoid Residue Data",
-      "name": "Данные о таргоидских остатках",
+      "name": "Данных об осадке таргоидского происхождения",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные о таргоидских остатках"
+      ]
     },
     {
       "key": "tgstructuraldata",
       "symbol": "TG_StructuralData",
       "english": "Thargoid Structural Data",
-      "name": "Данные о таргоидской структуре",
+      "name": "Данные о структуре таргоидского объекта",
       "category": "encoded",
       "family": null,
       "grade": 2,
       "capacity": 250,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные о таргоидской структуре"
+      ]
     },
     {
       "key": "unknowncarapace",
@@ -1305,45 +1383,57 @@
       "key": "unknownorganiccircuitry",
       "symbol": "UnknownOrganicCircuitry",
       "english": "Thargoid Organic Circuitry",
-      "name": "Таргоидские органические схемы",
+      "name": "Таргоидская органическая схема",
       "category": "manufactured",
       "family": null,
       "grade": 5,
       "capacity": 100,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Таргоидские органические схемы"
+      ]
     },
     {
       "key": "unknowntechnologycomponents",
       "symbol": "UnknownTechnologyComponents",
       "english": "Thargoid Technological Components",
-      "name": "Таргоидские технологические компоненты",
+      "name": "Компоненты таргоидской техники",
       "category": "manufactured",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Таргоидские технологические компоненты"
+      ]
     },
     {
       "key": "tgbiomechanicalconduits",
       "symbol": "TG_BioMechanicalConduits",
       "english": "Bio-Mechanical Conduits",
-      "name": "Биомеханические проводники",
+      "name": "Биомеханические энергопроводники",
       "category": "manufactured",
       "family": null,
       "grade": 3,
       "capacity": 200,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Биомеханические проводники"
+      ]
     },
     {
       "key": "tgpropulsionelement",
       "symbol": "TG_PropulsionElement",
       "english": "Propulsion Elements",
-      "name": "Элементы двигательной установки",
+      "name": "Реактивные элементы",
       "category": "manufactured",
       "family": null,
       "grade": 5,
       "capacity": 100,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Элементы двигательной установки"
+      ]
     },
     {
       "key": "tgweaponparts",
@@ -1360,34 +1450,43 @@
       "key": "tgwreckagecomponents",
       "symbol": "TG_WreckageComponents",
       "english": "Wreckage Components",
-      "name": "Компоненты обломков",
+      "name": "Обломки кораблекрушений",
       "category": "manufactured",
       "family": null,
       "grade": 3,
       "capacity": 200,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Компоненты обломков"
+      ]
     },
     {
       "key": "tgshipflightdata",
       "symbol": "TG_ShipFlightData",
       "english": "Ship Flight Data",
-      "name": "Полётные данные корабля",
+      "name": "Полетные данные корабля",
       "category": "encoded",
       "family": null,
       "grade": 3,
       "capacity": 200,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Полётные данные корабля"
+      ]
     },
     {
       "key": "tgshipsystemsdata",
       "symbol": "TG_ShipSystemsData",
       "english": "Ship Systems Data",
-      "name": "Данные систем корабля",
+      "name": "Данные бортовых систем корабля",
       "category": "encoded",
       "family": null,
       "grade": 4,
       "capacity": 150,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Данные систем корабля"
+      ]
     },
     {
       "key": "guardianpowercell",
@@ -1470,12 +1569,15 @@
       "key": "guardianvesselblueprint",
       "symbol": "Guardian_VesselBlueprint",
       "english": "Guardian Vessel Blueprint Segment",
-      "name": "Фрагмент чертежа корабля Стражей",
+      "name": "Фрагмент чертежа судна Стражей",
       "category": "encoded",
       "family": null,
       "grade": 5,
       "capacity": 100,
-      "tradeable": false
+      "tradeable": false,
+      "nameAliases": [
+        "Фрагмент чертежа корабля Стражей"
+      ]
     },
     {
       "key": "rhenium",
@@ -16712,6 +16814,10 @@
       "url": "https://github.com/EDCD/FDevIDs/blob/master/material.csv"
     },
     {
+      "title": "Elite Dangerous Almanac Core · происхождение игровых названий корабельных материалов и ресурсов Odyssey",
+      "url": "https://github.com/Elite-Dangerous-Almanac/Almanac-Core/blob/47f07b921b4d2b795d17c42c6b43370f55e4a3c6/data/i18n/SOURCES.md#material-namesjsonc"
+    },
+    {
       "title": "EDCD · идентификаторы инженеров",
       "url": "https://github.com/EDCD/FDevIDs/blob/master/engineers.csv"
     },
@@ -16720,7 +16826,7 @@
       "url": "https://hosting.zaonce.net/community/journal/v37/Journal_Manual_v37.pdf"
     }
   ],
-  "attribution": "Game data and Coriolis JSON: copyright Frontier Developments plc, subject to Frontier terms. EDCD and Coriolis data contributors. Russian labels independently translated, with game-localized labels preferred when available. No NEWP code, artwork or descriptive guide prose is included.",
+  "attribution": "Game data and Coriolis JSON: copyright Frontier Developments plc, subject to Frontier terms. EDCD and Coriolis data contributors. Russian material names are from the game localization catalogued by Elite Dangerous Almanac Core and checked against Russian Player Journals and trader screens. Sources and license notices for Almanac Core and Odyssey Materials Helper are in engineering-roadmap.json. No NEWP code, artwork or descriptive guide prose is included.",
   "omittedLegacyEffects": [
     "special_feedback_cascade",
     "special_plasma_slug",

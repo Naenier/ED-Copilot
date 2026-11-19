@@ -202,6 +202,15 @@ func (h *hudWindow) refresh() {
 	if h == nil || h.closed || h.owner.disposed.Load() {
 		return
 	}
+	wasVisible := h.visible || h.leftVisible
+	defer func() {
+		visible := h.visible || h.leftVisible
+		if visible && !wasVisible {
+			recordWebOperation(h.owner.backend, "overlay", "show", time.Time{}, nil, nil)
+		} else if !visible && wasVisible {
+			recordWebOperation(h.owner.backend, "overlay", "hide", time.Time{}, nil, nil)
+		}
+	}()
 	s := h.owner.state
 	running := v.At(s, "connection", "gameRunning")
 	if !v.Bool(v.At(s, "settings", "overlayEnabled")) || running == false || v.Bool(v.At(s, "connection", "scanning")) {

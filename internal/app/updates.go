@@ -1,6 +1,9 @@
 package app
 
 import (
+	"time"
+
+	"github.com/Naenier/ED-Copilot/internal/diagnostics"
 	"github.com/Naenier/ED-Copilot/internal/updater"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
@@ -9,8 +12,19 @@ func (e *Engine) initializeUpdates() {
 	if e.opts.DisableNetwork {
 		return
 	}
-	manager, err := updater.New(updater.Options{CurrentVersion: Version, DataDir: e.opts.DataDir, HTTPClient: e.opts.HTTPClient, OnChange: e.Notify})
+	manager, err := updater.New(updater.Options{
+		CurrentVersion: Version, DataDir: e.opts.DataDir, HTTPClient: e.observedHTTP(e.opts.HTTPClient, nil), OnChange: e.Notify,
+		OnCheck: func(status string, started time.Time, err error) {
+			event := "check.complete"
+			switch status {
+			case "staged", "current", "portable", "recovery":
+				event = "check." + status
+			}
+			e.RecordOperation("updates", event, started, nil, err)
+		},
+	})
 	if err != nil {
+		e.diagnostics.Log(diagnostics.Error, "updates", "initialize", "Не удалось запустить службу обновлений")
 		e.updateError = err.Error()
 		return
 	}
@@ -24,19 +38,29 @@ func (e *Engine) initializeUpdates() {
 }
 
 func (e *Engine) consumeUpdateNotice() {
-	if notice, err := e.UpdateManager.ConsumeNotice(); err == nil && notice != nil {
-		e.mu.Lock()
-		e.updateNotice = v.Obj(v.Clone(notice))
-		e.mu.Unlock()
-		e.Notify()
+	started := time.Now()
+	notice, err := e.UpdateManager.ConsumeNotice()
+	if err != nil {
+		e.RecordOperation("updates", "notice", started, nil, err)
+		return
 	}
+	if notice == nil {
+		return
+	}
+	e.mu.Lock()
+	e.updateNotice = v.Obj(v.Clone(notice))
+	e.mu.Unlock()
+	e.RecordOperation("updates", "notice", started, nil, nil)
+	e.Notify()
 }
 
 func (e *Engine) ConfirmUpdateWorkspace() {
 	if e.UpdateManager == nil {
 		return
 	}
+	started := time.Now()
 	if err := e.UpdateManager.MarkWorkspaceReady(); err != nil {
+		e.RecordOperation("updates", "confirm-installation", started, nil, err)
 		e.mu.Lock()
 		e.updateError = err.Error()
 		e.mu.Unlock()
@@ -79,5 +103,10 @@ func (e *Engine) ApplyPendingUpdate() error {
 	if !closed || !enabled {
 		return nil
 	}
-	return e.UpdateManager.ApplyOnExit(false)
+	started := time.Now()
+	err := e.UpdateManager.ApplyOnExit(false)
+	if err != nil {
+		e.RecordOperation("updates", "apply", started, nil, err)
+	}
+	return err
 }

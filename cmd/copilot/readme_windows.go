@@ -3,10 +3,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Naenier/ED-Copilot/internal/app"
 	"github.com/Naenier/ED-Copilot/internal/localization"
@@ -38,17 +40,118 @@ func newReadmeController(engine *app.Engine) (*readmeController, error) {
 	if engine.Commander()["fid"] != "FNATIVE-SYNTHETIC" || !temporary || !strings.HasPrefix(filepath.Base(root), "ed-copilot-native-smoke-") || (engine.Language() != "en" && engine.Language() != "ru") {
 		return nil, errors.New("README capture requires the isolated temporary synthetic profile in English or Russian")
 	}
-	return &readmeController{engine}, nil
+	c := &readmeController{engine}
+	c.seedFitting()
+	return c, nil
 }
 
 func (c *readmeController) Snapshot() v.M {
 	return c.fixture(c.Engine.Snapshot())
 }
 func (c *readmeController) SnapshotForUI(tab string) v.M {
-	return c.fixture(c.Engine.SnapshotForUI(tab))
+	state := c.Engine.SnapshotForUI(tab)
+	if tab == "riches" {
+		state["riches"] = readmeCartography()
+	}
+	return c.fixture(state)
 }
 func (c *readmeController) SnapshotForHUD() v.M {
 	return c.fixture(c.Engine.SnapshotForHUD())
+}
+func (c *readmeController) SnapshotForWindow() v.M {
+	return c.fixture(c.Engine.SnapshotForWindow())
+}
+func (c *readmeController) SnapshotForNativeRefresh() v.M {
+	return c.fixture(c.Engine.SnapshotForNativeRefresh())
+}
+func (c *readmeController) SnapshotForOverview() v.M {
+	return c.fixture(c.Engine.SnapshotForOverview())
+}
+
+func (c *readmeController) Do(path string, body v.M) (v.M, error) {
+	result, err := c.Engine.Do(path, body)
+	if err == nil && strings.HasPrefix(path, "/api/ship-fits/fleet") {
+		result = c.fixture(result)
+	}
+	return result, err
+}
+
+// Apply a full synthetic ship observation so the capture uses the same fleet,
+// build calculations and materials interfaces as the ordinary renderer.
+func (c *readmeController) seedFitting() {
+	at := time.Now().UTC().Add(time.Minute)
+	c.Engine.Apply(v.M{
+		"event": "Loadout", "timestamp": v.ISO(at), "Ship": "panthermkii", "ShipID": 1,
+		"ShipName": "Звёздный попутчик", "ShipIdent": "CP-200",
+		"Modules": []v.M{
+			{"Slot": "Armour", "Item": "panthermkii_armour_grade2", "Engineering": v.M{"BlueprintName": "Armour_HeavyDuty", "Level": 5, "Quality": 1}},
+			{"Slot": "PowerPlant", "Item": "int_powerplant_size8_class5"},
+			{"Slot": "MainEngines", "Item": "int_engine_size8_class5"},
+			{"Slot": "FrameShiftDrive", "Item": "int_hyperdrive_overcharge_size7_class5", "Engineering": v.M{"BlueprintName": "FSD_LongRange", "Level": 5, "Quality": 1, "ExperimentalEffect": "special_fsd_cooled"}},
+			{"Slot": "LifeSupport", "Item": "int_lifesupport_size5_class4"},
+			{"Slot": "PowerDistributor", "Item": "int_powerdistributor_size7_class5"},
+			{"Slot": "Radar", "Item": "int_sensors_size5_class4"},
+			{"Slot": "FuelTank", "Item": "int_fueltank_size7_class3"},
+			{"Slot": "CargoHatch", "Item": "modularcargobaydoor"},
+			{"Slot": "Cargo01", "Item": "int_cargorack_size8_class1"},
+			{"Slot": "Cargo02", "Item": "int_cargorack_size7_class1"},
+			{"Slot": "Slot01_Size8", "Item": "int_cargorack_size8_class1"},
+			{"Slot": "Slot02_Size7", "Item": "int_shieldgenerator_size7_class5"},
+			{"Slot": "PlanetaryApproachSuite", "Item": "int_planetapproachsuite_advanced"},
+		},
+	}, nil)
+	c.Engine.Apply(v.M{
+		"event": "StoredShips", "timestamp": v.ISO(at.Add(time.Second)), "StarSystem": "Тестовая колония А",
+		"StationName": "Строительный склад Альфа",
+		"ShipsHere": []v.M{
+			{"ShipID": 1, "ShipType": "panthermkii", "Name": "Звёздный попутчик", "ShipIdent": "CP-200"},
+			{"ShipID": 2, "ShipType": "python", "Name": "Полярная звезда", "ShipIdent": "CP-201"},
+			{"ShipID": 3, "ShipType": "mandalay", "Name": "Горизонт", "ShipIdent": "CP-202"},
+		},
+		"ShipsRemote": []v.M{{"ShipID": 4, "ShipType": "sidewinder", "Name": "Первый полёт", "ShipIdent": "CP-203",
+			"StarSystem": "Тестовая колония Б", "StationName": "Демонстрационный порт Бета"}},
+	}, nil)
+	for _, entry := range []struct {
+		component, event string
+		err              error
+	}{
+		{"engineering", "ship-fit.materials", nil},
+		{"search", "stations.lookup", context.DeadlineExceeded},
+		{"journal", "replay.cancel", context.Canceled},
+		{"carrier", "report.open", os.ErrNotExist},
+	} {
+		c.Engine.RecordOperation(entry.component, entry.event, time.Time{}, nil, entry.err)
+	}
+}
+
+func readmeCartography() v.M {
+	options := v.M{"origin": "Тестовая колония А", "destination": "Учебная система Галилей", "jumpRangeLy": 68.8, "radiusLy": 200,
+		"maxResults": 100, "maxDistanceLs": 10000, "minMappingValue": 1000000, "useMappingValue": true, "avoidThargoids": true, "loop": false}
+	earth := v.M{"name": "Учебная система Атлас 3", "designation": "3", "type": "earthLike", "distanceLs": 242, "scanCredits": 265842, "mappingCredits": 1151985, "terraformable": false}
+	water := v.M{"name": "Учебная система Атлас 4", "designation": "4", "type": "waterWorld", "distanceLs": 448, "scanCredits": 342889, "mappingCredits": 1492600, "terraformable": true}
+	return v.M{
+		"route": v.M{"origin": options["origin"], "destination": options["destination"], "options": options, "stops": []v.M{
+			{"system": "Учебная система Атлас", "estimatedJumps": 2, "bodies": []v.M{earth, water}},
+			{"system": "Учебная система Кеплер", "estimatedJumps": 1, "bodies": []v.M{{"name": "Учебная система Кеплер 2", "designation": "2", "type": "earthLike", "distanceLs": 538, "scanCredits": 282400, "mappingCredits": 1475288}}},
+			{"system": "Учебная система Галилей", "estimatedJumps": 1, "transit": true},
+		}},
+		"progress": v.M{"nextSystem": "Учебная система Атлас", "nextTarget": earth, "completedJumps": 0, "remainingJumps": 4,
+			"completedStops": 0, "totalStops": 3, "totalMappingCredits": 4119873, "useMappingValue": true},
+		"search": v.M{"status": "Маршрут построен"},
+	}
+}
+
+func (c *readmeController) SearchNearest(input v.M) (v.M, error) {
+	if input["category"] != "stations" {
+		return c.Engine.SearchNearest(input)
+	}
+	return c.fixture(v.M{"status": "ok", "total": 5, "rows": []v.M{
+		{"name": "Демонстрационный порт Альфа", "system": "Тестовая колония А", "type": "Coriolis", "distanceLy": 0, "distanceLs": 345, "pad": "L", "faction": "Тестовая фракция", "economy": "Industrial", "services": []string{"Market", "Refuel", "Repair"}},
+		{"name": "Демонстрационный порт Бета", "system": "Учебная система Атлас", "type": "Orbis", "distanceLy": 5.24, "distanceLs": 614, "pad": "L", "economy": "High Tech", "services": []string{"Shipyard", "Outfitting", "Repair"}},
+		{"name": "Учебный торговый порт", "system": "Учебная система Лагранж", "type": "Ocellus", "distanceLy": 7.88, "distanceLs": 819, "pad": "L", "economy": "Refinery", "services": []string{"Market", "Repair"}},
+		{"name": "Строительный склад Бета", "system": "Тестовая колония Б", "type": "Outpost", "distanceLy": 10, "distanceLs": 1238, "pad": "M", "economy": "Colony", "services": []string{"Market", "Refuel"}},
+		{"name": "Демонстрационный терминал", "system": "Учебная система Кеплер", "type": "Coriolis", "distanceLy": 12.45, "distanceLs": 1492, "pad": "L", "economy": "Agriculture", "services": []string{"Refuel", "Repair"}},
+	}}), nil
 }
 
 // The ordinary Galaxy bridge stays offline in this fixture. These invented
@@ -99,6 +202,9 @@ var readmeFixtureNames = strings.NewReplacer(
 	"Снабжение новой станции", "Supply a new station",
 	"Тестовый командир", "Demo Commander",
 	"Звёздный попутчик", "Star Voyager",
+	"Полярная звезда", "Polaris",
+	"Горизонт", "Horizon",
+	"Первый полёт", "First Flight",
 	"Тестовая колония А", "Demo Colony Alpha",
 	"Тестовая колония Б", "Demo Colony Beta",
 	"Тестовая исходная система", "Demo Origin",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Naenier/ED-Copilot/internal/diagnostics"
 	"github.com/Naenier/ED-Copilot/internal/mining"
 	"github.com/Naenier/ED-Copilot/internal/pilot"
 	"github.com/Naenier/ED-Copilot/internal/presentation"
@@ -43,6 +44,7 @@ func (e *Engine) start(name string, input M, job func(context.Context, uint64) (
 	e.mu.Unlock()
 	go func() {
 		defer cancel()
+		started := time.Now()
 		state, err := job(ctx, id)
 		if state == nil {
 			state = M{}
@@ -58,6 +60,10 @@ func (e *Engine) start(name string, input M, job func(context.Context, uint64) (
 		}
 		e.updateNetwork(name, id, state)
 		_ = e.Save()
+		if name != "updates" {
+			event := strings.ToLower(name) + ".complete"
+			e.recordOperation(diagnosticSubsystem(name), event, started, diagnostics.Info, state, err)
+		}
 	}()
 	e.Notify()
 	return M{"ok": true, "started": true}
@@ -73,7 +79,13 @@ func (e *Engine) cancelJob(name string) {
 	e.mu.Unlock()
 	e.Notify()
 }
-func (e *Engine) Do(path string, body M) (M, error) {
+func (e *Engine) Do(path string, body M) (out M, failure error) {
+	if path == "/api/diagnostics/logs" {
+		return e.diagnosticLogs(body)
+	}
+	started := time.Now()
+	action := v.Str(body["action"])
+	defer func() { e.recordCommand(path, action, started, out, failure) }()
 	if body == nil {
 		body = M{}
 	}
@@ -81,6 +93,8 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		return result, err
 	}
 	switch path {
+	case "/api/ship-fits/fleet", "/api/ship-fits/fleet/loadout":
+		return e.fleetFitsCommand(path, body)
 	case "/api/ship-fits/materials":
 		return e.shipFitMaterials(body)
 	case "/api/ship-fits", "/api/ship-fits/get", "/api/ship-fits/save", "/api/ship-fits/delete", "/api/ship-fits/import", "/api/ship-fits/export":
@@ -537,10 +551,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			return nil, err
 		}
 		snapshot := e.SnapshotForUI("carrier")
-		client := e.opts.HTTPClient
-		if client == nil {
-			client = &http.Client{Timeout: 30 * time.Second}
-		}
+		client := e.observedHTTP(e.opts.HTTPClient, &http.Client{Timeout: 30 * time.Second})
 		searcher := trading.NewSearcher(client)
 		name := "trading"
 		if path == "/api/trading/routes" {
@@ -562,10 +573,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 			return nil, err
 		}
 		snapshot := e.Snapshot()
-		client := e.opts.HTTPClient
-		if client == nil {
-			client = &http.Client{Timeout: 30 * time.Second}
-		}
+		client := e.observedHTTP(e.opts.HTTPClient, &http.Client{Timeout: 30 * time.Second})
 		searcher := mining.NewSearcher(client)
 		return e.start("search", body, func(ctx context.Context, id uint64) (M, error) {
 			searcher.OnUpdate = func(s M) { s["running"] = true; e.updateNetwork("search", id, s) }
@@ -629,6 +637,7 @@ func (e *Engine) Do(path string, body M) (M, error) {
 		e.Notify()
 		return M{"ok": true}, nil
 	default:
+		path = ""
 		return nil, errors.New("Неизвестное действие приложения")
 	}
 	if err := e.Save(); err != nil {

@@ -11,14 +11,18 @@ var odysseyInventoryCategories = map[string]string{
 	"item": "items", "component": "components", "data": "data", "consumable": "consumables",
 }
 
-var odysseyMaterialSymbols = sync.OnceValue(func() map[string]string {
-	out := map[string]string{}
+var odysseyMaterialSymbols = sync.OnceValue(func() map[string]M {
+	out := map[string]M{}
 	for _, row := range v.Rows(roadmapExtension()["odysseyMaterials"]) {
-		key := v.Str(row["key"])
-		out[v.Key(v.Text(row["symbol"], key))] = key
+		out[v.Key(v.Text(row["symbol"], row["key"]))] = row
 	}
 	return out
 })
+
+func OdysseyMaterialNames(symbol any) (russian, english string) {
+	row := odysseyMaterialSymbols()[v.Key(symbol)]
+	return v.Str(row["name"]), v.Str(row["english"])
+}
 
 type odysseyStockGroup struct {
 	known     bool
@@ -51,9 +55,8 @@ func odysseyInventory(raw M) map[string]odysseyStockGroup {
 				if mission != "" && mission != "0" && mission != "18446744073709551615" {
 					continue
 				}
-				if material := odysseyMaterialSymbols()[v.Key(row["symbol"])]; material != "" &&
-					roadmapData().personalMaterials[material]["category"] == category {
-					s.counts[material] += v.Int(row["count"])
+				if material := odysseyMaterialSymbols()[v.Key(row["symbol"])]; material["category"] == category {
+					s.counts[v.Str(material["key"])] += v.Int(row["count"])
 				}
 			}
 		}
@@ -68,7 +71,7 @@ func odysseyPickupMaterials(raw any, shared map[string]int) map[string]int {
 		if index >= 32 {
 			break
 		}
-		if key := odysseyMaterialSymbols()[v.Key(value)]; key != "" {
+		if key := v.Str(odysseyMaterialSymbols()[v.Key(value)]["key"]); key != "" {
 			out[key] = shared[key]
 		}
 	}

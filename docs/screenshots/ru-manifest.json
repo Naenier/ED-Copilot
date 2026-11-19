@@ -1,5 +1,5 @@
 {
-  "applicationVersion": "2.8.8",
+  "applicationVersion": "2.9.0",
   "language": "ru",
   "data": "synthetic",
   "displayMode": "fullscreen",
@@ -8,25 +8,25 @@
       "file": "overview.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "aca2c6afd5390c6caba7fb95e668abf5dbe9922f2fbcb45a906a91aa30834c70"
+      "sha256": "3ae0c415e1b2c25fdb29e5e98757d7b54d11043f8c2bd0e75859b7c71c7e9397"
     },
     {
       "file": "commander.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "8d7d86bca858d878571014e41a242115b272aa42f6244344b4f78a955f516e89"
+      "sha256": "9ca933dc254ecf042aab12faaa5f6517bd2e7fd7e41ea9cca90c6db9501bd7f0"
     },
     {
       "file": "ranks.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "f4f9a249e054d3a21727c84848eb666914d91007c3eff01f3506dafdaab6d776"
+      "sha256": "aa450dffb1ddaa4bb4664a84aa24ada04f8871f64b78e39c3f795da5fffe970c"
     },
     {
       "file": "fleet.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "7675875703ef421338c76c1a21512a985fa94b112432698ded3f156a4abe9177"
+      "sha256": "682cdb87b92f94b9bf9c75d0aafd6487e341891ad878a03617b658a56a881388"
     },
     {
       "file": "inventory.png",
@@ -38,25 +38,25 @@
       "file": "navigation.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "aca2c6afd5390c6caba7fb95e668abf5dbe9922f2fbcb45a906a91aa30834c70"
+      "sha256": "3ae0c415e1b2c25fdb29e5e98757d7b54d11043f8c2bd0e75859b7c71c7e9397"
     },
     {
       "file": "navigation-compact.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "5ea15478812b4208c35d68a6468612b842749bdb0719670cfdf7ec4a224ce67d"
+      "sha256": "5bf131ace09b74fb954a7eb9e7837483ae5919d01e2a14eb82d903d4e0c93916"
     },
     {
       "file": "deals.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "9d3a47d867eaef2a98e79b4697b92d4a91c70aa9b30ca27a2aabf5e29bc0376f"
+      "sha256": "4003ce1b5de325ab8cc6ffa23bb98805428671c78bc7406b24d1d3401e719375"
     },
     {
       "file": "deals-filters.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "3dd52c8d7f87f2ef504e4463a13bb02f6fdc61eaf9a08acf87a43a9eefdce169"
+      "sha256": "ed440a6e35529daddd26c581ccb1c786960ff38f4b6cfe649c5ea9f5bfc38f48"
     },
     {
       "file": "carrier-trade.png",
@@ -68,58 +68,79 @@
       "file": "route.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "3b199fe6edaffc11fb90339936ae22f9fdb57ce6884fc325e5c78453badc685e"
+      "sha256": "bc0af8670c38b79e4716589c8a8c7eb60ebfbede2332bb1fa99bf7dc28315c42"
     },
     {
       "file": "road-to-riches.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "e2a716732acece23efb083e248cbea6dbc4972eb7b0b5ef5dfed64156c96575f",
-      "applicationVersion": "2.8.13"
+      "sha256": "03262e2483a23f17b8b1c7a1204fe633d846e98a207b26e81b726805fd320d52"
+    },
+    {
+      "file": "nearest.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "d17a6e18809598900469261d1d065edd74622f66772d27cec2c3340f8ffa19dd"
     },
     {
       "file": "galaxy.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "69cd00c3c4113f5a3bc3943ae6ca461e238677ae5564e63dbfe51d38773daa3f"
+      "sha256": "d386cda0a7693dc41686d1000019f8ccbe4529186b8ad2e238da6cd3a7f9b589"
     },
     {
       "file": "system.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "59ca9825685afc3e0bf8ff4487ea2352a8175238fddf29136ae486cb9b50e0ba"
+      "sha256": "4a4ab2ce79e874afd78f79fe9dd35672a371bb216c55ba13a8f06ac8b8f5a743"
     },
     {
       "file": "ships.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "0ac1f5f5171e9d33511b8a4d79305cb236cda0ec754ef13c8d840b6a0584b0c7",
-      "applicationVersion": "2.8.11"
+      "sha256": "0ac1f5f5171e9d33511b8a4d79305cb236cda0ec754ef13c8d840b6a0584b0c7"
     },
     {
       "file": "ship.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "cdc519b6c9190eb858decf840bbc35a2426e5cadb7b4a6c9242d9a4761a0bd30",
-      "applicationVersion": "2.8.11"
+      "sha256": "cdc519b6c9190eb858decf840bbc35a2426e5cadb7b4a6c9242d9a4761a0bd30"
     },
     {
       "file": "engineer.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "7c605e70409cad60793433a88bd1edf554a99cc3ed0d4e6fb1d864db6c31d706"
+      "sha256": "ef0e0899121ac22cf269b09804d9d52de2376c7450abc2124883b08341bc9762"
     },
     {
       "file": "engineering.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "10e381500946d87a4d58b24a7d89587c5d05e826f2a4b7d5494d34e8b9cde747"
+      "sha256": "10df7cc66156a96f20b5a4c67ef42dfd050126717413de66b8721c1e09925671"
+    },
+    {
+      "file": "ship-fitting-fleet.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9ec87920a17025fe233ab623fe79cc75ddaa26c2e44e538711de6655cacf12ac"
+    },
+    {
+      "file": "ship-fitting.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "c75c28b584bf79f12e2fcef021e0d5c9f41c7cd0dadc3867a26eb795240558e4"
+    },
+    {
+      "file": "ship-fitting-materials.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "064945efda81e7cd31e02779a4e7f62e299df7bcb5cea64350fc3227d927be67"
     },
     {
       "file": "material-exchange.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "263a255fe8c8de425cfa1c0162d949a45a9154b1ff91c2b955db54411b728dad"
+      "sha256": "c5546d74108a656f45fb2c7995f1f9c38795d83959cabb1ad842ec2375eea548"
     },
     {
       "file": "material.png",
@@ -149,7 +170,7 @@
       "file": "colonization.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "7de8a763578a9796365a4e7b86fad455c55521184f4edc398b237a5b23de3e42"
+      "sha256": "b900e951d664d2ab20f2b6948b2f1c1cc9b81d7b452877a29e762633f67b14a4"
     },
     {
       "file": "academy.png",
@@ -161,25 +182,31 @@
       "file": "exobiology.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "f14698e577738e4c9d806ddb7cdee16427cee1f2c78df9b74e3d088179bcea55"
+      "sha256": "3ef52b59c30efb8211ca6f924538491498a5d6bebe4bf39f289d88f3bda00309"
     },
     {
       "file": "exo-planets.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "78105d76a84da21a062595aace7c84d3f4b590ac2d22e5989504934d3d39ec91"
+      "sha256": "a758d8cf33b48b3cf46980d9e130a429a970730f3bea8fe915af6b894a3cee26"
     },
     {
       "file": "exo-samples.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "e1c8ecae45a8d871f9de10b884d27d5cdfd1c9e02bbcff1834cda8366e77b00f"
+      "sha256": "07360d2a529be7c57d5eea1480a269345f6ecfc843b40f2f8464f3f9234c0cbe"
     },
     {
       "file": "politics.png",
       "width": 1920,
       "height": 1080,
-      "sha256": "f27be155f0db7dd69b6d3fb2778fca8ccd20482bbcc991b0adc747c8b059f43a"
+      "sha256": "b10054fda41cd55cf45925a0679254461cf1c102402a62f44b6f0bdf8df218b8"
+    },
+    {
+      "file": "app-log.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "2d5b230edee9d9e57f8ecd3fe6877eeb1827b8ef6e1ef650275b2e7972ca8904"
     }
   ]
 }

@@ -177,3 +177,26 @@ func TestShipFitMaterialsChargesOnlyAddedFactoryExperimental(t *testing.T) {
 		t.Fatalf("unsupported experimental was not reported: %v", unavailable)
 	}
 }
+
+func TestShipFitMaterialsUsesTheDisplayedCraftPercentage(t *testing.T) {
+	e, _, _ := fixtureEngine(t, nil)
+	for _, example := range []struct {
+		quality float64
+		rolls   int
+	}{{.6667, 2}, {.67, 2}, {.68, 3}} {
+		response := researchResult(t, e, "/api/ship-fits/materials", M{"modules": []M{
+			{"slot": "FrameShiftDrive", "blueprint": "FSD_LongRange", "grade": 3, "quality": example.quality},
+		}})
+		count := -1
+		for _, group := range v.Rows(response["groups"]) {
+			for _, row := range v.Rows(group["rows"]) {
+				if row["key"] == "wakesolutions" {
+					count = v.Int(row["required"])
+				}
+			}
+		}
+		if count != example.rolls {
+			t.Errorf("quality %g: got %d Wake Solutions, want %d", example.quality, count, example.rolls)
+		}
+	}
+}
