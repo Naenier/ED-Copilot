@@ -175,4 +175,12 @@
 .fit-fleet-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;color:var(--accent);background:var(--raised)}
 .fit-fleet-icon .icon{width:17px;height:17px}
 .fit-fleet-current{display:inline-block;margin-inline-start:8px;color:var(--accent);font-size:11px}
+.fit-preset-filters{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.fit-preset-filters :is(input,select){width:100%;min-width:0}
+.fit-preset-list .fit-fleet-info>strong{display:block;margin-top:3px}
+.fit-preset-list p{color:var(--muted);margin:5px 0;font-size:12px;line-height:1.5}
+.fit-preset-list .fit-fleet-info>small{margin-top:0}
+.fit-preset-source{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--muted)}
+.fit-source-link{padding:2px 0;color:var(--accent);text-align:start;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:650px){.fit-preset-filters{grid-template-columns:1fr 1fr}.fit-preset-filters>:last-child{grid-column:1/-1}}
 @media(max-width:500px){.fit-fleet-list li{grid-template-columns:auto minmax(0,1fr)}.fit-fleet-list button{grid-column:2;justify-self:start}}

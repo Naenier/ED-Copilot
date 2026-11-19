@@ -79,6 +79,7 @@ type Window struct {
 	disposed                                               atomic.Bool
 	tray                                                   *walk.NotifyIcon
 	hud                                                    *hudWindow
+	notificationSounds                                     *notificationSoundPlayer
 	font, titleFont, boldFont                              *walk.Font
 	brushes                                                []*walk.SolidColorBrush
 	colors                                                 M

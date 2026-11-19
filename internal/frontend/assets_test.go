@@ -260,11 +260,12 @@ func jsCallArguments(source string, from int) []string {
 
 func TestShipFittingCatalogueLoadsOutsideStartupDocument(t *testing.T) {
 	document := HTML("1111111111111111111111111111111111111111", false)
-	if !strings.Contains(document, "workspace/ship-fits.js") || strings.Contains(document, "globalThis.EdCopilotShipFitRU =") {
+	if !strings.Contains(document, "workspace/ship-fits.js") || strings.Contains(document, "globalThis.EdCopilotShipFitRU =") ||
+		strings.Contains(document, "globalThis.EDCopilotShipFitPresets =") {
 		t.Fatal("ship fitting catalogue must load on demand")
 	}
 	bundle := string(ShipFitsBundle())
-	for _, asset := range []string{"ship-fit-ru.js", "ship-fit-engine.js", "ship-fits.js"} {
+	for _, asset := range []string{"ship-fit-ru.js", "ship-fit-engine.js", "ship-fit-presets.js", "ship-fits.js"} {
 		if !strings.Contains(bundle, embeddedAsset(t, asset)) {
 			t.Fatalf("on-demand ship fitting bundle omits %s", asset)
 		}

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -32,7 +31,9 @@ type sectionSeven struct {
 	loadoutChangedAt                time.Time
 	observedOwner, observedShipID   string
 	lowFuel, engineeringReady       bool
-	carrierJump                     M
+	armedCarrierCooldown            string
+	carrierCooldownSeen             string
+	carrierDepartureSeen            string
 	screenOwner                     string
 	itineraryCache                  M
 	itineraryRevision               uint64
@@ -54,9 +55,9 @@ func (e *Engine) initSectionSeven(saved M) {
 }
 
 func (e *Engine) startSectionSeven() {
-	// A pending jump can approach departure while Status.json is unchanged.
+	// Carrier timers can change while the journal and Status.json are quiet.
 	go func() {
-		tick := time.NewTicker(10 * time.Second)
+		tick := time.NewTicker(time.Second)
 		defer tick.Stop()
 		for {
 			select {
@@ -64,7 +65,7 @@ func (e *Engine) startSectionSeven() {
 				return
 			case now := <-tick.C:
 				e.domainMu.Lock()
-				changed := e.carrierDepartureNotice(now)
+				changed := e.tickCarrierNotifications(now)
 				e.domainMu.Unlock()
 				if changed {
 					e.Notify()
@@ -77,7 +78,8 @@ func (e *Engine) startSectionSeven() {
 func (e *Engine) resetSectionSevenObservations() {
 	s := &e.section7
 	s.fleetFits.reset("")
-	s.loadout, s.stored, s.carrierJump, s.observedOwner = nil, nil, nil, ""
+	s.loadout, s.stored, s.observedOwner = nil, nil, ""
+	s.armedCarrierCooldown, s.carrierCooldownSeen, s.carrierDepartureSeen = "", "", ""
 	s.observedShipID = ""
 	s.loadoutChangedAt = time.Time{}
 	s.lowFuel, s.engineeringReady = false, false
@@ -120,7 +122,7 @@ func (e *Engine) saveSectionSeven(saved M) {
 	saved["notifications"] = s.notifications.Export()
 }
 
-func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied bool) {
+func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied bool, notices gameNotificationChanges) {
 	s := &e.section7
 	if owner == "" {
 		return
@@ -132,7 +134,8 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 		s.fleetFits.journal(event)
 	}
 	if owner != s.observedOwner {
-		s.loadout, s.stored, s.carrierJump = nil, nil, nil
+		s.loadout, s.stored = nil, nil
+		s.armedCarrierCooldown, s.carrierCooldownSeen, s.carrierDepartureSeen = "", "", ""
 		s.observedShipID = ""
 		s.loadoutChangedAt = time.Time{}
 		s.lowFuel, s.engineeringReady = false, false
@@ -144,6 +147,7 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 		if at := v.Time(event["timestamp"]); !at.Before(s.loadoutChangedAt) {
 			s.loadout, s.loadoutChangedAt = nil, at
 			s.observedShipID = observedEngineeringShipID(event)
+			s.lowFuel = false
 		}
 	case "Loadout":
 		if at := v.Time(event["timestamp"]); v.Arr(event["Modules"]) != nil && ships.VehicleKind(v.Str(event["Ship"])) == "ship" && !at.Before(s.loadoutChangedAt) {
@@ -167,6 +171,10 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	case "Location", "FSDJump", "CarrierJump", "Scan", "FSSDiscoveryScan", "FSSAllBodiesFound", "SAAScanComplete", "Touchdown", "SupercruiseExit", "SellExplorationData", "MultiSellExplorationData", "Died":
 		s.explorationRevision++
 	}
+	var routeBefore M
+	if notices.live && oneOf(kind, "FSDJump", "Docked") {
+		routeBefore = s.routes.HUD(owner)
+	}
 	clipboard := s.routes.Observe(owner, event, meta)
 	if v.Bool(meta["replay"]) || owner != e.planWorkspace.key {
 		return
@@ -183,6 +191,9 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 	if oneOf(kind, "Location", "FSDJump", "CarrierJump") {
 		s.notifications.SetSystem(v.Str(v.At(meta, "commander", "system")))
 	}
+	if !notices.live {
+		return
+	}
 	for _, finding := range findings {
 		s.notifications.Emit(notifications.Event{
 			ID: v.Str(finding["id"]), Kind: "finding", Scope: owner, Activity: activity,
@@ -193,68 +204,10 @@ func (e *Engine) observeSectionSeven(owner string, event, meta M, richesCopied b
 			ObservedAt: v.Time(finding["observedAt"]),
 		})
 	}
-	at := v.Time(event["timestamp"])
-	if at.IsZero() || time.Since(at) > 2*time.Minute || at.After(time.Now().Add(time.Minute)) {
-		return
+	if routeBefore != nil {
+		e.notifyShipRoute(owner, routeBefore, s.routes.HUD(owner), v.Time(event["timestamp"]))
 	}
-	cmd := v.Obj(meta["commander"])
-	notice := notifications.Event{Scope: owner, Activity: activity, System: v.Str(cmd["system"]), ObservedAt: at}
-	switch kind {
-	case "Status", "FuelScoop", "FSDJump", "ReservoirReplenished", "RefuelAll", "RefuelPartial":
-		if s.notifications.Enabled("fuel") {
-			fuel := v.Obj(e.Pilot.Snapshot()["fuel"])
-			current, known := v.Number(fuel["mainTons"])
-			capacity := v.Num(fuel["mainCapacityTons"])
-			if known && capacity > 0 {
-				ratio := current / capacity
-				if ratio > .15 {
-					s.lowFuel = false
-				}
-				if ratio <= .10 && !s.lowFuel {
-					s.lowFuel = true
-					notice.ID, notice.Kind, notice.Link = v.ISO(at), "fuel", "ship-route"
-					notice.Title, notice.EnglishTitle = "Мало топлива", "Low fuel"
-					notice.Detail = fmt.Sprintf("В основном баке %.1f т", current)
-					notice.EnglishDetail = fmt.Sprintf("%.1f t in the main tank", current)
-					s.notifications.Emit(notice)
-				}
-			}
-		}
-	case "MissionCompleted":
-		if id := v.Str(event["MissionID"]); id != "" {
-			notice.ID, notice.Kind, notice.Link = id, "task", "overview"
-			notice.Title, notice.EnglishTitle = "Миссия завершена", "Mission completed"
-			notice.Detail = v.Text(event["LocalisedName"], event["Name_Localised"])
-			notice.EnglishDetail = v.Text(event["MissionName"], notice.Detail)
-			s.notifications.Emit(notice)
-		}
-	case "CarrierJumpRequest":
-		if v.Str(event["CarrierID"]) != "" && v.Str(event["CarrierID"]) == v.Str(e.Carrier.OwnerID) {
-			s.carrierJump = v.Copy(event)
-			e.carrierDepartureNotice(time.Now())
-		}
-	case "CarrierJumpCancelled", "CarrierJump", "Shutdown":
-		if kind == "Shutdown" || v.Str(event["CarrierID"]) == v.Str(e.Carrier.OwnerID) {
-			s.carrierJump = nil
-		}
-	case "Materials", "MaterialCollected", "MaterialTrade", "EngineerCraft":
-		e.engineeringReadyNotice(notice)
-	}
-}
-
-func (e *Engine) carrierDepartureNotice(now time.Time) bool {
-	s := &e.section7
-	departure := v.Time(s.carrierJump["DepartureTime"])
-	if s.observedOwner == "" || s.observedOwner != e.planWorkspace.key || !departure.After(now) || departure.Sub(now) > 5*time.Minute {
-		return false
-	}
-	system := v.Str(s.carrierJump["SystemName"])
-	clock := departure.Local().Format("15:04")
-	return s.notifications.Emit(notifications.Event{
-		ID: v.Str(s.carrierJump["CarrierID"]) + "/" + v.ISO(departure), Kind: "carrier", Scope: s.observedOwner,
-		Title: "Скоро прыжок флотоносца", EnglishTitle: "Fleet carrier departure soon",
-		Detail: system + " · " + clock, EnglishDetail: system + " · " + clock, System: system, Link: "carrier", ObservedAt: now,
-	})
+	e.observeGameNotifications(owner, event, meta, notices)
 }
 
 func (e *Engine) engineeringReadyNotice(notice notifications.Event) {
@@ -592,7 +545,7 @@ func (e *Engine) secondScreenView(mode string) secondscreen.View {
 func (e *Engine) notifyGoalCompleted(owner string, goal M, at time.Time) {
 	title := v.Str(goal["title"])
 	e.section7.notifications.Emit(notifications.Event{
-		ID: "goal/" + v.Str(goal["id"]), Kind: "task", Scope: owner, Activity: v.Str(e.settings["activity"]),
+		ID: "goal/" + v.Str(goal["id"]), Kind: "objective", Scope: owner, Activity: v.Str(e.settings["activity"]),
 		Title: "Цель выполнена", EnglishTitle: "Objective completed", Detail: title, EnglishDetail: title,
 		System: v.Str(goal["system"]), Link: "targets", ObservedAt: at,
 	})

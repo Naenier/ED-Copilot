@@ -239,6 +239,8 @@ func (e *Engine) snapshotScopedLocked(tab string) M {
 	if wantCarrier {
 		state["carrier"] = e.Carrier.Snapshot(ctx)
 		ctx["carrier"] = state["carrier"]
+	} else if hud && e.Carrier.OwnerID != "" {
+		state["carrierJump"] = e.Carrier.JumpSnapshot(v.Time(ctx["now"]))
 	}
 	if oneOf(tab, "overview", "colonization", "statistics") || hud && activity == "colonization" {
 		state["colonization"] = e.Colonies.Snapshot(ctx)

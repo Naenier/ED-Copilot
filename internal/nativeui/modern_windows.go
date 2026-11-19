@@ -193,6 +193,7 @@ func newModernWindow(backend Controller, options Options) (*Window, error) {
 	u.main.AsContainerBase().SizeChanged().Attach(func() {
 		u.modern.resizeBrowser()
 	})
+	u.startNotificationSounds()
 	go u.watch()
 	return u, nil
 }
@@ -1032,6 +1033,11 @@ func (m *modernShell) nativeAction(params M) (response any, failure error) {
 		}()
 	}
 	switch action {
+	case "notification-sound-preview":
+		if err := u.notificationSounds.preview(); err != nil {
+			return nil, err
+		}
+		return M{"ok": true}, nil
 	case "controls-import", "controls-export":
 		return u.controlsFileAction(params)
 	case "profile-export":

@@ -32,6 +32,12 @@
   const materialGroups = [
     ['raw','Сырьё'], ['manufactured','Промышленные материалы'], ['encoded','Данные'],
   ];
+  const presetRoles = {
+    combat:'Бой ПвЕ','anti-xeno':'Бой с таргоидами',trade:'Грузоперевозки',exploration:'Дальние исследования',
+    exobiology:'Экзобиология','laser-mining':'Лазерная добыча','core-mining':'Добыча из ядер',
+    passengers:'Пассажирские рейсы',rescue:'Спасательные операции',salvage:'Сбор грузов',racing:'Гонки'
+  };
+  const presets = () => window.EDCopilotShipFitPresets?.builds || [];
   const coreNames = {
     PowerPlant:'Силовая установка', MainEngines:'Двигатели', FrameShiftDrive:'Двигатель FSD',
     LifeSupport:'Система жизнеобеспечения', PowerDistributor:'Распределитель питания', Radar:'Сенсоры', FuelTank:'Топливный бак',
@@ -136,6 +142,7 @@
       fits.map(fit => option(u,fit.id,[fit.name,shipName(u,fit.ship)].filter((text,index) => index===0 || text!==fit.name).join(' · '),r.id)).join('') +
       '</select>' + (r.build ? button(u,'new','Новая сборка',{icon:'plus',disabled:r.busy}) : '') +
       '</div><div class="fit-actions">' +
+      (presets().length ? button(u,'presets','Готовые сборки',{icon:'layout-grid',disabled:r.busy}) : '') +
       button(u,'fleet','Загрузить из флота',{icon:'ship',disabled:r.busy}) +
       button(u,'import','Импорт JSON / Coriolis',{disabled:r.busy}) +
       (fits.length ? button(u,'export-library','Экспорт библиотеки',{disabled:r.busy}) : '') + '</div></div>';
@@ -634,6 +641,70 @@
     });
     void loadFleet(C,u,panel);
   }
+  function showPresets(C,u,r) {
+    const data = presets();
+    const collator = sort(u);
+    const names = new Map(engine().ships().map(ship=>[ship.id,shipName(u,ship.id,ship.name)]));
+    const title = preset => (russian(u) ? preset.title : preset.titleEn) || preset.title;
+    const notes = preset => (russian(u) ? preset.notes : preset.notesEn) || preset.notes;
+    const role = id => u.t(presetRoles[id] || id);
+    const byShip = [...new Set(data.map(preset=>preset.shipId))].sort((a,b)=>collator.compare(names.get(a),names.get(b)));
+    const roles = [...new Set(data.map(preset=>preset.role))].sort((a,b)=>collator.compare(role(a),role(b)));
+    const selected = r.build?.shipId || r.newShip || '';
+    const ordered = [...data].sort((a,b)=>
+      collator.compare(names.get(a.shipId),names.get(b.shipId)) || collator.compare(title(a),title(b)));
+    const markup = (ship,wantedRole,query) => {
+      const normal = value => lower(value).replaceAll('ё','е');
+      const words = normal(query).trim().split(/\s+/).filter(Boolean);
+      const filtered = ordered.filter(preset =>
+        (!ship || preset.shipId===ship) && (!wantedRole || preset.role===wantedRole) &&
+        words.every(word=>normal([names.get(preset.shipId),preset.title,preset.titleEn,role(preset.role)].join(' ')).includes(word)));
+      if (!filtered.length) return '<p class="fit-muted" role="status">' + h(u,'Сборки с такими фильтрами не найдены.') + '</p>';
+      return '<ul class="fit-fleet-list fit-preset-list">' + filtered.map(preset => {
+        const source = preset.source || {};
+        const kind = source.kind === 'adapted' ? 'Адаптация' : 'Автор';
+        const attribution = source.title ? h(u,kind) + ' · ' + u.esc(source.title) : '';
+        const link = (url,label) => typeof url === 'string' && url.startsWith('https://') ?
+          '<button type="button" class="quiet fit-source-link" data-external="' + u.esc(url) + '">' + h(u,label) + '</button>' : '';
+        return '<li><span class="fit-fleet-icon" aria-hidden="true">' + u.icon('ship') + '</span>' +
+          '<div class="fit-fleet-info"><small>' + u.esc(names.get(preset.shipId)) + ' · ' + u.esc(role(preset.role)) + '</small>' +
+          '<strong>' + u.esc(title(preset)) + '</strong>' +
+          (notes(preset) ? '<p>' + u.esc(notes(preset)) + '</p>' : '') +
+          (attribution ? '<div class="fit-preset-source"><span>' + attribution + '</span>' +
+            link(source.url,'Исходная сборка') + link(source.referenceUrl,'Руководство автора') + '</div>' : '') + '</div>' +
+          button(u,'preset-open','Открыть сборку',{value:preset.id,style:'quiet',icon:'arrow-right'}) + '</li>';
+      }).join('') + '</ul>';
+    };
+    const body = '<div id="fit-presets" class="fit-presets"><div class="fit-preset-filters">' +
+      label(u,'Корабль','<select id="fit-preset-ship">' + option(u,'',u.t('Все корабли'),selected) +
+        byShip.map(id=>option(u,id,names.get(id),selected)).join('') + '</select>') +
+      label(u,'Роль сборки','<select id="fit-preset-role">' + option(u,'',u.t('Все роли'),'') +
+        roles.map(id=>option(u,id,role(id),'')).join('') + '</select>') +
+      label(u,'Поиск сборки','<input id="fit-preset-query" type="search" autocomplete="off">') +
+      '</div><div id="fit-preset-results">' + markup(byShip.includes(selected)?selected:'','','') + '</div></div>';
+    u.dialog(u.t('Готовые сборки'),body,'',true);
+    const panel = u.$('#fit-presets');
+    if (!panel) return;
+    const filter = () => {
+      const target = u.$('#fit-preset-results',panel);
+      if (target) target.innerHTML = markup(u.$('#fit-preset-ship',panel)?.value || '',
+        u.$('#fit-preset-role',panel)?.value || '',u.$('#fit-preset-query',panel)?.value || '');
+    };
+    panel.addEventListener('change',event => {
+      if (['fit-preset-ship','fit-preset-role'].includes(event.target.id)) filter();
+    });
+    panel.addEventListener('input',event => {
+      if (event.target.id==='fit-preset-query') filter();
+    });
+    panel.addEventListener('click',event => {
+      const control = event.target.closest('[data-fit-action="preset-open"]');
+      if (!control || !active(C) || model(C)!==r) return;
+      const preset = data.find(item=>item.id===control.dataset.fitValue);
+      if (!preset) return;
+      u.closeLayer();
+      guard(C,u,r,() => install(r,u,{...preset.build,name:title(preset)}));
+    });
+  }
   async function refresh(C,u,r) {
     const data = await request(r,u,'ship-fits-list');
     if (model(C)!==r) return;
@@ -747,6 +818,7 @@
     switch (which) {
       case 'retry': run(C,u,r,() => refresh(C,u,r)); return;
       case 'materials': if (r.build) showMaterials(C,u,r); return;
+      case 'presets': showPresets(C,u,r); return;
       case 'fleet': showFleet(C,u); return;
       case 'new':
         r.showNew = !r.showNew; draw(C,u,'#fit-new-ship'); return;

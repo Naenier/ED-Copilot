@@ -194,3 +194,27 @@ test('library export preserves the database revision and stops after cancelling 
   assert.equal(calls[1].input.name,'ED Copilot Fittings - 01.json');
   assert.equal(JSON.parse(calls[1].input.text)[0].shipId,'sidewinder');
 });
+
+test('ready builds open the selected hull with provenance and normal draft handling', async t => {
+  window.EDCopilotShipFitPresets = {version:1,builds:[
+    {id:'sidewinder-intro',shipId:'sidewinder',role:'combat',title:'Первый бой',titleEn:'First engagement',
+      build:fitter.create('sidewinder'),source:{kind:'adapted',title:'Coriolis',url:'https://coriolis.io/outfit/sidewinder'}},
+    {id:'eagle-racing',shipId:'eagle',role:'racing',title:'Скоростной Eagle',titleEn:'Sprint Eagle',
+      build:fitter.create('eagle'),source:{kind:'original',title:'ED Copilot'}},
+  ]};
+  t.after(() => delete window.EDCopilotShipFitPresets);
+  const {C,u,host,layer} = harness(() => assert.fail('presets must be usable offline'));
+  assert.match(workspace.render(C,u),/data-fit-action="presets"/);
+  C.shipFitUI.dirty = true;
+  click(host,'presets');
+  assert.match(layer().innerHTML,/Первый бой/);
+  assert.match(layer().innerHTML,/data-external="https:\/\/coriolis.io\/outfit\/sidewinder"/);
+  assert.doesNotMatch(layer().innerHTML,/Скоростной Eagle/);
+  click(layer(),'preset-open','sidewinder-intro');
+  assert.equal(layer(),null);
+  assert.match(host.innerHTML,/Есть несохранённые изменения/);
+  click(host,'confirm');
+  await next();
+  assert.equal(C.shipFitUI.name,'Первый бой');
+  assert.equal(C.shipFitUI.id,undefined);
+});

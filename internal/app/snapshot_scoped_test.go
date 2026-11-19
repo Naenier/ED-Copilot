@@ -148,11 +148,27 @@ func TestScopedHUDPreservesEveryActivityAndGlobalColonySelector(t *testing.T) {
 	engine.Apply(testEvent("Scan", M{"BodyID": 2, "BodyName": "Synthetic Origin 2", "Landable": true, "Materials": []M{{"Name": "Polonium", "Percent": 1}}}), M{})
 	doOK(t, engine, "/api/colonization", M{"action": "create-project", "targetSystem": "Synthetic Colony"})
 	now := time.Now()
+	engine.Apply(testEvent("CarrierJumpRequest", M{"CarrierID": "42", "SystemName": "Synthetic Carrier Target",
+		"timestamp": v.ISO(now), "DepartureTime": v.ISO(now.Add(45 * time.Minute))}), M{"replay": true})
 	for _, activity := range p.Activities {
 		doOK(t, engine, "/api/settings", M{"activity": activity.Value})
-		want, got := p.BuildHUD(engine.Snapshot(), now), p.BuildHUD(engine.SnapshotForHUD(), now)
+		scoped := engine.SnapshotForHUD()
+		want, got := p.BuildHUD(engine.Snapshot(), now), p.BuildHUD(scoped, now)
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("HUD changed for %s: got=%+v want=%+v", activity.Value, got, want)
+		}
+		if activity.Value != "carrier" && activity.Value != "colonization" && v.At(scoped, "carrier", "warehouse") != nil {
+			t.Errorf("carrier timer pulled in the warehouse for %s", activity.Value)
+		}
+		var timerVisible bool
+		for _, section := range got.Sections {
+			if section.Kind == "carrier" && section.Subtitle == "Synthetic Carrier Target" {
+				timerVisible = true
+				break
+			}
+		}
+		if !timerVisible {
+			t.Errorf("carrier timer absent for %s", activity.Value)
 		}
 	}
 	doOK(t, engine, "/api/settings", M{"activity": "colonization"})

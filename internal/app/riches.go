@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Naenier/ED-Copilot/internal/notifications"
 	"github.com/Naenier/ED-Copilot/internal/riches"
 	v "github.com/Naenier/ED-Copilot/internal/value"
 )
@@ -226,6 +228,7 @@ func (e *Engine) setRichesBodyCompletion(input M) error {
 				}
 				key := richesBodyKey(stop, body)
 				observation := journey.Observed[key]
+				wasCompleted := observation.Manual || observation.journalComplete(journey.usesMapping())
 				observation.Manual = checked
 				if observation == (richesBodyObservation{}) {
 					delete(journey.Observed, key)
@@ -234,6 +237,9 @@ func (e *Engine) setRichesBodyCompletion(input M) error {
 						journey.Observed = make(map[string]richesBodyObservation)
 					}
 					journey.Observed[key] = observation
+				}
+				if checked && !wasCompleted && e.section7.notifications.Enabled("cartographyComplete") && journey.finished() {
+					e.section7.notifications.Emit(richesProgressNotice(owner, stop.System, journey, true, time.Now()))
 				}
 				e.revision++
 				return nil
@@ -276,7 +282,7 @@ func (e *Engine) estimateRichesNextLegLocked(journey *richesJourney, stop riches
 	return max(1, stop.EstimatedJumps-journey.LegJumps)
 }
 
-func (e *Engine) observeRichesLocked(kind string, event, meta M) {
+func (e *Engine) observeRichesLocked(kind string, event, meta M) (notice *notifications.Event) {
 	if v.Bool(meta["side"]) || !oneOf(kind, "FSDJump", "Scan", "SAAScanComplete") {
 		return
 	}
@@ -310,6 +316,9 @@ func (e *Engine) observeRichesLocked(kind string, event, meta M) {
 			journey.LegJumps = 0
 			if !replay {
 				e.queueRichesClipboardLocked(journey)
+				finished := e.section7.notifications.Enabled("cartographyComplete") && journey.finished()
+				update := richesProgressNotice(owner, system, journey, finished, at)
+				return &update
 			}
 		}
 		return
@@ -332,11 +341,50 @@ func (e *Engine) observeRichesLocked(kind string, event, meta M) {
 			}
 			key := richesBodyKey(stop, body)
 			observation := journey.Observed[key]
+			wasCompleted := observation.Manual || observation.journalComplete(journey.usesMapping())
 			observation.Scanned = true
 			observation.Mapped = observation.Mapped || kind == "SAAScanComplete"
 			journey.Observed[key] = observation
+			if !replay && !wasCompleted && observation.journalComplete(journey.usesMapping()) &&
+				e.section7.notifications.Enabled("cartographyComplete") && journey.finished() {
+				update := richesProgressNotice(owner, system, journey, true, at)
+				return &update
+			}
 			return
 		}
+	}
+	return nil
+}
+
+func (j *richesJourney) usesMapping() bool {
+	return j.Route.MaxResults == 0 || j.Route.UseMappingValue
+}
+
+func (j *richesJourney) finished() bool {
+	if j.NextStop != len(j.Route.Stops) {
+		return false
+	}
+	useMapping := j.usesMapping()
+	for _, stop := range j.Route.Stops {
+		for _, body := range stop.Bodies {
+			observation := j.Observed[richesBodyKey(stop, body)]
+			if !observation.Manual && !observation.journalComplete(useMapping) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func richesProgressNotice(owner, system string, journey *richesJourney, finished bool, at time.Time) notifications.Event {
+	kind, title, english := "cartographyStop", "Система маршрута картографии достигнута", "Mapping waypoint reached"
+	if finished {
+		kind, title, english = "cartographyComplete", "Маршрут картографии завершён", "Mapping route complete"
+	}
+	return notifications.Event{
+		ID: v.ISO(journey.CreatedAt) + "/" + strconv.Itoa(journey.NextStop), Kind: kind, Scope: owner,
+		Activity: "cartography", Title: title, EnglishTitle: english, Detail: system, EnglishDetail: system,
+		System: system, Link: "riches", ObservedAt: at,
 	}
 }
 
@@ -360,7 +408,7 @@ func (e *Engine) richesSnapshotLocked(includeRoute bool) M {
 		out["route"] = route
 	}
 	var totalScan, totalMapping int64
-	useMapping := journey.Route.MaxResults == 0 || journey.Route.UseMappingValue
+	useMapping := journey.usesMapping()
 	estimated, remaining := 0, 0
 	targets := []M{}
 	for i, stop := range journey.Route.Stops {

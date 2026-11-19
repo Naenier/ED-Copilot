@@ -83,7 +83,7 @@ const NearestAssetPath = "/workspace/nearest.js"
 var NearestBundle = makeBundle([]string{"nearest.css"}, "nearest-options.js", "nearest-strings.js", "nearest-picker.js", "nearest.js")
 
 // ShipFitsBundle keeps the fitting catalogue out of the WebView startup document.
-var ShipFitsBundle = makeBundle([]string{"ship-fits.css"}, "ship-fit-ru.js", "ship-fit-engine.js", "ship-fits.js")
+var ShipFitsBundle = makeBundle([]string{"ship-fits.css"}, "ship-fit-ru.js", "ship-fit-engine.js", "ship-fit-presets.js", "ship-fits.js")
 
 var workspaceBundles = map[string]func() []byte{
 	ShipFitsAssetPath:                ShipFitsBundle,

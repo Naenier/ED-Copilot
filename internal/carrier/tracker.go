@@ -49,6 +49,7 @@ type Tracker struct {
 	Planning, StockBaseline                 M
 	Now                                     func() time.Time
 	OtherCarrierEvents                      int
+	workspace, commanderFID                 string
 }
 
 func New(saved M) *Tracker {
@@ -62,6 +63,7 @@ func (t *Tracker) Reset() {
 	t.DockedCarrierID = ""
 	t.DockedStation = ""
 	t.OtherCarrierEvents = 0
+	t.workspace, t.commanderFID = "", ""
 }
 func (t *Tracker) ExportSettings() M {
 	return M{"planning": v.Copy(t.Planning), "stockBaseline": v.Copy(t.StockBaseline)}
@@ -168,6 +170,16 @@ func (t *Tracker) moveStock(c M, key, label string, delta float64, timestamp any
 	}
 }
 func (t *Tracker) Apply(event, context M) {
+	workspace, fid := v.Str(context["planWorkspace"]), v.Str(v.At(context, "commander", "fid"))
+	if workspace != "" && t.workspace != "" && workspace != t.workspace || fid != "" && t.commanderFID != "" && fid != t.commanderFID {
+		t.Reset()
+	}
+	if workspace != "" {
+		t.workspace = workspace
+	}
+	if fid != "" {
+		t.commanderFID = fid
+	}
 	typ := v.Str(event["event"])
 	timestamp := event["timestamp"]
 	if typ == "Docked" || typ == "Location" {
@@ -268,12 +280,17 @@ func (t *Tracker) Apply(event, context M) {
 		}
 		c["location"] = destination
 		pending := v.Obj(jump["pending"])
-		arrived := typ == "CarrierJump"
-		if len(pending) > 0 && !v.Time(pending["departureTime"]).IsZero() && v.Str(event["StarSystem"]) == v.Str(pending["system"]) && !v.Time(timestamp).Before(v.Time(pending["departureTime"])) && (pending["bodyId"] == nil || event["BodyID"] == nil || v.Str(pending["bodyId"]) == v.Str(event["BodyID"])) {
-			arrived = true
+		jumpObserved := typ == "CarrierJump"
+		if jumpObserved && len(pending) == 0 {
+			pending = v.Obj(jump["transit"])
 		}
-		if arrived {
-			observeCarrierArrival(c, origin, destination, pending, event)
+		if len(pending) != 0 {
+			at := v.Time(timestamp)
+			jumpObserved = !at.Before(v.Time(pending["requestedAt"])) && sameOrbit(pending, destination) &&
+				(jumpObserved || locationIndicatesJump(v.Obj(jump["origin"]), destination, pending, at))
+		}
+		if jumpObserved {
+			observeCarrierJumpLocation(c, origin, destination, pending, event)
 			if typ == "CarrierJump" && v.Bool(event["Docked"]) {
 				t.DockedCarrierID, t.DockedStation = t.OwnerID, v.Str(event["StationName"])
 			}
@@ -281,6 +298,11 @@ func (t *Tracker) Apply(event, context M) {
 			fuel["needsRefresh"], fuel["tankEstimated"] = true, false
 		}
 	case "CarrierJumpRequest":
+		if !v.Time(timestamp).After(v.Time(jump["timelineAt"])) {
+			break
+		}
+		jump["timelineAt"] = timestamp
+		jump["transit"] = nil
 		jump["origin"] = v.Copy(v.Obj(c["location"]))
 		departure := v.Time(event["DepartureTime"])
 		var millis any
@@ -289,7 +311,12 @@ func (t *Tracker) Apply(event, context M) {
 		}
 		jump["pending"] = M{"system": v.Text(event["SystemName"]), "body": event["Body"], "bodyId": event["BodyID"], "systemAddress": v.First(event["SystemAddress"], event["SystemID"]), "departureTime": event["DepartureTime"], "departureMs": millis, "requestedAt": timestamp}
 	case "CarrierJumpCancelled":
+		if at := v.Time(timestamp); at.IsZero() || at.Before(v.Time(jump["timelineAt"])) {
+			break
+		}
+		jump["timelineAt"] = timestamp
 		jump["pending"] = nil
+		jump["transit"] = nil
 		jump["origin"] = nil
 	case "CarrierDepositFuel":
 		if explicitID == t.OwnerID {
@@ -529,31 +556,6 @@ func (t *Tracker) Snapshot(context M) M {
 	if finance["balance"] != nil && v.Num(t.Planning["weeklyUpkeep"]) > 0 {
 		finance["runwayWeeks"] = math.Max(0, v.Num(finance["balance"])/v.Num(t.Planning["weeklyUpkeep"]))
 	}
-	jump := v.Obj(c["jump"])
-	pending := v.Obj(jump["pending"])
-	arrival := v.Time(jump["lastArrival"])
-	phase := "idle"
-	var cooldown, seconds any
-	if !arrival.IsZero() {
-		cooldown = arrival.Add(5 * time.Minute).UnixMilli()
-		if now.Before(arrival.Add(5 * time.Minute)) {
-			phase = "cooldown"
-		}
-	}
-	if len(pending) > 0 {
-		phase = "countdown"
-		departure := v.Time(pending["departureTime"])
-		if !departure.IsZero() {
-			seconds = math.Max(0, departure.Sub(now).Seconds())
-			if !now.Before(departure) {
-				phase = "departure-passed"
-			}
-		}
-	}
-	var lastArrival any
-	if !arrival.IsZero() {
-		lastArrival = M{"timestamp": jump["lastArrival"], "system": v.At(c, "location", "system"), "bodyId": v.At(c, "location", "bodyId")}
-	}
 	services, orders := []M{}, []M{}
 	for _, r := range v.Obj(c["services"]) {
 		services = append(services, v.Copy(v.Obj(r)))
@@ -585,5 +587,5 @@ func (t *Tracker) Snapshot(context M) M {
 		advisories = append(advisories, M{"level": "warn", "text": "Баланса хватит менее чем на четыре недели."})
 	}
 	access := map[string]string{"all": "Все", "none": "Только владелец", "friends": "Друзья", "squadron": "Эскадрилья", "squadronfriends": "Друзья и эскадрилья"}
-	return M{"owned": c != nil, "id": c["id"], "name": v.Str(c["name"]), "callsign": v.Str(c["callsign"]), "updatedAt": c["updatedAt"], "statsAt": c["statsAt"], "location": v.Copy(v.Obj(c["location"])), "dockingAccess": c["dockingAccess"], "dockingAccessLabel": v.Text(access[v.Str(c["dockingAccess"])], c["dockingAccess"], "Неизвестно"), "allowNotorious": c["allowNotorious"], "pendingDecommission": v.Bool(c["pendingDecommission"]), "scrapTime": c["scrapTime"], "dockedHere": t.IsOwnDockedMarket(nil), "finance": finance, "fuel": fuel, "space": space, "services": services, "warehouse": warehouse, "orders": orders, "jump": M{"pending": jump["pending"], "lastArrival": lastArrival, "cooldownUntilMs": cooldown, "cooldownEstimated": true, "phase": phase, "secondsToDeparture": seconds, "arrivalConfirmed": len(pending) == 0 && len(v.Obj(c["location"])) > 0}, "transactions": v.Clone(c["transactions"]), "advisories": advisories, "planning": plan}
+	return M{"owned": c != nil, "id": c["id"], "name": v.Str(c["name"]), "callsign": v.Str(c["callsign"]), "updatedAt": c["updatedAt"], "statsAt": c["statsAt"], "location": v.Copy(v.Obj(c["location"])), "dockingAccess": c["dockingAccess"], "dockingAccessLabel": v.Text(access[v.Str(c["dockingAccess"])], c["dockingAccess"], "Неизвестно"), "allowNotorious": c["allowNotorious"], "pendingDecommission": v.Bool(c["pendingDecommission"]), "scrapTime": c["scrapTime"], "dockedHere": t.IsOwnDockedMarket(nil), "finance": finance, "fuel": fuel, "space": space, "services": services, "warehouse": warehouse, "orders": orders, "jump": t.JumpSnapshot(now), "transactions": v.Clone(c["transactions"]), "advisories": advisories, "planning": plan}
 }

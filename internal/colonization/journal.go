@@ -1,6 +1,9 @@
 package colonization
 
 import (
+	"strings"
+	"time"
+
 	"github.com/Naenier/ED-Copilot/internal/value"
 )
 
@@ -149,4 +152,33 @@ func (p *Planner) Apply(event, context M) {
 	}
 	p.claims[key] = record
 	p.discoverClaimLocked(record, typ)
+}
+
+// ConstructionNoticeState returns journal evidence only for a linked colony structure.
+func (p *Planner) ConstructionNoticeState(rawMarket any) (name, status string, observed time.Time) {
+	id := marketID(rawMarket)
+	if id == "" {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for _, project := range p.projects {
+		if value.At(project, "journalOwnership", "status") == "released" {
+			continue
+		}
+		for _, building := range rows(project["buildings"]) {
+			if building["marketId"] != id {
+				continue
+			}
+			name = firstText(building["journalDisplayName"], building["name"])
+			status, observed = str(building["journalStatus"]), value.Time(building["journalUpdatedAt"])
+			depot := p.depots[id]
+			if depotAt := value.Time(depot["timestamp"]); depotAt.After(observed) && !IsColonisationShip(depot) &&
+				strings.EqualFold(str(project["targetSystem"]), str(depot["system"])) {
+				return name, p.statusOf(building), depotAt
+			}
+			return name, status, observed
+		}
+	}
+	return
 }

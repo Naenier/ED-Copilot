@@ -225,6 +225,13 @@ func (r *liveRoute) stop(index int, includeReturnSale bool) M {
 	return view
 }
 
+func (s *LiveRoutes) CompletedRounds(owner string) int {
+	if run := s.runs[owner]; run != nil {
+		return run.Rounds
+	}
+	return 0
+}
+
 func (s *LiveRoutes) Snapshot(owner string) M {
 	run := s.runs[owner]
 	if run == nil {

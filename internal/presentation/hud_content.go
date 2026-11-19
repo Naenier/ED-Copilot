@@ -62,6 +62,11 @@ func buildHUDContent(s M, now time.Time) HUDDocument {
 	}
 	hudJournalNotice(&doc, s, now)
 	hudCompactContext(&doc, v.Obj(s["commander"]))
+	if activity != "carrier" {
+		jump := v.Obj(v.First(s["carrierJump"], v.At(s, "carrier", "jump")))
+		name, timer, _ := hudCarrierTimer(jump, now)
+		hudCard(&doc, "carrier", "ПРЫЖОК ФЛОТОНОСЦА", name, 0, timer)
+	}
 	return doc
 }
 

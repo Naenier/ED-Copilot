@@ -434,6 +434,19 @@ func (p *Planner) Apply(event, context M) {
 		}
 	}
 }
+
+// EngineerProgressNotice reads the saved journal stage for a single engineer.
+func (p *Planner) EngineerProgressNotice(event M) (key, name, english, status string) {
+	key = roadmapEngineerKey(event["EngineerID"], event["Engineer"])
+	if key == "" {
+		return
+	}
+	entry := roadmapEngineers().byKey[key]
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return key, v.Str(entry["name"]), v.Str(entry["english"]), v.Str(p.progress[key]["status"])
+}
+
 func (p *Planner) Snapshot(context M) M {
 	p.mu.RLock()
 	defer p.mu.RUnlock()

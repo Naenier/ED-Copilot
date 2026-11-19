@@ -2,13 +2,12 @@
   'use strict';
 
   const views = {'notifications': 'notifications.view', 'second-screen': 'second-screen.view'};
-  const categories = {finding: 'Находки', engineering: 'Материалы для инженерии', task: 'Завершение задач', carrier: 'Прыжок флотоносца', fuel: 'Мало топлива'};
   const modes = {navigation: 'Навигация', expedition: 'Экспедиция', engineering: 'Инженерия', colonization: 'Колонизация'};
   const active = C => Object.hasOwn(views, C.tab);
   const scope = C => C.state.planWorkspace?.key || '';
   const local = C => {
     if (!C.sectionSevenTools || C.sectionSevenTools.tab !== C.tab || C.sectionSevenTools.owner !== scope(C)) {
-      C.sectionSevenTools = {tab: C.tab, owner: scope(C), data: null, fetched: 0, busy: false};
+      C.sectionSevenTools = {tab: C.tab, owner: scope(C), data: null, fetched: 0, busy: false, request: 0, groups: new Map()};
     }
     return C.sectionSevenTools;
   };
@@ -19,30 +18,54 @@
   const checked = value => value ? 'checked' : '';
   const button = (u, label, action, icon, attr = '') => u.btn(label, 'section-seven-' + action, icon, '', attr);
 
-  function notifications(data, C, u) {
+  const eventTabs = new Set(['carrier','ship-route','riches','deals','colonization','engineering','exploration','exobiology','overview','targets']);
+  function notifications(data, C, u, session) {
     const p = data.preferences;
-    const rules = Object.entries(categories).map(([id, name]) => {
-      const rule = p.rules[id];
-      return `<div class="s7-rule">
-        <label><input name="${id}-enabled" type="checkbox" ${checked(rule.enabled)}> ${u.esc(u.t(name))}</label>
-        <label><input name="${id}-visual" type="checkbox" ${checked(rule.visual)}> ${u.esc(u.t('Оверлей'))}</label>
-        <label class="s7-priority"><span class="s7-label">${u.esc(u.t('Приоритет'))}</span>
-          <select name="${id}-priority">${options(u, [['1', 'Обычный'], ['2', 'Высокий'], ['3', 'Срочный']], rule.priority)}</select>
-        </label>
-      </div>`;
-    }).join('');
     const en = C.state.settings?.language === 'en';
+    const groups = new Map();
+    for (const event of data.catalog || []) {
+      if (!Object.hasOwn(p.rules,event.id)) continue;
+      if (!groups.has(event.group)) groups.set(event.group,[]);
+      groups.get(event.group).push(event);
+    }
+    const field = (name, value) => `<input id="s7-notification-${u.esc(name)}" name="${u.esc(name)}" type="checkbox" ${checked(value)}>`;
+    const choices = [['1', 'Обычный'], ['2', 'Высокий'], ['3', 'Срочный']];
+    const rules = [...groups].map(([group,events],index) => {
+      const rows = events.map(event => {
+        const id = event.id, rule = p.rules[id];
+        const title = en ? event.englishTitle || event.title : event.title;
+        const description = en ? event.englishDescription || event.description : event.description;
+        return `<div class="s7-rule">
+          <label class="s7-rule-name">${field(id+'-enabled',rule.enabled)} <span><strong>${u.esc(title)}</strong>
+            ${description ? `<small>${u.esc(description)}</small>` : ''}</span></label>
+          <label>${field(id+'-visual',rule.visual)} ${u.esc(u.t('Оверлей'))}</label>
+          <label>${field(id+'-sound',rule.sound)} ${u.esc(u.t('Звук'))}</label>
+          <label class="s7-priority"><span class="s7-label">${u.esc(u.t('Приоритет'))}</span>
+            <select id="s7-notification-${u.esc(id)}-priority" name="${u.esc(id)}-priority">${options(u, choices, rule.priority)}</select>
+          </label>
+        </div>`;
+      }).join('');
+      return `<details class="s7-rule-group" data-notification-group="${u.esc(group)}" ${(session.groups.get(group) ?? (index === 0)) ? 'open' : ''}>
+        <summary>${u.esc(en ? events[0].englishGroup || group : group)}</summary>${rows}</details>`;
+    }).join('');
     const history = data.events || [];
     const events = history.slice(0, 40).map((event, index) => {
       const title = (en ? event.englishTitle : event.title) || event.title;
-      const details = [(en ? event.englishDetail : event.detail) || event.detail, event.body || event.system].filter(Boolean).join(' · ');
+      const detail = (en ? event.englishDetail : event.detail) || event.detail || '';
+      const location = event.body || event.system;
+      const details = location && !detail.split(' · ').includes(location) ?
+        [detail,location].filter(Boolean).join(' · ') : detail;
       return `<div class="s7-event"><div><strong>${u.esc(title)}</strong>
         ${details ? `<div class="s7-label">${u.esc(details)}</div>` : ''}</div>
         <span class="s7-label">${u.esc(date(event.observedAt, u))}</span>
-        ${event.link ? button(u, 'Открыть раздел', 'event', 'arrow-right', `data-index="${index}"`) : ''}</div>`;
+        ${eventTabs.has(event.link) ? button(u, 'Открыть раздел', 'event', 'arrow-right', `data-index="${index}"`) : ''}</div>`;
     }).join('');
     return `<form id="s7-notifications" class="panel s7-panel">
-      <label class="s7-enable"><input name="enabled" type="checkbox" ${checked(p.enabled)}> ${u.esc(u.t('Включить уведомления'))}</label>
+      <div class="s7-notification-controls">
+        <label class="s7-enable">${field('enabled',p.enabled)} ${u.esc(u.t('Включить уведомления'))}</label>
+        <label class="s7-enable">${field('sound',p.sound)} ${u.esc(u.t('Звуки уведомлений'))}</label>
+        ${button(u,'Прослушать сигнал','sound-preview','bell')}
+      </div>
       <div class="s7-rules">${rules}</div>
       <div class="s7-actions">
         <button class="pill primary" type="submit">${u.esc(u.t('Сохранить'))}</button>
@@ -86,27 +109,37 @@
   function render(C, u) {
     const s = local(C);
     const title = C.tab === 'notifications' ? 'Уведомления' : 'Второй экран';
-    const description = C.tab === 'notifications' ? 'Выберите события для оверлея.' : 'Откройте выбранные панели на телефоне или другом компьютере в вашей сети.';
+    const description = C.tab === 'notifications' ? 'Выберите события для оверлея и звуковых сигналов.' : 'Откройте выбранные панели на телефоне или другом компьютере в вашей сети.';
     return u.heading(u.t(title), u.t(description)) + `<div class="s7-tools">${s.error ?
       `<p role="alert">${u.esc(s.error)}</p>${button(u, 'Повторить', 'retry', 'refresh-cw')}` : s.data ?
-        (C.tab === 'notifications' ? notifications(s.data, C, u) : screens(s.data, u)) :
+        (C.tab === 'notifications' ? notifications(s.data, C, u, s) : screens(s.data, u)) :
         `<p role="status">${u.esc(u.t('Загрузка…'))}</p>`}</div>`;
   }
 
   function init(C, u) {
     if (!active(C)) return;
     const s = local(C);
-    if (s.busy || Date.now() - s.fetched < 4000 || s.error) return;
+    const form = s.tab === 'notifications' && u.$('#s7-notifications');
+    if (form && !form.s7RulesBound) {
+      form.s7RulesBound = true;
+      form.addEventListener('change', () => { s.dirty = true; });
+      form.addEventListener('toggle', event => {
+        const group = event.target.dataset?.notificationGroup;
+        if (group) s.groups.set(group,event.target.open);
+      },true);
+    }
+    if (s.busy || s.saving || s.dirty || Date.now() - s.fetched < 4000 || s.error) return;
     s.fetched = Date.now();
     s.busy = true;
+    const request = ++s.request;
     void u.call(views[s.tab], {expectedPlanWorkspace: s.owner}).then(data => {
-      if (!active(C) || local(C) !== s) return;
+      if (!active(C) || local(C) !== s || s.request !== request || s.dirty) return;
       if (JSON.stringify(data) !== JSON.stringify(s.data)) {
         s.data = data;
         u.renderPage({preserveContent: true});
       }
     }).catch(error => {
-      if (active(C) && local(C) === s) {
+      if (active(C) && local(C) === s && s.request===request && !s.dirty) {
         s.error = error.message;
         u.renderPage({preserveContent: true});
       }
@@ -115,20 +148,23 @@
 
   async function update(C, u, values) {
     const s = local(C);
+    const request = ++s.request;
     const op = s.tab === 'notifications' ? 'notifications.update' : 'second-screen.update';
     const result = await u.call(op, {...values, expectedPlanWorkspace: s.owner});
-    if (active(C) && local(C) === s) {
+    if (active(C) && local(C) === s && s.request === request) {
+      s.dirty = false;
       s.data = result;
       s.fetched = Date.now();
       u.renderPage({preserveContent: true});
     }
   }
 
-  function preferences(fields) {
-    const rules = Object.fromEntries(Object.keys(categories).map(id => [id, {
-      enabled: fields.has(id + '-enabled'), visual: fields.has(id + '-visual'), priority: Number(fields.get(id + '-priority'))
+  function preferences(fields, catalog) {
+    const rules = Object.fromEntries(catalog.map(({id}) => [id, {
+      enabled: fields.has(id + '-enabled'), visual: fields.has(id + '-visual'),
+      sound: fields.has(id + '-sound'), priority: Number(fields.get(id + '-priority'))
     }]));
-    return {enabled: fields.has('enabled'), rules};
+    return {enabled: fields.has('enabled'), sound: fields.has('sound'), rules};
   }
 
   async function submit(form, C, u) {
@@ -136,8 +172,18 @@
     if (form.id === 's7-screens') {
       return update(C, u, {action: 'start', host: fields.get('host'), modes: fields.getAll('modes')});
     }
-    await update(C, u, {preferences: preferences(fields)});
-    u.toast(u.t('Настройки сохранены'));
+    const s = local(C);
+    if (s.saving) return;
+    s.saving = true;
+    const controls = [...form.elements].filter(control => !control.disabled);
+    for (const control of controls) control.disabled = true;
+    try {
+      await update(C, u, {preferences: preferences(fields,s.data?.catalog || [])});
+      if (active(C) && local(C)===s) u.toast(u.t('Настройки сохранены'));
+    } finally {
+      s.saving = false;
+      for (const control of controls) control.disabled = false;
+    }
   }
 
   async function handle(action, control, C, u) {
@@ -147,10 +193,13 @@
       s.error = '';
       s.fetched = 0;
       init(C, u);
+    } else if (verb === 'sound-preview') {
+      await u.call('native',{action:'notification-sound-preview'});
     } else if (verb === 'event') {
       const event = s.data?.events?.[Number(control.dataset.index)];
-      if (!event?.link) return;
-      const mode = ({exploration:'Находки', engineering:'План', overview:'Миссии'})[event.link] || '';
+      if (!eventTabs.has(event?.link)) return;
+      const modes = {exploration:'Находки', engineering:'План', overview:'Миссии'};
+      const mode = ['engineerInvited','engineerUnlocked'].includes(event.kind) ? 'Прокачка' : modes[event.link] || '';
       await u.navigate(event.link, {mode,prefill:{systemAddress:event.systemAddress,systemName:event.system,bodyId:event.bodyId}});
     } else if (verb === 'copy-url' || verb === 'copy-code') {
       const value = verb === 'copy-url' ? s.data?.url : s.data?.code;

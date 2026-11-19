@@ -32,13 +32,23 @@ func sameOrbit(a, b M) bool {
 	return sameSystem(a, b) && (a["bodyId"] == nil || b["bodyId"] == nil || v.Str(a["bodyId"]) == v.Str(b["bodyId"]))
 }
 
+func locationIndicatesJump(origin, destination, pending M, at time.Time) bool {
+	departure := v.Time(pending["departureTime"])
+	if departure.IsZero() || at.Before(departure) || sameOrbit(origin, destination) {
+		return false
+	}
+	// An orbit specified in the request must appear in the location entry.
+	// CarrierJump independently confirms the move even without a body ID.
+	return pending["bodyId"] == nil || destination["bodyId"] != nil
+}
+
 func fleetJumpFuel(distance, occupied, tank float64) float64 {
 	return math.Round(5 + distance*(Capacity+occupied+tank)/200000)
 }
 
 // CarrierLocation can arrive before the corresponding CarrierJump and lacks
 // coordinates. Keep the departure location until that jump can be reconciled.
-func observeCarrierArrival(c, origin, destination, pending, event M) {
+func observeCarrierJumpLocation(c, origin, destination, pending, event M) {
 	at := v.Time(event["timestamp"])
 	if at.IsZero() {
 		return
@@ -46,11 +56,11 @@ func observeCarrierArrival(c, origin, destination, pending, event M) {
 	jump, fuel := v.Obj(c["jump"]), v.Obj(c["fuel"])
 	last := v.Obj(jump["fuelLeg"])
 	lastAt := v.Time(last["at"])
-	if !lastAt.IsZero() && at.Before(lastAt) {
+	if at.Before(v.Time(jump["timelineAt"])) {
 		return
 	}
 	requestAt := v.Str(pending["requestedAt"])
-	duplicate := !lastAt.IsZero() && at.Sub(lastAt) < 5*time.Minute && sameOrbit(destination, v.Obj(last["destination"])) &&
+	duplicate := !lastAt.IsZero() && (at.Sub(lastAt) < FleetCarrierCooldown || sameOrbit(origin, destination)) && sameOrbit(destination, v.Obj(last["destination"])) &&
 		(requestAt == "" || requestAt == v.Str(last["requestAt"]))
 	if !duplicate {
 		from := v.Obj(jump["origin"])
@@ -58,11 +68,19 @@ func observeCarrierArrival(c, origin, destination, pending, event M) {
 			from = origin
 		}
 		last = M{"origin": v.Copy(from), "destination": v.Copy(destination), "at": event["timestamp"], "requestAt": requestAt}
-		jump["fuelLeg"], jump["lastArrival"] = last, event["timestamp"]
+		jump["fuelLeg"], jump["lastArrival"], jump["timelineAt"] = last, event["timestamp"], event["timestamp"]
 		jump["origin"] = nil
 		jump["pending"] = nil
+		if event["event"] == "CarrierLocation" {
+			jump["transit"] = v.Copy(pending)
+		}
 	} else if destination["coordinates"] != nil {
 		v.Obj(last["destination"])["coordinates"] = destination["coordinates"]
+	}
+	if event["event"] == "CarrierJump" && !v.Bool(last["confirmed"]) {
+		last["confirmed"] = true
+		jump["confirmedArrival"] = M{"timestamp": event["timestamp"], "system": destination["system"], "bodyId": destination["bodyId"], "requestAt": requestAt}
+		jump["transit"], jump["timelineAt"] = nil, event["timestamp"]
 	}
 	if tank, known := validTank(event["FuelLevel"]); known {
 		if !v.Time(fuel["updatedAt"]).After(at) {

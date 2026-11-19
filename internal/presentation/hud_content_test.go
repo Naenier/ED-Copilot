@@ -287,7 +287,7 @@ func TestHUDTradeArrivalKeepsOneStationAndSelectedCommodityWarnings(t *testing.T
 func TestHUDCarrierPendingJumpFuelSafetyAndStalePlanIsolation(t *testing.T) {
 	s := M{"settings": M{"activity": "carrier"}, "commander": M{"system": "Alpha"}, "carrier": M{"owned": true, "callsign": "TEST-1", "location": M{"system": "Alpha"}, "fuel": M{"tankTons": 0, "reserveTons": 100}, "jump": M{"pending": M{"system": "Beta", "departureTime": v.ISO(hudFixtureNow.Add(5 * time.Minute))}}}, "carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Alpha", "visited": true}, {"name": "Beta", "fuelUsedTons": 92, "distanceLy": 450}}}, "summary": M{"remainingJumps": 1}}}
 	doc := BuildHUD(s, hudFixtureNow)
-	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[0].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "До отправления: 5 мин") || !hudHasWarning(doc, "Перелить в бак: 92") {
+	if strings.Count(hudProse(doc), "Beta") != 1 || doc.Sections[0].Title != "ПРЫЖОК ФЛОТОНОСЦА" || !strings.Contains(hudProse(doc), "До отправления: 05:00") || !hudHasWarning(doc, "Перелить в бак: 92") {
 		t.Fatal("pending action, de-duplication or known fuel prep failed", doc)
 	}
 	doc = BuildHUD(s, hudFixtureNow.Add(6*time.Minute))
@@ -319,10 +319,47 @@ func TestHUDEnglishCarrierKeepsTargetIdentityAndLocalizesPairedFacts(t *testing.
 		"carrierRoute": M{"progress": M{"nextIndex": 1}, "route": M{"stops": []M{{"name": "Alpha"}, {"name": system, "fuelUsedTons": 92, "distanceLy": 450}}}}}
 	doc := BuildHUD(s, hudFixtureNow)
 	got := hudProse(doc)
-	for _, want := range []string{"CARRIER JUMP", system, "Departure in: 5 min", "Transfer to tank: 92 t", "Distance and fuel use: 450 ly · 92 t"} {
+	for _, want := range []string{"CARRIER JUMP", system, "Departure in: 05:00", "Transfer to tank: 92 t", "Distance and fuel use: 450 ly · 92 t"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in %q", want, got)
 		}
+	}
+}
+
+func TestHUDCarrierClockAdvancesWithoutAChangedSnapshot(t *testing.T) {
+	now := hudFixtureNow
+	departure := now.Add(2*time.Minute + 4*time.Second)
+	s := M{"settings": M{"activity": "flight", "language": "en"}, "commander": M{"system": "Pilot system"},
+		"carrierJump": M{"pending": M{"system": "Carrier target", "departureTime": v.ISO(departure)}}}
+	check := func(at time.Time, expected string) {
+		t.Helper()
+		section := hudSection(BuildHUD(s, at), "CARRIER JUMP")
+		if section == nil || section.Subtitle != "Carrier target" || len(section.Lines) != 1 || hudLineProse(section.Lines[0]) != expected {
+			t.Fatalf("timer panel = %#v, want %q", section, expected)
+		}
+	}
+	check(now, "Departure in: 02:04")
+	check(now.Add(25*time.Second+20*time.Millisecond), "Departure in: 01:39")
+	check(departure, "Waiting for arrival confirmation")
+
+	estimatedArrival := departure.Add(time.Minute)
+	cooldown := estimatedArrival.Add(5 * time.Minute)
+	s["carrierJump"] = M{"destination": "Carrier target", "estimatedArrival": v.ISO(estimatedArrival), "estimatedCooldownUntil": v.ISO(cooldown)}
+	check(departure, "Carrier in transit")
+	check(estimatedArrival, "Cooldown ends in: ≈ 05:00")
+	check(cooldown.Add(-200*time.Millisecond), "Cooldown ends in: ≈ 00:01")
+	if section := hudSection(BuildHUD(s, cooldown), "CARRIER JUMP"); section != nil {
+		t.Fatalf("expired estimate still displayed: %#v", section)
+	}
+
+	// The fleet carrier mode uses the same live clock and keeps its fuel card.
+	s["settings"] = M{"activity": "carrier", "language": "en"}
+	s["carrier"] = M{"owned": true, "fuel": M{"tankTons": 500}, "jump": M{
+		"lastArrival": M{"system": "Carrier target"}, "cooldownUntil": v.ISO(cooldown),
+	}}
+	check(cooldown.Add(-117*time.Second), "Cooldown ends in: ≈ 01:57")
+	if section := hudSection(BuildHUD(s, cooldown), "FLEET CARRIER"); section == nil {
+		t.Fatal("fuel card disappeared when the timer expired")
 	}
 }
 

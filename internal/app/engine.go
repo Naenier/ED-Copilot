@@ -44,7 +44,7 @@ import (
 
 type M = v.M
 
-const Version = "2.9.0"
+const Version = "2.9.1"
 
 type Options struct {
 	DataDir, JournalDir            string
@@ -292,10 +292,8 @@ func New(o Options) (_ *Engine, failure error) {
 	x.initializeUpdates()
 	x.startAutomaticFrontier()
 	x.startColonyHistory()
-	if !o.DisableNetwork {
-		x.startSectionSeven()
-	}
 	if !o.ManualPolling {
+		x.startSectionSeven()
 		x.journalDone = make(chan struct{})
 		go func() {
 			defer close(x.journalDone)
@@ -460,7 +458,7 @@ func (e *Engine) applyLocked(event, meta M) {
 	}
 	e.observeSurfaceNavigationLocked(kind, event, meta)
 	clipboardBefore := e.clipboardSequence
-	e.observeRichesLocked(kind, event, meta)
+	richesNotice := e.observeRichesLocked(kind, event, meta)
 	richesCopied := clipboardBefore != e.clipboardSequence
 	e.observeOdysseyPickupsLocked(event, meta, previousWorkspace)
 	if kind == "Cargo" && event["Inventory"] != nil {
@@ -504,6 +502,8 @@ func (e *Engine) applyLocked(event, meta M) {
 		e.Engineering.Reset()
 		e.Pilot.Reset()
 	}
+	notices := e.beforeGameNotifications(workspace, event, ctx)
+	notices.riches = richesNotice
 	e.Carrier.Apply(event, ctx)
 	if !v.Bool(meta["replay"]) && e.Carrier.OwnerID != "" &&
 		((kind == "CarrierJump" || kind == "CarrierLocation" || kind == "CarrierDepositFuel") &&
@@ -540,15 +540,23 @@ func (e *Engine) applyLocked(event, meta M) {
 	if previousWorkspace != e.planWorkspace.key {
 		e.sectionSevenContext()
 	}
-	e.observeSectionSeven(workspace, event, observation, richesCopied)
+	e.observeSectionSeven(workspace, event, observation, richesCopied, notices)
 	advanced := e.Route.ObserveCarrierLocation(v.Obj(e.Carrier.Current()["location"]))
 	if advanced && !v.Bool(meta["replay"]) && !side && (kind == "CarrierJump" || kind == "CarrierLocation") {
 		e.queueNextRouteClipboard()
+	}
+	tradeBefore := 0
+	observeTradeRound := notices.live && !side && oneOf(kind, "Docked", "CarrierJump") && e.section7.notifications.Enabled("tradeRound")
+	if observeTradeRound {
+		tradeBefore = e.tradeRuns.CompletedRounds(workspace)
 	}
 	if nextSystem := e.tradeRuns.Observe(workspace, event, ctx); nextSystem != "" && !v.Bool(meta["replay"]) && !side {
 		e.mu.Lock()
 		e.queueClipboardLocked("trade-route", nextSystem)
 		e.mu.Unlock()
+	}
+	if observeTradeRound && e.tradeRuns.CompletedRounds(workspace) > tradeBefore {
+		e.notifyTradeRound(workspace, e.tradeRuns.Snapshot(workspace), cmdCopy, v.Time(at))
 	}
 	if kind == "Market" && event["Items"] != nil {
 		e.market(event, cmdCopy)

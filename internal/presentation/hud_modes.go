@@ -1,6 +1,7 @@
 package presentation
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -535,6 +536,49 @@ func hudCarrierNextStop(route M) M {
 	return nil
 }
 
+func hudCarrierDuration(remaining time.Duration) string {
+	seconds := int64((remaining-1)/time.Second) + 1
+	if seconds >= 3600 {
+		return fmt.Sprintf("%d:%02d:%02d", seconds/3600, seconds/60%60, seconds%60)
+	}
+	return fmt.Sprintf("%02d:%02d", seconds/60, seconds%60)
+}
+
+// Calculate the text from absolute timestamps. The native HUD can keep the
+// timer moving using a cached snapshot while the journal remains unchanged.
+func hudCarrierTimer(jump M, now time.Time) (name string, line HUDLine, waiting bool) {
+	if pending := v.Obj(jump["pending"]); len(pending) != 0 {
+		name = v.Text(pending["system"], pending["name"])
+		departure := v.Time(pending["departureTime"])
+		switch {
+		case departure.IsZero():
+			return name, hudMuted("Прыжок запланирован"), false
+		case now.Before(departure):
+			return name, hudValue("До отправления", hudCarrierDuration(departure.Sub(now)), "text"), false
+		default:
+			return name, hudMuted("Ожидаем подтверждение прибытия"), true
+		}
+	}
+	if arrival := v.Time(jump["estimatedArrival"]); !arrival.IsZero() {
+		name = v.Str(jump["destination"])
+		if now.Before(arrival) {
+			return name, hudMuted("Флотоносец в прыжке"), true
+		}
+		if until := v.Time(jump["estimatedCooldownUntil"]); now.Before(until) {
+			return name, hudValue("До окончания охлаждения", "≈ "+hudCarrierDuration(until.Sub(now)), "text"), false
+		}
+		return "", HUDLine{}, false
+	}
+	until := v.Time(jump["cooldownUntil"])
+	if until.IsZero() && v.Num(jump["cooldownUntilMs"]) > 0 {
+		until = time.UnixMilli(int64(v.Num(jump["cooldownUntilMs"])))
+	}
+	if now.Before(until) {
+		return v.Str(v.At(jump, "lastArrival", "system")), hudValue("До окончания охлаждения", "≈ "+hudCarrierDuration(until.Sub(now)), "text"), false
+	}
+	return "", HUDLine{}, false
+}
+
 func hudCarrier(doc *HUDDocument, s M, now time.Time) {
 	c := v.Obj(s["carrier"])
 	if !v.Bool(c["owned"]) {
@@ -543,29 +587,22 @@ func hudCarrier(doc *HUDDocument, s M, now time.Time) {
 	fuel := v.Obj(c["fuel"])
 	route := v.Obj(s["carrierRoute"])
 	stop := hudCarrierNextStop(route)
-	pending := v.Obj(v.At(c, "jump", "pending"))
-	name := v.Text(pending["system"], pending["name"])
+	jump := v.Obj(c["jump"])
+	name, timer, pendingPast := hudCarrierTimer(jump, now)
 	rows := []HUDLine{}
-	pendingPast := false
-	if name != "" {
-		if at := v.Time(pending["departureTime"]); !at.IsZero() {
-			remaining := at.Sub(now)
-			if remaining > 0 {
-				rows = append(rows, hudValue("До отправления", Number(int64((remaining+time.Minute-1)/time.Minute))+" мин", "text"))
-			} else {
-				pendingPast = true
-				rows = append(rows, hudMuted("Ожидаем подтверждение прибытия"))
-			}
-		} else {
-			rows = append(rows, hudMuted("Прыжок запланирован"))
-		}
-		if stop != nil && !hudEqual(name, v.First(stop["name"], stop["system"])) {
+	if timer.Text != "" {
+		rows = append(rows, timer)
+	}
+	if stop != nil {
+		plannedName := v.Text(stop["name"], stop["system"])
+		if name != "" && len(v.Obj(jump["pending"])) > 0 && !hudEqual(name, plannedName) {
 			rows = append(rows, hudWarn("По плану далее: "+v.Text(stop["name"], stop["system"])))
 			stop = nil
+		} else if pendingPast {
+			stop = nil
+		} else {
+			name = plannedName
 		}
-	}
-	if name == "" && stop != nil {
-		name = v.Text(stop["name"], stop["system"])
 	}
 	if stop != nil {
 		if !pendingPast && !v.Bool(fuel["needsRefresh"]) && hudKnown(fuel["tankTons"]) && hudKnown(stop["fuelUsedTons"]) && v.Num(fuel["tankTons"]) < v.Num(stop["fuelUsedTons"]) {
